@@ -34,7 +34,7 @@
     if (filmCv.width !== w || filmCv.height !== h) { filmCv.width = w; filmCv.height = h; film.w = W; film.h = H; film.last = 0; }
     const lvl = settings.film, R = REELS[cos.reel] || REELS.standard;
     const due = now - film.last > 83;
-    if (!due && !film.iris && !film.spot) return;
+    if (!due && !film.iris && !film.spot && !misc.kind) return;
     if (due) { film.last = now; filmTick(R, lvl); }
     const c = fctx; c.setTransform(d, 0, 0, d, 0, 0); c.clearRect(0, 0, W, H);
     if (lvl !== "off" && !sandbox) {
@@ -60,6 +60,7 @@
         if (film.burn) { const bx = W * 0.8, by = H * 0.2, gr = c.createRadialGradient(bx, by, 0, bx, by, U * 0.4); gr.addColorStop(0, "rgba(255,244,210,.5)"); gr.addColorStop(1, "rgba(255,200,120,0)"); c.fillStyle = gr; c.fillRect(0, 0, W, H); }
       }
     }
+    drawMischief(c);   // the jam's burn, the slip's frame line, the hand, the blot (09l_mischief.js)
     if (film.iris) drawIris(c, now);
     if (film.spot) drawSpot(c, now);
   }

@@ -219,7 +219,7 @@
   const ZERO = { bones: 0, bonks: 0, misses: 0, clutch: 0, bonesTotal: 0, makes: 0, best: 0, perfects: 0, rims: 0, bestStreak: 0, bestPerfStreak: 0, peakLives: 0, games: 0, points: 0, throws: 0, unlocked: [], boardBest: null, fragments: [], bossLog: {} };
   for (const [k, v] of Object.entries(T.profile())) if (typeof v === "number" && !(k in ZERO) && k !== "updatedAt" && k !== "schema") ZERO[k] = k === "bestStage" ? 1 : 0;   // every other counter too
   ZERO.achievements = T.achievements().map(a => a.id); ZERO.arcade = {};   // (all achievements in hand, so none pays out in the middle of a bones test)
-  ZERO.shots = {}; ZERO.modes = {}; ZERO.seen = [];   // (v25–v27: signature shots, mode records, what the Codex has noted)
+  ZERO.shots = {}; ZERO.modes = {}; ZERO.seen = []; ZERO.secrets = [];   // (v25–v27: signature shots, mode records, what the Codex has noted)
   const statFor = { perfStreak: "bestPerfStreak" };
   const DEF = { skull: "bone", eyes: "pie", teeth: "grin", paint: "none", trail: "dust", impact: "classic", ring: "hoop", aim: "bone", reel: "standard", title: "rookie", hat: "none", aura: "none", pole: "wood" };
   const dressDefault = () => { for (const [k, v] of Object.entries(DEF)) T.equip(k, v); };
@@ -1543,7 +1543,7 @@
   });
   test("The Codex sheet: a tab for each part and the Archive, ??? until found, and the count", () => {
     T.setStats({ ...ZERO, bossLog: { crow: 2 }, fragments: ["tophat"], shots: { longbomb: 1 }, bestStage: 2 }); T.toTitle(); T.openSheet("codex");
-    const tabs = [...document.querySelectorAll("#codexTabs [data-cat]")]; assert(tabs.length === 8, `eight tabs (${tabs.length})`);
+    const tabs = [...document.querySelectorAll("#codexTabs [data-cat]")]; assert(tabs.length === 9, `nine tabs: seven parts, the Secrets (v28) and the Archive (${tabs.length})`);
     tabs.find(b => b.dataset.cat === "boss").click();
     const rows = [...document.querySelectorAll("#codexList .entry")], crow = rows.find(r => r.dataset.entry === "boss:crow");
     assert(rows.length === 16 && crow && /Crow King/.test(crow.textContent) && /Beaten 2/.test(crow.textContent), `16 bosses, the Crow King written up (${rows.length})`);
@@ -1562,6 +1562,51 @@
     assert(!document.querySelector('#codexList [data-doc="restoration"]').classList.contains("sealed"), "finishing the story unseals the restoration report");
     T.closeSheet(); T.setStats(ZERO); T.toTitle();
   });
+
+  // ── v28: the cartoon misbehaves, and nine secrets ──
+  test("The cartoon misbehaves between throws: at most once a map, never early, never mid-flight, and it can be switched off", () => {
+    T.mischiefOn(true); T.clearMisc(); T.setStats(ZERO); fresh(); T.seedRun(7);
+    for (let i = 0; i < 4; i++) { T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); }
+    assert(!T.misc().log.length, "nothing in the first five throws");
+    for (let i = 0; i < 60 && !T.misc().log.length; i++) { T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); if (T.state().hits >= 24) T.setHits(10); }
+    assert(T.misc().log.length === 1, `one misbehaviour on the map (${T.misc().log})`);
+    for (let i = 0; i < 30; i++) { T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); if (T.state().hits >= 24) T.setHits(10); }
+    assert(T.misc().log.length === 1, `and only one a map (${T.misc().log})`);
+    fresh(); T.clearMisc(); T.throwAt(0, C.RING_Y); T.step(0.2); assert(T.misbehave("jam") === null, "never while the skull's in the air");
+    T.step(2.5); T.setSetting("mischief", false); T.clearMisc(); for (let i = 0; i < 60; i++) { T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); if (T.state().hits >= 24) T.setHits(10); }
+    assert(!T.misc().log.length, "Mischief off: never"); T.setSetting("mischief", true);
+    T.toTitle();
+  });
+  test("The six misbehaviours: a jam shudders and holds, a slip rolls back into the gate, the hand, the wrong reel, the fourth wall, the blot", () => {
+    T.mischiefOn(true); T.setStats(ZERO); fresh(); T.clearMisc();
+    T.misbehave("jam"); T.step(0.05); let m = T.misc(); assert(m.kind === "jam" && /translateY/.test(m.css), `the picture shudders (${m.css})`); T.step(1.8); assert(!T.misc().kind, "and runs on");
+    T.misbehave("slip"); T.step(0.1); m = T.misc(); assert(/translateY\(-\d/.test(m.css), `the frame rolls down into the gate (${m.css})`); T.step(0.7);
+    T.misbehave("wrong"); m = T.misc(); assert(m.wrong && /WRONG REEL/.test($("rcSub").textContent) && T.state().state === "ready", "a spliced-in card that holds nothing up"); T.step(0.6); assert(!T.misc().wrong, "gone in half a second");
+    T.voiceTest(true); T.misbehave("wall"); assert(T.voice().pool === "meta", `Morty talks to the camera (${T.voice().pool})`); T.voiceTest(false); T.step(0.2);
+    T.misbehave("blot"); assert(T.misc().kind === "blot", "an ink blot on the lens"); T.step(2.5);
+    T.misbehave("hand"); T.step(0.8); const p = T.misc().hand; assert(p, "the animator's hand reaches in");
+    T.canvas().dispatchEvent(new PointerEvent("pointerdown", { clientX: p.x, clientY: p.y, bubbles: true, pointerId: 9 }));
+    assert(T.secrets().includes("caught") && !T.misc().kind, `tap it: Caught in the Act (${T.secrets()})`);
+    T.setStats(ZERO); T.toTitle();
+  });
+  test("Nine secrets: each found its own way, each pays 150 bones once, and the Codex keeps them", () => {
+    T.setStats({ ...ZERO, bones: 0 }); T.toTitle();
+    for (let i = 0; i < 13; i++) $("mascot").dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+    assert(T.secrets().includes("knock") && T.bones() === 150, `thirteen pokes: Knock Knock (${T.secrets()}, ${T.bones()})`);
+    for (const k of ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "b", "a"]) window.dispatchEvent(new KeyboardEvent("keydown", { key: k }));
+    assert(T.secrets().includes("projector") && T.profile().unlocked.includes("reel:twostrip"), "the old projector's code unlocks the Two-Strip Color reel");
+    T.secretName("Morty"); assert(T.secrets().includes("name"), "Morty's own name on the stone");
+    fresh(); for (let i = 0; i < 5; i++) T.upwardPull(); assert(T.secrets().includes("upside"), "five upward pulls: Wrong Way Round");
+    fresh(); T.setLives(5); for (let i = 0; i < 3; i++) { T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y + 2.2); }
+    assert(T.state().lastResult.kind === "over" && T.secrets().includes("moon"), `three overs in a row: Moonshot (${T.state().lastResult.kind})`);
+    fresh(); T.setStage(7); T.setStreak(12); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); assert(T.secrets().includes("thirteen"), "thirteen in a row in the Belfry");
+    const b = T.bones(); T.secretName("Morty"); assert(T.bones() === b, "a secret pays once");
+    T.toTitle(); T.openSheet("codex"); document.querySelector('#codexTabs [data-cat="secret"]').click();
+    const rows = [...document.querySelectorAll("#codexList .entry")];
+    assert(rows.length === 9 && rows.filter(r => !r.classList.contains("unseen")).length === T.secrets().length && /secrets found/.test($("codexCount").textContent), `the Secrets tab (${rows.length}, ${T.secrets().length})`);
+    T.closeSheet(); T.setStats(ZERO); T.toTitle();
+  });
+  T.mischiefOn(false);
 
   T.sandbox(false); T.start(); T.pause(false);  // leave the game playable, player's saved data untouched
   window.__skullTossResults = results;

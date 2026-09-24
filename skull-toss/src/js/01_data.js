@@ -240,7 +240,7 @@
     return p;
   }
   const DEFAULT_SETTINGS = { sound: true, music: 45, sfx: 80, amb: 50, vibe: true, shake: true, guide: "full", film: reduceMotion ? "light" : "full", camera: reduceMotion ? "still" : "full", voice: "babble",
-    flashes: reduceMotion ? "reduced" : "full", contrast: false, text: "normal", cards: "full", lang: "en" };   // cards: the reel's title cards (09i_reel.js)   // accessibility: flash strength, high contrast, text size
+    flashes: reduceMotion ? "reduced" : "full", contrast: false, text: "normal", cards: "full", lang: "en", mischief: true };   // cards: the reel's title cards (09i_reel.js)   // accessibility: flash strength, high contrast, text size
   // "best" is the most hits in one run (what older saves called their best score); "bestScore" is the arcade score
   const STAT_KEYS = ["games", "throws", "makes", "perfects", "rims", "bestStreak", "bestPerfStreak", "peakLives", "points", "best", "bonesTotal", "bonks", "misses", "clutch",
     "bestScore", "scoreTotal", "bestStage", "miniKills", "miniFlawless", "bossKills", "bossFlawless",
@@ -248,7 +248,7 @@
     "powerups", "cursed", "saves", "bonesSpent", "shopBuys", "coffins", "playTime", "grabs", "arcadeRuns", "chalClaims", "achSeen", "storyClears", "targetHits", "hazardHits", "continues"];
   // arcade: the best on each map, keyed by map number ({ score, secs, hits, runs }); achievements: the ones unlocked
   const DEFAULT_PROFILE = { name: "", bones: 0, daily: null, weekly: null, monthly: null, unlocked: [], seen: [], achievements: [], arcade: {}, updatedAt: 0, board: false, bestStage: 1, boardBest: null,
-    fragments: [], bossLog: {}, shots: {}, modes: {}, seen: [] };   // seen: what the Codex has noted ("boss:crow", "power:rush"…)   // modes: Boss Rush's and each mini-game's record (07i_modes.js)   // shots: each signature shot, how many times (07h_shots.js)   // fragments: Morty's pieces recovered (ids); bossLog: each boss beaten, how many times
+    fragments: [], bossLog: {}, shots: {}, modes: {}, seen: [], secrets: [] };   // secrets: the ones found (09l_mischief.js)   // seen: what the Codex has noted ("boss:crow", "power:rush"…)   // modes: Boss Rush's and each mini-game's record (07i_modes.js)   // shots: each signature shot, how many times (07h_shots.js)   // fragments: Morty's pieces recovered (ids); bossLog: each boss beaten, how many times
   for (const k of STAT_KEYS) if (!(k in DEFAULT_PROFILE)) DEFAULT_PROFILE[k] = 0;
   const DEFAULT_COS = { skull: "bone", eyes: "pie", teeth: "grin", paint: "none", trail: "dust", impact: "classic", ring: "hoop", aim: "bone", reel: "standard", title: "rookie", updatedAt: 0 };
   let sandbox = null;   // while the spec runs, nothing is written to the player's storage or cloud
@@ -294,6 +294,7 @@
     out.shots = sh;
     const md = {}; if (out.modes && typeof out.modes === "object") for (const [k, v] of Object.entries(out.modes)) if (/^[a-z]{2,16}$/.test(k) && v && typeof v === "object") { md[k] = {}; for (const [f, n] of Object.entries(v)) if (/^[a-z]{2,12}$/i.test(f)) md[k][f] = Math.max(0, Math.floor(Number(n) || 0)); }
     out.modes = md;
+    out.secrets = Array.isArray(out.secrets) ? [...new Set(out.secrets.filter(k => typeof k === "string" && /^[a-z]{2,16}$/.test(k)))].slice(0, 40) : [];
     out.seen = Array.isArray(out.seen) ? [...new Set(out.seen.filter(k => typeof k === "string" && /^[a-z]{2,8}:[a-z0-9]{1,16}$/.test(k)))].slice(0, 400) : [];
     return out;
   }
@@ -311,7 +312,7 @@
     const out = { ...a };
     for (const k of STAT_KEYS) out[k] = Math.max(a[k], b[k]);
     out.unlocked = [...new Set([...a.unlocked, ...b.unlocked])];
-    out.seen = [...new Set([...a.seen, ...b.seen])];
+    out.seen = [...new Set([...a.seen, ...b.seen])]; out.secrets = [...new Set([...a.secrets, ...b.secrets])];
     const newer = b.updatedAt > a.updatedAt ? b : a, older = newer === a ? b : a;
     out.name = newer.name || older.name;
     out.bones = newer.bones;   // a spendable balance: the most recent save wins (max() would refund purchases)
@@ -354,6 +355,7 @@
     if (!["normal", "large"].includes(settings.text)) settings.text = "normal";
     if (!["full", "short", "off"].includes(settings.cards)) settings.cards = "full";
     if (typeof settings.lang !== "string") settings.lang = "en";
+    settings.mischief = settings.mischief !== false;
     settings.contrast = !!settings.contrast;
     profile = cleanProfile(readSaved(KEYS.profile));
     profile.best = Math.max(profile.best, Number(store.get(KEYS.best, 0)) || 0);

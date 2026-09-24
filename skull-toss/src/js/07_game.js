@@ -218,6 +218,7 @@
       if (game.throws <= 8 && game.lives > 0) setHint(t(`coach.${kind}`), true);
     }
     mortyAfterThrow(kind, R.make);   // Morty's two cents (08g_voice.js)
+    secretsAfterThrow(kind, R.make);   // (09l_mischief.js)
     srEl.textContent = t("result.sr", { what: (R.make ? t(`result.${kind}.word`).replace("!", "") : t(`result.${kind}.call`) + ", " + t(`result.${kind}.sub`)).toLowerCase(), score: fmtN(game.score), hits: game.hits, lives: game.lives });
     checkUnlocks(); persist(); updateHud();
   }
@@ -237,6 +238,7 @@
       if (game.throws < 2 && !hintEl.textContent) setHint(t("hint.start"));
     }
     saveRunSnapshot();
+    mischiefAfterThrow();   // now and then the old print acts up (09l_mischief.js)
   }
   function resetSkull() {
     Object.assign(skull, { p0: { x: 0, y: START_Y, z: 0 }, v0: { x: 0, y: 0, z: 0 }, t: 0, crossed: false, resting: true, missed: false, ghosted: 0,
@@ -362,6 +364,7 @@
     else if (game.state === "cine") { updateCine(dt); skull.spawn = Math.min(1, skull.spawn + dt / 0.3); }
     else if (game.state === "ready" || game.state === "title") skull.spawn = Math.min(1, skull.spawn + dt / 0.3);
     updateModes(dt);   // Curtain Call's clock, the encore's end (07i_modes.js)
+    updateMischief();
     if (game.state === "continue") updateContinue(dt);
     else if (game.state === "ready") mortyIdle();
     if (game.state === "over" && screen === "play" && game.time - game.overAt > (game.overHold || 0.6)) showScreen("over");

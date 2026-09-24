@@ -21,7 +21,7 @@
   function release() {
     if (!aim.active) return;
     if (aim.valid) { skull.pullOff = pullOffset(); launch(aim.AX, aim.AY); }
-    else { aim.active = false; cvs.classList.remove("aiming"); Sound.slack(); if (aim.upward) setHint(t("hint.pullRelease"), true); }
+    else { aim.active = false; cvs.classList.remove("aiming"); Sound.slack(); if (aim.upward) { setHint(t("hint.pullRelease"), true); secretUpward(); } }
   }
   function cancelAim() { if (!aim.active) return; aim.active = false; cvs.classList.remove("aiming"); Sound.pullEnd(); }
 
@@ -30,6 +30,7 @@
   document.addEventListener("keydown", firstGesture, true);
 
   cvs.addEventListener("pointerdown", e => {
+    if (handHit(e.clientX, e.clientY)) { e.preventDefault(); misc.kind = null; foundSecret("caught"); Sound.toon("boing"); return; }   // caught the animator in the act
     if (game.state !== "ready" || aim.active || paused || sheet || screen !== "play") return;
     e.preventDefault();
     Object.assign(aim, { active: true, source: "pointer", id: e.pointerId, sx: e.clientX, sy: e.clientY, cx: e.clientX, cy: e.clientY });

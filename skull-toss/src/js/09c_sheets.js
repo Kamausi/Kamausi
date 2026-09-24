@@ -44,7 +44,7 @@
   const SLIDERS = ["music", "sfx", "amb"];
   function renderSettings() {
     const set = (id, v) => $(id).setAttribute("aria-checked", String(!!v));
-    set("set-sound", settings.sound); set("set-shake", settings.shake);
+    set("set-sound", settings.sound); set("set-shake", settings.shake); set("set-mischief", settings.mischief);
     const canVibe = typeof navigator.vibrate === "function";
     $("set-vibe").disabled = !canVibe; set("set-vibe", canVibe && settings.vibe);
     $("vibeNote").textContent = canVibe ? t("settings.vibe.on") : t("settings.vibe.none");
@@ -85,6 +85,7 @@
   $("set-sound").addEventListener("click", () => toggleSetting("sound"));
   $("set-vibe").addEventListener("click", () => toggleSetting("vibe"));
   $("set-shake").addEventListener("click", () => toggleSetting("shake"));
+  $("set-mischief").addEventListener("click", () => toggleSetting("mischief"));
   $("set-contrast").addEventListener("click", () => { toggleSetting("contrast"); applyAccess(); });
   bindSeg("set-flashes", v => { settings.flashes = v; persist(); applyAccess(); renderSettings(); Sound.ui("tick"); });
   bindSeg("set-lang", v => { settings.lang = setLang(v); persist(); renderSettings(); Sound.ui("tick"); });
@@ -166,4 +167,5 @@
     } else { toast("That code didn't work. Check it was copied in full"); Sound.ui("deny"); }
   });
   $("prof-name").addEventListener("input", e => { profile.name = e.target.value.replace(/\s+/g, " ").trimStart().slice(0, 16); persist(2500); });
+  $("prof-name").addEventListener("change", e => secretName(e.target.value));   // (a secret: 09l_mischief.js)
   $("prof-name").addEventListener("change", e => { profile.name = profile.name.trim(); e.target.value = profile.name; persist(800); });

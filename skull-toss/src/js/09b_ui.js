@@ -217,7 +217,7 @@
   window.addEventListener("pointermove", e => { ui.px = e.clientX; ui.py = e.clientY; }, { passive: true });
   $("mascot").addEventListener("pointerdown", () => {   // poke it: BOING
     const T = uiNow(); mascot.pokeAt = T; mascot.vy = -560; mascot.spin = (Math.random() < 0.5 ? -1 : 1) * 14;
-    kick(mascot.R, 0.5, 0, Math.PI / 2, 260, 6); setMood(mascot.R, "happy", T); Sound.toon("boing");
+    kick(mascot.R, 0.5, 0, Math.PI / 2, 260, 6); setMood(mascot.R, "happy", T); Sound.toon("boing"); secretPoke(T);
   });
   function fitCanvas(cv) {
     const r = cv.getBoundingClientRect(), d = Math.min(2, window.devicePixelRatio || 1), w = Math.round(r.width * d), h = Math.round(r.height * d);
@@ -239,7 +239,8 @@
     M.spin *= Math.max(0, 1 - dt * 3); M.ang += M.spin * dt; if (Math.abs(M.spin) < 0.5) M.ang *= Math.max(0, 1 - dt * 6);
     if (T - M.pokeAt > 1.1 && R.mood === "happy") setMood(R, "idle", T);
     const quirk = SKINS[cos.skull] && SKINS[cos.skull].idle ? SKINS[cos.skull].idle(T) : null;
-    if (R.mood !== "happy") setMood(R, quirk || "idle", T);
+    if (secretsTitleIdle(T)) setMood(R, "sleep", T);   // left alone a minute, he drops off (09l_mischief.js)
+    else if (R.mood !== "happy") setMood(R, quirk || "idle", T);
     R.aT = 1 + 0.02 * Math.sin(T * 2.4); R.tiltT = 0.1 * Math.sin(T * 1.5);
     const cx = r.width / 2, cy = floor + M.y;
     let lx = 0, ly = 0.1;

@@ -1,8 +1,23 @@
-# SKULL TOSS v27
+# SKULL TOSS v28
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)), with a synthesised waltz standing in wherever they can't load.
+
+## New in v28: the cartoon misbehaves, and nine secrets
+
+**The old print acts up.** It has been through a fire, and now and then, between throws in Story and Arcade, it misbehaves:
+
+- **Jam:** the picture shudders and holds while a burn bubbles through the film, then it runs on.
+- **Slip:** the frame slips and rolls back down into the gate, the frame line showing.
+- **The animator's hand:** a white glove (four fingers, as the style sheet required) reaches in and pats Morty.
+- **Wrong reel:** half a second of another reel's title card, stamped WRONG REEL!
+- **Fourth wall:** Morty turns to the camera and says something he shouldn't.
+- **Ink blot:** a blot lands on the lens and slides off.
+
+It never happens mid-flight, in a boss fight or a cut-scene, or in a run's first five throws. The Mischief Director allows at most one a map (one every forty throws in Arcade). All of it is picture only and never touches a throw. **Settings → Mischief** turns it off. Reduced motion leaves out the slip and the wrong reel, and the Flashes setting dims the burn.
+
+**Nine secrets**, which the game never mentions. Each pays 150 bones once and goes in a new **Secrets** tab in the Codex, which gives a cryptic hint for each one still hidden. None can be found in Practice. (One of them is an old projector's code that brings the Two-Strip Color reel out of the Vault.)
 
 ## New in v27: the Codex and the Production Archive
 
@@ -737,7 +752,7 @@ From the console, `SkullToss.debug.visualAnimation` lists the pose library (`pos
 
 ## Tests
 
-Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **161 checks**, covering:
+Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **164 checks**, covering:
 
 - **Layout, scoring and aiming.**
   - Everything is centred and every result is classified correctly.
@@ -852,3 +867,7 @@ Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to
   - The Codex notes a boss when you meet it, a power-up when you grab it, and each map's hazard and target. What you see in Practice counts too.
   - The Codex sheet has eight tabs, 16 bosses written up or ???, and the found count.
   - The Archive starts with the first memo, unseals eight documents by Reel Five, and the restoration report when the story is finished.
+- **v28.**
+  - The cartoon misbehaves between throws: nothing in the first five, one a map at most, never mid-flight, and never with Mischief off.
+  - The six misbehaviours each do their thing. Tapping the animator's hand is a secret.
+  - The secrets are each found their own way, each pays 150 bones once, and the Codex's Secrets tab keeps them.

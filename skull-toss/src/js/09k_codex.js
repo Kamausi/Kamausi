@@ -41,9 +41,16 @@
   const codexUI = { cat: "map" };
   function renderCodex() {
     const tabs = $("codexTabs");
-    if (!tabs.children.length) for (const c of [...CODEX_CATS, "archive"]) tabs.append(h("button", { type: "button", role: "tab", data: { cat: c }, "aria-selected": "false" }, t(`codex.cat.${c}`)));
+    if (!tabs.children.length) for (const c of [...CODEX_CATS, "secret", "archive"]) tabs.append(h("button", { type: "button", role: "tab", data: { cat: c }, "aria-selected": "false" }, t(`codex.cat.${c}`)));
     for (const b of tabs.children) b.setAttribute("aria-selected", String(b.dataset.cat === codexUI.cat));
     const list = $("codexList"); list.textContent = "";
+    if (codexUI.cat === "secret") {   // the secrets (09l_mischief.js): a hint for each still hidden
+      const got = realProfile().secrets;
+      $("codexCount").textContent = t("codex.secret.count", { n: got.length, total: SECRETS.length });
+      for (const id of SECRETS) { const on = got.includes(id);
+        list.append(h("div", { class: `entry${on ? "" : " unseen"}`, data: { entry: "secret:" + id } }, h("b", {}, on ? t(`secret.${id}.name`) : t("codex.unknown")), h("p", {}, on ? t(`secret.${id}.body`) : t(`secret.${id}.hint`)))); }
+      return;
+    }
     if (codexUI.cat === "archive") {
       const open = ARCHIVE.filter(A => A.open());
       $("codexCount").textContent = t("codex.archive.count", { n: open.length, total: ARCHIVE.length });

@@ -95,6 +95,8 @@
         css = `translateX(${((v.x || 0) * A * W).toFixed(1)}px) rotate(${((v.r || 0) * A).toFixed(2)}deg) scale(${s.toFixed(4)})`; blur = (v.blur || 0) * A;
       }
     }
+    if (misc.kind === "jam" && game.time - misc.t0 < misc.dur * 0.55) css += ` translateY(${(Math.sin(performance.now() * 0.09) * 2.2).toFixed(1)}px)`;   // (real time: the game's clock is held)
+    else if (misc.kind === "slip") css += ` translateY(${(-(1 - clamp((game.time - misc.t0) / misc.dur, 0, 1)) * H).toFixed(1)}px)`;
     const key = css + "|" + blur.toFixed(1);
     if (key !== camfx.applied) { camfx.applied = key; cvs.style.transform = css; cvs.style.filter = blur > 0.2 ? `blur(${blur.toFixed(1)}px)` : ""; }
   }
