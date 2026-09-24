@@ -53,7 +53,7 @@
   const TARGET_SOUND = { frog: "ribbit", duck: "quack", bell: "clang", bonefruit: "bonk" };
   const targetPos = T => ({ x: T.x, y: T.y + (T.kind === "frog" ? 0 : Math.sin(T.t * 2 + T.ph) * 0.08), z: T.z });
   function spawnTarget() {
-    const kind = mapData(game.stage || 1).target, low = kind === "frog";
+    const kind = mapData(game.stage || 1).target, low = kind === "frog"; sawIt("target", kind);
     targets.push({ kind, x: rrIn(-1.6, 1.6), y: low ? 0.22 : rrIn(1.4, 3.1), z: RING_Z + rrIn(1.4, 3.0), t: 0, left: 6, pop: 0, ph: rrIn(0, TAU) });
   }
   function refillTargets() {
@@ -93,6 +93,7 @@
   // after every throw: the wind turns, and the scheduled hazards (bats, bones, fog) come round every so many throws
   function hazardsAfterThrow() {
     const T = tierNow(), M = mapData(game.stage || 1).mechanic;
+    if (HZ.kind !== "none" && hazardsLive()) sawIt("hazard", HZ.kind);   // the Codex notes the map's hazard (09k_codex.js)
     if (HZ.kind === "wind" && hazardsAllowed()) { HZ.wind = Math.round(rrIn(-1, 1) * (M.max || 1.5) * (0.4 + 0.6 * T.hazard) * 10) / 10; renderWind(); if (Math.abs(HZ.wind) > 0.6) Sound.toon("gust"); }
     if (!hazardsLive() || !T.hazardEvery) return;
     if (++HZ.since < T.hazardEvery) return;

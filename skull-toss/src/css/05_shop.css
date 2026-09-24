@@ -209,3 +209,18 @@
 .practice-opts{display:grid;gap:8px;margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--panel-2);border:2px solid var(--line-2)}
 .practice-opts .row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0;border:0}
 .practice-opts .lbl{font:800 12px var(--ui);letter-spacing:.08em;text-transform:uppercase;color:var(--cream-dim)}
+/* the Codex (09k_codex.js): entries as index cards; the Archive as aged paper */
+.codex-count{margin:12px 0 0;font:16px/1 var(--num);letter-spacing:.06em;color:var(--mustard-l)}
+.codex-list{display:grid;gap:10px;margin-top:10px}
+.codex-list .entry{padding:11px 13px 10px;border-radius:10px;background:var(--paper);color:var(--ink);border:2px solid var(--ink);box-shadow:0 3px 0 var(--ink)}
+.codex-list .entry b{display:block;font:18px/1.05 var(--display);letter-spacing:.03em;text-transform:uppercase}
+.codex-list .entry p{margin:5px 0 0;font:700 12.5px/1.4 var(--ui)}
+.codex-list .entry .cx-stat{display:inline-block;margin-top:6px;font:14px/1 var(--num);letter-spacing:.06em;color:var(--red-d)}
+.codex-list .entry.unseen{background:var(--panel-2);color:var(--cream-faint);border-color:var(--line-2);box-shadow:none}
+.codex-list .doc{padding:14px 16px;border-radius:4px;background:linear-gradient(180deg,#EFE2C2,#E2D0A6);color:#2B2118;box-shadow:0 3px 0 var(--ink),inset 0 0 30px rgba(120,80,30,.25);transform:rotate(-.4deg)}
+.codex-list .doc:nth-child(even){transform:rotate(.5deg)}
+.codex-list .doc h3{margin:2px 0 6px;font:800 15px/1.2 "Courier New",Courier,ui-monospace,monospace;text-transform:uppercase;letter-spacing:.04em}
+.codex-list .doc .doc-date{margin:0;font:700 11px/1 "Courier New",Courier,ui-monospace,monospace;letter-spacing:.1em;color:#6B4526}
+.codex-list .doc .doc-body{margin:0;font:13px/1.5 "Courier New",Courier,ui-monospace,monospace}
+.codex-list .doc.sealed{background:var(--panel-2);color:var(--cream-faint);box-shadow:none;border:2px dashed var(--line-2)}
+.codex-list .doc.sealed .doc-date{color:var(--cream-faint)}

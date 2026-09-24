@@ -248,7 +248,7 @@
     "powerups", "cursed", "saves", "bonesSpent", "shopBuys", "coffins", "playTime", "grabs", "arcadeRuns", "chalClaims", "achSeen", "storyClears", "targetHits", "hazardHits", "continues"];
   // arcade: the best on each map, keyed by map number ({ score, secs, hits, runs }); achievements: the ones unlocked
   const DEFAULT_PROFILE = { name: "", bones: 0, daily: null, weekly: null, monthly: null, unlocked: [], seen: [], achievements: [], arcade: {}, updatedAt: 0, board: false, bestStage: 1, boardBest: null,
-    fragments: [], bossLog: {}, shots: {}, modes: {} };   // modes: Boss Rush's and each mini-game's record (07i_modes.js)   // shots: each signature shot, how many times (07h_shots.js)   // fragments: Morty's pieces recovered (ids); bossLog: each boss beaten, how many times
+    fragments: [], bossLog: {}, shots: {}, modes: {}, seen: [] };   // seen: what the Codex has noted ("boss:crow", "power:rush"…)   // modes: Boss Rush's and each mini-game's record (07i_modes.js)   // shots: each signature shot, how many times (07h_shots.js)   // fragments: Morty's pieces recovered (ids); bossLog: each boss beaten, how many times
   for (const k of STAT_KEYS) if (!(k in DEFAULT_PROFILE)) DEFAULT_PROFILE[k] = 0;
   const DEFAULT_COS = { skull: "bone", eyes: "pie", teeth: "grin", paint: "none", trail: "dust", impact: "classic", ring: "hoop", aim: "bone", reel: "standard", title: "rookie", updatedAt: 0 };
   let sandbox = null;   // while the spec runs, nothing is written to the player's storage or cloud
@@ -294,6 +294,7 @@
     out.shots = sh;
     const md = {}; if (out.modes && typeof out.modes === "object") for (const [k, v] of Object.entries(out.modes)) if (/^[a-z]{2,16}$/.test(k) && v && typeof v === "object") { md[k] = {}; for (const [f, n] of Object.entries(v)) if (/^[a-z]{2,12}$/i.test(f)) md[k][f] = Math.max(0, Math.floor(Number(n) || 0)); }
     out.modes = md;
+    out.seen = Array.isArray(out.seen) ? [...new Set(out.seen.filter(k => typeof k === "string" && /^[a-z]{2,8}:[a-z0-9]{1,16}$/.test(k)))].slice(0, 400) : [];
     return out;
   }
   function cleanArcade(a) {
@@ -326,6 +327,7 @@
     out.fragments = [...new Set([...a.fragments, ...b.fragments])];
     out.bossLog = { ...a.bossLog }; for (const [k, v] of Object.entries(b.bossLog)) out.bossLog[k] = Math.max(out.bossLog[k] || 0, v);
     out.shots = { ...a.shots }; for (const [k, v] of Object.entries(b.shots)) out.shots[k] = Math.max(out.shots[k] || 0, v);
+    out.seen = [...new Set([...a.seen, ...b.seen])];
     out.modes = JSON.parse(JSON.stringify(a.modes)); for (const [k, v] of Object.entries(b.modes)) { const o = out.modes[k] || (out.modes[k] = {}); for (const [f, n] of Object.entries(v)) o[f] = Math.max(o[f] || 0, n); }
     out.schema = Math.max(a.schema, b.schema);
     out.gift = a.gift || b.gift ? 1 : 0;

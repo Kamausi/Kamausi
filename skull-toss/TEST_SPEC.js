@@ -219,6 +219,7 @@
   const ZERO = { bones: 0, bonks: 0, misses: 0, clutch: 0, bonesTotal: 0, makes: 0, best: 0, perfects: 0, rims: 0, bestStreak: 0, bestPerfStreak: 0, peakLives: 0, games: 0, points: 0, throws: 0, unlocked: [], boardBest: null, fragments: [], bossLog: {} };
   for (const [k, v] of Object.entries(T.profile())) if (typeof v === "number" && !(k in ZERO) && k !== "updatedAt" && k !== "schema") ZERO[k] = k === "bestStage" ? 1 : 0;   // every other counter too
   ZERO.achievements = T.achievements().map(a => a.id); ZERO.arcade = {};   // (all achievements in hand, so none pays out in the middle of a bones test)
+  ZERO.shots = {}; ZERO.modes = {}; ZERO.seen = [];   // (v25–v27: signature shots, mode records, what the Codex has noted)
   const statFor = { perfStreak: "bestPerfStreak" };
   const DEF = { skull: "bone", eyes: "pie", teeth: "grin", paint: "none", trail: "dust", impact: "classic", ring: "hoop", aim: "bone", reel: "standard", title: "rookie", hat: "none", aura: "none", pole: "wood" };
   const dressDefault = () => { for (const [k, v] of Object.entries(DEF)) T.equip(k, v); };
@@ -1527,6 +1528,39 @@
     assert(!$("mapPick").hidden && !$("practiceOpts").hidden && /Practice/.test($("mapPickK").textContent), "Practice goes to the map list, with its options");
     document.querySelector('#mapList [data-map="1"]').click(); assert(T.inPractice() && T.state().stage === 2, "and starts there");
     T.toTitle(); T.setStats(ZERO);
+  });
+
+  // ── v27: the Codex and the Production Archive ──
+  test("The Codex notes things as they turn up: a boss when you meet it, a power-up when you grab it, each map's hazard and target", () => {
+    T.setStats(ZERO); let K = T.codex(); assert(K.total === 66 && K.count === 1, `66 entries, only Moonshine Cemetery known at first (${K.count}/${K.total})`);
+    fresh(); toHit(25); assert(T.codex().seen.includes("boss:crow"), "meeting the Crow King notes him");
+    T.givePower("rush"); assert(T.codex().seen.includes("power:rush"), "grabbing a power-up notes it");
+    fresh(); T.setStage(2); T.setHits(10); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y);
+    K = T.codex(); assert(K.seen.includes("hazard:bats") && K.seen.includes("target:brazier"), `the crypts' bats and brazier (${K.seen.join(", ")})`);
+    T.setPractice({ ring: "full", half: "A", hazards: true }); T.startMode("practice", 0); T.givePower("ghost"); T.endRun(); T.step(1);
+    assert(T.codex().seen.includes("power:ghost"), "what you see in Practice still goes in the Codex");
+    T.setStats(ZERO); T.toTitle();
+  });
+  test("The Codex sheet: a tab for each part and the Archive, ??? until found, and the count", () => {
+    T.setStats({ ...ZERO, bossLog: { crow: 2 }, fragments: ["tophat"], shots: { longbomb: 1 }, bestStage: 2 }); T.toTitle(); T.openSheet("codex");
+    const tabs = [...document.querySelectorAll("#codexTabs [data-cat]")]; assert(tabs.length === 8, `eight tabs (${tabs.length})`);
+    tabs.find(b => b.dataset.cat === "boss").click();
+    const rows = [...document.querySelectorAll("#codexList .entry")], crow = rows.find(r => r.dataset.entry === "boss:crow");
+    assert(rows.length === 16 && crow && /Crow King/.test(crow.textContent) && /Beaten 2/.test(crow.textContent), `16 bosses, the Crow King written up (${rows.length})`);
+    assert(rows.filter(r => r.classList.contains("unseen")).length === 15 && rows.find(r => r.dataset.entry === "boss:reaper").textContent.startsWith("???"), "the rest stay ???");
+    assert(/of 66 found/.test($("codexCount").textContent), $("codexCount").textContent);
+    T.closeSheet(); T.setStats(ZERO); T.toTitle();
+  });
+  test("The Production Archive unseals the studio's paperwork as the story goes on", () => {
+    T.setStats(ZERO); assert(T.codex().archive.join() === "memo", `only the first memo at the start (${T.codex().archive})`);
+    T.setStats({ ...ZERO, makes: 1, bestStage: 5, bossLog: { crow: 1 }, bonesTotal: 1000, perfects: 25 });
+    assert(T.codex().archive.length === 8 && !T.codex().archive.includes("restoration"), `eight documents by Reel Five (${T.codex().archive})`);
+    T.toTitle(); T.openSheet("codex"); document.querySelector('#codexTabs [data-cat="archive"]').click();
+    const docs = [...document.querySelectorAll("#codexList .doc")];
+    assert(docs.length === 12 && docs.filter(d => !d.classList.contains("sealed")).length === 8 && /1933/.test(docs[0].textContent), `12 documents, 8 unsealed (${docs.length})`);
+    T.setStats({ storyClears: 1 }); document.querySelector('#codexTabs [data-cat="archive"]').click();
+    assert(!document.querySelector('#codexList [data-doc="restoration"]').classList.contains("sealed"), "finishing the story unseals the restoration report");
+    T.closeSheet(); T.setStats(ZERO); T.toTitle();
   });
 
   T.sandbox(false); T.start(); T.pause(false);  // leave the game playable, player's saved data untouched

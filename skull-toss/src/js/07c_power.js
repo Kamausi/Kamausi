@@ -34,7 +34,7 @@
 
   const powerOn = id => !!powers[id];
   function givePower(id) {
-    const P = POWERS[id]; powers[id] = { left: P.throws, uses: P.uses || 0, t: 0 };
+    const P = POWERS[id]; powers[id] = { left: P.throws, uses: P.uses || 0, t: 0 }; sawIt("power", id);
     renderPowers();
   }
   function usePower(id) {

@@ -122,6 +122,7 @@
       const z = RING_Z + rrIn(1.4, 3.2), T = flightT(), tc = RING_Z * T / RING_Z, vy = (cy - START_Y + 0.5 * G * tc * tc) / tc;   // the throw through (cx, cy) at the ring…
       const t2 = z / (RING_Z / T), x = (cx / RING_Z) * z, y = START_Y + vy * t2 - 0.5 * G * t2 * t2;                                   // …and where it is at the target's depth
       targets.push({ kind, x, y, z, t: 0, left: 99, pop: 0, ph: rrIn(0, TAU), via: { x: cx, y: cy } });   // via: where to throw through the ring
+      sawIt("target", kind);
     }
   }
 

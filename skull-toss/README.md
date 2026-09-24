@@ -1,8 +1,27 @@
-# SKULL TOSS v26
+# SKULL TOSS v27
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)), with a synthesised waltz standing in wherever they can't load.
+
+## New in v27: the Codex and the Production Archive
+
+A new **Codex** chip on the title screen opens everything you've met, written up, in 66 entries:
+
+- the eight maps, from their premise and what's odd about each;
+- the sixteen bosses, each with a line of history, their tell, and how often you've beaten them;
+- Morty's eight pieces and who was holding each;
+- the seven power-ups;
+- each map's hazard: bats, wind, falling bones, fog, balloons, the pendulum and the Final Reel's jump cuts;
+- each map's bonus target;
+- the twelve signature shots, with how often you've made each.
+
+An entry is **???** until you meet the thing in play, with a word on how to find it.
+
+- **How entries fill in.** Maps, pieces and shots come from your progress. Bosses, power-ups, hazards and targets are noted the first time they turn up (`profile.seen`), with a toast.
+- **Practice.** What you see there still goes in the Codex: it records what you know, not what you've scored.
+
+**The Production Archive** is the Codex's last tab: the studio's paperwork from 1933, twelve documents unsealed as the story goes on. It runs from the first production memo and Morty's model sheet, through the censor's letter, the payroll ledger and the newspaper clipping about the fire, to the restoration report you unseal by finishing the story.
 
 ## New in v26: more ways to play
 
@@ -718,7 +737,7 @@ From the console, `SkullToss.debug.visualAnimation` lists the pose library (`pos
 
 ## Tests
 
-Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **158 checks**, covering:
+Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **161 checks**, covering:
 
 - **Layout, scoring and aiming.**
   - Everything is centred and every result is classified correctly.
@@ -829,3 +848,7 @@ Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to
   - Target Gallery: five targets hang behind a still ring, a throw through the hole reaches them, and ten throws end the run.
   - Story's encore after an end boss: misses are free, makes pay 5 bones, then the next reel.
   - The Play sheet lists five more modes, locked until an end boss falls. Practice picks a map and its options.
+- **v27.**
+  - The Codex notes a boss when you meet it, a power-up when you grab it, and each map's hazard and target. What you see in Practice counts too.
+  - The Codex sheet has eight tabs, 16 bosses written up or ???, and the found count.
+  - The Archive starts with the first memo, unseals eight documents by Reel Five, and the restoration report when the story is finished.

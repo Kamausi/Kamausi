@@ -32,6 +32,7 @@
     else if (name === "achievements") renderAchievements();
     else if (name === "board") renderBoard();
     else if (name === "store") renderStore();
+    else if (name === "codex") renderCodex();
   }
   document.addEventListener("click", e => {
     const open = e.target.closest("[data-sheet]"); if (open) { sheetOpener = open; openSheet(open.dataset.sheet); return; }

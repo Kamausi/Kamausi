@@ -317,6 +317,6 @@
   // definition (07f_bosses.js)
   function makeBoss(id, stage) {
     const B = id === "pumpkin" ? makePumpkinKing(stage) : id === "crow" ? makeCrowKing(stage) : makeGenericBoss(id, stage);
-    B.kind = id; B.short = BOSS_INFO[id].short;
+    B.kind = id; B.short = BOSS_INFO[id].short; sawIt("boss", id);
     return B;
   }
