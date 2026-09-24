@@ -1,7 +1,7 @@
   // ───────────────────────── the campaign: eight maps, their bosses, and Morty's missing pieces ─────────────────────────
-  // The maps themselves are data (src/maps/*.json, checked by the build and embedded as MAP_DATA). Each map has a
-  // mini-boss at 25 hits and an end boss at 50. Every end boss is holding one of the pieces of Morty that were cut
-  // from the 1933 reel; beat all eight and the story ends with Morty whole again.
+  // The maps themselves are data (src/maps/*.json, checked by the build and embedded as MAP_DATA). Each map is 80 hits
+  // (v47): a mini-boss at 30, an end boss at 50, and the end at 80. Every end boss is holding one of the pieces of Morty
+  // that were cut from the 1933 reel; beat all eight and the story ends with Morty whole again.
   // their names, tells and hints are strings (boss.<id>.name/short/tell/hint in src/strings/en.json)
   const BOSS_IDS = ["crow", "batbaron", "scarecrow", "owl", "gator", "jester", "cuckoo", "projectionist", "undertaker", "count", "pumpkin", "marrowroot", "madame", "ringmaster", "clockking", "reaper"];
   const BOSS_INFO = Object.fromEntries(BOSS_IDS.map(id => [id, { get name() { return t(`boss.${id}.name`); }, get short() { return t(`boss.${id}.short`); },

@@ -44,7 +44,7 @@
     else { const any = POWER_IDS.filter(ok); id = any.length ? any[Math.floor(runRand() * any.length)] : POWER_IDS.find(x => x !== PD.last && x !== "cursed") || "deadeye"; }   // (nothing left in the bag fits just now)
     PD.last = id; return id;
   }
-  // the stage the drops are counted in: a map's first half or its second (Arcade's endless climb: each 25 hits)
+  // the stage the drops are counted in: a map's first half or its second (Arcade's endless climb: each 30 hits)
   const powerStageKey = () => arcadeLike() && game.stageHits > STAGE_BOSS ? `${game.stage}+${Math.floor(game.stageHits / STAGE_MINI)}` : `${game.stage}${game.phase}`;
   const powers = {};          // id → { left: throws left, uses }
   let pickup = null;          // the prop floating in the ring: { id, t, left, pop }

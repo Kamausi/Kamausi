@@ -196,6 +196,14 @@ def map_problems(m, fname):
         tt = m["targetTypes"].get(ph)
         if not tt or any(t not in REG["targetType"] for t in tt): bad.append(f"targetTypes.{ph} must list registered target types ({', '.join(REG['targetType'])})")
     if m["bosses"].get("mini") not in REG["mini"] or m["bosses"].get("end") not in REG["end"]: bad.append("bosses must name a registered mini-boss and end boss")
+    # ── the 80-hit structure (v47): acts I–III and the approach each have a name, and everything comes in on the map's own hits
+    SB = BLUEPRINT["structure"]
+    acts = m.get("acts")
+    if not (isinstance(acts, list) and len(acts) == 4 and all(isinstance(a, str) and a.strip() for a in acts)): bad.append("acts must name the map's four travelling sections: acts I–III and the approach to the end boss")
+    for o in O.get("A", []):
+        if isinstance(o.get("from"), int) and o["from"] >= SB["mini"]: bad.append(f"obstacle {o.get('kind')} comes in at hit {o['from']}, after the first half's {SB['mini']}")
+    for o in O.get("B", []):
+        if isinstance(o.get("from"), int) and o["from"] >= SB["boss"] - SB["loose"]: bad.append(f"obstacle {o.get('kind')} comes in {o['from']} hits into the approach, which is only {SB['boss'] - SB['loose']} long")
     if m["fragment"] not in REG["fragment"]: bad.append(f"fragment \"{m['fragment']}\" isn't registered")
     if m.get("target") not in REG["target"]: bad.append(f"target \"{m.get('target')}\" isn't one the code draws ({', '.join(REG['target'])})")
     if not 0.85 <= m["music"].get("rate", 0) <= 1.15: bad.append("music.rate must be 0.85–1.15")

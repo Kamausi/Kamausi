@@ -1,7 +1,7 @@
   // ───────────────────────── the Director's Challenge ─────────────────────────
   // Every week H.K., head of production (the one who wrote the first memo), sends down a note: one map, one twist,
   // one seed, the same for everyone, and three things he'd like to see on film. Anyone can play it, whatever they've
-  // reached in Story: he lends you the reel. It plays like Arcade (no bosses, the ring goes 3D at 25 hits, three
+  // reached in Story: he lends you the reel. It plays like Arcade (no bosses, the ring goes 3D at 30 hits, three
   // skulls, no continues) with the twist on top. Each note met is a star for the week, paying bones the first time;
   // the week's best score is kept beside them. A new week, a new note.
   const TWISTS = {

@@ -266,7 +266,7 @@
           4.6
         ],
         "r": 0.3,
-        "from": 6
+        "from": 10
       },
       {
         "kind": "bumper",
@@ -280,7 +280,7 @@
           0.25,
           5.0
         ],
-        "from": 14
+        "from": 20
       }
     ],
     "B": [
@@ -320,7 +320,7 @@
           3.9
         ],
         "r": 0.26,
-        "from": 10
+        "from": 4
       }
     ],
     "boss": [
@@ -368,6 +368,12 @@
     "mini": "batbaron",
     "end": "count"
   },
+  "acts": [
+    "The Gilded Gates",
+    "Mausoleum Row",
+    "The Angels' Walk",
+    "The Count's Crypt"
+  ],
   "fragment": "gilded",
   "target": "brazier",
   "music": {

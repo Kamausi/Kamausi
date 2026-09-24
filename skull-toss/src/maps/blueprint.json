@@ -7,6 +7,10 @@
     "why": "the throw lane, the ring's space and the boss's patch: scenery never stands in it (behind z 16, decoration may). Only gameplay objects (the ring, its anchor's hanger, targets and obstacles) cross it."
   },
   "bossSpace": { "zMin": 9, "zMax": 16, "xMax": 4.5 },
+  "structure": {
+    "act": 10, "mini": 30, "loose": 40, "boss": 50, "end": 80, "phases": 3,
+    "why": "v47: every map is 80 hits in 10-hit sections. Acts I–III (1–30), the mini-boss (31–40: ten hits and the ring breaks loose), the approach (41–50), then the end boss in three phases of ten (51–60, 61–70, 71–80). Every ten hits something changes. Boss Rush keeps its short fights."
+  },
   "gameplayPlanes": {
     "foreground": { "z": [0, 9.6], "holds": ["launcher", "skull", "ring", "targets", "obstacles", "anchor hangers", "power-ups"], "rule": "gameplay-critical: everything the throw can touch" },
     "midground": { "z": [9.6, 30], "holds": ["large props", "structures", "secondary hazards", "moving scenery", "impact-reactive objects", "bosses"], "rule": "gameplay and interaction: it reacts to the throw, it never blocks it" },

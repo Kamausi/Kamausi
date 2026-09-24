@@ -7,11 +7,13 @@
   // Rush's list, the Director's note). A replay plays on a copy of the profile, so watching one changes nothing of yours, never posts to
   // the board and never touches a run you could resume. Share one as a link (#replay=…) and whoever opens it
   // watches the same run.
+  // v47 made the maps 80 hits, so a recording from before plays out differently: those are version 1, and no longer open
+  const REPLAY_V = 2;
   const Replay = {
     rec: null, last: null, play: null, speed: 1,
     begin(opts) {
       if (this.play) return;
-      this.rec = { v: 1, mode: game.mode, map: game.map, seed: game.seed, rm: reduceMotion ? 1 : 0, set: { cards: cardsMode(), mischief: mischiefOn() ? 1 : 0 },
+      this.rec = { v: REPLAY_V, mode: game.mode, map: game.map, seed: game.seed, rm: reduceMotion ? 1 : 0, set: { cards: cardsMode(), mischief: mischiefOn() ? 1 : 0 },
         practice: game.mode === "practice" ? { ...practice } : null, leader: reelSt.introLeader ? 1 : 0, rush: game.mode === "rush" ? modeSt.rush.map(b => b.id) : null, dir: game.mode === "director" && game.director ? JSON.parse(JSON.stringify(game.director)) : null, feat: game.mode === "feature" && game.feature ? JSON.parse(JSON.stringify(game.feature)) : null, ev: [], at: Date.now() };
     },
     step: () => Math.round((game.time - (game.run.t0 || 0)) / SIM_STEP),
@@ -22,7 +24,7 @@
     },
     encode(R) { return btoa(unescape(encodeURIComponent(JSON.stringify(R)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); },
     decode(s) {
-      try { const R = JSON.parse(decodeURIComponent(escape(atob(String(s).replace(/-/g, "+").replace(/_/g, "/"))))); return R && R.v === 1 && Array.isArray(R.ev) && MODES[R.mode] ? R : null; } catch (e) { return null; }
+      try { const R = JSON.parse(decodeURIComponent(escape(atob(String(s).replace(/-/g, "+").replace(/_/g, "/"))))); return R && R.v === REPLAY_V && Array.isArray(R.ev) && MODES[R.mode] ? R : null; } catch (e) { return null; }
     },
     // watch a recording: the same run, on a copy of the profile, with the recorder's settings
     watch(R) {

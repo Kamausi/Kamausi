@@ -273,6 +273,12 @@
     "mini": "crow",
     "end": "pumpkin"
   },
+  "acts": [
+    "The Hollow",
+    "Haunted Farm",
+    "Harvest Grove",
+    "Pumpkin Field"
+  ],
   "fragment": "hollow",
   "target": "jack",
   "music": {

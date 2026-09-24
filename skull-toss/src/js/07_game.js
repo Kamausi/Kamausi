@@ -99,7 +99,7 @@
     if (d > rc - RING_TUBE - SKULL_R && d < rc + RING_TUBE + SKULL_R + 0.02 && anchorHolds()) anchorReact(strength);   // a knock on the ring swings its anchor
     const ux = d > 1e-6 ? dx / d : 0, uy = d > 1e-6 ? dy / d : 1;
     if (d > inner && boss && boss.eyeAt) { const e = boss.eyeAt(s.p0); if (e >= 0) {   // the Pumpkin King's eyes: a hit, not a miss
-      const ep = boss.eyePos(e); boss.eyeHit(e, at); s.v0 = { x: (s.p0.x - ep.x) * 4, y: 1.5, z: -Math.abs(s.v0.z) * 0.3 }; resolve("eye", at, project(ep.x, ep.y, ep.z)); return; } }
+      const ep = boss.eyePos(e), eP = project(ep.x, ep.y, ep.z); boss.eyeHit(e, eP); s.v0 = { x: (s.p0.x - ep.x) * 4, y: 1.5, z: -Math.abs(s.v0.z) * 0.3 }; resolve("eye", eP, eP); return; } }
     if (d <= inner) { const kind = d <= perfR ? "perfect" : "swish"; VisualSystem.triggerImpact(kind, { at, strength, pan }); resolve(kind, at, null, d); }
     else if (d >= outer) {
       if (hasPost() && dy < -(rc + RING_TUBE) && Math.abs(dx) < POST_HALF + SKULL_R) {
@@ -158,7 +158,7 @@
     crusher: { make: false, hit: true },
     barrier: { make: false, hit: true },
     decoy:   { make: false, hit: true },   // (a decoy target hung in front of the ring: 07e_directors.js)
-    eye:     { make: false, hit: true, safe: true }   // (the Pumpkin King's eyes: a hit, not a miss; it costs no skull)
+    eye:     { make: true, pts: 1, fill: GOLD, text: INK, mood: "excited" }   // (v47: the Pumpkin King's eyes are targets, and a poke is one of the 80 hits)
   };
   // the words are strings: result.<kind>.word for a make, result.<kind>.call and .sub for a miss; coach.<kind> the tip after one
   const MISS_STAT = { wide: "wides", over: "overs", low: "lows", post: "posts", short: "shorts", clank: "clanks", seed: "seeds" };
@@ -170,14 +170,14 @@
     const x = at ? at.x : W / 2, y = at ? at.y - ring.rc * at.s - U * 0.05 : H * 0.3;
     if (R.make) {
       if (game.lives === 1) profile.clutch++;
-      game.streak++; game.hits++; if (!boss) game.stageHits++;
+      game.streak++; game.hits++; game.stageHits++;   // (every make counts, boss hits too: the map is 80 of them)
       // SCORE: base × combo × stage, and the power-ups that gamble on it
       const blast = powerOn("blast"), mult = comboMult(game.streak) * stageMult() * (powerOn("cursed") ? 3 : 1) * (blast ? 3 : 1);
       const pts = Math.max(5, Math.round((BASE_PTS[kind] * mult) / 5) * 5);
       game.score += pts; game.result.pts = pts; profile.scoreTotal += pts;
       game.perfStreak = kind === "perfect" ? game.perfStreak + 1 : 0;
       run.bestCombo = Math.max(run.bestCombo, game.streak);
-      if (kind === "perfect") run.perfects++; else if (kind === "rim") run.rims++; else run.swishes++;
+      if (kind === "perfect") run.perfects++; else if (kind === "rim") run.rims++; else if (kind === "eye") { run.eyes = (run.eyes || 0) + 1; profile.eyePokes++; } else run.swishes++;
       profile.makes++; profile.points += R.pts; profile.mapMakes[game.stage] = (profile.mapMakes[game.stage] || 0) + 1;
       if (kind === "perfect") profile.perfects++;
       if (kind === "rim") profile.rims++;
@@ -195,7 +195,8 @@
       if (powerOn("magnet")) magnetBones(at || { x, y });
       if (pickup && d != null && pickupHit(game.lastCross)) collectPickup(at);
       if (boss && !boss.dead) boss.hit(kind, at);
-      judgeShots(kind, x, y);   // a signature shot? (07h_shots.js)
+      catchLooseRing(x, y);     // the first make through the ring the mini-boss dropped (07b_stage.js)
+      if (kind !== "eye") judgeShots(kind, x, y);   // a signature shot? (07h_shots.js; a poke in the eye isn't a throw through a ring)
       directorMake();           // the Shrinking Ring (07k_director.js)
       encoreMake();             // the encore pays bones for every make (07i_modes.js)
       showCombo(game.streak);

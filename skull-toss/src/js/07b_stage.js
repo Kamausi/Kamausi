@@ -1,14 +1,17 @@
-  // ───────────────────────── stages: 25 → mini-boss → 25 more in 3D → boss → next stage ─────────────────────────
-  // Hits are progression (every make is one hit); score is the arcade number (base × combo × stage, plus boss and
-  // power-up bonuses) that goes on the leaderboard. Each stage has two halves that feel different:
-  //   A  0–25   the ring slides left ↔ right, faster as you go
-  //   ⚑  25     MINI-BOSS: the Crow King carries the ring (and teaches you that it can move in depth)
-  //   B  25–50  the ring breaks loose and flies a triangle through depth: left, right, up, down, near, far
-  //   ⚑  50     MAIN BOSS: the Pumpkin King
-  //   ★  clear  a skull back, a new stage, everything a notch faster
-  // Stages are data: each one names its patterns and modifiers, so new ones are cheap to add.
-  const STAGE_MINI = 25, STAGE_BOSS = 50;
-  const BASE_PTS = { perfect: 250, swish: 100, rim: 75 };
+  // ───────────────────────── stages (v47): 80 hits a map, in ten-hit sections ─────────────────────────
+  // Hits are progression (every make is one hit, boss hits included); score is the arcade number (base × combo ×
+  // stage, plus boss and power-up bonuses) that goes on the leaderboard. Every map runs the same 80-hit shape
+  // (src/maps/blueprint.json: structure), and every ten hits something changes:
+  //   Acts I–III   1–30   the ring slides left ↔ right on its anchor, faster as you go; each act has a name
+  //   ⚑  MINI-BOSS 31–40  ten hits on him and he drops the ring: it breaks loose and flies on its own
+  //   The approach 41–50  the loose ring flies the map's path through depth (catch it first), toward the end boss
+  //   ⚑  END BOSS  51–80  three phases of ten hits, each one harder; at 80 he's down
+  //   ★  clear     the body part, the Black Ring shard, Can Alley if you want it, then the next map
+  // Stages are data: each one names its patterns, modifiers and acts, so new ones are cheap to add.
+  const STRUCT = BLUEPRINT.structure;
+  const ACT_LEN = STRUCT.act, STAGE_MINI = STRUCT.mini, STAGE_LOOSE = STRUCT.loose, STAGE_BOSS = STRUCT.boss, STAGE_END = STRUCT.end;
+  const MINI_HITS = STAGE_LOOSE - STAGE_MINI, BOSS_HITS = STAGE_END - STAGE_BOSS, BOSS_PHASES = STRUCT.phases;
+  const BASE_PTS = { perfect: 250, swish: 100, rim: 75, eye: 150 };
   const comboMult = streak => Math.min(1 + 0.5 * Math.max(0, streak - 1), 6);
   // corners of the triangle: 0 near-left-low · 1 far-right-low · 2 up-centre. Patterns are learnable, never random.
   // The maps are data (src/maps/*.json → MAP_DATA): each names its ring's speed, triangle, patterns, modifiers and path.
@@ -46,17 +49,22 @@
     for (let i = 0; i < 26; i++) { const m = (a + b) / 2; if (f(m) < 0) a = m; else b = m; }
     return b;
   }
-  // how hard the ring is right now (targets; update() eases toward them)
+  // how hard the ring is right now (targets; update() eases toward them). The first half climbs to the same level over
+  // its 30 hits as it always did; the approach climbs the flying ring's whole range in its 10 (Arcade, which never
+  // stops, climbs it at the old pace).
+  const A_TOP = 16.25, B_RISE = 6.25, B_SLOW = 1.05;
+  const aLevel = h => A_TOP * Math.min(h, STAGE_MINI) / STAGE_MINI;
+  const bHits = h => Math.max(0, h - (arcadeLike() ? STAGE_MINI : STAGE_LOOSE)), bPace = () => (arcadeLike() ? 25 : STAGE_BOSS - STAGE_LOOSE);
   function ringTargets() {
     const MR = modeRing(); if (MR && game.state !== "title") return MR;   // Curtain Call, the encore, a slow Practice ring
     const st = game.stage || 1, S = stageDef(st), h = game.stageHits || 0, cursed = powerOn("cursed") ? 1.5 : 1, T = tierNow();
     if (game.state === "title") { const L = level(0); return { mode: "line", ...L }; }
     if (ringFlies()) {   // the second half: the map's path, legs per second (the carousel's circle runs in radians: three legs a lap)
-      const L = level(16 + (h - STAGE_MINI) * 0.25 + (st - 1) * 4), lap = RING_PATHS[ring.mode].lap || 1;
-      return { rc: L.rc - (hasMod("shrink") ? 0.05 : 0) + T.rc - (ring.rcShrink || 0), omega: lap * cursed * S.speed * T.speed * directorSpeed() * arcadeRamp() / Math.max(0.72, 1.9 - (h - STAGE_MINI) * 0.042), amp: 0, bob: 0 };
+      const b = bHits(h) / bPace(), L = level(16 + b * B_RISE + (st - 1) * 4), lap = RING_PATHS[ring.mode].lap || 1;
+      return { rc: L.rc - (hasMod("shrink") ? 0.05 : 0) + T.rc - (ring.rcShrink || 0), omega: lap * cursed * S.speed * T.speed * directorSpeed() * arcadeRamp() / Math.max(0.72, 1.9 - b * B_SLOW), amp: 0, bob: 0 };
     }
     if (ring.mode === "boss") return { rc: boss ? boss.rc : ring.rc, omega: 1, amp: 0, bob: 0 };
-    const L = level(Math.min(h, STAGE_MINI) * 0.65 + (st - 1) * 3);
+    const L = level(aLevel(h) + (st - 1) * 3);
     return { amp: L.amp, omega: L.omega * cursed * S.speed * T.speed * directorSpeed(), rc: L.rc - (hasMod("shrink") ? 0.05 : 0) + T.rc - (ring.rcShrink || 0), bob: Math.max(L.bob, hasMod("bob") ? 0.16 : 0) };
   }
   // Arcade never ends, so past the story's top speed its ring keeps winding up: 6% quicker every 10 hits, to 1.6×
@@ -96,21 +104,34 @@
 
   // ── the acts
   function stageReset() {
-    Object.assign(game, { stage: 1, stageHits: 0, hits: 0, phase: "A", cine: null, freeze: 0 });
+    Object.assign(game, { stage: 1, stageHits: 0, hits: 0, phase: "A", act: 0, cine: null, freeze: 0 });
     boss = null; seeds.length = 0; setRingMode("line", false); hideStageCard(); clearDirectors();
   }
+  // which ten-hit section of the map the run is in: 0–2 the first half's acts, 3 the approach, 4 the end boss
+  const actOf = h => (h < STAGE_MINI ? Math.floor(h / ACT_LEN) : h < STAGE_BOSS ? 3 : 4);
+  const ROMAN = ["I", "II", "III", "IV", "V"];
+  const actName = (i, n = game.stage) => (mapData(n).acts || [])[i] || "";
   // called once a throw has settled: has the player just earned the next act?
   function stageCheck() {
     if (game.lives <= 0) return false;
     if (game.mode !== "story" && !arcadeLike()) return false;   // (the other modes move on in modeCheck: 07i_modes.js)
-    if (arcadeLike()) {   // no bosses: at 25 hits the ring simply shakes loose and goes 3D, for good
+    if (arcadeLike()) {   // no bosses: at the mini-boss's hit the ring simply shakes loose and goes 3D, for good
       if (game.phase === "A" && game.stageHits >= STAGE_MINI) { arcadeGo3D(); return true; }
       return false;
     }
     if (boss && boss.dead) { if (game.phase === "mini") miniBossDown(); else mainBossDown(); return true; }
+    if (boss && boss.phaseDue) { bossPhaseCard(); return true; }
     if (game.phase === "A" && game.stageHits >= STAGE_MINI) { startMiniBoss(); return true; }
     if (game.phase === "B" && game.stageHits >= STAGE_BOSS) { startMainBoss(); return true; }
+    actCheck();
     return false;
+  }
+  // every ten hits of the first half a new act, with its own name on a card (it doesn't stop the throw)
+  function actCheck() {
+    const a = actOf(game.stageHits || 0);
+    if (game.phase !== "A" || a <= (game.act || 0)) return;
+    game.act = a; Sound.toon("xylo"); Telemetry.emit("act", { stage: game.stage, act: a + 1 });
+    stageCard(t("card.act.k", { n: ROMAN[a] }), actName(a), t("card.act.s", { n: STAGE_MINI - game.stageHits, boss: BOSS_INFO[bossIds().mini].name }), 2.0);
   }
   function arcadeGo3D() {
     game.phase = "B"; clearPickups(); Sound.toon("brass");
@@ -131,24 +152,45 @@
     profile.miniKills++; profile.bossLog[boss.kind] = (profile.bossLog[boss.kind] || 0) + 1; if (boss.flawless) profile.miniFlawless++; game.run.bosses++;
     const bonus = Math.round(2500 * stageMult() * (boss.flawless ? 1.5 : 1));
     game.score += bonus; flyPoints(`+${fmtN(bonus)}`, W / 2, H * 0.36, true); Sound.toon("fanfare"); mortySays("bossdown", { priority: true });
-    stageCard(t("card.miniDown.k"), t("card.go3d.k"), `${t("card.go3d.t")}${boss.flawless ? " · " + t("card.flawless") : ""}`, 2.6, "gold");
+    // hit 40: he drops the ring and it breaks loose, flying on its own. The approach begins (and the first throw through
+    // the loose ring catches it: 07_game.js)
+    game.stageHits = Math.max(game.stageHits || 0, STAGE_LOOSE); game.act = 3; game.run.catchDue = 1;
+    stageCard(t("card.miniDown.k"), t("card.loose.t"), `${t("card.loose.s", { act: actName(3) })}${boss.flawless ? " · " + t("card.flawless") : ""}`, 2.6, "gold");
     // the rules change: the camera pulls back, the ring shakes loose and grows wings, the band changes key
-    cine("mini-out", 2.6, () => { boss = null; game.phase = "B"; snapRing(); setHint(t("hint.watch")); obstaclesSync(); updateHud(); }, 0.55);
+    cine("mini-out", 2.6, () => { boss = null; game.phase = "B"; snapRing(); setHint(t("hint.catch")); obstaclesSync(); updateHud(); }, 0.55);
     setRingMode(bMode()); snapRing(); ring.morph = 1; Sound.setAct("B");
     checkUnlocks(); persist(); updateHud();
     challenge("bosses", 1);
   }
+  // the first make through the loose ring: caught! (the Crow King's encounter is done)
+  function catchLooseRing(x, y) {
+    if (!game.run.catchDue || game.phase !== "B" || boss) return;
+    game.run.catchDue = 0; const bonus = Math.round(500 * stageMult());
+    game.score += bonus; profile.scoreTotal += bonus; profile.ringCatches++;
+    impact(t("result.catch"), x, y - U * 0.16, { fill: GOLD, text: INK, scale: 0.7, delay: 0.3, bits: false }); flyPoints(`+${fmtN(bonus)}`, x, y - U * 0.02, false);
+    Sound.toon("whistleUp"); setHint(t("hint.watch"));
+  }
   function startMainBoss() {
-    game.phase = "boss"; clearPickups(); clearPowers(); clearDirectors(); Sound.toon("brass"); Sound.setAct("boss");
+    game.phase = "boss"; game.act = 4; clearPickups(); clearPowers(); clearDirectors(); Sound.toon("brass"); Sound.setAct("boss");
     boss = makeBoss(bossIds().end, game.stage); setRingMode("boss"); snapRing(); obstaclesSync(); Telemetry.emit("boss_start", { kind: boss.kind, stage: game.stage, tier: "end" });
-    stageCard(t("card.boss.k"), BOSS_INFO[boss.kind].name, BOSS_INFO[boss.kind].tell, 2.6, "boss"); mortySays("boss." + boss.kind, { priority: true }); camMove("dutch"); Sound.motif(boss.kind);
-    cine("boss-in", 2.6, () => setHint(BOSS_INFO[boss ? boss.kind : "pumpkin"].hint), 0.35);
+    stageCard(t("card.boss.k"), BOSS_INFO[boss.kind].name, `${t("card.phase.k", { n: ROMAN[0] })} · ${bossPhaseName(boss, 0)}`, 2.6, "boss"); mortySays("boss." + boss.kind, { priority: true }); camMove("dutch"); Sound.motif(boss.kind);
+    cine("boss-in", 2.6, () => setHint(bossHint(boss)), 0.35);
+    updateHud();
+  }
+  // the end boss's three phases (hits 51–60, 61–70, 71–80): a card between them, and a beat to take it in
+  const bossPhaseName = (B, i) => t(`phase.${B.kind === "pumpkin" ? "pumpkin" : "any"}.${i + 1}`);
+  const bossHint = B => (B && B.kind === "pumpkin" && B.phase === 2 ? t("hint.pkMouth") : BOSS_INFO[B ? B.kind : "pumpkin"].hint);
+  function bossPhaseCard() {
+    const B = boss; B.phaseDue = false; const i = B.phase;
+    Sound.toon("rumble"); Sound.toon("brass"); VisualSystem.triggerCameraJolt("thunder"); Telemetry.emit("boss_phase", { kind: B.kind, phase: i + 1 });
+    stageCard(t("card.phase.k", { n: ROMAN[i] }), bossPhaseName(B, i), t("card.phase.s", { n: B.hp }), 1.6, "boss");
+    cine("boss-phase", 1.4, () => setHint(bossHint(boss)), 0.2);
     updateHud();
   }
   function mainBossDown() {
     profile.bossKills++; if (boss.flawless) { profile.bossFlawless++; profile.flawless[boss.kind] = 1; } game.run.bosses++;
     profile.bossLog[boss.kind] = (profile.bossLog[boss.kind] || 0) + 1;
-    profile.bestStage = Math.max(profile.bestStage, game.stage + 1);
+    profile.bestStage = Math.max(profile.bestStage, game.stage + 1); game.stageHits = Math.max(game.stageHits || 0, STAGE_END);
     // the corrected roadmap's progression: END BOSS → BODY-PART REWARD → BLACK RING SHARD → BONUS ROUND (optional) → NEXT MAP
     const M = mapData(game.stage), frag = M.fragment, fresh = !profile.fragments.includes(frag), part = BODY_PART[boss.kind], partKey = part ? part.kind + ":" + part.id : "";
     if (fresh) profile.fragments.push(frag);
@@ -168,7 +210,7 @@
     stageCard(t("card.clear.k", { map: M.name }), t("card.clear.t", { piece: partName }), `${t("card.clear.s", { bones })}${boss.flawless ? " · " + t("card.flawless") : ""}`, 2.8, "gold");
     Sound.toon("fanfare"); changeoverCues(2.8 + 2.3);
     const nextMap = () => {
-      game.stage++; game.stageHits = 0; game.phase = "A"; VisualSystem.setStage(game.stage); setScene(game.stage - 1);
+      game.stage++; game.stageHits = 0; game.phase = "A"; game.act = 0; VisualSystem.setStage(game.stage); setScene(game.stage - 1);
       if (game.lives < MAX_LIVES) { game.lives++; game.slots = Math.max(game.slots, game.lives); }
       setRingMode("line"); snapRing(); Sound.setAct("A"); hazardsReset(); refillTargets();
       nextReel();   // the next reel's title card (and the intermission, halfway): 09i_reel.js
@@ -218,18 +260,19 @@
       progLbl.textContent = `${STAGES[game.map].name} · ${game.mode === "director" ? t("director.k") : t(`season.${(game.feature && game.feature.season) || "s1"}.feature`)}`;
       return;
     }
-    const fighting = !!boss && (game.phase === "mini" || game.phase === "boss");
+    const fighting = !!boss && (game.phase === "mini" || game.phase === "boss"), phased = fighting && game.phase === "boss";
     progEl.classList.toggle("fight", fighting);
+    progEl.classList.toggle("phases", phased);   // (the end boss's bar shows its three phases)
     progEl.classList.toggle("half", game.phase !== "A" && !fighting);
     progSt.textContent = game.stage || 1;
     if (fighting) {
       progFill.style.width = (100 * Math.max(0, boss.hp) / boss.max).toFixed(1) + "%";
-      progLbl.textContent = boss.dead ? "Down!" : `${boss.short} · ${Math.max(0, boss.hp)}`; progEl.dataset.boss = boss.kind;
-    } else {
-      const h = Math.min(game.stageHits || 0, STAGE_BOSS);
-      progFill.style.width = (100 * h / STAGE_BOSS).toFixed(1) + "%";
+      progLbl.textContent = boss.dead ? "Down!" : `${boss.short}${phased ? ` · ${ROMAN[boss.phase || 0]}` : ""} · ${Math.max(0, boss.hp)}`; progEl.dataset.boss = boss.kind;
+    } else {   // the whole map, 80 hits: the mini-boss's mark at 30, the end boss's at 50
+      const h = Math.min(game.stageHits || 0, STAGE_END);
+      progFill.style.width = (100 * h / STAGE_END).toFixed(1) + "%";
       const B = bossIds();
-      progLbl.textContent = h < STAGE_MINI ? `${STAGE_MINI - h} to ${BOSS_INFO[B.mini].name.replace(/^The /, "the ")}` : `${STAGE_BOSS - h} to ${BOSS_INFO[B.end].name.replace(/^The /, "the ")}`;
+      progLbl.textContent = h < STAGE_MINI ? `${STAGE_MINI - h} to ${BOSS_INFO[B.mini].name.replace(/^The /, "the ")}` : `${Math.max(0, STAGE_BOSS - h)} to ${BOSS_INFO[B.end].name.replace(/^The /, "the ")}`;
       delete progEl.dataset.boss;
     }
     progEl.querySelector(".mini").classList.toggle("done", (game.stageHits || 0) >= STAGE_MINI);

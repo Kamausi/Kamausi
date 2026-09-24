@@ -2,7 +2,7 @@
   // Every boss is a carrier (how it moves the ring during the fight), an optional attack (volleys of things that knock
   // the skull out of the air, always told first), and a drawing. The Crow King and the Pumpkin King keep their own
   // hand-tuned code (07d_boss.js); every other boss is data here. Mini-bosses carry the ring and never attack; end
-  // bosses stand far off, attack, get angrier at half health, and each is holding one of Morty's pieces.
+  // bosses stand far off, attack, get angrier with each of their three phases (v47), and each is holding one of Morty's pieces.
   //   Production: concept → gimmick → carrier → attack → arena → phases → drawing → hit and defeat → sound → QA.
   const BOSS_DEFS = {
     batbaron:   { mini: true, hp: [5, 8], hang: 1.05, fall: "spin", bits: "#3A2A4A",
@@ -50,8 +50,10 @@
   };
 
   // ── carriers: at(t) → where the ring is at fight time t, and tell (0–1) while the boss is giving its warning
-  const bossAngry = B => B.hp <= B.max / 2;
-  const pick2 = (v, B) => (Array.isArray(v) ? v[bossAngry(B) ? 1 : 0] : v);
+  // a mini-boss gets angry at half health; an end boss (v47) climbs through three phases, its second value its worst
+  const bossAngry = B => (B.end ? (B.phase || 0) >= 1 : B.hp <= B.max / 2);
+  const bossHeat = B => (B.end ? (B.phase || 0) / (BOSS_PHASES - 1) : bossAngry(B) ? 1 : 0);
+  const pick2 = (v, B) => (Array.isArray(v) ? v[0] + (v[1] - v[0]) * bossHeat(B) : v);
   const lerp3 = (A, C, k) => ({ x: A[0] + (C[0] - A[0]) * k, y: A[1] + (C[1] - A[1]) * k, z: A[2] + (C[2] - A[2]) * k });
   // a segmented timeline (hold → tell → move), each leg timed when it starts: a look-ahead into the next leg keeps its timing
   function legs(B, C, lenOf) {
@@ -147,7 +149,7 @@
         const V = B.volley, every = pick2(A.every, B);
         V.tell = B.t >= V.next - 0.9 && B.t < V.next ? (B.t - (V.next - 0.9)) / 0.9 : 0;
         if (B.t >= V.next && game.state !== "cine") {
-          const n = pick2(A.n, B), pat = V.n % 3;
+          const n = Math.round(pick2(A.n, B)), pat = V.n % 3;
           for (let i = 0; i < n; i++) {
             const lane = pat === 0 ? (i / (n - 1)) * 2 - 1 : pat === 1 ? 1 - (i / (n - 1)) * 2 : (i % 2 ? -0.6 : 0.6) * (1 - i * 0.15);
             seeds.push({ kind: A.shot, at: B.t + i * 0.16, x: A.high ? lane * 1.4 : A.from[0], y: A.from[1], z: A.from[2], tx: lane * 1.4, ty: 2.25 + (i % 2) * 0.55, tz: 3.2, rot: rrIn(0, TAU), live: false });
@@ -159,13 +161,13 @@
       }
     };
     B.hit = (kind, at) => {
-      const dmg = kind === "perfect" ? 2 : 1, was = B.hp;
-      B.hp = Math.max(0, B.hp - dmg); B.hurt = 1; bossBonus(dmg, at);
+      const dmg = bossDmg(kind), was = B.hp;
+      B.hp = Math.max(0, B.hp - dmg); B.hurt = 1; bossBonus(bossPay(kind, dmg), at); bossTally(B);
       const bp = at || { x: W / 2, y: H * 0.3 };
       for (let i = 0; i < 10; i++) particles.push({ kind: "chunk", x: bp.x, y: bp.y, vx: rand(-1, 1) * U * 0.5, vy: -U * rand(0.2, 0.6), rot: rand(0, TAU), vr: rand(-6, 6), life: rand(0.8, 1.2), max: 1.2, size: rand(5, 9), color: D.bits || INK, g: 0.8, a: 1 });
       if (B.hp <= 0) { bossDown(B, at); updateHud(); return; }
       VisualSystem.triggerImpact("boss", { at });
-      if (was > B.max / 2 && B.hp <= B.max / 2) { caption(D.mini ? "HE'S RATTLED!" : "NOW HE'S MAD!", W / 2, H * 0.22); Sound.toon("rumble"); }
+      if (D.mini && was > B.max / 2 && B.hp <= B.max / 2) { caption("HE'S RATTLED!", W / 2, H * 0.22); Sound.toon("rumble"); }   // (an end boss's phases have their own cards)
       if (A) { const thirds = [Math.ceil(B.max * 2 / 3), Math.ceil(B.max / 3)]; if (B.ghosts < 2 && was > thirds[B.ghosts] && B.hp <= thirds[B.ghosts]) { B.ghosts++; B.ghostDue = true; } }
       updateHud();
     };

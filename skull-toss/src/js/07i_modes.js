@@ -21,7 +21,7 @@
     director: { lives: true, open: () => true },  // the Director's Challenge (07k_director.js): the week's map, whatever you've reached
     feature:  { lives: true, open: () => !!seasonNow() }   // the season's Feature (07l_season.js): only while a season's on
   };
-  const arcadeLike = () => game.mode === "arcade" || game.mode === "director" || game.mode === "feature";   // (no bosses; the ring goes 3D at 25 hits and keeps winding up)
+  const arcadeLike = () => game.mode === "arcade" || game.mode === "director" || game.mode === "feature";   // (no bosses; the ring goes 3D at 30 hits and keeps winding up)
   const MODE_IDS = Object.keys(MODES), MINI_IDS = MODE_IDS.filter(m => MODES[m].mini);
   const modeOf = () => MODES[game.mode] || MODES.story;
   const freeMiss = () => !!modeOf().free || game.phase === "encore";   // a miss that costs no skull
@@ -68,7 +68,7 @@
   function modeRing() {
     if (game.phase === "encore") return { amp: 0, omega: 0, rc: RC_START + CANS.rc, bob: 0 };   // Can Alley: a still, generous ring
     if (game.mode === "curtain") { const L = level(24); return { amp: 1.35, omega: 1.5, rc: L.rc + 0.02, bob: 0.14 }; }
-    if (game.mode === "practice" && practice.ring === "slow") { const L = level(Math.min(game.stageHits || 0, STAGE_MINI) * 0.65); return { ...L, omega: L.omega * 0.5 }; }
+    if (game.mode === "practice" && practice.ring === "slow") { const L = level(aLevel(game.stageHits || 0)); return { ...L, omega: L.omega * 0.5 }; }
     return null;
   }
   // ── after each throw has settled: true if the mode moved the run on (stageCheck's place)

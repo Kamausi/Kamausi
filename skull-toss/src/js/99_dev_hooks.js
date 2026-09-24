@@ -3,7 +3,7 @@
   // TEST_SPEC.js drives the game through them with the clock paused.
   const WEB_PAYMENTS = Payments, WEB_ADS = Ads;   // (the web build's own, for going back after a faked shell)
   Object.assign(window.SkullToss.debug, {
-    constants: { G, SKULL_R, START_Y, RING_Z, RING_Y, RING_TUBE, RC_START, RC_MIN, POST_HALF, FLIGHT_T, START_LIVES, MAX_LIVES },
+    constants: { G, SKULL_R, START_Y, RING_Z, RING_Y, RING_TUBE, RC_START, RC_MIN, POST_HALF, FLIGHT_T, START_LIVES, MAX_LIVES, STAGE_MINI, STAGE_LOOSE, STAGE_BOSS, STAGE_END, ACT_LEN },
     level, catalog: () => JSON.parse(JSON.stringify(CATALOG)), bandStyle: () => ({ id: cos.band, ...(BANDS[cos.band] || {}) }), wearOutfit: i => wearOutfit(i), saveOutfit: i => saveOutfit(i), surprise: () => surpriseLook(),
     reqText: (k, n) => REQ_TEXT[k](n), cleanProfile: p => cleanProfile(p),
     async fakeServer(uid) { Backend.reset(); Backend.useFake(uid); await Souls.connect(); return Backend.kind; }, noServer() { Backend.reset(); Souls.connect(); },
@@ -151,7 +151,7 @@
       for (const [s2, p2] of [[1, "A"], [1, "B"], [2, "A"], [2, "B"]]) { game.stage = s2; game.phase = p2; pickupSchedule(); out.push(PD.step); }
       Object.assign(game, { score, stage: st, phase: ph, result: res, stageHits: hits }); powerDirectorReset(); return out; },
     ringHeat: () => ringHeatGoal(),
-    powerRolls(n, phase = "A", per = 250) { const out = [], was = game.result, score = game.score; game.phase = phase; game.stageHits = phase === "A" ? 0 : STAGE_MINI; game.score = 0; powerDirectorReset();
+    powerRolls(n, phase = "A", per = 250) { const out = [], was = game.result, score = game.score; game.phase = phase; game.stageHits = phase === "A" ? 0 : STAGE_LOOSE; game.score = 0; powerDirectorReset();
       for (let i = 0; i < n; i++) { game.stageHits++; game.score += per; game.throws++; game.result = { make: true, pts: per }; pickupSchedule(); if (pickup) { out.push({ hit: game.stageHits, id: pickup.id, score: game.score }); pickup = null; } }
       game.result = was; game.score = score; return out; }, setWind(w) { HZ.wind = w; renderWind(); }, hz: () => ({ kind: HZ.kind, wind: HZ.wind, fog: HZ.fog, list: HZ.list.map(h => ({ kind: h.kind, fixed: !!h.fixed, x: h.x, y: h.y, z: h.z })), bob: pendBob() }),
     fogIn() { HZ.fogT = 3.6; }, hazardsAfterThrow: () => hazardsAfterThrow(), setPendT(t) { HZ.pendT = t; }, pend: () => ({ ...PEND, period: pendPeriod() }),
@@ -175,7 +175,9 @@
     plantObstacle(o) { OB.off = false; OB.list.push({ ...o, key: "test" + OB.list.length, born: OB.t, hitAt: -9, fired: -1, balls: o.balls || [] }); }, clearObstacles() { OB.list = []; }, banked: () => skull.banked || 0,
     reactAt(x, z, k = 1) { envImpact(x, z, k); return GY.props.filter(p => p.react || p.fallen || p.cracked).map(p => ({ kind: p.kind, does: p.react ? p.react.does : p.fallen ? "fall" : "crack" })); },
     spawnTargetType(type) { spawnTarget(type); return { ...targets[targets.length - 1] }; }, hitTargetNow(i = 0) { hitTarget(targets[i]); return targets.map(T => ({ type: T.type, pop: T.pop, shield: !!T.shield })); }, targetLive: i => targetLive(targets[i]), targetPos: i => targetPos(targets[i]),
-    pk: () => boss && boss.kind === "pumpkin" ? { eyes: boss.eyes.slice(), blind: boss.blind, rc: boss.rc, hp: boss.hp, eye: [boss.eyePos(0), boss.eyePos(1)] } : null,
+    pk: () => boss && boss.kind === "pumpkin" ? { eyes: boss.eyes.slice(), blind: boss.blind, rc: boss.rc, hp: boss.hp, eye: [boss.eyePos(0), boss.eyePos(1)], phase: boss.phase, reach: boss.reach } : null,
+    fight: () => boss ? { kind: boss.kind, hp: boss.hp, max: boss.max, end: !!boss.end, phase: boss.phase || 0, phaseDue: !!boss.phaseDue } : null,
+    act: () => ({ act: game.act || 0, name: actName(game.act || 0), card: $("stagecard").hidden ? "" : $("stagecard").textContent, catchDue: !!game.run.catchDue }),
     fgAlphaAt(pts) { let a = 0; for (const P of fgLayer) { const g = P.c.getContext("2d"); for (const q of pts) { const x = Math.round((q.x - P.x0) * P.c.width / P.w), y = Math.round((q.y - P.y0) * P.c.height / P.h); if (x < 0 || y < 0 || x >= P.c.width || y >= P.c.height) continue; a = Math.max(a, g.getImageData(x, y, 1, 1).data[3] / 255); } } return a; },
     ringScreen: (x, y, z) => { const p = projectBase(x, y, z); return { x: p.x, y: p.y }; },
     obstacles: () => OB.list.map(I => ({ kind: I.kind, key: I.key, balls: I.balls.length })), syncObstacles() { obstaclesSync(true); }, obClock(t) { if (t != null) OB.t = t; return OB.t; }, obForce: (x, y, z) => obstacleForce({ x, y, z }),

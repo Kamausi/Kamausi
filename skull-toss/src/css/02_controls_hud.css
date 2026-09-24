@@ -95,7 +95,10 @@
 .prog .track i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:4px;background:linear-gradient(180deg,#FFE04E,#FF9A3A);transition:width .35s var(--snap)}
 .prog .mark{position:absolute;top:50%;width:19px;height:19px;margin:-9.5px 0 0 -9.5px;padding:2px;border-radius:50%;background:var(--paper);border:2px solid var(--ink);box-shadow:0 2px 0 var(--ink);transition:transform .3s var(--snap),opacity .3s}
 .prog .mark svg{display:block;width:100%;height:100%}
-.prog .mini{left:50%}.prog .boss{left:100%}
+.prog .mini{left:37.5%}.prog .boss{left:62.5%}.prog .end{left:100%;width:15px;height:15px;margin:-7.5px 0 0 -7.5px}
+.prog .tick{display:none;position:absolute;top:-1px;bottom:-1px;width:2px;margin-left:-1px;background:var(--ink)}
+.prog .t1{left:33.333%}.prog .t2{left:66.667%}
+.prog.phases .tick{display:block}
 /* Arcade: a clock where the stage number was, racing your best time on the map */
 .prog .arc{display:none;font-size:13px;color:#FFD94E}
 .prog.arcade .arc{display:block}

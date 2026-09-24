@@ -271,7 +271,7 @@
           2.6,
           1.6
         ],
-        "from": 8
+        "from": 10
       }
     ],
     "B": [
@@ -313,7 +313,7 @@
           2.8,
           1.2
         ],
-        "from": 8
+        "from": 4
       }
     ],
     "boss": [
@@ -355,6 +355,12 @@
     "mini": "owl",
     "end": "marrowroot"
   },
+  "acts": [
+    "The Wisp Path",
+    "Hollow-Log Hollow",
+    "The Signpost Maze",
+    "The Marrow Root"
+  ],
   "fragment": "whistle",
   "target": "wisp",
   "music": {

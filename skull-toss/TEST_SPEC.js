@@ -217,7 +217,7 @@
   });
 
   // ── Cosmetics ─────────────────────────────────────────────
-  const ZERO = { canAlley: {}, canClears: 0, cansDown: 0, bonusRounds: 0, bones: 0, bonks: 0, misses: 0, clutch: 0, bonesTotal: 0, makes: 0, best: 0, perfects: 0, rims: 0, bestStreak: 0, bestPerfStreak: 0, peakLives: 0, games: 0, points: 0, throws: 0, unlocked: [], boardBest: null, fragments: [], bossLog: {} };
+  const ZERO = { ringCatches: 0, eyePokes: 0, canAlley: {}, canClears: 0, cansDown: 0, bonusRounds: 0, bones: 0, bonks: 0, misses: 0, clutch: 0, bonesTotal: 0, makes: 0, best: 0, perfects: 0, rims: 0, bestStreak: 0, bestPerfStreak: 0, peakLives: 0, games: 0, points: 0, throws: 0, unlocked: [], boardBest: null, fragments: [], bossLog: {} };
   for (const [k, v] of Object.entries(T.profile())) if (typeof v === "number" && !(k in ZERO) && k !== "updatedAt" && k !== "schema") ZERO[k] = k === "bestStage" ? 1 : 0;   // every other counter too
   ZERO.achievements = T.achievements().map(a => a.id); ZERO.arcade = {};   // (all achievements in hand, so none pays out in the middle of a bones test)
   ZERO.shots = {}; ZERO.modes = {}; ZERO.met = []; ZERO.secrets = []; ZERO.history = []; ZERO.mastery = []; ZERO.flawless = {}; ZERO.mapMakes = {}; ZERO.arcadeTables = {}; ZERO.lastIni = ""; ZERO.streakLast = ""; ZERO.firsts = [];   // (v25–v27: signature shots, mode records, what the Codex has noted)
@@ -513,7 +513,7 @@
 
   // ── v11: score, progress, stages and bosses ───────────────
   const toHit = n => { T.calm(); T.setHits(n - 1); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); T.unfreezeRing(); };
-  const beatCrow = (stage = 1) => { fresh(); if (stage > 1) T.setStage(stage); toHit(25); T.step(2.6); T.hurtBoss(99); T.endThrow(); T.step(3.2); };
+  const beatCrow = (stage = 1) => { fresh(); if (stage > 1) T.setStage(stage); toHit(C.STAGE_MINI); T.step(2.6); T.hurtBoss(99); T.endThrow(); T.step(3.2); };
   test("HUD: the score centred in the title's lettering, the hits under it, the best under that; small skulls and combo", () => {
     fresh(); throwAndSettle(0, C.RING_Y);
     assert($("score").dataset.v === "250" && $("hits").textContent === "1", `score ${$("score").dataset.v}, hits ${$("hits").textContent}`);
@@ -531,10 +531,10 @@
     assert(lv.top < 60 && lv.left < W * 0.25, `skulls at ${Math.round(lv.left)},${Math.round(lv.top)}`);
     assert(sc.top < 60 && Math.abs(mid(sc) - W / 2) < W * 0.2, `score at ${Math.round(mid(sc))} of ${W}`);
     assert(pr.height < 60 && pr.top > H * 0.6 && Math.abs(mid(pr) - W / 2) < 24, `progress bar ${Math.round(pr.height)}px tall at ${Math.round(mid(pr))},${Math.round(pr.top)} of ${W}×${H}`);
-    T.setHits(12); assert(/13 to the Crow King/.test($("progLabel").textContent), $("progLabel").textContent);
+    T.setHits(12); assert(/18 to the Crow King/.test($("progLabel").textContent), $("progLabel").textContent);
   });
-  test("25 hits bring on the Crow King: he carries the ring near and far, and no power-ups appear", () => {
-    fresh(); toHit(25); let s = T.state();
+  test("30 hits bring on the Crow King: he carries the ring near and far, and no power-ups appear", () => {
+    fresh(); toHit(C.STAGE_MINI); let s = T.state();
     assert(s.phase === "mini" && s.state === "cine" && T.boss().kind === "crow", `phase ${s.phase}, state ${s.state}`);
     T.step(2.6); s = T.state(); assert(s.state === "ready" && s.ring.mode === "boss", "the fight didn't start");
     let zmin = 99, zmax = 0; for (let i = 0; i < 480; i++) { T.step(1 / 60); const z = T.state().ring.z; zmin = Math.min(zmin, z); zmax = Math.max(zmax, z); }
@@ -547,7 +547,7 @@
     const s = T.state(); assert(s.lastResult.kind === "perfect", `got ${s.lastResult.kind}`); near(s.lastCross.ringZ, 7.4, 1e-6, "crossing depth");
   });
   test("Beating the Crow King turns the ring 3D: a repeating triangle through left, right, up, down, near and far", () => {
-    fresh(); toHit(25); T.step(2.6); T.hurtBoss(99); T.endThrow(); let s = T.state();
+    fresh(); toHit(C.STAGE_MINI); T.step(2.6); T.hurtBoss(99); T.endThrow(); let s = T.state();
     assert(s.cine === "mini-out" && s.ring.mode === "tri", `cine ${s.cine}, ring ${s.ring.mode}`);
     T.step(3.2); s = T.state(); assert(s.phase === "B" && s.state === "ready", `phase ${s.phase}`);
     const V = T.triVerts(), span = k => Math.max(...V.map(v => v[k])) - Math.min(...V.map(v => v[k]));
@@ -555,14 +555,14 @@
     const q = T.ringMode().seq; assert(q.length >= 6 && q.slice(0, 3).join() === q.slice(3, 6).join(), "each pattern should repeat (learnable, not random)");
   });
   test("Leading the flying ring through depth scores", () => {
-    beatCrow(); T.setHits(30);
+    beatCrow(); T.setHits(C.STAGE_LOOSE + 5);
     const VZ = C.RING_Z / C.FLIGHT_T; let tau = T.state().ring.z / VZ, p;
     for (let i = 0; i < 30; i++) { p = T.ringAhead(tau); tau = p.z / VZ; }
     assert(T.throwThrough(p.x, p.y, p.z), "throw refused"); T.step(2.5);
     const s = T.state(); assert(s.lastResult.make, `leading the 3D ring should score (got ${s.lastResult.kind}; cross z ${s.lastCross && s.lastCross.ringZ})`);
   });
-  test("50 hits on map 1 bring on the Pumpkin King; a seed knocks the skull out of the air, Ghost Toss slips through", () => {
-    beatCrow(1); toHit(50); let s = T.state(); assert(s.phase === "boss" && T.boss().kind === "pumpkin", `phase ${s.phase}`);
+  test("Hit 50 on map 1 brings on the Pumpkin King; a seed knocks the skull out of the air, Ghost Toss slips through", () => {
+    beatCrow(1); toHit(C.STAGE_BOSS); let s = T.state(); assert(s.phase === "boss" && T.boss().kind === "pumpkin", `phase ${s.phase}`);
     T.step(2.9); T.freezeRing(0, C.RING_Y);
     const lives = T.state().lives, a = { AX: 0, AY: C.RING_Y }, q = T.skullPathAt(a.AX, a.AY, 3 / (C.RING_Z / C.FLIGHT_T));
     T.plantSeed(q.x, q.y, q.z); T.throwAt(a.AX, a.AY); T.step(2.5); s = T.state();
@@ -571,7 +571,7 @@
     assert(T.state().lastResult.make, `Ghost Toss should phase through the seed (got ${T.state().lastResult.kind})`);
   });
   test("Beating the Pumpkin King clears map 1: a big bonus, bones, a skull back, the body part and the shard, then map 2", () => {
-    beatCrow(1); toHit(50); T.step(2.9); const s0 = T.state(), bones = T.bones();
+    beatCrow(1); toHit(C.STAGE_BOSS); T.step(2.9); const s0 = T.state(), bones = T.bones();
     T.hurtBoss(99); T.endThrow(); T.step(6); const s = T.state();
     assert(s.stage === 2 && s.phase === "A" && s.stageHits === 0, `stage ${s.stage}, phase ${s.phase}`);
     assert(T.profile().unlocked.includes("hair:vines") && T.profile().fragments.includes("hollow"), "the Pumpkin-Vine Curls and the Hollow Shard");
@@ -832,7 +832,7 @@
     T.start();
   });
   test("The bosses have visual states: in, open, winding up, hurt, down", () => {
-    fresh(); toHit(25); const seen = new Set();
+    fresh(); toHit(C.STAGE_MINI); const seen = new Set();
     for (let i = 0; i < 90; i++) { T.step(0.05); seen.add(T.visualSystem().boss); }
     T.hurtBoss(1); T.step(1 / 60); seen.add(T.visualSystem().boss);
     T.hurtBoss(99); T.step(0.3); seen.add(T.visualSystem().boss);   // (past the knockout's hold)
@@ -865,12 +865,12 @@
     T.toTitle(); $("play").click(); document.querySelector('#modePick [data-mode="story"]').click();
     assert(T.arcade().mode === "story" && T.state().stage === 1 && T.state().state === "ready", "Story starts at stage 1");
   });
-  test("Arcade: no bosses, the ring goes 3D at 25 hits and keeps speeding up; bests are kept map by map", () => {
+  test("Arcade: no bosses, the ring goes 3D at 30 hits and keeps speeding up; bests are kept map by map", () => {
     T.setStats({ ...ZERO, bestStage: 9 }); T.startArcade(1); T.freezeRing(0, C.RING_Y);
-    T.setHits(24); throwAndSettle(0, C.RING_Y); T.step(2.6);
-    assert(!T.boss() && T.ringMode().mode === "tri", `25 hits in Arcade: no Crow King, the ring goes 3D (${T.ringMode().mode}, boss ${JSON.stringify(T.boss())})`);
+    T.setHits(C.STAGE_MINI - 1); throwAndSettle(0, C.RING_Y); T.step(2.6);
+    assert(!T.boss() && T.ringMode().mode === "tri", `30 hits in Arcade: no Crow King, the ring goes 3D (${T.ringMode().mode}, boss ${JSON.stringify(T.boss())})`);
     T.setHits(49); assert(T.arcade().ramp === 1, "no extra speed yet"); T.setHits(80); assert(T.arcade().ramp > 1.1, `the ring should keep winding up (${T.arcade().ramp})`);
-    T.setHits(24); T.freezeRing(0, C.RING_Y);
+    T.setHits(C.STAGE_MINI - 1); T.freezeRing(0, C.RING_Y);
     const story = T.profile().bestScore;
     for (let i = 0; i < 3; i++) throwAndSettle(3, C.RING_Y);
     T.step(2);
@@ -973,7 +973,7 @@
   test("The score follows the acts: menu, A, B and the boss, with the synth as the understudy", () => {
     T.toTitle(); assert(T.music().want === "menu", `title plays ${T.music().want}`);
     fresh(); assert(T.music().want === "A", `a run opens on ${T.music().want}`);
-    toHit(25); assert(T.music().want === "boss", `the mini-boss plays ${T.music().want}`);
+    toHit(C.STAGE_MINI); assert(T.music().want === "boss", `the mini-boss plays ${T.music().want}`);
     T.step(2.6); T.hurtBoss(99); T.endThrow(); T.step(3.2);
     assert(T.music().want === "B", `after the Crow King it should be act B, not ${T.music().want}`);
     assert(!T.music().on, "the recorded reel should stay out of the way in sandbox");
@@ -1152,13 +1152,13 @@
   });
   test("End bosses give a body part and hold a shard of the Black Ring: map 1's gives the Pumpkin-Vine Curls and the Hollow Shard, once", () => {
     T.setStats({ ...ZERO, bestScore: 0 });
-    for (let k = 0; k < 2; k++) { beatCrow(1); toHit(50); T.step(2.9); assert(T.boss().kind === "pumpkin", `map 1's end boss is the Pumpkin King (${T.boss().kind})`); T.hurtBoss(99); T.endThrow(); T.step(6); }
+    for (let k = 0; k < 2; k++) { beatCrow(1); toHit(C.STAGE_BOSS); T.step(2.9); assert(T.boss().kind === "pumpkin", `map 1's end boss is the Pumpkin King (${T.boss().kind})`); T.hurtBoss(99); T.endThrow(); T.step(6); }
     const p = T.profile(); assert(p.fragments.length === 1 && p.fragments[0] === "hollow" && p.bossLog.pumpkin === 2 && T.canUse("hair", "vines"), JSON.stringify({ f: p.fragments, log: p.bossLog }));
     T.setStats({ ...ZERO, bestScore: 0 }); T.toTitle();
   });
   test("The Adventure ends after map 8: the last shard, the Black Ring whole, THE END, Wizard Mort and The Whole Reel", () => {
     T.setStats({ ...ZERO, bestScore: 0 });
-    beatCrow(8); toHit(50); T.step(2.9); assert(T.boss().kind === "reaper", `map 8's end boss is the Reel Reaper (${T.boss().kind})`);
+    beatCrow(8); toHit(C.STAGE_BOSS); T.step(2.9); assert(T.boss().kind === "reaper", `map 8's end boss is the Reel Reaper (${T.boss().kind})`);
     T.hurtBoss(99); T.endThrow(); T.step(9);   // (the knockout's hold, the reward and the shard, then the 3.4 s ending)
     const p = T.profile();
     assert(p.storyClears === 1 && p.fragments.includes("abyss") && p.bestStage === 9 && T.canUse("wings", "shadow") && T.canUse("wizard", "mort"), JSON.stringify({ c: p.storyClears, f: p.fragments, b: p.bestStage }));
@@ -1227,7 +1227,7 @@
     assert(T.hz().list.some(h => h.kind === "bat"), "the Gilded Graveyard sends a bat every few throws");
     fresh(); T.setStage(5); T.fogIn(); T.step(1.2); assert(T.hz().fog > 0.5, `the Black Marsh's fog rolls in (${T.hz().fog.toFixed(2)})`);
     T.step(4); assert(T.hz().fog < 0.05, "and rolls out again");
-    beatCrow(7); toHit(50); T.step(2.9); T.freezeRing(0, C.RING_Y); const P = T.pend(), tc = P.z / (C.RING_Z / C.FLIGHT_T), a = T.aimFor(0, P.y - P.L, P.z);
+    beatCrow(7); toHit(C.STAGE_BOSS); T.step(2.9); T.freezeRing(0, C.RING_Y); const P = T.pend(), tc = P.z / (C.RING_Z / C.FLIGHT_T), a = T.aimFor(0, P.y - P.L, P.z);
     T.setPendT(-tc); T.throwAt(a.AX, a.AY); T.step(2.5);
     assert(T.state().lastResult.kind !== "pendulum", "no pendulum during the end boss");
     T.toTitle();
@@ -1258,7 +1258,7 @@
   test("Every map's mini-boss takes the ring, moves it, gives its tell, and falls", () => {
     const M = T.maps();
     for (let n = 1; n <= 8; n++) {
-      fresh(); T.setStage(n); toHit(25); const id = M[n - 1].bosses.mini;
+      fresh(); T.setStage(n); toHit(C.STAGE_MINI); const id = M[n - 1].bosses.mini;
       assert(T.boss() && T.boss().kind === id, `map ${n}: the mini-boss should be ${id} (${T.boss() && T.boss().kind})`);
       const s = watchBoss(9), xs = s.pos.map(q => q.x), ys = s.pos.map(q => q.y), zs = s.pos.map(q => q.z);
       assert(Math.max(...xs) - Math.min(...xs) + Math.max(...ys) - Math.min(...ys) + Math.max(...zs) - Math.min(...zs) > 1, `${id} should move the ring`);
@@ -1272,7 +1272,7 @@
   test("Every map's end boss attacks with its own volleys, told first, and falls holding its shard", () => {
     const M = T.maps(); T.setStats({ ...ZERO, bestScore: 0 });
     for (let n = 1; n <= 8; n++) {
-      beatCrow(n); toHit(50); const id = M[n - 1].bosses.end;
+      beatCrow(n); toHit(C.STAGE_BOSS); const id = M[n - 1].bosses.end;
       assert(T.boss() && T.boss().kind === id, `map ${n}: the end boss should be ${id} (${T.boss() && T.boss().kind})`);
       const s = watchBoss(11);
       assert(s.shots > 0 && s.states.has("attack"), `${id} should throw something, after a tell (${s.shots} shots; ${[...s.states]})`);
@@ -1284,7 +1284,7 @@
     T.setStats({ ...ZERO, bestScore: 0 }); T.toTitle();
   });
   test("A new end boss's volleys knock the skull down, and a Ghost Toss turns up at two-thirds and one-third health", () => {
-    beatCrow(1); toHit(50); T.step(2.9); T.freezeRing(0, C.RING_Y);
+    beatCrow(1); toHit(C.STAGE_BOSS); T.step(2.9); T.freezeRing(0, C.RING_Y);
     const a = { AX: 0, AY: C.RING_Y }, q = T.skullPathAt(a.AX, a.AY, 3 / (C.RING_Z / C.FLIGHT_T)), lives = T.state().lives;
     T.plantSeed(q.x, q.y, q.z); T.throwAt(a.AX, a.AY); T.step(2.5);
     assert(T.state().lastResult.kind === "seed" && T.state().lives === lives - 1, `a clod to the face (${T.state().lastResult.kind})`);
@@ -1385,7 +1385,7 @@
     T.toTitle(); assert(!$("resumeRunBtn").hidden, "the title offers to resume");
     $("resumeRunBtn").click(); const s = T.state();
     assert(s.state === "ready" && s.score === was.score && s.hits === was.hits && s.lives === was.lives && s.stageHits === was.stageHits && T.powers().deadeye, JSON.stringify({ s, was }));
-    fresh(); toHit(25); assert(T.boss(), "the mini-boss has started"); T.step(3); T.freezeRing(T.state().ring.x, T.state().ring.y, T.state().ring.z); T.hurtBoss(1); T.endThrow();
+    fresh(); toHit(C.STAGE_MINI); assert(T.boss(), "the mini-boss has started"); T.step(3); T.freezeRing(T.state().ring.x, T.state().ring.y, T.state().ring.z); T.hurtBoss(1); T.endThrow();
     T.toTitle(); $("resumeRunBtn").click(); assert(T.boss() && T.boss().hp === T.boss().max && T.state().phase === "mini", `a fight comes back from its start (${T.state().phase})`);
     T.setStats({ ...ZERO, bones: 1000 }); fresh(); T.setLives(1); missOut(); assert(T.state().state === "continue", "offered");
     T.toTitle(); $("resumeRunBtn").click(); assert(T.state().state === "continue", `after a reload the offer is made again (${T.state().state})`);
@@ -1396,7 +1396,7 @@
 
   // ── v23: the reel's own cards ──
   const skipCards = () => { for (let i = 0; i < 6 && T.reel().card; i++) { T.skipReel(); T.step(0.02); } };
-  const beatBoth = stage => { fresh(); skipCards(); T.setStage(stage); toHit(25); T.step(2.6); T.hurtBoss(99); T.endThrow(); T.step(3.2); toHit(50); T.step(2.9); T.hurtBoss(99); T.endThrow(); };
+  const beatBoth = stage => { fresh(); skipCards(); T.setStage(stage); toHit(C.STAGE_MINI); T.step(2.6); T.hurtBoss(99); T.endThrow(); T.step(3.2); toHit(C.STAGE_BOSS); T.step(2.9); T.hurtBoss(99); T.endThrow(); };
   step(() => T.cards(true));
   test("A Story run opens on the countdown leader, then Reel One's title card; the throw waits, and a tap skips", () => {
     T.setStats(ZERO); T.start(); T.freezeRing(0, C.RING_Y);
@@ -1446,7 +1446,7 @@
     for (let n = 1; n <= 8; n++) assert((L["map." + n] || []).length, `a line for map ${n}`);
     for (const f of ["hollow", "gilded", "whistle", "drowned", "marsh", "desert", "clockwork", "abyss"]) assert((L["fragment." + f] || []).length, `a line for the ${f} shard`);
     assert(T.lineIds("morty.grab.").length >= 28 && T.lineIds("morty.grab.")[0] === "morty.grab.01", "line IDs are voice-line IDs");
-    T.setStats(ZERO); fresh(); toHit(25); T.step(3); T.toTitle();
+    T.setStats(ZERO); fresh(); toHit(C.STAGE_MINI); T.step(3); T.toTitle();
     const miss = T.missingStrings().filter(k => k !== "no.such.string"); assert(!miss.length, `no string went missing in play (${miss.join(", ")})`);
   });
   test("The pseudo-locale: every tagged text changes, numbers survive, and nothing overflows its button", () => {
@@ -1474,7 +1474,7 @@
     T.voiceTest(false);
   });
   test("Morty's big moments always get a line; the rest wait their turn; and he nags once if you stall", () => {
-    T.setStats(ZERO); fresh(); T.voiceTest(true); toHit(25);
+    T.setStats(ZERO); fresh(); T.voiceTest(true); toHit(C.STAGE_MINI);
     assert(T.voice().pool === "boss.crow", `the Crow King walks on to a line (${T.voice().pool})`);
     const id = T.voice().id; T.step(2.4); T.freezeRing(T.state().ring.x, T.state().ring.y, T.state().ring.z); T.hurtBoss(1);
     assert(T.voice().id === id, "a small moment inside the cooldown stays quiet");
@@ -1531,7 +1531,7 @@
     fresh(); T.setLives(1); T.clearCamLog(); const b = shotAt(0, C.RING_Y);
     assert(b.includes("buzzer") && b.includes("deadcentre") && T.bursts().some(w => /BUZZER BEATER/.test(w)), `a perfect on the last skull: the Buzzer Beater takes the card (${b}, ${T.bursts()})`);
     assert(T.camfx().log.includes("hold"), `a big one holds the reel (${T.camfx().log})`);
-    fresh(); toHit(25); T.step(3); T.hurtBoss(T.boss().max - 1); const r = T.state().ring;
+    fresh(); toHit(C.STAGE_MINI); T.step(3); T.hurtBoss(T.boss().max - 1); const r = T.state().ring;
     const k = shotAt(r.x, r.y, r.z); assert(k.includes("knockout") && T.boss().dead, `a perfect that puts a boss down is a Knockout Blow (${k})`);
     T.toTitle();
   });
@@ -1541,7 +1541,7 @@
     T.step(1.5); T.freezeRing(2.0, 2.3, 6.0); T.throwThrough(2.0 - holeClear(T.state().ring.rc) * 0.6, 2.3, 6.0); T.step(1.1);   // (a swish: a perfect would be Dead Centre, which outranks it)
     f = T.camfx(); assert(f.kind === "whip" && /translateX\(-?[1-9]/.test(f.css), `the Top Corner whips the frame (${JSON.stringify(f)})`);
     T.step(2); assert(T.camfx().css === "", "and it comes back to rest");
-    fresh(); T.calm(); T.setHits(25); T.stageCheck(); T.step(0.4); f = T.camfx(); assert(f.kind === "dutch" && /rotate\((?!0\.00)/.test(f.css), `the mini-boss walks on to a Dutch tilt (${JSON.stringify(f)})`);
+    fresh(); T.calm(); T.setHits(C.STAGE_MINI); T.stageCheck(); T.step(0.4); f = T.camfx(); assert(f.kind === "dutch" && /rotate\((?!0\.00)/.test(f.css), `the mini-boss walks on to a Dutch tilt (${JSON.stringify(f)})`);
     T.step(2); assert(T.camfx().css === "", "then the frame comes level");
     T.setSetting("camera", "still"); fresh(); T.calm(); T.freezeRing(0.2, 2.3, 8.0); T.throwThrough(0.2, 2.3, 8.0); T.step(1.2);
     f = T.camfx(); assert(!f.kind && f.css === "" && T.lastShots().includes("longbomb"), `Still: the shot counts, the frame stays put (${JSON.stringify(f)})`);
@@ -1609,7 +1609,7 @@
     T.setStats(ZERO); T.toTitle();
   });
   // ── v45: Can Alley, the optional bonus round after an end boss ──
-  const toCanAlley = () => { T.encore(true); T.setStats(ZERO); fresh(); toHit(25); T.step(2.6); T.hurtBoss(99); T.endThrow(); T.step(3.2); toHit(50); T.step(2.9); T.hurtBoss(99); T.endThrow(); T.step(6); };
+  const toCanAlley = () => { T.encore(true); T.setStats(ZERO); fresh(); toHit(C.STAGE_MINI); T.step(2.6); T.hurtBoss(99); T.endThrow(); T.step(3.2); toHit(C.STAGE_BOSS); T.step(2.9); T.hurtBoss(99); T.endThrow(); T.step(6); };
   test("v45: after an end boss, Can Alley is offered (Play or Skip, fifteen seconds); skipping goes straight on to the next map", () => {
     toCanAlley();
     assert(T.bonusOffered() && T.state().state === "cine", `the offer after Reel One's end boss (${T.state().state})`);
@@ -1664,7 +1664,7 @@
   // ── v27: the Codex and the Production Archive ──
   test("The Codex notes things as they turn up: a boss when you meet it, a power-up when you grab it, each map's hazard and target", () => {
     T.setStats(ZERO); let K = T.codex(); assert(K.total === 75 && K.count === 1, `75 entries, only Crow Hollow known at first (${K.count}/${K.total})`);
-    fresh(); toHit(25); assert(T.codex().seen.includes("boss:crow"), "meeting the Crow King notes him");
+    fresh(); toHit(C.STAGE_MINI); assert(T.codex().seen.includes("boss:crow"), "meeting the Crow King notes him");
     T.givePower("rush"); assert(T.codex().seen.includes("power:rush"), "grabbing a power-up notes it");
     fresh(); T.setStage(2); T.setHits(10); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y);
     K = T.codex(); assert(K.seen.includes("hazard:bats") && K.seen.some(k => /^target:(standard|swinging|golden|secret)$/.test(k)) && K.seen.includes("obstacle:bumper"), `the Gilded Graveyard's bats, its targets and its urns (${K.seen.join(", ")})`);
@@ -1842,7 +1842,7 @@
     assert(T.equip("title", "shotdoctor"), "gold on all twelve: the Shot Doctor"); T.equip("title", "rookie"); T.setStats(ZERO);
   });
   test("Map mastery: a star for its end boss, one for beating it without a miss, one for 100 makes there", () => {
-    T.setStats({ ...ZERO, bones: 0 }); fresh(); toHit(25); T.step(2.6); T.hurtBoss(99); T.endThrow(); T.step(3.2); toHit(50); T.step(2.9); T.hurtBoss(99); T.endThrow(); T.step(6.5);
+    T.setStats({ ...ZERO, bones: 0 }); fresh(); toHit(C.STAGE_MINI); T.step(2.6); T.hurtBoss(99); T.endThrow(); T.step(3.2); toHit(C.STAGE_BOSS); T.step(2.9); T.hurtBoss(99); T.endThrow(); T.step(6.5);
     const P = T.profile(); assert(P.bossLog.pumpkin === 1 && P.flawless.pumpkin === 1, `the Pumpkin King down, without a miss (${JSON.stringify(P.flawless)})`);
     assert(T.tierReached("map", "1", 0) && T.tierReached("map", "1", 1) && !T.tierReached("map", "1", 2), "two stars");
     T.setStats({ mapMakes: { 1: 100 } }); assert(T.tierReached("map", "1", 2), "the third at 100 makes");
@@ -2332,10 +2332,10 @@
     T.toTitle();
   });
   test("A map brings its obstacles in on its beats: one thing, then more, then the second half's", () => {
-    fresh(); T.setStage(2); T.setHits(5); T.syncObstacles(); assert(T.obstacles().length === 0, "nothing at first");
-    T.setHits(6); T.syncObstacles(); assert(T.obstacles().map(o => o.kind).join() === "bumper", `a gilded urn at hit 6 (${JSON.stringify(T.obstacles())})`);
-    T.setHits(14); T.syncObstacles(); assert(T.obstacles().length === 2, "two by hit 14");
-    for (let n = 1; n <= 8; n++) { fresh(); T.setStage(n); T.setHits(24); T.syncObstacles(); const k = T.obstacles().map(o => o.kind); assert(n === 1 ? !k.length : k.length >= 1, `map ${n}'s first half (${k})`); }
+    fresh(); T.setStage(2); T.setHits(C.ACT_LEN - 1); T.syncObstacles(); assert(T.obstacles().length === 0, "nothing in Act I");
+    T.setHits(C.ACT_LEN); T.syncObstacles(); assert(T.obstacles().map(o => o.kind).join() === "bumper", `a gilded urn as Act II begins (${JSON.stringify(T.obstacles())})`);
+    T.setHits(2 * C.ACT_LEN); T.syncObstacles(); assert(T.obstacles().length === 2, "two by Act III");
+    for (let n = 1; n <= 8; n++) { fresh(); T.setStage(n); T.setHits(C.STAGE_MINI - 1); T.syncObstacles(); const k = T.obstacles().map(o => o.kind); assert(n === 1 ? !k.length : k.length >= 1, `map ${n}'s first half (${k})`); }
     T.toTitle();
   });
   test("A gilded urn bounces the skull instead of stopping it; the rest knock it out of the air, and Ghost Toss slips through", () => {
@@ -2384,15 +2384,40 @@
     document.querySelector('#codexTabs [data-cat="target"]').click(); assert(document.querySelectorAll("#codexList .entry").length === 9, "nine targets");
     T.closeSheet(); T.toTitle();
   });
-  test("The Pumpkin King: his mouth is the ring, his eyes are targets; poke both shut and he's blind, gaping, and hurt double", () => {
-    T.setStats(ZERO); beatCrow(1); toHit(50); T.step(2.9); T.freezeRing(0, C.RING_Y); let K = T.pk(); assert(K && !K.eyes[0] && !K.eyes[1], "two open eyes");
-    const lives = T.state().lives, e0 = K.eye[0]; T.freezeRing(0, C.RING_Y); K = T.pk(); const e = K.eye[0]; void e0;
+  test("The Pumpkin King: his mouth is the ring, his eyes are targets; a poke is one of the 80 hits, and poke both shut and he's blind and gaping", () => {
+    T.setStats(ZERO); beatCrow(1); toHit(C.STAGE_BOSS); T.step(2.9); T.freezeRing(0, C.RING_Y); let K = T.pk();
+    assert(K && !K.eyes[0] && !K.eyes[1] && K.hp === C.STAGE_END - C.STAGE_BOSS && K.phase === 0, `two open eyes, thirty hits, phase I (${JSON.stringify(K)})`);
+    const lives = T.state().lives; T.freezeRing(0, C.RING_Y); K = T.pk(); const e = K.eye[0];
     T.plantSeed(9, 9, 9); const aim = T.aimFor(e.x, e.y, e.z); T.throwAt(aim.AX, aim.AY); T.step(2.5);
-    assert(T.state().lastResult.kind === "eye" && T.state().lives === lives && T.pk().eyes[0], `POKE: a hit, not a miss (${T.state().lastResult.kind}, lives ${T.state().lives}/${lives})`);
+    let s = T.state(); assert(s.lastResult.kind === "eye" && s.lastResult.make && s.lives === lives && T.pk().eyes[0] && T.pk().hp === K.hp - 1 && s.stageHits === C.STAGE_BOSS + 1,
+      `POKE: a hit that counts (${s.lastResult.kind}, lives ${s.lives}/${lives}, hp ${T.pk().hp}, hits ${s.stageHits})`);
     const e1 = T.pk().eye[1], aim2 = T.aimFor(e1.x, e1.y, e1.z); T.freezeRing(0, C.RING_Y); T.throwAt(aim2.AX, aim2.AY); T.step(2.5);
     K = T.pk(); assert(K.blind > 0 && K.rc > 0.6, `blind, and the mouth gapes (${JSON.stringify(K)})`);
-    const hp = K.hp; T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); assert(T.pk().hp === hp - 4 || T.pk().hp === hp - 2, `down his throat counts double (${hp} → ${T.pk().hp})`);
+    const hp = K.hp; T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); assert(T.pk().hp === hp - 1 && T.state().stageHits === C.STAGE_BOSS + 3, `down his throat is one hit more (${hp} → ${T.pk().hp})`);
     T.toTitle();
+  });
+  test("v47: every map is 80 hits — three named acts, the Crow King's ten, the ring breaks loose at 40, the approach, the end boss's three phases of ten", () => {
+    T.setStats(ZERO); fresh(); T.calm();
+    toHit(C.ACT_LEN); let A = T.act(); assert(A.act === 1 && /Act II/.test(A.card) && /Haunted Farm/.test(A.card), `hit 10: Act II, the Haunted Farm (${JSON.stringify(A)})`);
+    toHit(2 * C.ACT_LEN); A = T.act(); assert(A.act === 2 && /Harvest Grove/.test(A.card), `hit 20: Act III (${JSON.stringify(A)})`);
+    toHit(C.STAGE_MINI); T.step(2.6); let F = T.fight(); assert(F && F.kind === "crow" && F.max === 10 && !F.end, `hit 30: the Crow King, ten hits (${JSON.stringify(F)})`);
+    for (let i = 0; i < 10 && T.boss() && !T.boss().dead; i++) { const r = T.state().ring; T.freezeRing(r.x, r.y, r.z); T.throwThrough(r.x, r.y, r.z); T.step(2.4); if (i < 9) assert(T.state().stageHits === C.STAGE_MINI + i + 1, `each make on him is one hit, a perfect too (${T.state().stageHits})`); }
+    T.step(3.2); let s = T.state(); assert(s.phase === "B" && s.stageHits === C.STAGE_LOOSE && T.act().catchDue, `hit 40: he drops the ring and it's loose (${s.phase}, ${s.stageHits})`);
+    const r = s.ring, c0 = T.profile().ringCatches; T.freezeRing(r.x, r.y, r.z); T.throwThrough(r.x, r.y, r.z); T.step(2.5); assert(!T.act().catchDue && T.profile().ringCatches === c0 + 1, `the first make catches it (${T.profile().ringCatches})`); T.unfreezeRing();
+    toHit(C.STAGE_BOSS); T.step(2.9); F = T.fight(); assert(F.kind === "pumpkin" && F.end && F.max === 30 && F.phase === 0 && $("prog").classList.contains("phases"), `hit 50: the Pumpkin King, thirty hits in phases (${JSON.stringify(F)})`);
+    T.hurtBoss(10); F = T.fight(); assert(F.phase === 1 && F.phaseDue && T.state().stageHits === 60, `hit 60: phase II (${JSON.stringify(F)}, ${T.state().stageHits})`);
+    T.stageCheck(); assert(/Phase II/.test($("stagecard").textContent) && /The Roll/.test($("stagecard").textContent) && T.state().cine === "boss-phase", `the phase card (${$("stagecard").textContent})`);
+    T.step(1.6); T.hurtBoss(10); T.stageCheck(); T.step(1.6); const K = T.pk(); assert(K.phase === 2 && K.eyes[0] && K.eyes[1] && K.rc > 0.6 && /The Mouth/.test($("stagecard").textContent), `hit 70: phase III, the mouth; his eyes screwed shut (${JSON.stringify(K)})`);
+    T.hurtBoss(10); assert(T.boss().dead && T.state().stageHits === C.STAGE_END, `hit 80: he's down (${T.state().stageHits})`);
+    T.endThrow(); T.step(6); s = T.state(); assert(s.stage === 2 && s.stageHits === 0 && T.act().act === 0, `and on to map 2 (${s.stage})`);
+    T.toTitle();
+  });
+  test("v47: Boss Rush keeps its short fights (a perfect hurts twice there), and an end boss still climbs three phases", () => {
+    T.setStats({ ...ZERO, bossKills: 1, bossLog: { crow: 1, pumpkin: 1 } }); T.startMode("rush", 0); T.step(2.6); let F = T.fight();
+    assert(F && F.kind === "crow" && F.max < 10, `the Crow King's own short fight (${JSON.stringify(F)})`);
+    T.hurtBoss(99); T.endThrow(); T.step(3); F = T.fight(); assert(F && F.kind === "pumpkin" && F.end && F.max < 30, `then the Pumpkin King's (${JSON.stringify(F)})`);
+    T.hurtBoss(Math.ceil(F.max / 3)); assert(T.fight().phase === 1, `a third down: phase II (${JSON.stringify(T.fight())})`);
+    T.toTitle(); T.setStats(ZERO);
   });
   test("The new slots: hair, facial hair and wings come back from the end bosses; a launcher; Wizard Mort at four shards and the whole Black Ring", () => {
     T.setStats(ZERO); T.toTitle(); T.openSheet("customize");

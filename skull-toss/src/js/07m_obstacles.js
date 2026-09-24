@@ -18,14 +18,14 @@
   const CRUSHER_TALL = 2.2, BAR_R = 0.09, BALL_R = 0.2, MAG_CORE = 0.22;
   const obSpeed = () => (tierNow().objects || 1) * (game.phase === "boss" && boss && bossAngry(boss) ? 1.2 : 1);
   const obstaclesAllowed = () => hazardsAllowed() && game.state !== "title";
-  // which of the map's obstacles are in now: the first half's by hit count, the second half's by hits since the mini-boss,
+  // which of the map's obstacles are in now: the first half's by hit count, the approach's by hits since the ring broke loose,
   // the end boss's own set for the fight, none for the mini-boss
   function obstacleSpecs() {
     if (!obstaclesAllowed() || OB.off) return [];   // (off: the spec's calm set-up throws)
     const O = mapData(game.stage || 1).obstacles, h = game.stageHits || 0;
     if (boss) return game.phase === "boss" ? O.boss.map((o, i) => ({ ...o, key: "boss" + i })) : [];   // (the end boss brings the map's machinery into the fight; a mini-boss fights clean)
     if (game.phase === "A") return O.A.map((o, i) => ({ ...o, key: "A" + i })).filter(o => h >= o.from);
-    if (game.phase === "B") return O.B.map((o, i) => ({ ...o, key: "B" + i })).filter(o => h - STAGE_MINI >= o.from);
+    if (game.phase === "B") return O.B.map((o, i) => ({ ...o, key: "B" + i })).filter(o => h - (arcadeLike() ? STAGE_MINI : STAGE_LOOSE) >= o.from);
     return [];
   }
   function obstaclesReset() { OB.list = []; OB.t = 0; obstaclesSync(true); }

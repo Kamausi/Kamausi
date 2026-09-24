@@ -4,8 +4,10 @@
   // look a few milliseconds ahead. Toss through the ring to hurt the boss (a perfect hurts twice).
   //   CROW KING (mini-boss): carries the ring in his talons. He hovers, squawks (the tell), then swoops to his
   //   next perch: left, right, up, down, NEAR and FAR. He's there to teach you that the ring can move in depth.
-  //   PUMPKIN KING (main boss): rises behind the graves. A vine carries the ring around the triangle, and he
-  //   spits volleys of seeds down the throw lane. A seed knocks the skull out of the air, so throw between volleys.
+  //   PUMPKIN KING (main boss): his mouth is the ring, his eyes are targets, and he spits volleys of seeds down the
+  //   throw lane. A seed knocks the skull out of the air, so throw between volleys. Three phases (v47): the eyes, the
+  //   roll, the mouth.
+  // v47: in the Adventure a mini-boss takes ten hits (31–40) and an end boss thirty (51–80, a phase every ten).
   const seeds = [];
   const SEED_R = 0.14;
   const bossPathAt = (B, p) => B.pathAt(B.t + (p - ring.phase));
@@ -50,9 +52,9 @@
       if (q.tell > 0 && B.t - B.cawAt > 1) { B.cawAt = B.t; Sound.toon("caw", panOf(q.x)); }
     };
     B.hit = (kind, at) => {
-      const dmg = kind === "perfect" ? 2 : 1;
+      const dmg = bossDmg(kind);
       B.hp = Math.max(0, B.hp - dmg); B.hurt = 1; VisualSystem.cue("caw");   // (the doonk is the contact's: the director plays it)
-      bossBonus(dmg, at);
+      bossBonus(bossPay(kind, dmg), at); bossTally(B);
       const q = B.pathAt(B.t), bp = project(q.x, q.y + CROW_HANG, q.z);
       for (let i = 0; i < 10; i++) particles.push({ kind: "feather", x: bp.x, y: bp.y, vx: rand(-1, 1) * U * 0.5, vy: -U * rand(0.2, 0.6), rot: rand(0, TAU), vr: rand(-4, 4), life: rand(0.9, 1.4), max: 1.4, size: rand(6, 11), color: "#2B2B33", g: 0.25, a: 1 });
       if (B.hp <= 0) bossDown(B, at); else VisualSystem.triggerImpact("boss", { at });
@@ -118,22 +120,36 @@
 
   // ── the Pumpkin King (v44, the corrected roadmap's V20): HIS MOUTH IS THE RING and HIS EYES ARE TARGETS. His great head
   // rises out of the pumpkin rows and drifts round the ring's space; the ring is clamped in his grin, so a toss through
-  // it goes down his throat (that's what hurts him). He spits seed volleys out through the ring at you, cheeks puffing
-  // first. Hit an eye and it squeezes shut (a hit, not a miss: it costs no skull); shut both and he's blind for a few
-  // seconds: no volleys, his mouth gapes wider, and every throw down it counts double. Then his eyes open again.
+  // it goes down his throat. He spits seed volleys out through the ring at you, cheeks puffing first.
+  // v47: thirty hits (51–80), in three phases of ten:
+  //   I   THE EYES   he drifts slowly; his eyes are the targets. A poke is a hit, and the eye squeezes shut; shut
+  //                  both and he's blind for a few seconds (no seeds, his mouth gapes), then they open again.
+  //   II  THE ROLL   his head rolls round the arena, so the eyes (and the mouth) are moving targets, and a poked
+  //                  eye opens again after a few seconds, so blinding him takes two quick ones.
+  //   III THE MOUTH  his eyes screw shut for good; he comes to the middle, his mouth gapes, and only a throw down his
+  //                  throat hurts him. Seeds come quicker.
+  // A throw down his throat is always a hit, in any phase.
   const PK_TRI = [{ x: -1.2, y: 1.95, z: 5.4 }, { x: 1.25, y: 2.0, z: 7.2 }, { x: 0.05, y: 2.45, z: 6.2 }], PK_SEQ = [0, 1, 2, 0, 2, 1];
   const PK_HEAD = { dy: 0.8, dz: 0.45, r: 1.4 }, PK_EYE = { dx: 0.66, dy: 1.05, r: 0.22 }, PK_BLIND = 4.5;
+  const PK_SHUT = 90;   // (an eye shut for this long or more stays shut until he's blinded, or for good)
+  const PK_PHASE = [   // by phase: how fast he drifts, how far round the arena, how long a poked eye stays shut, the seeds, the mouth
+    { rate: 0.45, reach: 1, shut: PK_SHUT, every: 4.4, n: 3, mouth: 0 },
+    { rate: 0.95, reach: 1.1, shut: 6, every: 3.8, n: 4, mouth: 0 },
+    { rate: 0.4, reach: 0.45, shut: PK_SHUT, every: 3.2, n: 4, mouth: 0.12 }
+  ];
+  const PK_MID = { x: 0.05, y: 2.2, z: 6.2 };
   function makePumpkinKing(stage) {
     const max = Math.min(8 + (stage - 1), 12), start = { x: ring.x, y: ring.y, z: ring.z };
     const B = { kind: "pumpkin", short: "Pumpkin King", hp: max, max, rc: 0.56, flat: false, flawless: true, dead: false, t: 0, deadAt: 0, hurt: 0, start,
-      entry: 2.4, s: 0, rise: 0, volley: { next: 3.6, tell: 0, n: 0 }, ghosts: 0, spit: 0, eyes: [0, 0], blind: 0 };   // eyes: how long each stays shut (0 = open)
-    B.rate = () => (B.hp <= B.max / 2 ? 0.8 : 0.6) * (0.9 + stage * 0.1) * (B.blind > 0 ? 0.55 : 1);
+      entry: 2.4, s: 0, rise: 0, volley: { next: 3.6, tell: 0, n: 0 }, ghosts: 0, spit: 0, eyes: [0, 0], blind: 0, reach: 1, roll: 0 };   // eyes: how long each stays shut (0 = open)
+    const P = () => PK_PHASE[B.phase || 0];
+    B.rate = () => P().rate * (0.9 + stage * 0.1) * (B.blind > 0 ? 0.55 : 1);
     B.pathAt = t => {
       if (B.dead) return { ...B.frozen };
       if (t < B.entry - 0.6) return { ...B.start };
       const s = B.s + (t - B.t) * B.rate(), i = Math.floor(s), f = smooth(s - i), n = PK_SEQ.length;
-      const A = PK_TRI[PK_SEQ[((i % n) + n) % n]], C = PK_TRI[PK_SEQ[(((i + 1) % n) + n) % n]];
-      const q = { x: A.x + (C.x - A.x) * f, y: A.y + (C.y - A.y) * f, z: A.z + (C.z - A.z) * f };
+      const A = PK_TRI[PK_SEQ[((i % n) + n) % n]], C = PK_TRI[PK_SEQ[(((i + 1) % n) + n) % n]], k = B.reach;
+      const q = { x: PK_MID.x + (A.x + (C.x - A.x) * f - PK_MID.x) * k, y: PK_MID.y + (A.y + (C.y - A.y) * f - PK_MID.y) * k, z: PK_MID.z + (A.z + (C.z - A.z) * f - PK_MID.z) * k };
       if (t < B.entry) { const g = smooth((t - (B.entry - 0.6)) / 0.6); return { x: B.start.x + (q.x - B.start.x) * g, y: B.start.y + (q.y - B.start.y) * g, z: B.start.z + (q.z - B.start.z) * g }; }
       return q;
     };
@@ -141,42 +157,48 @@
     B.eyePos = (i, m = ring) => ({ x: m.x + (i ? PK_EYE.dx : -PK_EYE.dx), y: m.y + PK_EYE.dy, z: m.z });
     // a throw crossing the mouth's plane: did it hit an open eye? (-1: no)
     B.eyeAt = P => { if (B.dead || B.t < B.entry) return -1; for (const i of [0, 1]) { const e = B.eyePos(i); if (!B.eyes[i] && Math.hypot(P.x - e.x, P.y - e.y) <= PK_EYE.r + SKULL_R) return i; } return -1; };
-    B.eyeHit = (i, at) => {
-      B.eyes[i] = 99; B.hurt = 0.6;
-      const e = B.eyePos(i), p = project(e.x, e.y, e.z); impact("POKE!", p.x, p.y - U * 0.06, { fill: GOLD, text: INK, scale: 0.6, bits: false }); Sound.toon("boing", panOf(e.x));
-      if (B.eyes[0] && B.eyes[1]) { B.blind = PK_BLIND; B.volley.next = Math.max(B.volley.next, B.t + PK_BLIND + 1.2); seeds.length = 0; caption("HE CAN'T SEE!", W / 2, H * 0.22); Sound.toon("rumble"); }
+    B.eyeHit = (i, at) => {   // (the hit itself, and what it's worth, is the make's: 07_game.js calls B.hit("eye") next)
+      B.eyes[i] = P().shut; B.hurt = 0.6;
+      const e = B.eyePos(i); Sound.toon("boing", panOf(e.x));   // (POKE! is the make's word: 07_game.js)
+      if (B.eyes[0] && B.eyes[1]) { B.blind = PK_BLIND; B.eyes = [PK_BLIND + 0.3, PK_BLIND + 0.3]; B.volley.next = Math.max(B.volley.next, B.t + PK_BLIND + 1.2); seeds.length = 0; caption("HE CAN'T SEE!", W / 2, H * 0.22); Sound.toon("rumble"); }
       void at;
     };
+    // a new phase: II, the roll; III, the mouth (his eyes screw shut for good and he comes to the middle)
+    B.onPhase = ph => { if (ph === 2) { B.blind = 0; B.eyes = [1e9, 1e9]; } };
     B.update = dt => {
       B.t += dt; B.hurt = Math.max(0, B.hurt - dt * 2); B.rise = Math.min(1, B.rise + dt / 1.6);
       if (B.dead) { B.sink = (B.sink || 0) + dt; return; }
       if (B.t > B.entry) B.s += dt * B.rate();
-      if (B.blind > 0) { B.blind -= dt; if (B.blind <= 0) { B.blind = 0; B.eyes = [0, 0]; Sound.toon("whistleUp"); } }
-      B.rc = 0.56 + (B.blind > 0 ? 0.14 : 0);
+      B.reach += (P().reach - B.reach) * Math.min(1, dt * 1.5);   // (he rolls out wider, or in to the middle, over a second or so)
+      B.roll = B.phase === 1 ? Math.sin(B.t * 2.3) * 0.28 : B.roll * Math.max(0, 1 - dt * 3);
+      for (const i of [0, 1]) if (B.eyes[i] && B.eyes[i] < PK_SHUT) B.eyes[i] = Math.max(0, B.eyes[i] - dt);
+      if (B.blind > 0) { B.blind -= dt; if (B.blind <= 0) { B.blind = 0; if (B.phase < 2) { B.eyes = [0, 0]; Sound.toon("whistleUp"); } } }
+      B.rc = 0.56 + (B.blind > 0 ? 0.14 : 0) + P().mouth;
       // seed volleys, out through the ring: puff the cheeks (the tell), then ptoo-ptoo-ptoo
       const V = B.volley;
       if (B.blind <= 0 && B.t >= V.next - 0.9 && B.t < V.next) V.tell = (B.t - (V.next - 0.9)) / 0.9; else V.tell = 0;
       if (B.blind <= 0 && B.t >= V.next && game.state !== "cine") {
-        const n = B.hp <= B.max / 2 ? 4 : 3, pat = V.n % 3, m = B.pathAt(B.t);
+        const n = P().n, pat = V.n % 3, m = B.pathAt(B.t);
         for (let i = 0; i < n; i++) {
           const lane = pat === 0 ? (i / (n - 1)) * 2 - 1 : pat === 1 ? 1 - (i / (n - 1)) * 2 : (i % 2 ? -0.6 : 0.6) * (1 - i * 0.15);
           seeds.push({ at: B.t + i * 0.16, x: m.x, y: m.y, z: m.z + 0.1, tx: lane * 1.4, ty: 2.25 + (i % 2) * 0.55, tz: 2.2, rot: rand(0, TAU), live: false });
         }
-        V.n++; V.next = B.t + (B.hp <= B.max / 2 ? 3.6 : 4.4); B.spit = 0.3; Sound.toon("ptoo");
+        V.n++; V.next = B.t + P().every; B.spit = 0.3; Sound.toon("ptoo");
         const mp = project(m.x, m.y, m.z); caption("PTOO!", mp.x + U * 0.12, mp.y - U * 0.1);
       }
       B.spit = Math.max(0, B.spit - dt);
     };
     B.hit = (kind, at) => {
-      const dmg = (kind === "perfect" ? 2 : 1) * (B.blind > 0 ? 2 : 1), was = B.hp;   // (blind, a throw down his throat counts double)
+      const dmg = bossDmg(kind, B.blind > 0 ? 2 : 1);   // (in Boss Rush, blind, a throw down his throat counts double)
       B.hp = Math.max(0, B.hp - dmg); B.hurt = 1;
-      bossBonus(dmg, at);
-      const m = B.pathAt(B.t), pp = project(m.x, m.y + PK_HEAD.dy, m.z + PK_HEAD.dz);
+      bossBonus(bossPay(kind, dmg), at);
+      const m = B.pathAt(B.t), pp = kind === "eye" && at ? at : project(m.x, m.y + PK_HEAD.dy, m.z + PK_HEAD.dz);
       for (let i = 0; i < 10; i++) particles.push({ kind: "chunk", x: pp.x + rand(-1, 1) * PK_HEAD.r * pp.s * 0.5, y: pp.y + rand(-0.5, 0.5) * PK_HEAD.r * pp.s * 0.5, vx: rand(-1, 1) * U * 0.6, vy: -U * rand(0.3, 0.8), rot: rand(0, TAU), vr: rand(-8, 8), life: rand(0.8, 1.2), max: 1.2, size: rand(6, 12), color: i % 2 ? "#E8803A" : "#D9692A", g: 0.9 });
+      const was = B.hp + dmg;
+      bossTally(B);
       if (B.hp <= 0) bossDown(B, at);
       else {
         VisualSystem.triggerImpact("boss", { at });
-        if (was > B.max / 2 && B.hp <= B.max / 2) { caption("HE'S FURIOUS!", W / 2, H * 0.22); Sound.toon("rumble"); }
         const thirds = [Math.ceil(B.max * 2 / 3), Math.ceil(B.max / 3)];
         if (B.ghosts < 2 && was > thirds[B.ghosts] && B.hp <= thirds[B.ghosts]) { B.ghosts++; B.ghostDue = true; }
       }
@@ -192,7 +214,7 @@
     const rise = smooth(B.rise), sink = B.sink || 0, t = B.t, tt = Math.floor(t * 12) / 12;
     const m = B.dead ? B.frozen : { x: ring.x, y: ring.y, z: ring.z }, drop = (1 - rise) * 3.4 + sink * sink * 2.5;
     const c = project(m.x, m.y + PK_HEAD.dy - drop, m.z + PK_HEAD.dz), R = PK_HEAD.r * c.s;
-    const hurt = B.hurt, angry = B.hp <= B.max / 2, V = B.volley, puff = V.tell ? Math.sin(V.tell * Math.PI * 0.5) : 0, split = B.dead ? Math.min(1, (t - B.deadAt) / 0.6) : 0;
+    const hurt = B.hurt, angry = (B.phase || 0) >= 1, V = B.volley, puff = V.tell ? Math.sin(V.tell * Math.PI * 0.5) : 0, split = B.dead ? Math.min(1, (t - B.deadAt) / 0.6) : 0;
     ctx.save(); ctx.translate(c.x, c.y);
     const bounce = 1 + Math.sin(tt * 6) * 0.02 + hurt * 0.05;
     ctx.scale(bounce + puff * 0.08, 1 / bounce - hurt * 0.04);
@@ -207,9 +229,11 @@
       ctx.save();
       if (h) { ctx.translate(h * split * R * 0.5, split * R * 0.1); ctx.rotate(h * split * 0.35); ctx.beginPath(); ctx.rect(h < 0 ? -R * 2 : 0, -R * 2, R * 2, R * 4); ctx.clip(); }
       const cols = ["#D9692A", "#E8803A", "#F09046", "#E8803A", "#D9692A"];
+      ctx.save(); ctx.rotate(B.roll || 0);   // (phase II: the head rolls; the face, the targets, stays upright)
       for (let i = 0; i < 5; i++) { const xk = (i - 2) * 0.36; ctx.fillStyle = cols[i]; ctx.strokeStyle = INK; ctx.lineWidth = Math.max(2.5, R * 0.035); ctx.beginPath(); ctx.ellipse(xk * R, 0, R * (0.55 - Math.abs(i - 2) * 0.04), R * 0.9, 0, 0, TAU); ctx.fill(); ctx.stroke(); }
       ctx.fillStyle = "#5A6B2A"; ctx.beginPath(); ctx.moveTo(-R * 0.1, -R * 0.85); ctx.quadraticCurveTo(-R * 0.05, -R * 1.2, R * 0.18, -R * 1.25); ctx.lineTo(R * 0.2, -R * 1.12); ctx.quadraticCurveTo(R * 0.08, -R * 1.05, R * 0.1, -R * 0.85); ctx.closePath(); ctx.fill(); ctx.stroke();
       ctx.fillStyle = GOLD; ctx.beginPath(); ctx.moveTo(-R * 0.45, -R * 0.82); for (let k = 0; k <= 4; k++) ctx.lineTo(-R * 0.45 + k * R * 0.225, -R * (k % 2 ? 1.0 : 1.16)); ctx.lineTo(R * 0.45, -R * 0.82); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.restore();
       // the carved grin: a jagged dark hole round where the ring sits (the ring itself is drawn over it)
       const mo = project(m.x, m.y - drop, m.z), mx = mo.x - c.x, my = mo.y - c.y, mr = B.rc * mo.s * (1.25 + (B.spit > 0 ? 0.1 : 0));
       ctx.fillStyle = "#1A0A04"; ctx.beginPath();
@@ -220,7 +244,9 @@
       // the eyes: targets, a glowing bull's-eye each, squeezed shut once hit
       for (const i of [0, 1]) {
         const e = B.eyePos(i, { x: m.x, y: m.y - drop, z: m.z }), ep = project(e.x, e.y, e.z), ex = ep.x - c.x, ey = ep.y - c.y, er = PK_EYE.r * ep.s;
-        if (B.eyes[i] || B.dead) { ctx.strokeStyle = INK; ctx.lineWidth = er * 0.35; ctx.beginPath(); ctx.moveTo(ex - er, ey); ctx.quadraticCurveTo(ex, ey + er * 0.5, ex + er, ey); ctx.stroke(); for (let k = -1; k <= 1; k++) { ctx.beginPath(); ctx.moveTo(ex + k * er * 0.5, ey + er * 0.1); ctx.lineTo(ex + k * er * 0.6, ey + er * 0.5); ctx.lineWidth = er * 0.12; ctx.stroke(); } continue; }
+        if (B.eyes[i] || B.dead) {
+          if (B.phase === 2 && !B.dead) { ctx.strokeStyle = glow; ctx.globalAlpha = fl; ctx.lineWidth = er * 0.6; ctx.beginPath(); ctx.moveTo(ex - er * 1.1, ey - er * (i ? 0.35 : -0.1)); ctx.lineTo(ex + er * 1.1, ey - er * (i ? -0.1 : 0.35)); ctx.stroke(); ctx.globalAlpha = 1; }   // (phase III: screwed shut, glaring)
+          ctx.strokeStyle = INK; ctx.lineWidth = er * 0.35; ctx.beginPath(); ctx.moveTo(ex - er, ey); ctx.quadraticCurveTo(ex, ey + er * 0.5, ex + er, ey); ctx.stroke(); for (let k = -1; k <= 1; k++) { ctx.beginPath(); ctx.moveTo(ex + k * er * 0.5, ey + er * 0.1); ctx.lineTo(ex + k * er * 0.6, ey + er * 0.5); ctx.lineWidth = er * 0.12; ctx.stroke(); } continue; }
         ctx.fillStyle = INK; ctx.beginPath(); ctx.moveTo(ex - er * 1.25, ey - er * (angry ? 1.1 : 0.7)); ctx.lineTo(ex + er * 1.25, ey - er * (angry ? 0.2 : 0.7)); ctx.lineTo(ex, ey + er * 1.1); ctx.closePath(); ctx.fill();
         for (const [k, col] of [[0.85, glow], [0.55, "#1A0A04"], [0.28, glow]]) { ctx.fillStyle = col; ctx.globalAlpha = col === glow ? fl : 1; ctx.beginPath(); ctx.arc(ex, ey - er * 0.05, er * k, 0, TAU); ctx.fill(); } ctx.globalAlpha = 1;
       }
@@ -291,6 +317,21 @@
       return;
     }
   }
+  // v47: in the Adventure every make on a boss is one hit (of his 10, or 30), a perfect included: it pays double instead.
+  // Boss Rush keeps each boss's own short fight, where a perfect hurts twice.
+  const storyFight = () => game.mode === "story";
+  const bossDmg = (kind, k = 1) => (storyFight() ? 1 : (kind === "perfect" ? 2 : 1) * k);
+  const bossPay = (kind, dmg) => Math.max(dmg, kind === "perfect" ? 2 : 1);
+  // after every hit on a boss: count it among the map's 80, and move an end boss on to its next phase at each third
+  function bossTally(B) {
+    if (storyFight() && B.base != null) game.stageHits = B.base + (B.max - B.hp);
+    if (!B.end || B.dead || B.hp <= 0) return;
+    const ph = Math.min(BOSS_PHASES - 1, Math.floor(((B.max - B.hp) * BOSS_PHASES) / B.max));
+    if (ph <= (B.phase || 0)) return;
+    B.phase = ph; if (B.onPhase) B.onPhase(ph);
+    if (storyFight()) B.phaseDue = true;   // (the card comes once the throw has settled: 07b_stage.js)
+    else caption(`${t("card.phase.k", { n: ROMAN[ph] })}!`, W / 2, H * 0.22);
+  }
   // every boss hit is worth extra
   function bossBonus(dmg, at) {
     const bonus = Math.round(300 * dmg * stageMult());
@@ -313,5 +354,7 @@
   function makeBoss(id, stage) {
     const B = id === "pumpkin" ? makePumpkinKing(stage) : id === "crow" ? makeCrowKing(stage) : makeGenericBoss(id, stage);
     B.kind = id; B.short = BOSS_INFO[id].short; sawIt("boss", id);
+    B.end = id !== "crow" && !(BOSS_DEFS[id] && BOSS_DEFS[id].mini); B.phase = 0;
+    if (storyFight()) { B.max = B.hp = B.end ? BOSS_HITS : MINI_HITS; B.base = B.end ? STAGE_BOSS : STAGE_MINI; }   // (v47: 31–40 and 51–80)
     return B;
   }

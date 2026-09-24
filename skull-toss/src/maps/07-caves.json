@@ -266,7 +266,7 @@
         ],
         "k": 9.0,
         "R": 1.9,
-        "from": 6
+        "from": 10
       },
       {
         "kind": "crusher",
@@ -283,7 +283,7 @@
           0.7,
           0.9
         ],
-        "from": 14
+        "from": 20
       }
     ],
     "B": [
@@ -324,7 +324,7 @@
         ],
         "len": 0.95,
         "spin": 1.5,
-        "from": 10
+        "from": 4
       }
     ],
     "boss": [
@@ -382,6 +382,12 @@
     "mini": "cuckoo",
     "end": "clockking"
   },
+  "acts": [
+    "The Mine Mouth",
+    "The Gear Gallery",
+    "The Pendulum Hall",
+    "The Clock King's Works"
+  ],
   "fragment": "clockwork",
   "target": "bell",
   "music": {

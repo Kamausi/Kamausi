@@ -254,7 +254,7 @@
         ],
         "len": 1.25,
         "spin": 1.1,
-        "from": 6
+        "from": 10
       }
     ],
     "B": [
@@ -282,7 +282,7 @@
           2.4,
           1.6
         ],
-        "from": 8
+        "from": 4
       }
     ],
     "boss": [
@@ -315,6 +315,12 @@
     "mini": "jester",
     "end": "ringmaster"
   },
+  "acts": [
+    "The Flooded Aisle",
+    "The Gilt Boxes",
+    "Under the Screen",
+    "The Big Top Stage"
+  ],
   "fragment": "drowned",
   "target": "duck",
   "music": {

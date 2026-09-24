@@ -163,8 +163,8 @@
     [0.37, "C+"], [0.29, "C"], [0.21, "C-"], [0.12, "D"], [0, "F"]];
   function runGrade() {
     const r = game.run, t = Math.max(1, game.throws);
-    const clean = (r.perfects * 3 + r.swishes * 2 + r.rims) / (t * 3);          // 1.0 = every toss a perfect
-    const reach = Math.min(0.26, (game.hits / 50) * 0.1 + r.bosses * 0.07 + (game.stage - 1) * 0.05);
+    const clean = (r.perfects * 3 + r.swishes * 2 + r.rims + (r.eyes || 0) * 2) / (t * 3);          // 1.0 = every toss a perfect
+    const reach = Math.min(0.26, (game.hits / STAGE_END) * 0.16 + r.bosses * 0.07 + (game.stage - 1) * 0.05);
     const v = clamp(clean * 0.82 + reach, 0, 1);
     return { grade: (GRADES.find(g => v >= g[0]) || GRADES[GRADES.length - 1])[1], stars: v >= 0.72 ? 3 : v >= 0.48 ? 2 : v >= 0.24 ? 1 : 0, v };
   }
