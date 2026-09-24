@@ -63,14 +63,13 @@ jobs:
       run:
         working-directory: skull-toss
     steps:
+      - uses: actions/checkout@v4
       - name: Is there a deploy key?
         id: key
         env:
           SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: |
           if [ -z "$SA" ]; then echo "No FIREBASE_SERVICE_ACCOUNT secret yet: nothing to deploy."; echo "go=false" >> "$GITHUB_OUTPUT"; else echo "go=true" >> "$GITHUB_OUTPUT"; fi
-      - uses: actions/checkout@v4
-        if: steps.key.outputs.go == 'true'
       - uses: actions/setup-python@v5
         if: steps.key.outputs.go == 'true'
         with:
