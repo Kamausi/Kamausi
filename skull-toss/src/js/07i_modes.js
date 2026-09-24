@@ -33,14 +33,14 @@
 
   // ── starting and leaving
   function leavePractice() {
-    if (!modeSt.real) return;
+    if (!modeSt.real || Replay.play) return;   // (a replay gives the profile back itself)
     const P = modeSt.real; modeSt.real = null; profile = P;
     const R = profile.modes.practice || (profile.modes.practice = { best: 0, runs: 0 }); R.runs++; R.throws = (R.throws || 0) + game.throws;
     persist(1500); updateHud();
   }
   function modeStart(mode) {
     leavePractice();
-    if (mode === "practice") { modeSt.real = profile; profile = JSON.parse(JSON.stringify(profile)); }   // a copy to play on
+    if (mode === "practice" && !Replay.play) { modeSt.real = profile; profile = JSON.parse(JSON.stringify(profile)); }   // a copy to play on
     Object.assign(modeSt, { rush: [], rushI: 0, clock: MODES[mode].clock || 0, far: 0, targetsHit: 0 });
   }
   function modeBegin() {   // after startGame has set the run up: each mode's own opening
@@ -49,7 +49,8 @@
       if (practice.half === "B") { game.phase = "B"; setRingMode(bMode(), false); ring.morph = 1; Sound.setAct("B"); }
       if (practice.ring === "still") ring.frozen = { x: 0, y: RING_Y, z: RING_Z };
     } else if (m === "rush") {
-      for (let n = 1; n <= MAP_COUNT; n++) { const B = mapData(n).bosses; if (profile.bossLog[B.mini]) modeSt.rush.push({ id: B.mini, stage: n, end: false }); if (profile.bossLog[B.end]) modeSt.rush.push({ id: B.end, stage: n, end: true }); }
+      if (Replay.play && Replay.play.R.rush) for (const id of Replay.play.R.rush) { const n = MAP_DATA.findIndex(M => M.bosses.mini === id || M.bosses.end === id) + 1; modeSt.rush.push({ id, stage: n, end: mapData(n).bosses.end === id }); }
+      else for (let n = 1; n <= MAP_COUNT; n++) { const B = mapData(n).bosses; if (profile.bossLog[B.mini]) modeSt.rush.push({ id: B.mini, stage: n, end: false }); if (profile.bossLog[B.end]) modeSt.rush.push({ id: B.end, stage: n, end: true }); }
       if (!modeSt.rush.length) modeSt.rush.push({ id: "crow", stage: 1, end: false });
       rushBoss();
     } else if (m === "longshot") { ring.frozen = { x: 0, y: RING_Y, z: LONGSHOT.z0 }; }

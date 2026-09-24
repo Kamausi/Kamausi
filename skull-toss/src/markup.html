@@ -36,6 +36,7 @@
 <div class="ach-pop" id="achPop" hidden role="status"></div>
 <div class="gameover" id="gameOver" hidden aria-hidden="true"><div class="go-card"><span class="go-w"><i style="--i:0">G</i><i style="--i:1">A</i><i style="--i:2">M</i><i style="--i:3">E</i></span><span class="go-w"><i style="--i:4">O</i><i style="--i:5">V</i><i style="--i:6">E</i><i style="--i:7">R</i></span></div></div>
 <div class="stagecard" id="stagecard" hidden role="status"></div>
+<div class="replay-badge" id="replayBadge" hidden><span data-t="ui.replay">Replay</span><button type="button" id="replaySpeed" aria-label="Replay speed" data-t-aria="ui.replay-speed">1×</button><button type="button" id="replayExit" aria-label="Leave the replay" data-t-aria="ui.leave-the-replay">✕</button></div>
 <div class="reelcard" id="reelCard" hidden><canvas id="reelCv" aria-hidden="true"></canvas>
   <div class="rc-text"><p class="rc-k" id="rcK"></p><p class="rc-reel" id="rcReel"></p><h2 class="rc-t" id="rcTitle"></h2><p class="rc-s" id="rcSub"></p><p class="rc-n" id="rcNote"></p></div>
   <p class="rc-skip" data-t="ui.tap-to-skip">Tap to skip</p></div>
@@ -48,6 +49,7 @@
     <p class="tagline" data-t="ui.a-lost-cartoon-from-1933">A lost cartoon from 1933</p>
     <nav class="menu-stack" aria-label="Main menu" data-t-aria="ui.main-menu">
       <button class="btn primary" id="play" type="button"><svg class="toss"><use href="#i-skull"/></svg><svg class="icon"><use href="#i-play"/></svg><span data-t="ui.play">Play</span></button>
+      <button class="btn" id="sharedReplayBtn" type="button" hidden><svg class="toss"><use href="#i-skull"/></svg><svg class="icon"><use href="#i-play"/></svg><span data-t="ui.watch-the-shared-replay">Watch the shared replay</span></button>
       <button class="btn" id="resumeRunBtn" type="button" hidden><svg class="toss"><use href="#i-skull"/></svg><svg class="icon"><use href="#i-retry"/></svg><span data-t="ui.resume-run">Resume run</span></button>
       <button class="btn" id="challengesBtn" data-sheet="challenges" type="button"><svg class="toss"><use href="#i-skull"/></svg><svg class="icon"><use href="#i-tomb"/></svg><span data-t="ui.challenges">Challenges</span><span class="pip" id="challengePip" hidden></span></button>
       <button class="btn" id="customizeBtn" data-sheet="customize" type="button"><svg class="toss"><use href="#i-skull"/></svg><svg class="icon"><use href="#i-vault"/></svg><span data-t="ui.skull-vault">Skull Vault</span><span class="pip" id="customizePip" hidden></span></button>
@@ -102,6 +104,7 @@
       <button class="btn primary" id="again" type="button"><svg class="toss"><use href="#i-skull"/></svg><svg class="icon"><use href="#i-retry"/></svg><span data-t="ui.toss-again">Toss again</span></button>
       <button class="btn" id="toMenu" type="button"><svg class="icon"><use href="#i-home"/></svg><span data-t="ui.menu">Menu</span></button>
     </div>
+    <div class="menu-row"><button class="chip-btn" id="watchBtn" type="button"><svg class="icon"><use href="#i-play"/></svg><span data-t="ui.watch-replay">Watch replay</span></button><button class="chip-btn" id="shareBtn" type="button"><svg class="icon"><use href="#i-star"/></svg><span data-t="ui.share">Share</span></button></div>
     <div class="menu-row"><button class="chip-btn" data-sheet="board" type="button"><svg class="icon"><use href="#i-crown"/></svg><span data-t="ui.leaders">Leaders</span></button><button class="chip-btn" data-sheet="store" type="button"><svg class="icon"><use href="#i-cart"/></svg><span data-t="ui.shop">Shop</span></button></div>
     <p class="meta" id="bestLine"></p>
   </div>

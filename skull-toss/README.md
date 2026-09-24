@@ -1,8 +1,18 @@
-# SKULL TOSS v34
+# SKULL TOSS v35
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)), with a synthesised waltz standing in wherever they can't load.
+
+## New in v35: cartoon replays, and sharing them
+
+- **Watch replay** on the headstone plays the run you just had back, throw for throw.
+  - **How it works.** The simulation is fixed-step and seeded, so a run is its seed plus what you did and when: each throw (where it was aimed), each skipped card, each continue taken or turned down, and ending the run. Each is stamped with the step it happened on, counted in game time, so a freeze frame never shifts it.
+  - **Settings that travel with it.** The few settings that change the simulation go with the replay: title cards, mischief, the countdown leader, the hang a miss takes under reduced motion, Practice's options and Boss Rush's list.
+  - **Watching.** A **Replay** badge sits under the score, with 1×, 2× and 4× speed and a way out (✕, or Esc).
+  - **Safe to watch.** A replay plays on a copy of your profile, so watching changes nothing of yours, never posts to the board, and never touches a run you could resume.
+- **Share** puts the run in a link (`…#replay=…`) using the system's share sheet, or copies it where there isn't one. Opening the link offers **Watch the shared replay** on the title screen, and it's the same run.
+- With a server, a Story run's recording now goes to `submitRun` with it, kept for audit beside the run.
 
 ## New in v34: a leaderboard the server checks
 
@@ -833,7 +843,7 @@ From the console, `SkullToss.debug.visualAnimation` lists the pose library (`pos
 
 ## Tests
 
-Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **181 checks**, covering:
+Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **184 checks**, covering:
 
 - **Layout, scoring and aiming.**
   - Everything is centred and every result is classified correctly.
@@ -977,3 +987,7 @@ Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to
   - A finished run is checked by the server and posted all-time and this week. A forged score is refused, and a run straight after another is slowed down.
   - Each kind of forgery is refused by name.
   - The board has a This week tab.
+- **v35.**
+  - A run played only through a player's inputs (throws, card skips, the end) replays to the same score, hits and throws, and changes nothing on the profile or the resume snapshot.
+  - A replay survives a link: encoded, decoded and replayed the same. Junk is refused, and the title offers a shared one.
+  - The headstone offers Watch replay and Share, and a replay's own stone says Replay.

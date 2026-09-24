@@ -20,7 +20,7 @@
     if (!document.hidden && raw < 0.25) { frames++; if (raw > 1 / 40) slow++; }
     if (frames >= 120) { if (slow > 60) { if (QUALITY.level > 0.5) setQuality(QUALITY.level - 0.25); else if (maxDPR > 1) { maxDPR = Math.max(1, maxDPR - 0.5); resize(); } } frames = 0; slow = 0; }
     let dt = real;
-    if (!manual) { pollPad(); if (game.slowmo > 0 && !paused) { game.slowmo -= dt; dt *= 0.3; } advance(dt); }
+    if (!manual) { pollPad(); if (game.slowmo > 0 && !paused) { game.slowmo -= dt; dt *= 0.3; } advance(dt * (Replay.play ? Replay.speed : 1)); }
     if (aim.active && !paused) Sound.pull(aim.tension);
     VisualSystem.render(); drawUI(ts);
     if (visualsOn()) visualTick(raw, performance.now() - t0);

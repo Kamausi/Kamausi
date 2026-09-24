@@ -10,6 +10,7 @@
   let Ads = { available: () => false, show: () => Promise.resolve(false) };
   const contEl = $("continueBox");
   function continueRule() {
+    if (Replay.play) return Replay.contRule();   // (a replay offers one exactly when the recording decided one)
     if ((sandbox && !sandbox.contOn) || !modeOf().cont || game.phase === "encore") return { ok: false };   // (older tests expect the last skull to end the run)
     const used = game.run.continues || 0, maps = game.run.contMaps || [];
     if (game.mode === "arcade" ? used >= 1 : used >= CONTINUE.perRun || maps.includes(game.stage)) return { ok: false };
@@ -37,8 +38,9 @@
   }
   function takeContinue(method) {
     if (game.state !== "continue") return false;
+    Replay.note("c", method === "ad" ? 1 : 0, 0);
     const cost = game.cont.cost;
-    if (method === "bones") { if (profile.bones < cost) return false; profile.bones -= cost; profile.bonesSpent += cost; renderBones(); }
+    if (method === "bones" && !Replay.play) { if (profile.bones < cost) return false; profile.bones -= cost; profile.bonesSpent += cost; renderBones(); }
     contEl.hidden = true; game.cont = null;
     game.run.continues = (game.run.continues || 0) + 1; game.run.contMaps = (game.run.contMaps || []).concat(game.stage); profile.continues++;
     game.lives = 1; game.streak = 0; game.perfStreak = 0;
@@ -51,6 +53,7 @@
   }
   function declineContinue(why = "no") {
     if (game.state !== "continue") return;
+    Replay.note("n");
     contEl.hidden = true; game.cont = null;
     Telemetry.emit("continue_decline", { why, stage: game.stage });
     gameOver();
@@ -68,7 +71,7 @@
   // caught in a boss fight comes back at the start of that fight.
   const RUN_KEY = "skullToss.run.v1", RUN_MAX_AGE = 24 * 3600 * 1000;
   function saveRunSnapshot(cont = false) {
-    if ((sandbox && !sandbox.snapOn) || !modeOf().cont) return;   // (the spec keeps its snapshots apart from the player's)
+    if ((sandbox && !sandbox.snapOn) || !modeOf().cont || Replay.play) return;   // (the spec keeps its snapshots apart from the player's)
     const phase = game.phase === "mini" ? "A" : game.phase === "boss" ? "B" : game.phase;
     const stageHits = game.phase === "mini" ? STAGE_MINI : game.phase === "boss" ? STAGE_BOSS : game.stageHits;
     const S = { v: 1, at: Date.now(), mode: game.mode, map: game.map, stage: game.stage, phase, stageHits, hits: game.hits, score: game.score,

@@ -33,7 +33,7 @@
     submit() {
       const R = profile.boardBest; if (!R || !profile.board || !Backend.hasFunctions()) return Promise.resolve(false);
       const run = { mode: "story", ...R, name: cleanName(profile.name) || "Nameless soul", title: cos.title, look: this.entry().look };
-      return Backend.call("submitRun", { run, log: "" }).then(r => { this.lastSubmit = r; return !!(r && r.accepted); },
+      return Backend.call("submitRun", { run, log: Replay.last && Replay.last.mode === "story" ? Replay.encode(Replay.last) : "" }).then(r => { this.lastSubmit = r; return !!(r && r.accepted); },
         e => { this.lastSubmit = { accepted: false, why: e.message, code: e.code }; return false; });
     },
     push(force = false) {

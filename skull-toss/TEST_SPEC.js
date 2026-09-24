@@ -1783,6 +1783,45 @@
     T.closeSheet();
   });
 
+  // ── v35: replays and sharing ──
+  const playRun = (aims, cards = true) => {   // a run played only through what a player can do: throws, card skips, the end
+    T.cards(cards); T.setStats({ ...ZERO, bones: 500 }); T.start(); T.step(0.4); T.skipReel(); T.step(0.02);
+    for (const [AX, AY] of aims) { for (let i = 0; i < 400 && T.state().state !== "ready"; i++) T.step(0.05); if (T.state().state !== "ready") break; T.step(0.13); T.throwAt(AX, AY); T.step(0.4); }
+    for (let i = 0; i < 100 && T.state().state === "flying"; i++) T.step(0.05);
+    if (T.state().state !== "over") T.endRun(); T.step(1);
+    return { score: T.state().score, hits: T.state().hits, throws: T.state().throws };
+  };
+  test("A replay plays the same run back, throw for throw, and changes nothing of yours", () => {
+    const aims = [[0.1, C.RING_Y], [-0.4, C.RING_Y + 0.1], [0.6, C.RING_Y - 0.1], [0, C.RING_Y], [0.9, C.RING_Y + 0.2], [-0.8, C.RING_Y], [0.3, C.RING_Y + 0.3], [0, C.RING_Y - 0.2], [-0.2, C.RING_Y], [0.5, C.RING_Y]];
+    const orig = playRun(aims), R = T.lastReplay();
+    assert(R && R.ev.filter(e => e[1] === "t").length === orig.throws && R.ev.some(e => e[1] === "s") && R.score === orig.score, `the run is recorded (${JSON.stringify({ orig, ev: R && R.ev.length })})`);
+    assert(orig.throws >= 3 && orig.hits >= 1, `a run worth replaying (${JSON.stringify(orig)})`);
+    const before = T.profile(), snap = T.snapshot();
+    assert(T.watchReplay() && T.replaying(), "watching");
+    for (let i = 0; i < 2400 && T.state().state !== "over"; i++) T.step(0.05);
+    const s = T.state(); assert(s.state === "over" && s.score === orig.score && s.hits === orig.hits && s.throws === orig.throws, `the same run (${JSON.stringify({ got: [s.score, s.hits, s.throws], orig })})`);
+    T.stopReplay(); const after = T.profile();
+    assert(after.makes === before.makes && after.bones === before.bones && after.games === before.games && JSON.stringify(T.snapshot()) === JSON.stringify(snap), "and nothing of yours changed");
+    T.cards(false); T.setStats(ZERO); T.toTitle();
+  });
+  test("A replay survives the trip through a link: encoded, decoded, the same run", () => {
+    const orig = playRun([[0, C.RING_Y], [0.4, C.RING_Y], [-0.3, C.RING_Y]], false), R = T.lastReplay(), link = T.replayLink(R);
+    assert(/#replay=[\w-]+$/.test(link) && JSON.stringify(T.decodeReplay(link.split("#replay=")[1])) === JSON.stringify(R), "round trip");
+    assert(T.decodeReplay("not a replay") === null && T.decodeReplay(T.encodeReplay({ v: 9 })) === null, "junk is refused");
+    T.toTitle(); T.offerShared(R); assert(!$("sharedReplayBtn").hidden, "the title offers a shared replay");
+    $("sharedReplayBtn").click(); assert(T.replaying(), "and plays it");
+    for (let i = 0; i < 1200 && T.state().state !== "over"; i++) T.step(0.05);
+    assert(T.state().score === orig.score && T.state().throws === orig.throws, `the same run from the link (${T.state().score} vs ${orig.score})`);
+    T.stopReplay(); T.offerShared(null); T.setStats(ZERO); T.toTitle();
+  });
+  test("The headstone offers Watch replay and Share; a replay's own stone says Replay", () => {
+    playRun([[0, C.RING_Y], [0.2, C.RING_Y]], false); T.step(2);
+    assert(!$("watchBtn").hidden && !$("shareBtn").hidden, "both on a real run's stone");
+    T.watchReplay(); for (let i = 0; i < 1200 && T.state().state !== "over"; i++) T.step(0.05); T.step(2);
+    assert($("resTitle").textContent === "Replay" && $("shareBtn").hidden, `a replay's stone (${$("resTitle").textContent})`);
+    T.stopReplay(); T.setStats(ZERO); T.toTitle();
+  });
+
   (async () => {
     for (const q of queue) {
       if (q.step) { q.fn(); continue; }

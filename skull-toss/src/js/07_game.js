@@ -8,6 +8,7 @@
   function screenDir(s) { const a = project(s.pos.x, s.pos.y, s.pos.z), v = velAt(s, s.t), b = project(s.pos.x + v.x * 0.02, s.pos.y + v.y * 0.02, s.pos.z + v.z * 0.02); return Math.atan2(b.y - a.y, b.x - a.x); }
 
   function launch(AX, AY) {
+    Replay.note("t", AX, AY);
     voice.quiet = game.time; voice.idleSaid = false;
     const v = aimVelocity(AX, AY);
     Object.assign(skull, { launchRing: { x: ring.x, y: ring.y, z: ring.z }, ax0: windNow(), close: false, shots: [] });   // (what the signature shots read: 07h_shots.js)
@@ -211,7 +212,7 @@
         if (at) { const sp = project(skull.p0.x, skull.p0.y, skull.p0.z), dx = at.x - sp.x, dy = at.y - sp.y, d = Math.hypot(dx, dy) || 1, off = ring.rc * at.s + U * 0.075;
           cx = at.x + (dx / d) * off * 1.25; cy = at.y + (dy / d) * off; }
         caption(`${t(`result.${kind}.call`)}… ${t(`result.${kind}.sub`)}`, cx, cy);
-        if (!skull.resting) skull.hang = reduceMotion ? 0.2 : 0.38;
+        if (!skull.resting) skull.hang = simReduced() ? 0.2 : 0.38;   // (a replay uses the recorder's setting)
         VisualSystem.emit("miss");
       }
       buzz(30);
@@ -250,9 +251,10 @@
   // two ways to play. Story: the stages in order, each with its two bosses. Arcade: one map (any stage), no bosses
   // and no end: the ring keeps getting quicker, and the run lasts as long as your skulls do.
   function startGame(opts = {}) {
-    const mode = MODES[opts.mode] && MODES[opts.mode].open ? (MODES[opts.mode].open() ? opts.mode : "story") : MODES[opts.mode] ? opts.mode : "story";
+    if (Replay.play && !opts.replay) Replay.stop(false);   // (a real run ends any replay: 07j_replay.js)
+    const mode = !MODES[opts.mode] ? "story" : opts.replay || !MODES[opts.mode].open || MODES[opts.mode].open() ? opts.mode : "story";
     modeStart(mode);   // (Practice swaps in a copy of the profile here: 07i_modes.js)
-    const pick = clamp(opts.map | 0, 0, STAGES.length - 1), map = MODES[mode].maps ? (mapUnlocked(pick) ? pick : 0) : MODES[mode].mini ? miniMap(mode) : 0;
+    const pick = clamp(opts.map | 0, 0, STAGES.length - 1), map = opts.replay ? pick : MODES[mode].maps ? (mapUnlocked(pick) ? pick : 0) : MODES[mode].mini ? miniMap(mode) : 0;
     Object.assign(game, { state: "ready", score: 0, hits: 0, lives: START_LIVES, slots: START_LIVES, streak: 0, perfStreak: 0, peakLives: START_LIVES, throws: 0,
       result: null, lastCross: null, newBest: false, shake: 0, slowmo: 0, run: freshRun(), mode, map });
     game.run.t0 = game.time; Object.assign(voice, { said: 0, text: "", quiet: game.time, idleSaid: false });
@@ -270,8 +272,10 @@
     paused = false; Sound.setPaused(false); showCombo(0); gameOverCard(false); contEl.hidden = true; game.cont = null;
     showScreen("play");
     hazardsReset(); refillTargets();
+    misc.lastMap = 0; misc.lastThrow = -99; misc.kind = null;   // (mischief's once-a-map is per run)
     modeBegin();   // each mode's own opening (07i_modes.js)
     if (opts.quiet || (mode !== "story" && mode !== "arcade" && mode !== "practice")) setHint(game.mode === "rush" ? "" : t("hint.start")); else introReel(mode, map);   // the leader and the reel's title card (09i_reel.js)
+    Replay.begin(opts);   // record what the player does, for a replay (07j_replay.js)
     updateHud();
     Telemetry.emit("run_start", { mode, map, stage: game.stage, career: profile.games });   // career: runs finished before this one
   }
@@ -279,7 +283,7 @@
   const arcadeRec = (map = game.map) => profile.arcade[String(map)] || { score: 0, secs: 0, hits: 0, runs: 0 };
   // card: the GAME OVER words pop up first (out of skulls); ending the run from the pause menu goes straight to the stone
   function gameOver(card = true) {
-    Sound.flightStop(true); clearRunSnapshot(); contEl.hidden = true; game.cont = null;
+    Sound.flightStop(true); if (!Replay.play) clearRunSnapshot(); contEl.hidden = true; game.cont = null;
     game.state = "over"; game.overAt = game.time; game.overHold = card ? GAME_OVER_HOLD : 0.6; game.cine = null; hideStageCard();
     if (card) gameOverCard(true, game.run.story ? ["The", "End"] : undefined);
     game.run.secs = Math.max(0, game.time - (game.run.t0 || 0));
@@ -307,11 +311,12 @@
     profile.bones += game.run.bones; profile.bonesTotal += game.run.bones;
     checkUnlocks(); persist(300);
     showCombo(0); setHint(""); Sound.over(); Sound.setAct("menu"); VisualSystem.emit("death"); updateHud();
-    renderResults(); if (game.mode === "story") Board.post();
+    renderResults(); if (game.mode === "story" && !Replay.play) Board.post();
     Telemetry.emit("run_end", { mode: game.mode, map: game.map, score: game.score, hits: game.hits, stage: game.stage, secs: Math.round(game.run.secs), throws: game.throws, quit: !card });
+    Replay.finish(); renderResults();   // (the recording is kept for Watch replay and Share)
     leavePractice();   // (the copy goes; the real profile comes back, one practice run the richer)
   }
-  function endRun() { if (inRun()) { aim.active = false; Sound.pullEnd(); gameOver(false); game.overAt = game.time - 0.6; } }
+  function endRun() { if (inRun()) { Replay.note("e"); aim.active = false; Sound.pullEnd(); gameOver(false); game.overAt = game.time - 0.6; } }
 
   // ───────────────────────── the skull's rig, frame by frame ─────────────────────────
   function updateRig(dt) {
@@ -345,6 +350,7 @@
     VisualSystem.update(dt);
   }
   function updateGame(dt) {
+    if (Replay.play) Replay.tick();   // what the recording did at this step (07j_replay.js)
     game.time += dt;
     if (game.mode === "arcade" && inRun()) { const s = Math.floor(arcadeSecs()); if (s !== ui.arcSec) { ui.arcSec = s; renderProgress(); } }   // the Arcade clock, on game time
     const L = ringTargets(), k = Math.min(1, dt * 2.2);

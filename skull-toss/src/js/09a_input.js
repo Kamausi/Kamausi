@@ -30,6 +30,7 @@
   document.addEventListener("keydown", firstGesture, true);
 
   cvs.addEventListener("pointerdown", e => {
+    if (Replay.play) return;   // (watching: the recording does the throwing)
     if (handHit(e.clientX, e.clientY)) { e.preventDefault(); misc.kind = null; foundSecret("caught"); Sound.toon("boing"); return; }   // caught the animator in the act
     if (game.state !== "ready" || aim.active || paused || sheet || screen !== "play") return;
     e.preventDefault();
@@ -47,6 +48,7 @@
 
   window.addEventListener("keydown", e => {
     const k = e.key;
+    if (Replay.play && screen === "play") { if (k === "Escape") { Replay.stop(true); e.preventDefault(); } return; }
     if (sheet) { if (k === "Escape") { closeSheet(); e.preventDefault(); } return; }
     if (game.state === "continue") { if (k === "Escape") { declineContinue("no"); e.preventDefault(); } return; }
     if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
@@ -80,6 +82,7 @@
   }
   function pollPad() {
     const gp = firstPad();
+    if (Replay.play) return;
     if (!gp) { if (aim.active && aim.source === "pad") cancelAim(); padIn.prev = []; return; }
     const held = i => !!(gp.buttons[i] && (gp.buttons[i].pressed || gp.buttons[i].value > 0.5)), pressed = i => held(i) && !padIn.prev[i];
     const sx = gp.axes[0] || 0, sy = gp.axes[1] || 0, mag = Math.hypot(sx, sy);

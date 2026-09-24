@@ -12,7 +12,7 @@
   // big scene changes iris out and back in, like the end of an old cartoon; pausing is instant
   function showScreen(name, fx = true) {
     const prev = screen; screen = name;
-    if (name === "title") renderResumeOffer();
+    if (name === "title") { renderResumeOffer(); renderSharedOffer(); }
     if (fx && prev !== name && name !== "pause" && prev !== "pause") irisTo(() => applyScreen(name)); else applyScreen(name);
   }
   // GAME OVER pops up over the picture when the last skull is gone; the headstone follows it
@@ -37,7 +37,7 @@
     showScreen("play"); Sound.ui("close");
   }
   function toTitle() {
-    closeSheet(false); paused = false; Sound.setPaused(false); cancelAim(); Sound.flightStop(true); leavePractice();
+    closeSheet(false); paused = false; Sound.setPaused(false); cancelAim(); Sound.flightStop(true); Replay.stop(false); leavePractice();
     game.state = "title"; game.score = 0; game.hits = 0; game.lives = START_LIVES; game.slots = START_LIVES; game.streak = 0;
     stageReset(); clearPowers(); clearPickups(); setScene(0); snapRing(); Sound.setAct("menu");
     particles = []; bursts = []; waves = []; clearFlies(); resetSkull(); showCombo(0); setHint("");
@@ -178,6 +178,7 @@
     $("newBest").textContent = r.story && !best ? "Morty is whole again!" : !arcade ? "A brand new record!" : best ? `New best on ${STAGES[game.map].name}!` : "Your longest run on this map!";
     $("resTitle").textContent = best || longer ? "" : arcade ? `Arcade · ${STAGES[game.map].name}` : titleName();
     $("resBones").textContent = r.bones;
+    $("watchBtn").hidden = !Replay.last && !Replay.play; $("shareBtn").hidden = !Replay.last || !!Replay.play;   // (07j_replay.js)
     if (mode !== "story" && mode !== "arcade") {   // the other modes: their own record on the ribbon and the line below
       const R = modeRec(mode), fresh = game.newBest && (r.modeValue || 0) > 0;
       $("newBest").hidden = !fresh; $("newBest").textContent = t("res.newRecord", { mode: t(`mode.${mode}.name`) });
@@ -186,6 +187,7 @@
     }
     const A = arcade ? arcadeRec() : null;
     $("bestLine").innerHTML = arcade ? `Map best <b>${fmtN(A.score)}</b> · longest <b>${mmss(A.secs)}</b>` : `Best <b>${fmtN(profile.bestScore)}</b> · ${rankFor(profile.makes).name}`;
+    if (Replay.play) { $("newBest").hidden = true; $("resTitle").textContent = t("replay.ribbon"); }
     // the progress panel: what's next in the Vault, with the bones this run earned sitting in its top-right corner
     const nx = nextUnlock(), txt = $("nextText"), bar = $("nextBar");
     bar.hidden = !nx;

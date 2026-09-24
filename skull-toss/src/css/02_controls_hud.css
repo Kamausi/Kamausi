@@ -180,3 +180,7 @@ html.hc .rc-text{text-shadow:0 0 2px var(--ink),0 0 4px var(--ink)}
 .reelcard.wrong{pointer-events:none}
 .reelcard.wrong .rc-s{margin-top:10px;padding:4px 12px;border:4px solid #C0392B;border-radius:6px;font:30px/1 var(--display);font-style:normal;letter-spacing:.06em;color:#E0503E;transform:rotate(-8deg);max-width:none}
 .reelcard.wrong .rc-skip{display:none}
+
+/* a replay playing (v35): a badge under the score, with its speed and a way out */
+.replay-badge{position:fixed;top:calc(env(safe-area-inset-top,0px) + 92px);left:50%;transform:translateX(-50%);z-index:6;display:flex;align-items:center;gap:6px;padding:5px 6px 5px 12px;border-radius:999px;background:#A94332;border:2px solid var(--ink);box-shadow:0 3px 0 var(--ink);font:16px/1 var(--num);letter-spacing:.12em;color:var(--cream);text-transform:uppercase}
+.replay-badge button{min-width:32px;height:26px;border-radius:999px;border:2px solid var(--ink);background:var(--cream);color:var(--ink);font:15px/1 var(--num);cursor:pointer}

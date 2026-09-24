@@ -47,6 +47,7 @@
   // a tap, Space or Enter: on to the next card (the throw is held until the last one is done)
   function skipReelCard() {
     if (!reelSt.card || !game.cine || game.cine.kind !== "reel") return false;
+    Replay.note("s");
     game.cine.t = game.cine.dur; Sound.ui("tick"); return true;
   }
   reelEl.addEventListener("pointerdown", e => { e.preventDefault(); skipReelCard(); });
@@ -108,7 +109,8 @@
 
   // ── where the reel's cards come in
   function introReel(mode, map) {   // a run starts: the leader (once a session) and Reel One's card (Story), or the map's card (Arcade, Practice)
-    const leader = mode === "story" && !reelSt.leaderShown && cardsMode() === "full";
+    const leader = Replay.play ? !!Replay.play.R.leader : mode === "story" && !reelSt.leaderShown && cardsMode() === "full";   // (a replay shows it if the run did)
+    reelSt.introLeader = leader;
     if (leader) reelSt.leaderShown = true;
     const list = mode !== "story" ? [titleCard(map + 1, mode)] : (leader ? [{ kind: "leader" }] : []).concat(titleCard(1));
     reelCards(list, () => { setHint(t("hint.start")); mortySays(`map.${game.stage}`, { priority: true }); });
