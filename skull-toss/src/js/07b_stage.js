@@ -11,21 +11,12 @@
   const BASE_PTS = { perfect: 250, swish: 100, rim: 75 };
   const comboMult = streak => Math.min(1 + 0.5 * Math.max(0, streak - 1), 6);
   // corners of the triangle: 0 near-left-low · 1 far-right-low · 2 up-centre. Patterns are learnable, never random.
-  // tint: each stage's colour grade (a soft wash over the graveyard, so the maps read as different places);
-  // blurb: how its ring behaves, for the Arcade map list
-  const STAGES = [
-    { name: "Moonshine Cemetery",  speed: 1.0,  tri: { a: 1.25, up: 0.8, near: 1.2, far: 1.3, skew: 0 },    seqs: [[0, 1, 2], [0, 2, 1]],                   mods: [],
-      tint: null, blurb: "The gentlest ring: it slides side to side, then flies a small triangle" },
-    { name: "The Crooked Crypts",  speed: 1.08, tri: { a: 1.35, up: 0.85, near: 1.3, far: 1.4, skew: 0.2 },  seqs: [[0, 1, 2], [0, 2, 1], [0, 1, 2, 1]],      mods: ["bob"],
-      tint: "#6C4F9E", blurb: "A quicker ring that bobs as it slides, and a lopsided triangle" },
-    { name: "Pumpkin Patch Hollow", speed: 1.15, tri: { a: 1.45, up: 0.9, near: 1.35, far: 1.5, skew: -0.25 }, seqs: [[0, 2, 1], [0, 1, 2, 1], [1, 0, 2, 0]],  mods: ["bob", "shrink"],
-      tint: "#D2782C", blurb: "Bobbing and smaller, over a wider triangle" },
-    { name: "The Bone Orchard",    speed: 1.22, tri: { a: 1.55, up: 1.0, near: 1.45, far: 1.6, skew: 0.35 }, seqs: [[0, 1, 2, 1], [0, 2, 0, 1, 2, 1], [2, 1, 0]], mods: ["bob", "shrink"],
-      tint: "#5E8C45", blurb: "The fastest, smallest ring, on the widest triangle of all" }
-  ];
-  function stageDef(n = game.stage || 1) {   // past the last one, the list loops and keeps getting faster
-    const i = (n - 1) % STAGES.length, loops = Math.floor((n - 1) / STAGES.length), S = STAGES[i];
-    return { ...S, speed: S.speed + loops * 0.3, n };
+  // The maps are data (src/maps/*.json → MAP_DATA): each names its ring's speed, triangle, patterns, modifiers and path.
+  const STAGES = MAP_DATA.map(m => ({ id: m.id, name: m.name, speed: m.ring.speed, tri: m.ring.tri, seqs: m.ring.seqs, mods: m.ring.mods,
+    path: m.ring.path, tint: m.look.tint, blurb: m.blurb, map: m }));
+  function stageDef(n = game.stage || 1) {   // the story has eight maps and then ends: nothing loops any more
+    const i = clamp((n | 0) - 1, 0, STAGES.length - 1);
+    return { ...STAGES[i], n };
   }
   const hasMod = m => stageDef().mods.includes(m);
   function triSequence(stage) {   // each pattern twice, then the next one
@@ -131,15 +122,16 @@
     setRingMode("tri"); snapRing(); ring.morph = 1; Sound.setAct("B");
     updateHud();
   }
+  const bossIds = (n = game.stage) => mapData(n).bosses;
   function startMiniBoss() {
     game.phase = "mini"; clearPickups(); clearPowers(); Sound.toon("brass"); Sound.setAct("boss");
-    boss = makeCrowKing(game.stage); setRingMode("boss"); snapRing(); Telemetry.emit("boss_start", { kind: boss.kind, stage: game.stage });
-    stageCard("Mini-boss", "The Crow King", `Toss through his ring ${boss.max} times`, 2.3, "boss");
+    boss = makeBoss(bossIds().mini, game.stage); setRingMode("boss"); snapRing(); Telemetry.emit("boss_start", { kind: boss.kind, stage: game.stage });
+    stageCard("Mini-boss", BOSS_INFO[boss.kind].name, `Toss through his ring ${boss.max} times`, 2.3, "boss");
     cine("mini-in", 2.3, () => setHint("He swoops near and far: lead the ring"));
     updateHud();
   }
   function miniBossDown() {
-    profile.miniKills++; if (boss.flawless) profile.miniFlawless++; game.run.bosses++;
+    profile.miniKills++; profile.bossLog[boss.kind] = (profile.bossLog[boss.kind] || 0) + 1; if (boss.flawless) profile.miniFlawless++; game.run.bosses++;
     const bonus = Math.round(2500 * stageMult() * (boss.flawless ? 1.5 : 1));
     game.score += bonus; flyPoints(`+${fmtN(bonus)}`, W / 2, H * 0.36, true); Sound.toon("fanfare");
     stageCard("Mini-boss defeated!", "The ring goes 3D", `Left, right, up, down, near and far${boss.flawless ? " · flawless!" : ""}`, 2.6, "gold");
@@ -151,27 +143,43 @@
   }
   function startMainBoss() {
     game.phase = "boss"; clearPickups(); clearPowers(); Sound.toon("brass"); Sound.setAct("boss");
-    boss = makePumpkinKing(game.stage); setRingMode("boss"); snapRing(); Telemetry.emit("boss_start", { kind: boss.kind, stage: game.stage });
-    stageCard("Main boss", "The Pumpkin King", "Seeds knock Morty away. Time your toss.", 2.6, "boss");
+    boss = makeBoss(bossIds().end, game.stage); setRingMode("boss"); snapRing(); Telemetry.emit("boss_start", { kind: boss.kind, stage: game.stage });
+    stageCard("End boss", BOSS_INFO[boss.kind].name, BOSS_INFO[boss.kind].tell, 2.6, "boss");
     cine("boss-in", 2.6, () => setHint("Throw between his seed volleys"), 0.35);
     updateHud();
   }
   function mainBossDown() {
     profile.bossKills++; if (boss.flawless) profile.bossFlawless++; game.run.bosses++;
+    profile.bossLog[boss.kind] = (profile.bossLog[boss.kind] || 0) + 1;
     profile.bestStage = Math.max(profile.bestStage, game.stage + 1);
+    // the end boss was holding one of Morty's pieces
+    const frag = mapData(game.stage).fragment, fresh = !profile.fragments.includes(frag);
+    if (fresh) profile.fragments.push(frag);
+    game.run.fragments = (game.run.fragments || []).concat(frag);
+    Telemetry.emit("fragment", { id: frag, fresh, stage: game.stage });
+    if (game.stage >= MAP_COUNT) { storyComplete(); return; }
     const bonus = Math.round((10000 + (boss.flawless ? 5000 : 0)) * stageMult());
     game.score += bonus; flyPoints(`+${fmtN(bonus)}`, W / 2, H * 0.36, true);
     const bones = 150 + game.stage * 50; addBones(bones); game.run.bossBones = (game.run.bossBones || 0) + bones;
-    stageCard(`Stage ${game.stage} clear!`, "The Pumpkin King falls", `+${bones} bones · a skull back${boss.flawless ? " · flawless!" : ""}`, 2.8, "gold");
+    stageCard(`${mapData(game.stage).name} clear!`, `${FRAGMENTS[frag].name} recovered`, `+${bones} bones · a skull back${boss.flawless ? " · flawless!" : ""}`, 2.8, "gold");
     Sound.toon("fanfare");
     cine("boss-out", 2.8, () => {
-      boss = null; seeds.length = 0; game.stage++; game.stageHits = 0; game.phase = "A"; VisualSystem.setStage(game.stage);
+      boss = null; seeds.length = 0; game.stage++; game.stageHits = 0; game.phase = "A"; VisualSystem.setStage(game.stage); setScene(game.stage - 1);
       if (game.lives < MAX_LIVES) { game.lives++; game.slots = Math.max(game.slots, game.lives); }
       setRingMode("line"); snapRing(); Sound.setAct("A");
       const S = stageDef();
-      stageCard(`Stage ${game.stage}`, S.name, S.mods.length ? "Everything's a little faster, and a little stranger" : "Everything's a little faster", 2);
+      stageCard(S.map.reel, S.name, S.map.identity.mechanic.split(":")[0], 2.2);
       updateHud();
     }, 0.4);
+    checkUnlocks(); persist(); updateHud();
+    challenge("bosses", 1);
+  }
+  // the last end boss: THE END. Morty is whole again and the run is over, won.
+  function storyComplete() {
+    profile.storyClears++; game.run.story = true;
+    stageCard("The End", "Morty is whole again", "All eight reels restored", 3.4, "gold");
+    Sound.toon("fanfare"); Telemetry.emit("story_complete", { score: game.score, secs: Math.round(game.time - (game.run.t0 || 0)) });
+    cine("boss-out", 3.4, () => { boss = null; seeds.length = 0; gameOver(true); }, 0.4);
     checkUnlocks(); persist(); updateHud();
     challenge("bosses", 1);
   }
@@ -204,7 +212,8 @@
     } else {
       const h = Math.min(game.stageHits || 0, STAGE_BOSS);
       progFill.style.width = (100 * h / STAGE_BOSS).toFixed(1) + "%";
-      progLbl.textContent = h < STAGE_MINI ? `${STAGE_MINI - h} to the Crow King` : `${STAGE_BOSS - h} to the Pumpkin King`;
+      const B = bossIds();
+      progLbl.textContent = h < STAGE_MINI ? `${STAGE_MINI - h} to ${BOSS_INFO[B.mini].name.replace(/^The /, "the ")}` : `${STAGE_BOSS - h} to ${BOSS_INFO[B.end].name.replace(/^The /, "the ")}`;
       delete progEl.dataset.boss;
     }
     progEl.querySelector(".mini").classList.toggle("done", (game.stageHits || 0) >= STAGE_MINI);

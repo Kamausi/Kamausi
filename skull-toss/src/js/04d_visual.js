@@ -97,7 +97,8 @@
     if (B.dead) return "defeat";
     if (B.t < (B.entry || 0)) return "enter";
     if (B.hurt > 0.5) return "hit";
-    if (B.kind === "crow") { const q = B.pathAt(B.t), S = B.seg, u = B.t - S.t0; return q.tell > 0 || u > S.hold + S.tell ? "attack" : "vulnerable"; }
+    if (B.state) return B.state();
+    if (B.seg && B.plan) { const q = B.pathAt(B.t), S = B.seg, u = B.t - S.t0; return q.tell > 0 || u > S.hold + S.tell ? "attack" : "vulnerable"; }
     if (B.volley) return B.volley.tell > 0 || B.spit > 0 ? "attack" : "vulnerable";
     return "vulnerable";
   }

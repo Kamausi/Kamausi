@@ -233,10 +233,11 @@
   // two ways to play. Story: the stages in order, each with its two bosses. Arcade: one map (any stage), no bosses
   // and no end: the ring keeps getting quicker, and the run lasts as long as your skulls do.
   function startGame(opts = {}) {
-    const mode = opts.mode === "arcade" ? "arcade" : "story", map = mode === "arcade" ? clamp(opts.map | 0, 0, STAGES.length - 1) : 0;
+    const mode = opts.mode === "arcade" ? "arcade" : "story", pick = clamp(opts.map | 0, 0, STAGES.length - 1), map = mode === "arcade" && mapUnlocked(pick) ? pick : 0;
     Object.assign(game, { state: "ready", score: 0, hits: 0, lives: START_LIVES, slots: START_LIVES, streak: 0, perfStreak: 0, peakLives: START_LIVES, throws: 0,
       result: null, lastCross: null, newBest: false, shake: 0, slowmo: 0, run: freshRun(), mode, map });
     game.run.t0 = game.time; voice.said = 0; voice.text = "";
+    setScene(map);   // Story starts on map 1; Arcade on the map picked
     ring.frozen = null; ring.flash = 0; ring.wobble = 0; ring.morph = 0;
     stageReset(); clearPowers(); clearPickups();
     if (mode === "arcade") { game.stage = map + 1; VisualSystem.setStage(game.stage); }
@@ -259,7 +260,7 @@
   function gameOver(card = true) {
     Sound.flightStop(true);
     game.state = "over"; game.overAt = game.time; game.overHold = card ? GAME_OVER_HOLD : 0.6; game.cine = null; hideStageCard();
-    if (card) gameOverCard(true);
+    if (card) gameOverCard(true, game.run.story ? ["The", "End"] : undefined);
     game.run.secs = Math.max(0, game.time - (game.run.t0 || 0));
     if (game.mode === "arcade") {   // arcade keeps its own bests, map by map (the story best and the leaderboard stay Story's)
       const k = String(game.map), A = profile.arcade[k] || (profile.arcade[k] = { score: 0, secs: 0, hits: 0, runs: 0 });

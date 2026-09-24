@@ -58,6 +58,64 @@ for name in ["sky", "far", "mid", "near", "foreground"]:
     svg = ET.parse(f).getroot()
     if (svg.get("viewBox") or "").split() != ["0", "0", "2000", "1000"]: sys.exit(f"build refused: scene/{name}.svg must use viewBox=\"0 0 2000 1000\"")
     SCENE[name] = "data:image/svg+xml;base64," + base64.b64encode(f.read_bytes()).decode()
+# ── maps: src/maps/NN-<id>.json, one per map, checked against the spatial blueprint and the registry of what the code
+#    implements, then embedded as MAP_DATA (with TIER_DATA, BLUEPRINT and MAP_REGISTRY). See docs/SPATIAL_BLUEPRINT.md. ──
+MAPDIR = root / "maps"
+BLUEPRINT = json.loads((MAPDIR / "blueprint.json").read_text())
+REG = json.loads((MAPDIR / "registry.json").read_text())
+TIERS = json.loads((MAPDIR / "tiers.json").read_text())
+HEX = re.compile(r"^#[0-9A-Fa-f]{6}$"); COLOR = re.compile(r"^(#[0-9A-Fa-f]{6}|rgba?\([\d.,\s]+\))$")
+def map_problems(m, fname):
+    bad = []
+    need = lambda k, d=m: k in d or bad.append(f"missing \"{k}\"")
+    for k in ["id", "n", "name", "reel", "premise", "identity", "look", "ring", "tiers", "mechanic", "bosses", "fragment", "music", "blurb"]: need(k)
+    if bad: return bad
+    if fname != f"{m['n']:02d}-{m['id']}.json": bad.append(f"file should be named {m['n']:02d}-{m['id']}.json")
+    for k in ["mechanic", "throw", "targets", "hazards", "camera", "ambient", "music", "sfx", "transition", "reward"]:
+        if not str(m["identity"].get(k, "")).strip(): bad.append(f"identity.{k} is empty (the stage bible needs it)")
+    L = m["look"]
+    for k, n in [("sky", 4), ("ground", 4), ("hills", 3)]:
+        if len(L.get(k, [])) != n or not all(HEX.match(c) for c in L.get(k, [])): bad.append(f"look.{k} must be {n} #rrggbb colours")
+    if L.get("grass") and (len(L["grass"]) != 2 or not all(HEX.match(c) for c in L["grass"])): bad.append("look.grass must be empty or 2 #rrggbb colours")
+    for k in ["silhouette", "moonColor"]:
+        if not HEX.match(str(L.get(k, ""))): bad.append(f"look.{k} must be #rrggbb")
+    for k in ["horizon", "haze", "light", "hillRim"]:
+        if not COLOR.match(str(L.get(k, ""))): bad.append(f"look.{k} must be a colour")
+    for k, reg in [("moon", "moon"), ("skyline", "skyline"), ("lane", "lane"), ("props", "props"), ("foreground", "foreground"), ("weather", "weather")]:
+        if L.get(k) not in REG[reg]: bad.append(f"look.{k} \"{L.get(k)}\" isn't one the code draws ({', '.join(REG[reg])})")
+    for wk in L.get("ambient", {}).get("walkers", []):
+        if wk not in REG["walkers"]: bad.append(f"ambient walker \"{wk}\" doesn't exist")
+    R, P = m["ring"], BLUEPRINT["ringPlane"]
+    if not 0.8 <= R.get("speed", 0) <= 1.8: bad.append("ring.speed must be 0.8–1.8")
+    T = R.get("tri", {}); a, up, near, far, skew = (T.get(k, 0) for k in ["a", "up", "near", "far", "skew"])
+    bob = 0.16 if "bob" in R.get("mods", []) else 0
+    for i, (x, y, z) in enumerate([(-a, P["y"] - 0.3, P["z"] - near), (a, P["y"] - 0.3 + skew * 0.4, P["z"] + far), (skew * a, P["y"] + up, P["z"] + 0.05)]):
+        if abs(x) > P["xMax"] or y - bob < P["yMin"] or y + bob > P["yMax"] or not P["zMin"] <= z <= P["zMax"]:
+            bad.append(f"ring triangle corner {i} ({x:.2f}, {y:.2f}, {z:.2f}) leaves the ring's playable space")
+    for q in R.get("seqs", []):
+        if len(q) < 3 or any(v not in (0, 1, 2) for v in q) or any(q[i] == q[(i + 1) % len(q)] for i in range(len(q))):
+            bad.append(f"ring sequence {q} must visit corners 0–2, at least three legs, never a corner to itself")
+    if any(md not in REG["mods"] for md in R.get("mods", [])): bad.append("ring.mods has an unknown modifier")
+    if R.get("path") not in REG["path"]: bad.append(f"ring.path \"{R.get('path')}\" isn't one the code flies")
+    if len(m["tiers"]) != 2 or any(t not in [x["id"] for x in TIERS] for t in m["tiers"]): bad.append("tiers must name two tiers (first half, second half)")
+    if m["mechanic"].get("kind") not in REG["mechanic"]: bad.append(f"mechanic \"{m['mechanic'].get('kind')}\" isn't implemented")
+    if m["bosses"].get("mini") not in REG["mini"] or m["bosses"].get("end") not in REG["end"]: bad.append("bosses must name a registered mini-boss and end boss")
+    if m["fragment"] not in REG["fragment"]: bad.append(f"fragment \"{m['fragment']}\" isn't registered")
+    if not 0.85 <= m["music"].get("rate", 0) <= 1.15: bad.append("music.rate must be 0.85–1.15")
+    return bad
+MAP_DATA, problems = [], []
+for f in sorted(MAPDIR.glob("[0-9][0-9]-*.json")):
+    m = json.loads(f.read_text()); MAP_DATA.append(m)
+    problems += [f"maps/{f.name}: {b}" for b in map_problems(m, f.name)]
+if [m.get("n") for m in MAP_DATA] != list(range(1, len(MAP_DATA) + 1)): problems.append("maps must be numbered 1, 2, 3… with no gaps")
+for key in ["id", "fragment"]:
+    vals = [m.get(key) for m in MAP_DATA]
+    if len(set(vals)) != len(vals): problems.append(f"two maps share a {key}")
+bosses = [m["bosses"][k] for m in MAP_DATA for k in ("mini", "end") if "bosses" in m]
+if len(set(bosses)) != len(bosses): problems.append("two maps share a boss")
+if problems: sys.exit("build refused: the maps don't check out\n  " + "\n  ".join(problems))
+js = ("  const MAP_DATA = " + json.dumps(MAP_DATA, separators=(",", ":"), ensure_ascii=False) + ";\n  const TIER_DATA = " + json.dumps(TIERS, separators=(",", ":")) +
+      ";\n  const BLUEPRINT = " + json.dumps(BLUEPRINT, separators=(",", ":")) + ";\n  const MAP_REGISTRY = " + json.dumps(REG, separators=(",", ":")) + ";\n" + js)
 # ── optional ring art: src/art/rings/<id>.(webp|png) plus <id>.json from measure.py ──
 RING_ART = {}
 for f in sorted((root / "art" / "rings").glob("*")):

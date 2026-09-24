@@ -16,10 +16,12 @@
   }
   // GAME OVER pops up over the picture when the last skull is gone; the headstone follows it
   const GAME_OVER_HOLD = 1.6;   // seconds the words hold before the results
-  function gameOverCard(on) {
+  function gameOverCard(on, words = ["Game", "Over"]) {
     const el = $("gameOver");
     if (!on) { el.hidden = true; return; }
-    el.hidden = false; const card = el.firstElementChild; card.style.animation = "none"; void card.offsetWidth; card.style.animation = "";
+    const card = el.firstElementChild; let i = 0;
+    card.innerHTML = words.map(w => `<span class="go-w">${[...w.toUpperCase()].map(ch => `<i style="--i:${i++}">${ch}</i>`).join("")}</span>`).join("");
+    el.classList.toggle("won", words[0] === "The"); el.hidden = false; card.style.animation = "none"; void card.offsetWidth; card.style.animation = "";
     for (const i of card.querySelectorAll("i")) { i.style.animation = "none"; void i.offsetWidth; i.style.animation = ""; }
   }
   function pauseRun() {
@@ -36,7 +38,7 @@
   function toTitle() {
     closeSheet(false); paused = false; Sound.setPaused(false); cancelAim(); Sound.flightStop(true);
     game.state = "title"; game.score = 0; game.hits = 0; game.lives = START_LIVES; game.slots = START_LIVES; game.streak = 0;
-    stageReset(); clearPowers(); clearPickups(); snapRing(); Sound.setAct("menu");
+    stageReset(); clearPowers(); clearPickups(); setScene(0); snapRing(); Sound.setAct("menu");
     particles = []; bursts = []; waves = []; clearFlies(); resetSkull(); showCombo(0); setHint("");
     showScreen("title"); updateHud();
   }
@@ -48,12 +50,14 @@
   function renderPlay(maps = false) {
     $("modePick").hidden = maps; $("mapPick").hidden = !maps;
     $("h-play").textContent = maps ? "Arcade" : "Play";
-    $("storyBest").textContent = profile.bestScore > 0 ? `Best ${fmtN(profile.bestScore)} · reached stage ${profile.bestStage}` : "";
+    const reached = Math.min(profile.bestStage, MAP_COUNT), done = profile.storyClears > 0;
+    $("storyBest").textContent = profile.bestScore > 0 ? `Best ${fmtN(profile.bestScore)} · ${done ? `finished ${profile.storyClears > 1 ? profile.storyClears + " times" : ""}` : `reached map ${reached}`} · ${profile.fragments.length}/8 pieces` : "";
     const played = STAGES.map((S, i) => arcadeRec(i)).filter(a => a.runs), longest = played.length ? Math.max(...played.map(a => a.secs)) : 0;
     $("arcadeBest").textContent = played.length ? `Longest run ${clockStr(longest)}` : "";
     $("mapList").innerHTML = STAGES.map((S, i) => {
-      const A = arcadeRec(i);
-      return `<button class="map-card" type="button" data-map="${i}" style="--tint:${S.tint || "#26364A"}"><span class="n">Map ${i + 1}</span><b>${S.name}</b><span class="d">${S.blurb}</span>`
+      const A = arcadeRec(i), open = mapUnlocked(i);
+      if (!open) return `<button class="map-card locked" type="button" data-map="${i}" aria-disabled="true" style="--tint:${S.map.look.sky[1]}"><span class="n">Map ${i + 1}</span><b>${S.name}</b><span class="d">Reach it in Story to play it here</span><span class="rec"><span><i>Locked</i></span></span></button>`;
+      return `<button class="map-card" type="button" data-map="${i}" style="--tint:${S.map.look.sky[1]}"><span class="n">Map ${i + 1}</span><b>${S.name}</b><span class="d">${S.blurb}</span>`
         + `<span class="rec">${A.runs ? `<span><i>Best</i> ${fmtN(A.score)}</span><span><i>Longest</i> ${clockStr(A.secs)}</span>` : "<span><i>Not played yet</i></span>"}</span></button>`;
     }).join("");
   }
@@ -62,7 +66,7 @@
     if (b.dataset.mode === "story") { closeSheet(false); startGame({ mode: "story" }); }
     else { Sound.ui("flick"); renderPlay(true); const f = $("mapList").querySelector("button"); if (f && ui.kbd) f.focus({ preventScroll: true }); }
   });
-  $("mapList").addEventListener("click", e => { const b = e.target.closest("[data-map]"); if (!b) return; closeSheet(false); startGame({ mode: "arcade", map: +b.dataset.map }); });
+  $("mapList").addEventListener("click", e => { const b = e.target.closest("[data-map]"); if (!b) return; if (!mapUnlocked(+b.dataset.map)) { Sound.ui("deny"); return; } closeSheet(false); startGame({ mode: "arcade", map: +b.dataset.map }); });
   // in the map list, Back steps back to the two modes rather than closing
   $("sheet-play").querySelector("[data-back]").addEventListener("click", e => { if (!$("mapPick").hidden) { e.stopImmediatePropagation(); renderPlay(false); Sound.ui("close"); } }, true);
   $("toMenu").addEventListener("click", toTitle);
@@ -131,18 +135,20 @@
   function renderResults() {
     const r = game.run, g = runGrade();
     $("epitaph").textContent = profile.name || "a nameless soul";
+    $("over").classList.toggle("won", !!r.story); $("over").querySelector(".rip").innerHTML = r.story ? "The end<i>!</i>" : "Here lies<i>…</i>";
     const arcade = game.mode === "arcade";
     const rows = [["Score", `<b id="final">${fmtN(game.score)}</b>`], [arcade ? "Survived" : "Time", mmss(r.secs || 0)], ["Hits", game.hits],
       ["Perfect", `${r.perfects}/${game.throws}`], ["Best combo", `×${r.bestCombo}`]];
     if (r.bosses) rows.splice(4, 0, ["Bosses", r.bosses]);
     if (r.powerups) rows.push(["Power-ups", r.powerups]);
+    if (r.fragments && r.fragments.length) rows.push(["Morty's pieces", r.fragments.map(f => FRAGMENTS[f].name).join(", ")]);
     rows.push(["Skill level", g.stars ? `<span class="stars">${"★".repeat(g.stars)}</span>` : "—"]);
     $("resStats").innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
     $("resGrade").textContent = g.grade;
     $("resGrade").parentElement.classList.toggle("top", g.v >= 0.69);
     const best = game.newBest && game.score > 0, longer = arcade && r.newTime && r.secs > 0;
-    $("newBest").hidden = !(best || longer);
-    $("newBest").textContent = !arcade ? "A brand new record!" : best ? `New best on ${STAGES[game.map].name}!` : "Your longest run on this map!";
+    $("newBest").hidden = !(best || longer || r.story);
+    $("newBest").textContent = r.story && !best ? "Morty is whole again!" : !arcade ? "A brand new record!" : best ? `New best on ${STAGES[game.map].name}!` : "Your longest run on this map!";
     $("resTitle").textContent = best || longer ? "" : arcade ? `Arcade · ${STAGES[game.map].name}` : titleName();
     $("resBones").textContent = r.bones;
     const A = arcade ? arcadeRec() : null;

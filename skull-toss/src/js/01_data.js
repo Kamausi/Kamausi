@@ -218,11 +218,20 @@
   // older profile there. Every profile that comes in (this device, the cloud, a save code) runs the steps it hasn't
   // had, in order, so an old save reaches today's shape the same way wherever it comes from. A profile written by a
   // newer build keeps its number and its fields.
-  const SAVE_SCHEMA = 2;
+  const SAVE_SCHEMA = 3;
   const MIGRATIONS = {
     // v14: the leaderboard stops posting bestScore (a save code can carry any number) and posts boardBest instead,
     // the best Story run actually played to its end. Nothing carries over: the board takes runs finished from now on.
-    2: p => { p.boardBest = null; }
+    2: p => { p.boardBest = null; },
+    // v18: eight maps, and Story ends after the eighth. v12's "stage 5" onwards was map 1 again, faster; a stage number
+    // now names a map, and a v12 player who got past stage 4 had cleared the four old maps, which reaches map 5.
+    // The Whole Reel used to mean those four maps: anyone who has it keeps it as Half the Reel, and The Whole Reel
+    // now means all eight, so it can still be earned (and paid) the new way.
+    3: p => {
+      if (Number(p.bestStage) > 5) p.bestStage = 5;
+      if (Array.isArray(p.achievements)) p.achievements = p.achievements.map(a => a === "whole-reel" ? "half-reel" : a);
+      p.fragments = []; p.bossLog = {};
+    }
   };
   function migrateProfile(p) {
     const from = Math.max(1, Math.floor(Number(p.schema) || 1));
@@ -236,9 +245,10 @@
   const STAT_KEYS = ["games", "throws", "makes", "perfects", "rims", "bestStreak", "bestPerfStreak", "peakLives", "points", "best", "bonesTotal", "bonks", "misses", "clutch",
     "bestScore", "scoreTotal", "bestStage", "miniKills", "miniFlawless", "bossKills", "bossFlawless",
     "wides", "overs", "lows", "posts", "shorts", "clanks", "seeds", "zeroRuns", "quickDeaths",
-    "powerups", "cursed", "saves", "bonesSpent", "shopBuys", "coffins", "playTime", "grabs", "arcadeRuns", "chalClaims", "achSeen"];
+    "powerups", "cursed", "saves", "bonesSpent", "shopBuys", "coffins", "playTime", "grabs", "arcadeRuns", "chalClaims", "achSeen", "storyClears"];
   // arcade: the best on each map, keyed by map number ({ score, secs, hits, runs }); achievements: the ones unlocked
-  const DEFAULT_PROFILE = { name: "", bones: 0, daily: null, weekly: null, monthly: null, unlocked: [], seen: [], achievements: [], arcade: {}, updatedAt: 0, board: false, bestStage: 1, boardBest: null };
+  const DEFAULT_PROFILE = { name: "", bones: 0, daily: null, weekly: null, monthly: null, unlocked: [], seen: [], achievements: [], arcade: {}, updatedAt: 0, board: false, bestStage: 1, boardBest: null,
+    fragments: [], bossLog: {} };   // fragments: Morty's pieces recovered (ids); bossLog: each boss beaten, how many times
   for (const k of STAT_KEYS) if (!(k in DEFAULT_PROFILE)) DEFAULT_PROFILE[k] = 0;
   const DEFAULT_COS = { skull: "bone", eyes: "pie", teeth: "grin", paint: "none", trail: "dust", impact: "classic", ring: "hoop", aim: "bone", reel: "standard", title: "rookie", updatedAt: 0 };
   let sandbox = null;   // while the spec runs, nothing is written to the player's storage or cloud
@@ -276,6 +286,10 @@
     out.achievements = Array.isArray(out.achievements) ? [...new Set(out.achievements.filter(s => typeof s === "string"))].slice(0, 200) : [];
     out.arcade = cleanArcade(out.arcade);
     out.boardBest = cleanRun(out.boardBest);
+    out.bestStage = clamp(Math.floor(out.bestStage), 1, MAP_DATA.length + 1);   // (MAP_COUNT + 1: the story has been finished)
+    out.fragments = Array.isArray(out.fragments) ? [...new Set(out.fragments.filter(f => typeof f === "string"))].slice(0, 16) : [];
+    const log = {}; if (out.bossLog && typeof out.bossLog === "object") for (const [k, v] of Object.entries(out.bossLog)) if (/^[a-z]{2,16}$/.test(k)) log[k] = Math.max(0, Math.floor(Number(v) || 0));
+    out.bossLog = log;
     return out;
   }
   function cleanArcade(a) {
@@ -305,6 +319,8 @@
     }
     out.board = newer.board;
     out.boardBest = b.boardBest && (!a.boardBest || b.boardBest.score > a.boardBest.score) ? b.boardBest : a.boardBest;
+    out.fragments = [...new Set([...a.fragments, ...b.fragments])];
+    out.bossLog = { ...a.bossLog }; for (const [k, v] of Object.entries(b.bossLog)) out.bossLog[k] = Math.max(out.bossLog[k] || 0, v);
     out.schema = Math.max(a.schema, b.schema);
     out.gift = a.gift || b.gift ? 1 : 0;
     out.updatedAt = Math.max(a.updatedAt, b.updatedAt);

@@ -94,6 +94,12 @@
     c.beginPath(); c.moveTo(-0.14, -0.2); c.lineTo(-0.2, -0.52); c.lineTo(-0.02, -0.27); c.moveTo(0.14, -0.2); c.lineTo(0.2, -0.52); c.lineTo(0.02, -0.27); c.fill();
     c.restore();
   }
+  function drawCrowSil(c, x, y, s, f) {   // a crow: a heavier body and wide, slow wings
+    const up = -f * 0.6; c.save(); c.translate(x, y); c.scale(s * 1.2, s * 1.2); c.beginPath();
+    c.moveTo(-0.2, 0); c.quadraticCurveTo(-0.9, up - 0.3, -1.7, up + 0.1); c.lineTo(-1.3, up * 0.3 + 0.2); c.quadraticCurveTo(-0.7, 0.1, -0.2, 0.2);
+    c.lineTo(0.2, 0.2); c.quadraticCurveTo(0.7, 0.1, 1.3, up * 0.3 + 0.2); c.lineTo(1.7, up + 0.1); c.quadraticCurveTo(0.9, up - 0.3, 0.2, 0); c.closePath(); c.fill();
+    c.beginPath(); c.ellipse(0, 0.1, 0.3, 0.2, 0, 0, TAU); c.fill(); c.beginPath(); c.moveTo(0.28, 0.05); c.lineTo(0.55, 0.12); c.lineTo(0.28, 0.18); c.fill(); c.restore();
+  }
   function drawWitch(c, x, y, s, dir, t) {
     const fl = Math.sin(t * 9) * 0.06;
     c.save(); c.translate(x, y); c.scale(dir * s, s); c.fillStyle = INK; c.strokeStyle = INK; c.lineCap = "round"; c.lineJoin = "round";
@@ -177,7 +183,10 @@
     for (const c of w.clouds) { const sp = w.sprites[c.s]; if (!sp) continue; ctx.globalAlpha = c.a; ctx.drawImage(sp.c, c.x, c.y, sp.w, sp.h); }
     ctx.globalAlpha = 1;
     if (moonLayer) {   // the clouds pass behind the moon: it is a face in the sky, not weather
-      const M = moonLayer; planeXform(ctx, 400, "sky"); ctx.drawImage(M.c, M.x0, M.y0, M.w, M.h); planeXform(ctx, 160, "sky");
+      const M = moonLayer; planeXform(ctx, 400, "sky"); ctx.drawImage(M.c, M.x0, M.y0, M.w, M.h);
+      const Sc = sceneFX.screen;   // the picture-house screen flickers with the projector (as much as Flashes allows)
+      if (Sc) { ctx.fillStyle = `rgba(242,231,201,${(0.04 + 0.05 * Math.sin(t * 23) * Math.sin(t * 7)) * flashK()})`; ctx.fillRect(Sc.x - Sc.w / 2, Sc.y - Sc.h / 2, Sc.w, Sc.h); }
+      planeXform(ctx, 160, "sky");
     }
     if (w.bolt && w.bolt.t < 0.26 && !(w.bolt.t > 0.07 && w.bolt.t < 0.14)) {
       ctx.save(); ctx.strokeStyle = CREAM; ctx.lineJoin = "round";
@@ -190,7 +199,7 @@
     const w = world, t = w.t;
     planeXform(ctx, 40, "far");
     ctx.fillStyle = INK;
-    for (const b of w.bats) drawBat(ctx, b.x, b.y0 + Math.sin(b.ph * 0.18 * b.wob) * b.amp, b.sz, Math.sin(b.ph));
+    for (const b of w.bats) (b.kind === "crow" ? drawCrowSil : drawBat)(ctx, b.x, b.y0 + Math.sin(b.ph * 0.18 * b.wob) * b.amp, b.sz, Math.sin(b.ph));
     if (w.witch) { const k = w.witch; drawWitch(ctx, k.x, k.y0 + Math.sin(k.ph * 2) * U * 0.012, U * 0.09, k.dir, t); }
     baseXform(ctx);
   }

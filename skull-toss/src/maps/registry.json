@@ -1,0 +1,116 @@
+{
+  "_doc": "What the code implements. build.py checks every map against this list, and the spec checks that the code has every id here.",
+  "moon": [
+    "art",
+    "crescent",
+    "harvest",
+    "full",
+    "none",
+    "screen"
+  ],
+  "skyline": [
+    "graveyard",
+    "crypts",
+    "farm",
+    "orchard",
+    "bayou",
+    "carnival",
+    "city",
+    "theatre"
+  ],
+  "lane": [
+    "dirt",
+    "flagstone",
+    "furrows",
+    "bones",
+    "boardwalk",
+    "sawdust",
+    "cobbles",
+    "carpet"
+  ],
+  "props": [
+    "graveyard",
+    "crypts",
+    "patch",
+    "orchard",
+    "bayou",
+    "carnival",
+    "belfry",
+    "theatre"
+  ],
+  "foreground": [
+    "branches",
+    "chains",
+    "cornstalks",
+    "vines",
+    "moss",
+    "bunting",
+    "gears",
+    "curtains"
+  ],
+  "weather": [
+    "none",
+    "mist",
+    "leaves",
+    "spores",
+    "fireflies",
+    "confetti",
+    "rain",
+    "dust"
+  ],
+  "walkers": [
+    "zombie",
+    "skeleton",
+    "werewolf",
+    "ghost"
+  ],
+  "path": [
+    "triangle",
+    "circle",
+    "jumpcut"
+  ],
+  "mods": [
+    "bob",
+    "shrink"
+  ],
+  "mechanic": [
+    "none",
+    "bats",
+    "wind",
+    "bonefall",
+    "fog",
+    "balloons",
+    "pendulum",
+    "jumpcut"
+  ],
+  "mini": [
+    "crow",
+    "batbaron",
+    "scarecrow",
+    "owl",
+    "gator",
+    "jester",
+    "cuckoo",
+    "projectionist"
+  ],
+  "end": [
+    "undertaker",
+    "count",
+    "pumpkin",
+    "marrowroot",
+    "madame",
+    "ringmaster",
+    "clockking",
+    "reaper"
+  ],
+  "fragment": [
+    "tophat",
+    "bowtie",
+    "gloves",
+    "cane",
+    "spats",
+    "whistle",
+    "watch",
+    "shadow"
+  ]
+}

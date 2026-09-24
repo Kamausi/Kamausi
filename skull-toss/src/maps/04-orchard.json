@@ -1,0 +1,121 @@
+{
+  "id": "orchard",
+  "n": 4,
+  "name": "The Bone Orchard",
+  "reel": "Reel Four",
+  "premise": "Rows of trees that grow bones instead of apples. Harvest season is noisy.",
+  "identity": {
+    "mechanic": "Falling fruit: bones drop from the branches through the lane. A falling bone knocks the skull away.",
+    "throw": "Time the throw between drops; the shadow shows where one will land.",
+    "targets": "Hanging bone-fruit that pay when you clip them.",
+    "hazards": "Falling bones.",
+    "camera": "Under the canopy, dappled.",
+    "ambient": "Skeleton pickers, ghosts in the rows, spores drifting.",
+    "music": "The waltz on xylophone.",
+    "sfx": "Clacks, rattles, creaking branches.",
+    "transition": "Leaves closing like a curtain.",
+    "reward": "Morty's Cane."
+  },
+  "look": {
+    "sky": [
+      "#0E1A14",
+      "#1E3226",
+      "#3A5A3A",
+      "#6A8A4A"
+    ],
+    "horizon": "rgba(200,230,140,.12)",
+    "moon": "full",
+    "moonColor": "#DDE8B8",
+    "stars": 0.6,
+    "skyline": "orchard",
+    "silhouette": "#0C1610",
+    "haze": "rgba(106,138,74,.22)",
+    "ground": [
+      "#3E4A36",
+      "#2A3424",
+      "#1C2418",
+      "#10160E"
+    ],
+    "hills": [
+      "#4A5A3E",
+      "#3E4E34",
+      "#34422C"
+    ],
+    "hillRim": "rgba(220,240,180,.1)",
+    "grass": [
+      "#7A8A5A",
+      "#5A6A42"
+    ],
+    "lane": "bones",
+    "light": "rgba(200,230,140,.1)",
+    "props": "orchard",
+    "foreground": "vines",
+    "weather": "spores",
+    "tint": null,
+    "ambient": {
+      "walkers": [
+        "skeleton",
+        "zombie"
+      ],
+      "ghost": true,
+      "bats": 1.0,
+      "witch": false,
+      "digger": false,
+      "cat": false,
+      "lightning": false
+    }
+  },
+  "ring": {
+    "speed": 1.22,
+    "tri": {
+      "a": 1.55,
+      "up": 1.0,
+      "near": 1.45,
+      "far": 1.6,
+      "skew": 0.35
+    },
+    "seqs": [
+      [
+        0,
+        1,
+        2,
+        1
+      ],
+      [
+        0,
+        2,
+        0,
+        1,
+        2,
+        1
+      ],
+      [
+        2,
+        1,
+        0
+      ]
+    ],
+    "mods": [
+      "bob",
+      "shrink"
+    ],
+    "path": "triangle"
+  },
+  "tiers": [
+    "III",
+    "III"
+  ],
+  "mechanic": {
+    "kind": "bonefall"
+  },
+  "bosses": {
+    "mini": "owl",
+    "end": "marrowroot"
+  },
+  "fragment": "cane",
+  "music": {
+    "rate": 1.0,
+    "key": 2
+  },
+  "blurb": "The fastest ring yet, on a lopsided triangle, with bones falling through it"
+}

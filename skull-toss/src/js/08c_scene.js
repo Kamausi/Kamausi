@@ -8,7 +8,10 @@
     const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, ring.rc * p.s * 2.2);
     g.addColorStop(0, `rgba(${R.rgb},${0.1 + ring.flash * 0.18})`); g.addColorStop(1, `rgba(${R.rgb},0)`);
     ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(p.x, p.y, ring.rc * p.s * 2.2, ring.rc * p.s * 0.45, 0, 0, TAU); ctx.fill();
-    ctx.fillStyle = "rgba(0,0,0,.45)"; ctx.beginPath(); ctx.ellipse(p.x, p.y, ring.rc * p.s * 0.95, 0.07 * p.s, 0, 0, TAU); ctx.fill();
+    if (look().ambient.water) {   // over water the ring has a reflection where its shadow would be, rippling (the fog never hides it)
+      const r = ring.rc * p.s, wob = Math.sin(game.time * 3.1) * 0.06;
+      ctx.save(); ctx.globalAlpha = 0.38; ctx.translate(p.x, p.y + r * 0.18); ctx.scale(1 + wob, -0.26); drawRingShape(ctx, 0, 0, r, RING_TUBE * 2 * p.s, cos.ring, game.time, 0); ctx.restore();
+    } else { ctx.fillStyle = "rgba(0,0,0,.45)"; ctx.beginPath(); ctx.ellipse(p.x, p.y, ring.rc * p.s * 0.95, 0.07 * p.s, 0, 0, TAU); ctx.fill(); }
     if (ring.mode !== "line") {        // a plumb line from the ring to its shadow: where it is now, never where it's going
       const top = project(ring.x, ring.y - ring.rc - 0.05, ring.z);
       ctx.strokeStyle = "rgba(232,216,180,.22)"; ctx.lineWidth = 1; ctx.setLineDash([2, 5]); ctx.beginPath(); ctx.moveTo(top.x, top.y); ctx.lineTo(p.x, p.y); ctx.stroke(); ctx.setLineDash([]);
@@ -261,6 +264,7 @@
     L(skyLayer, 400, "sky");
     drawSkyWorld();
     L(farLayer, 70, "far");
+    if (sceneFX.wheel || sceneFX.clock) { planeXform(ctx, 70, "far"); drawFarFX(world.t); baseXform(ctx); }
     drawSkyLife();
     drawGroundPlane(ctx, groundLayer);
     if (midLayer) L(midLayer, 30, "world");
@@ -308,6 +312,7 @@
 
     // the nearest planes: props on the ground at the frame's edges, then branches right by the lens
     drawNear();
+    drawWeather();
     for (const P of fgLayer) L(P, 2.4, "fg");
     baseXform(ctx);
     if (voice.anchor) { drawSpeech(voice.anchor.x, voice.anchor.y, voice.anchor.r); voice.anchor = null; }

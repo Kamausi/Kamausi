@@ -1,0 +1,120 @@
+{
+  "id": "patch",
+  "n": 3,
+  "name": "Pumpkin Patch Hollow",
+  "reel": "Reel Three",
+  "premise": "A harvest-moon farm where the pumpkins grin back and the scarecrow has opinions about crows.",
+  "identity": {
+    "mechanic": "Wind: gusts push the skull sideways in flight. The weathervane and the leaves show which way.",
+    "throw": "Aim into the wind; the guide bends with it.",
+    "targets": "Jack-o'-lanterns that light up when a throw passes near.",
+    "hazards": "Gusts.",
+    "camera": "Wide and warm, the harvest moon low.",
+    "ambient": "Crows on the fence, the black cat, a zombie farmhand, the witch against the moon.",
+    "music": "The waltz on a fiddle, a touch quicker.",
+    "sfx": "Wind, rustling corn, caws.",
+    "transition": "A gust of leaves across the lens.",
+    "reward": "Morty's White Gloves."
+  },
+  "look": {
+    "sky": [
+      "#2A1420",
+      "#5A2A2E",
+      "#A24A2E",
+      "#D8843A"
+    ],
+    "horizon": "rgba(255,190,90,.18)",
+    "moon": "harvest",
+    "moonColor": "#F4B04A",
+    "stars": 0.3,
+    "skyline": "farm",
+    "silhouette": "#2A1410",
+    "haze": "rgba(216,132,58,.2)",
+    "ground": [
+      "#5A3A22",
+      "#3E2616",
+      "#2A1A10",
+      "#180E08"
+    ],
+    "hills": [
+      "#6A4428",
+      "#5A3A22",
+      "#4A301C"
+    ],
+    "hillRim": "rgba(255,200,120,.14)",
+    "grass": [
+      "#8A7A3A",
+      "#6A5A2A"
+    ],
+    "lane": "furrows",
+    "light": "rgba(255,170,60,.12)",
+    "props": "patch",
+    "foreground": "cornstalks",
+    "weather": "leaves",
+    "tint": null,
+    "ambient": {
+      "walkers": [
+        "zombie"
+      ],
+      "ghost": false,
+      "bats": 0.5,
+      "witch": true,
+      "digger": false,
+      "cat": true,
+      "lightning": false,
+      "crows": true
+    }
+  },
+  "ring": {
+    "speed": 1.15,
+    "tri": {
+      "a": 1.45,
+      "up": 0.9,
+      "near": 1.35,
+      "far": 1.5,
+      "skew": -0.25
+    },
+    "seqs": [
+      [
+        0,
+        2,
+        1
+      ],
+      [
+        0,
+        1,
+        2,
+        1
+      ],
+      [
+        1,
+        0,
+        2,
+        0
+      ]
+    ],
+    "mods": [
+      "bob",
+      "shrink"
+    ],
+    "path": "triangle"
+  },
+  "tiers": [
+    "II",
+    "III"
+  ],
+  "mechanic": {
+    "kind": "wind",
+    "max": 1.6
+  },
+  "bosses": {
+    "mini": "scarecrow",
+    "end": "pumpkin"
+  },
+  "fragment": "gloves",
+  "music": {
+    "rate": 1.03,
+    "key": 1
+  },
+  "blurb": "Bobbing and smaller, over a wider triangle, with the wind in it"
+}

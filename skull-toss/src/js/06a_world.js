@@ -27,31 +27,40 @@
     return { c, w, h };
   }
   const halfWidthAt = z => (W / 2) / (F / (z + CAM_BACK));
+  // how many clouds and fog banks a map has: none indoors, a low ceiling over the belfry, a thick mist in the crypts and the bayou
+  const skyCloud = () => { const L = look(); return { n: L.moon === "screen" ? 0 : L.moon === "none" ? 11 : 6, fog: L.weather === "mist" || L.ambient.water ? 6 : 3, fogA: L.weather === "mist" ? 1.6 : L.ambient.water ? 1.3 : 1 }; };
   function worldResize() {
+    const K = skyCloud();
     world.sprites = [0, 1, 2, 3, 4].map(i => makeCloud(900 + i * 37));
     const rnd = mulberry32(5150);
-    world.clouds = Array.from({ length: 6 }, (_, i) => ({ s: i % 5, x: rnd() * (W + U * 0.6) - U * 0.6, y: HY * (0.06 + rnd() * 0.62), v: U * (0.012 + rnd() * 0.03), a: 0.55 + rnd() * 0.45 }));
+    world.clouds = Array.from({ length: K.n }, (_, i) => ({ s: i % 5, x: rnd() * (W + U * 0.6) - U * 0.6, y: HY * (0.06 + rnd() * 0.62), v: U * (0.012 + rnd() * 0.03), a: 0.55 + rnd() * 0.45 }));
     const [fc, fg] = spriteCanvas(W * 0.9, U * 0.09);
     const gr = fg.createRadialGradient(W * 0.45, U * 0.045, 0, W * 0.45, U * 0.045, W * 0.45);
     gr.addColorStop(0, "rgba(200,210,225,.13)"); gr.addColorStop(1, "rgba(200,210,225,0)");
     fg.fillStyle = gr; fg.save(); fg.scale(1, (U * 0.09) / (W * 0.9)); fg.fillRect(0, 0, W * 0.9, W * 0.9); fg.restore();
     world.fogSprite = { c: fc, w: W * 0.9, h: U * 0.09 };
-    world.fog = [0.03, 0.09, 0.17].map((k, i) => ({ x: rnd() * W - W * 0.45, y: HY + (H - HY) * k, v: U * (0.008 + rnd() * 0.012) * (i % 2 ? -1 : 1), a: 0.6 + rnd() * 0.4 }));
+    world.fog = [0.03, 0.09, 0.17, 0.06, 0.12, 0.24].slice(0, K.fog).map((k, i) => ({ x: rnd() * W - W * 0.45, y: HY + (H - HY) * k, v: U * (0.008 + rnd() * 0.012) * (i % 2 ? -1 : 1), a: Math.min(1, (0.6 + rnd() * 0.4) * K.fogA) }));
     world.twinkles = Array.from({ length: 28 }, () => ({ x: rnd() * W, y: rnd() * HY * 0.8, ph: rnd() * TAU, sp: 0.6 + rnd() * 1.8, r: 0.8 + rnd() * 0.9 }));
     world.bats = []; world.flocks = []; world.witch = null; world.shooting = null; world.bolt = null;
-    graveyardResize(); walkerCelsResize();
+    graveyardResize(); walkerCelsResize(); weatherReset();
   }
 
+  // a new map: its own wanderers, sky life and weather, starting fresh
+  function worldForScene() {
+    Object.assign(world, { walkers: [], bats: [], flocks: [], witch: null, bolt: null, shooting: null, thunderAt: 0 });
+    GY.cat = null; GY.digger = null;
+    worldResize();
+  }
   const panX = sx => clamp((sx / W) * 2 - 1, -1, 1);
   function spawnWalker(type) {
     const T = WALKERS[type], z = rand(13, 27), dir = Math.random() < 0.5 ? 1 : -1, hw = halfWidthAt(z) + 2;
     world.walkers.push({ kind: "walker", type, z, dir, x: -dir * hw, start: -dir * hw, end: dir * hw, v: rand(T.v[0], T.v[1]), h: T.h * rand(0.93, 1.07),
       ph: rand(0, TAU), state: "walk", stopX: rand(-0.35, 0.35) * hw, howled: false, howlT: 0, next: world.t + rand(1, 3), alpha: 0 });
   }
-  function spawnFlock() {
+  function spawnFlock(kind = "bat") {
     const dir = Math.random() < 0.5 ? 1 : -1, n = 4 + ((Math.random() * 6) | 0), base = HY * rand(0.2, 0.7), flock = { next: world.t + rand(0.3, 1), bats: [] };
     for (let i = 0; i < n; i++) {
-      const b = { x: dir > 0 ? -rand(20, U * 0.4) : W + rand(20, U * 0.4), y0: base + rand(-U * 0.07, U * 0.07), vx: dir * U * rand(0.32, 0.5),
+      const b = { kind, x: dir > 0 ? -rand(20, U * 0.4) : W + rand(20, U * 0.4), y0: base + rand(-U * 0.07, U * 0.07), vx: dir * U * rand(0.32, 0.5),
         ph: rand(0, TAU), fl: rand(9, 13), amp: U * rand(0.01, 0.03), sz: U * rand(0.013, 0.021), wob: rand(0.8, 2) };
       world.bats.push(b); flock.bats.push(b);
     }
@@ -74,7 +83,7 @@
 
   function updateWorld(dt) {
     const w = world; w.t += dt;
-    updateGraveyard(dt);
+    updateGraveyard(dt); updateWeather(dt);
     for (const k of w.walkers) if (k.scare) k.scare = Math.max(0, k.scare - dt * 1.4);
     for (const c of w.clouds) {
       c.x += c.v * dt;
@@ -84,18 +93,19 @@
     if (w.fogSprite) for (const f of w.fog) { f.x += f.v * dt; if (f.x > W) f.x = -w.fogSprite.w; if (f.x < -w.fogSprite.w) f.x = W; }
     // director
     const n = w.next;
+    const A = look().ambient, kinds = A.walkers.filter(k => k !== "ghost");
     if (w.t >= n.walker) {
-      if (w.walkers.filter(k => k.type !== "ghost").length < 2) { // weighted pick, never the same monster twice running
-        let type; do { const r = Math.random(); type = r < 0.45 ? "zombie" : r < 0.8 ? "skeleton" : "werewolf"; } while (type === w.lastType);
+      if (kinds.length && w.walkers.filter(k => k.type !== "ghost").length < 2) { // weighted pick from the map's wanderers, never the same one twice running if it has a choice
+        let type, tries = 0; do { const r = Math.random(); type = kinds[Math.min(kinds.length - 1, Math.floor(Math.pow(r, 1.3) * kinds.length))]; } while (type === w.lastType && kinds.length > 1 && tries++ < 6);
         w.lastType = type; spawnWalker(type);
       }
       n.walker = w.t + rand(7, 16);
     }
-    if (w.t >= n.ghost) { if (!w.walkers.some(k => k.type === "ghost")) spawnWalker("ghost"); n.ghost = w.t + rand(25, 45); }
-    if (w.t >= n.bats) { spawnFlock(); n.bats = w.t + rand(14, 28); }
-    if (w.t >= n.witch) { if (!w.witch) spawnWitch(); n.witch = w.t + rand(45, 80); }
+    if (w.t >= n.ghost) { if ((A.ghost || A.walkers.includes("ghost")) && !w.walkers.some(k => k.type === "ghost")) spawnWalker("ghost"); n.ghost = w.t + rand(25, 45); }
+    if (w.t >= n.bats) { if (A.bats > 0) spawnFlock(A.crows ? "crow" : "bat"); n.bats = w.t + rand(14, 28) / Math.max(0.2, A.bats || 0.2); }
+    if (w.t >= n.witch) { if (A.witch && !w.witch) spawnWitch(); n.witch = w.t + rand(45, 80); }
     if (w.t >= n.shoot) { w.shooting = { x: rand(W * 0.15, W * 0.85), y: rand(HY * 0.05, HY * 0.35), vx: U * rand(1.1, 1.6) * (Math.random() < 0.5 ? -1 : 1), vy: U * rand(0.35, 0.6), t: 0, dur: 0.75 }; n.shoot = w.t + rand(18, 40); }
-    if (w.t >= n.bolt) { if (!reduceMotion) spawnBolt(); n.bolt = w.t + rand(50, 100); }
+    if (w.t >= n.bolt) { if (!reduceMotion && A.lightning) spawnBolt(); n.bolt = w.t + rand(50, 100) * (look().weather === "rain" ? 0.4 : 1); }
     // wanderers
     for (const k of w.walkers) {
       const T = WALKERS[k.type];

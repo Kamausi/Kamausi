@@ -7,6 +7,12 @@
     start() { startGame(); },
     pause(on = true) { manual = on; },
     simStep: SIM_STEP, simAdvance: dt => advance(dt), simReset() { simAcc = 0; },   // the live loop's fixed step
+    setScene: i => setScene(i), mapUnlocked: i => mapUnlocked(i), goWords: () => $("gameOver").textContent,
+    scene: () => ({ map: sceneMap, props: GY.props.length, kinds: [...new Set(GY.props.map(p => p.kind))].sort(), weather: WX.kind, bits: WX.bits.length, moon: moon.kind, fg: fgLayer.length,
+      clear: GY.props.every(p => p.kind === "digger" || clearOfLane(p.x, p.z)), clouds: world.clouds.length }),
+    maps: () => JSON.parse(JSON.stringify(MAP_DATA)),
+    implemented: () => ({ skyline: Object.keys(SKYLINES), lane: Object.keys(LANES), props: Object.keys(PROPSETS), foreground: Object.keys(FOREGROUNDS), near: Object.keys(NEAR_SETS),
+      weather: ["none", "mist", ...Object.keys(WX_COUNT)], moon: ["art", "none", "crescent", "harvest", "full", "screen"], registry: MAP_REGISTRY }),
     pollPad: () => pollPad(), aim: () => ({ active: aim.active, source: aim.source, valid: aim.valid, tension: aim.tension, AX: aim.AX, AY: aim.AY }),
     telemetry: () => Telemetry.events.map(e => ({ ...e })), migrateProfile: p => migrateProfile(JSON.parse(JSON.stringify(p))), saveSchema: SAVE_SCHEMA,
     readSaved: (k, st) => readSaved(k, st), boardEntry: () => Board.entry(), endRun: () => endRun(),
@@ -84,7 +90,8 @@
     spray(n) { for (let i = 0; i < n; i++) { particles.push({ kind: "dot", x: W / 2, y: H / 2, vx: 0, vy: 0, life: 5, max: 5, size: 2, color: CREAM, g: 0, a: 1 }); bursts.push({ word: "", x: 0, y: 0, t: 0, dur: 5 }); } },
     h: (...a) => h(...a),
     profile() { return JSON.parse(JSON.stringify(profile)); },
-    setStats(o) { Object.assign(profile, o); if (o.unlocked) profile.unlocked = [...o.unlocked]; if (o.achievements) profile.achievements = [...o.achievements]; if (o.arcade) profile.arcade = JSON.parse(JSON.stringify(o.arcade)); },
+    setStats(o) { Object.assign(profile, JSON.parse(JSON.stringify(o)));   // (a copy: the live profile must never share a list with the caller)
+      if (o.unlocked) profile.unlocked = [...o.unlocked]; if (o.achievements) profile.achievements = [...o.achievements]; if (o.arcade) profile.arcade = JSON.parse(JSON.stringify(o.arcade)); },
     setName(n) { profile.name = n; },
     equip, cosmetics() { return { ...cos }; }, checkUnlocks: () => checkUnlocks().map(f => f.kind + ":" + f.it.id),
     nextUnlock() { const n = nextUnlock(); return n && { kind: n.kind, id: n.it.id, have: n.have, need: n.it.req[1] }; },

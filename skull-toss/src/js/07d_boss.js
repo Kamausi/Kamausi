@@ -299,3 +299,10 @@
     seeds.length = 0;
   }
   function updateBoss(dt) { if (boss) boss.update(dt); }
+  // a boss by id (see BOSS_INFO). Until each has its own moves, a mini-boss flies like the Crow King and an end boss fights
+  // like the Pumpkin King, under its own name.
+  function makeBoss(id, stage) {
+    const mini = MAP_REGISTRY.mini.includes(id), B = id === "pumpkin" ? makePumpkinKing(stage) : id === "crow" ? makeCrowKing(stage) : mini ? makeCrowKing(stage) : makePumpkinKing(stage);
+    B.kind = id; B.short = BOSS_INFO[id].short;
+    return B;
+  }

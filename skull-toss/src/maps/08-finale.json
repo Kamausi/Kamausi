@@ -1,0 +1,116 @@
+{
+  "id": "finale",
+  "n": 8,
+  "name": "The Final Reel",
+  "reel": "Reel Eight",
+  "premise": "The picture palace where the last print of Morty's cartoon is kept. Something in the projection booth cut him out.",
+  "identity": {
+    "mechanic": "Jump cuts: the film skips and the ring jumps between frames. A flicker warns you a frame before.",
+    "throw": "Watch for the flicker; throw where the cut lands.",
+    "targets": "Film canisters in the aisle.",
+    "hazards": "Missing frames: the ring vanishes for a beat.",
+    "camera": "The projector's beam, dust in the light.",
+    "ambient": "Ghostly audience, ushers, dust.",
+    "music": "Every map's waltz, cut together.",
+    "sfx": "The projector's clatter, a reel spinning out.",
+    "transition": "THE END card.",
+    "reward": "Morty's Shadow, and Morty whole again."
+  },
+  "look": {
+    "sky": [
+      "#0A0808",
+      "#1A1210",
+      "#2A1A16",
+      "#3A2218"
+    ],
+    "horizon": "rgba(255,240,200,.1)",
+    "moon": "screen",
+    "moonColor": "#F2E7C9",
+    "stars": 0.0,
+    "skyline": "theatre",
+    "silhouette": "#0A0606",
+    "haze": "rgba(60,40,30,.3)",
+    "ground": [
+      "#5A1A1A",
+      "#3E1212",
+      "#2A0C0C",
+      "#160606"
+    ],
+    "hills": [
+      "#4A1616",
+      "#3E1212",
+      "#340E0E"
+    ],
+    "hillRim": "rgba(255,220,180,.1)",
+    "grass": [],
+    "lane": "carpet",
+    "light": "rgba(255,240,200,.14)",
+    "props": "theatre",
+    "foreground": "curtains",
+    "weather": "dust",
+    "tint": null,
+    "ambient": {
+      "walkers": [
+        "ghost",
+        "skeleton"
+      ],
+      "ghost": true,
+      "bats": 0.3,
+      "witch": false,
+      "digger": false,
+      "cat": false,
+      "lightning": false
+    }
+  },
+  "ring": {
+    "speed": 1.48,
+    "tri": {
+      "a": 1.6,
+      "up": 1.05,
+      "near": 1.5,
+      "far": 1.65,
+      "skew": 0.25
+    },
+    "seqs": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        0,
+        2,
+        1,
+        2
+      ],
+      [
+        1,
+        0,
+        2,
+        0
+      ]
+    ],
+    "mods": [
+      "bob",
+      "shrink"
+    ],
+    "path": "jumpcut"
+  },
+  "tiers": [
+    "V",
+    "VI"
+  ],
+  "mechanic": {
+    "kind": "jumpcut"
+  },
+  "bosses": {
+    "mini": "projectionist",
+    "end": "reaper"
+  },
+  "fragment": "shadow",
+  "music": {
+    "rate": 1.0,
+    "key": 0
+  },
+  "blurb": "The last reel: the fastest ring, and it cuts between frames"
+}

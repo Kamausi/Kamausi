@@ -7,25 +7,14 @@
   const twos = t => Math.floor(t * 12) / 12;
   const beatBounce = (t, ph = 0) => { const b = ((twos(t) / BEAT_S + ph) % 1 + 1) % 1; return b < 0.18 ? -Math.sin((b / 0.18) * Math.PI) : 0; };   // a quick squash on every beat
   const GY = { props: [], sprites: {}, digger: null, cat: null, S: 0 };
-  const STONE_COLS = [["#7C8798", "#98A3B4"], ["#8E849C", "#A89EB6"], ["#6F8A86", "#8AA6A2"], ["#8A8274", "#A69E8E"]];
-  (function layOut() {
-    const rnd = mulberry32(1933), P = GY.props;
-    const place = (kind, x, z, extra = {}) => P.push({ kind, x, z, ph: rnd(), seed: (rnd() * 1e6) | 0, face: rnd() < 0.3, ...extra });
-    // two banks of graves either side of the lane, getting sparser into the distance
-    for (let z = 4.5; z < 36; z += 1.3 + z * 0.06) for (const side of [-1, 1]) {
-      if (rnd() < 0.18) continue;
-      const x = side * (3.1 + rnd() * (2 + z * 0.18));
-      const k = rnd(); place(k < 0.5 ? "stone" : k < 0.68 ? "cross" : k < 0.82 ? "slab" : "obelisk", x, z + rnd() * 0.6, { col: (rnd() * STONE_COLS.length) | 0, tilt: (rnd() - 0.5) * 0.16, h: 0.75 + rnd() * 0.4 });
-    }
-    for (const [x, z] of [[-1.4, 18], [1.8, 21], [-2.2, 26], [0.4, 30], [2.6, 34]]) place("stone", x, z, { col: (rnd() * 4) | 0, tilt: (rnd() - 0.5) * 0.2, h: 0.8 + rnd() * 0.3 });
-    for (const [x, z, s] of [[-7.2, 15, 1.1], [6.8, 19, 1.2], [-10, 27, 1.3], [10.5, 31, 1.4], [-4.8, 33, 1.2]]) place("tree", x, z, { size: s });
-    place("crypt", 7.4, 26);
-    for (const [x, z] of [[-4.2, 7.5], [4.4, 12], [-5.8, 20]]) place("lantern", x, z);
-    for (const [x, z] of [[-6.5, 17.5], [5.8, 16.5]]) place("fence", x, z);
-    for (let i = 0; i < 26; i++) { const side = rnd() < 0.5 ? -1 : 1, z = 3.2 + rnd() * 24, x = side * (2.4 + rnd() * (2 + z * 0.25)); place("tuft", x, z, { size: 0.7 + rnd() * 0.5 }); }
-    P.push({ kind: "digger", x: -2.9, z: 12.5, ph: 0, face: false });
-    P.sort((a, b) => b.z - a.z);           // painted back to front, and the order never changes
-  })();
+  // lay out the map's props (06d_props.js): painted back to front, in an order that never changes while the map is up
+  function layOutProps() {
+    const rnd = mulberry32(1933 + sceneMap * 101), P = [];
+    const place = (kind, x, z, extra = {}) => { if (kind === "digger" || clearOfLane(x, z)) P.push({ kind, x, z, ph: rnd(), seed: (rnd() * 1e6) | 0, face: rnd() < 0.3, ...extra }); };
+    PROPSETS[look().props](place, rnd);
+    P.sort((a, b) => b.z - a.z);
+    GY.props = P; GY.sprites = {};
+  }
 
   // ── sprites (painted once per screen size, at the scale they'll usually be seen)
   function sprite(wM, hM, axM, ayM, S, paint) {
@@ -37,7 +26,7 @@
   }
   const ink2 = g => { g.fill(); g.stroke(); };
   function paintStone(g, k) {
-    const [base, lit] = STONE_COLS[k.col], h = k.h, w = 0.62, rnd = mulberry32(k.seed);
+    const [base, lit] = STONE_PALS[k.pal || "grave"][k.col || 0], h = k.h || 0.9, w = 0.62, rnd = mulberry32(k.seed);
     g.fillStyle = "rgba(0,0,0,.3)"; g.beginPath(); g.ellipse(0.04, 0, w * 0.7, 0.07, 0, 0, TAU); g.fill();
     g.fillStyle = base; g.beginPath();
     if (k.kind === "cross") { const t = 0.16; g.moveTo(-t / 2, 0); g.lineTo(-t / 2, -h * 0.72); g.lineTo(-w * 0.42, -h * 0.72); g.lineTo(-w * 0.42, -h * 0.88); g.lineTo(-t / 2, -h * 0.88); g.lineTo(-t / 2, -h * 1.12); g.lineTo(t / 2, -h * 1.12); g.lineTo(t / 2, -h * 0.88); g.lineTo(w * 0.42, -h * 0.88); g.lineTo(w * 0.42, -h * 0.72); g.lineTo(t / 2, -h * 0.72); g.lineTo(t / 2, 0); g.closePath(); ink2(g); g.fillStyle = lit; g.fillRect(-t / 2 + 0.02, -h * 1.1, 0.035, h * 1.08); return; }
@@ -84,7 +73,7 @@
   function paintTuft(g, k) {
     const n = 7, s = k.size;
     for (let i = 0; i < n; i++) { const a = -Math.PI / 2 + (i - (n - 1) / 2) * 0.22, l = (0.22 + ((i * 37) % 5) * 0.03) * s, bx = (i - (n - 1) / 2) * 0.03 * s;
-      g.fillStyle = i % 2 ? "#4A7A4A" : "#3E6A42"; g.beginPath(); g.moveTo(bx - 0.03 * s, 0); g.quadraticCurveTo(bx + Math.cos(a) * l * 0.4 - 0.02, Math.sin(a) * l * 0.5, bx + Math.cos(a) * l, Math.sin(a) * l); g.quadraticCurveTo(bx + Math.cos(a) * l * 0.4 + 0.03, Math.sin(a) * l * 0.5, bx + 0.03 * s, 0); g.closePath(); ink2(g); }
+      g.fillStyle = look().grass[i % 2] || "#3E6A42"; g.beginPath(); g.moveTo(bx - 0.03 * s, 0); g.quadraticCurveTo(bx + Math.cos(a) * l * 0.4 - 0.02, Math.sin(a) * l * 0.5, bx + Math.cos(a) * l, Math.sin(a) * l); g.quadraticCurveTo(bx + Math.cos(a) * l * 0.4 + 0.03, Math.sin(a) * l * 0.5, bx + 0.03 * s, 0); g.closePath(); ink2(g); }
   }
   function paintLantern(g) {
     g.fillStyle = "#2A2E36"; g.beginPath(); g.rect(-0.04, -1.5, 0.08, 1.5); ink2(g); g.beginPath(); g.moveTo(-0.04, -1.45); g.quadraticCurveTo(0.25, -1.55, 0.32, -1.4); g.lineWidth = 0.06; g.stroke(); g.lineWidth = 0.028;
@@ -96,7 +85,7 @@
     g.lineWidth = 0.035; g.strokeStyle = "#4A5060"; for (let i = 0; i < 9; i++) { const x = -1.6 + i * 0.4, h = 1.0 + Math.sin(i * 1.7) * 0.08; g.beginPath(); g.moveTo(x, -0.02); g.lineTo(x, -h + 0.04); g.stroke(); }
   }
   function spriteFor(k) {
-    const key = k.kind === "stone" || k.kind === "cross" || k.kind === "slab" || k.kind === "obelisk" || k.kind === "tree" || k.kind === "tuft" ? k.kind + k.seed : k.kind;
+    const key = k.kind === "mausoleum" || k.kind === "crypt" || k.kind === "torch" || k.kind === "lantern" || k.kind === "lamppost" ? k.kind : k.kind + k.seed;   // (only the identical ones share a sprite)
     if (GY.sprites[key]) return GY.sprites[key];
     const S = projectBase(0, 0, k.z).s * 1.1;
     let sp;
@@ -105,6 +94,7 @@
     else if (k.kind === "tuft") sp = sprite(0.8 * k.size, 0.45 * k.size, 0.4 * k.size, 0.4 * k.size, S, g => paintTuft(g, k));
     else if (k.kind === "lantern") sp = sprite(0.8, 1.7, 0.2, 1.65, S, paintLantern);
     else if (k.kind === "fence") sp = sprite(3.6, 1.35, 1.8, 1.25, S, paintFence);
+    else if (PROP_PAINT[k.kind]) { const [w, h, ax, ay] = PROP_SPRITES[k.kind], m = k.kind === "seats" || k.kind === "gear" ? 1 : k.size || 1; sp = sprite(w * m, h * m, ax * m, ay * m, S, g => PROP_PAINT[k.kind](g, k)); }
     else sp = sprite(1.0, 1.9, 0.5, 1.8, S, g => paintStone(g, k));
     return (GY.sprites[key] = sp);
   }
@@ -115,14 +105,12 @@
     if (k.kind === "digger") { drawDigger(); return; }
     const p = project(k.x, 0, k.z); if (p.x < -U * 1.2 || p.x > W + U * 1.2) return;
     const sp = spriteFor(k), sc = p.s / sp.S, t = world.t, bb = beatBounce(t, k.ph);
-    const sway = k.kind === "tree" ? Math.sin(twos(t) * 1.1 + k.ph * 6) * 0.05 : k.kind === "tuft" ? Math.sin(twos(t) * 2 + k.ph * 9) * 0.12 : 0;
+    const sway = k.kind === "tree" || k.kind === "bonetree" || k.kind === "cypress" ? Math.sin(twos(t) * 1.1 + k.ph * 6) * 0.05 : k.kind === "tuft" || k.kind === "reeds" || k.kind === "corn" ? Math.sin(twos(t) * 2 + k.ph * 9) * 0.12
+      : k.kind === "scarecrow" || k.kind === "balloons" ? Math.sin(twos(t) * 1.4 + k.ph * 4) * 0.07 : 0;
     ctx.save(); ctx.translate(p.x, p.y); if (k.tilt) ctx.rotate(k.tilt);
     if (sway) ctx.transform(1, 0, sway, 1, 0, 0);
     ctx.scale(sc * (1 - bb * 0.04), sc * (1 + bb * 0.06));
-    if (k.kind === "lantern") {   // a warm pool of light, flickering
-      const fl = 0.75 + 0.25 * Math.sin(t * 13 + k.ph * 9) * Math.sin(t * 4.1);
-      ctx.save(); ctx.globalCompositeOperation = "lighter"; const g = ctx.createRadialGradient(0.32 * sp.S, -1.25 * sp.S, 0, 0.32 * sp.S, -1.25 * sp.S, 1.4 * sp.S); g.addColorStop(0, `rgba(255,200,110,${0.32 * fl})`); g.addColorStop(1, "rgba(255,200,110,0)"); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0.32 * sp.S, -1.25 * sp.S, 1.4 * sp.S, 0, TAU); ctx.fill(); ctx.restore();
-    }
+    const life = PROP_LIFE[k.kind]; if (life) life(k, sp.S, t);   // light, drawn under the sprite so the prop stands in its own glow
     ctx.drawImage(sp.c, -sp.ax, -sp.ay, sp.w, sp.h);
     if (k.kind === "lantern") { const sw = Math.sin(twos(t) * 2 + k.ph) * 0.08; ctx.save(); ctx.translate(0.32 * sp.S, -1.38 * sp.S); ctx.rotate(sw); ctx.strokeStyle = INK; ctx.lineWidth = 0.03 * sp.S; ctx.fillStyle = `rgba(255,${190 + ((Math.sin(t * 13) * 30) | 0)},100,1)`; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, 0.08 * sp.S); ctx.stroke(); ctx.beginPath(); ctx.ellipse(0, 0.2 * sp.S, 0.09 * sp.S, 0.13 * sp.S, 0, 0, TAU); ctx.fill(); ctx.stroke(); ctx.restore(); }
     if (k.face && (k.kind === "stone" || k.kind === "slab")) drawStoneFace(k, sp, t);
@@ -249,5 +237,5 @@
   }
 
   // ── hooks for the rest of the game
-  function updateGraveyard(dt) { updateDigger(dt); updateCat(dt); }
+  function updateGraveyard(dt) { const A = look().ambient; if (A.digger) updateDigger(dt); if (A.cat) updateCat(dt); else GY.cat = null; }
   function drawPlayWorld() { drawCat(); }

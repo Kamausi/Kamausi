@@ -216,7 +216,7 @@
   });
 
   // ── Cosmetics ─────────────────────────────────────────────
-  const ZERO = { bones: 0, bonks: 0, misses: 0, clutch: 0, bonesTotal: 0, makes: 0, best: 0, perfects: 0, rims: 0, bestStreak: 0, bestPerfStreak: 0, peakLives: 0, games: 0, points: 0, throws: 0, unlocked: [], boardBest: null };
+  const ZERO = { bones: 0, bonks: 0, misses: 0, clutch: 0, bonesTotal: 0, makes: 0, best: 0, perfects: 0, rims: 0, bestStreak: 0, bestPerfStreak: 0, peakLives: 0, games: 0, points: 0, throws: 0, unlocked: [], boardBest: null, fragments: [], bossLog: {} };
   for (const [k, v] of Object.entries(T.profile())) if (typeof v === "number" && !(k in ZERO) && k !== "updatedAt" && k !== "schema") ZERO[k] = k === "bestStage" ? 1 : 0;   // every other counter too
   ZERO.achievements = T.achievements().map(a => a.id); ZERO.arcade = {};   // (all achievements in hand, so none pays out in the middle of a bones test)
   const statFor = { perfStreak: "bestPerfStreak" };
@@ -478,7 +478,7 @@
 
   // ── v11: score, progress, stages and bosses ───────────────
   const toHit = n => { T.setHits(n - 1); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); T.unfreezeRing(); };
-  const beatCrow = () => { fresh(); toHit(25); T.step(2.6); T.hurtBoss(99); T.endThrow(); T.step(3.2); };
+  const beatCrow = (stage = 1) => { fresh(); if (stage > 1) T.setStage(stage); toHit(25); T.step(2.6); T.hurtBoss(99); T.endThrow(); T.step(3.2); };
   test("HUD: the score centred, the hits under it, the best under that, all in the game's numerals; small skulls and combo", () => {
     fresh(); throwAndSettle(0, C.RING_Y);
     assert($("score").dataset.v === "250" && $("hits").textContent === "1", `score ${$("score").dataset.v}, hits ${$("hits").textContent}`);
@@ -525,8 +525,8 @@
     assert(T.throwThrough(p.x, p.y, p.z), "throw refused"); T.step(2.5);
     const s = T.state(); assert(s.lastResult.make, `leading the 3D ring should score (got ${s.lastResult.kind}; cross z ${s.lastCross && s.lastCross.ringZ})`);
   });
-  test("50 hits bring on the Pumpkin King; a seed knocks the skull out of the air, Ghost Toss slips through", () => {
-    beatCrow(); toHit(50); let s = T.state(); assert(s.phase === "boss" && T.boss().kind === "pumpkin", `phase ${s.phase}`);
+  test("50 hits on map 3 bring on the Pumpkin King; a seed knocks the skull out of the air, Ghost Toss slips through", () => {
+    beatCrow(3); toHit(50); let s = T.state(); assert(s.phase === "boss" && T.boss().kind === "pumpkin", `phase ${s.phase}`);
     T.step(2.9); T.freezeRing(0, C.RING_Y);
     const lives = T.state().lives, a = { AX: 0, AY: C.RING_Y }, q = T.skullPathAt(a.AX, a.AY, 3 / (C.RING_Z / C.FLIGHT_T));
     T.plantSeed(q.x, q.y, q.z); T.throwAt(a.AX, a.AY); T.step(2.5); s = T.state();
@@ -534,14 +534,14 @@
     T.givePower("ghost"); T.freezeRing(0, C.RING_Y); T.plantSeed(q.x, q.y, q.z); T.throwAt(a.AX, a.AY); T.step(2.5);
     assert(T.state().lastResult.make, `Ghost Toss should phase through the seed (got ${T.state().lastResult.kind})`);
   });
-  test("Beating the Pumpkin King clears the stage: a big bonus, bones, a skull back, and stage 2", () => {
-    beatCrow(); toHit(50); T.step(2.9); const s0 = T.state(), bones = T.bones();
+  test("Beating the Pumpkin King clears map 3: a big bonus, bones, a skull back, and map 4", () => {
+    beatCrow(3); toHit(50); T.step(2.9); const s0 = T.state(), bones = T.bones();
     T.hurtBoss(99); T.endThrow(); T.step(3.4); const s = T.state();
-    assert(s.stage === 2 && s.phase === "A" && s.stageHits === 0, `stage ${s.stage}, phase ${s.phase}`);
+    assert(s.stage === 4 && s.phase === "A" && s.stageHits === 0, `stage ${s.stage}, phase ${s.phase}`);
     assert(s.score >= s0.score + 10000 && T.bones() > bones, "no bonus");
-    assert(s.lives === Math.min(C.MAX_LIVES, s0.lives + 1), "no skull back"); assert(T.profile().bossKills >= 1 && T.profile().bestStage >= 2, "boss not recorded");
+    assert(s.lives === Math.min(C.MAX_LIVES, s0.lives + 1), "no skull back"); assert(T.profile().bossKills >= 1 && T.profile().bestStage >= 4 && T.profile().bossLog.pumpkin >= 1, "boss not recorded");
   });
-  test("Stages are data: each one names its speed, triangle and patterns", () => { const st = T.stages(); assert(st.length >= 4 && st[0] === "Moonshine Cemetery", st.join()); });
+  test("Stages are data: each one names its speed, triangle and patterns", () => { const st = T.stages(); assert(st.length === 8 && st[0] === "Moonshine Cemetery" && st[7] === "The Final Reel", st.join()); });
 
   // ── v11: power-ups ────────────────────────────────────────
   test("Power-ups float in the middle of the ring on a fixed schedule; only a toss through the middle grabs one", () => {
@@ -779,7 +779,7 @@
 
   // ── v12: two modes, GAME OVER, weekly and monthly challenges, achievements, new music and sounds ──
   test("PLAY asks Story or Arcade; Arcade lists every map with its best, and a map starts there", () => {
-    T.toTitle(); $("play").click();
+    T.setStats({ ...ZERO, bestStage: 9 }); T.toTitle(); $("play").click();
     assert(T.state().sheet === "play" && !$("modePick").hidden, "PLAY should open the mode picker");
     assert(document.querySelectorAll("#modePick [data-mode]").length === 2, "two modes to pick from");
     document.querySelector('#modePick [data-mode="arcade"]').click();
@@ -791,12 +791,12 @@
     document.querySelector('#modePick [data-mode="arcade"]').click(); document.querySelector('#mapList [data-map="2"]').click();
     const a = T.arcade(), s = T.state();
     assert(!T.state().sheet && s.state === "ready" && a.mode === "arcade" && a.map === 2 && s.stage === 3, `arcade on map 3 (${JSON.stringify(a)}, stage ${s.stage})`);
-    assert(a.tint, "a map other than the first has its own colour grade");
+    assert(T.scene().map === 2 && T.scene().props > 10, `a map other than the first dresses the scene as itself (${JSON.stringify(T.scene())})`);
     T.toTitle(); $("play").click(); document.querySelector('#modePick [data-mode="story"]').click();
     assert(T.arcade().mode === "story" && T.state().stage === 1 && T.state().state === "ready", "Story starts at stage 1");
   });
   test("Arcade: no bosses, the ring goes 3D at 25 hits and keeps speeding up; bests are kept map by map", () => {
-    T.setStats(ZERO); T.startArcade(1); T.freezeRing(0, C.RING_Y);
+    T.setStats({ ...ZERO, bestStage: 9 }); T.startArcade(1); T.freezeRing(0, C.RING_Y);
     T.setHits(24); throwAndSettle(0, C.RING_Y); T.step(2.6);
     assert(!T.boss() && T.ringMode().mode === "tri", `25 hits in Arcade: no Crow King, the ring goes 3D (${T.ringMode().mode}, boss ${JSON.stringify(T.boss())})`);
     T.setHits(49); assert(T.arcade().ramp === 1, "no extra speed yet"); T.setHits(80); assert(T.arcade().ramp > 1.1, `the ring should keep winding up (${T.arcade().ramp})`);
@@ -934,13 +934,13 @@
     T.unfakeBoard(); T.setName(""); T.setStats({ ...ZERO, bestScore: 0 }); T.toTitle();
   });
   test("Saves carry a schema number and step through migrations in order", () => {
-    assert(T.saveSchema === 2, `schema ${T.saveSchema}`);
+    assert(T.saveSchema === 3, `schema ${T.saveSchema}`);
     const old = T.migrateProfile({ bestScore: 5000, boardBest: { score: 5000 } });   // a v12 save has no number
-    assert(old.schema === 2 && old.boardBest === null, `a v12 save should reach schema 2 with no board run (${JSON.stringify(old)})`);
-    const newer = T.migrateProfile({ schema: 3, boardBest: { score: 7 } });
-    assert(newer.schema === 3 && newer.boardBest.score === 7, "a newer build's save keeps its number and its fields");
-    assert(decodeCode(T.exportCode()).v === 2 && T.profile().schema === 2, `codes and the live profile should carry the current schema (code ${decodeCode(T.exportCode()).v}, profile ${T.profile().schema})`);
-    assert(!T.importCode(encodeCode({ v: 3, p: { makes: 1 } })), "a code from a newer build should be refused, not half-read");
+    assert(old.schema === 3 && old.boardBest === null, `a v12 save should reach schema 3 with no board run (${JSON.stringify(old)})`);
+    const newer = T.migrateProfile({ schema: 9, boardBest: { score: 7 } });
+    assert(newer.schema === 9 && newer.boardBest.score === 7, "a newer build's save keeps its number and its fields");
+    assert(decodeCode(T.exportCode()).v === T.saveSchema && T.profile().schema === T.saveSchema, `codes and the live profile should carry the current schema (code ${decodeCode(T.exportCode()).v}, profile ${T.profile().schema})`);
+    assert(!T.importCode(encodeCode({ v: T.saveSchema + 1, p: { makes: 1 } })), "a code from a newer build should be refused, not half-read");
   });
   test("A save that won't read falls back to the last copy that did", () => {
     const m = new Map(), st = { get: (k, d) => (m.has(k) ? m.get(k) : d), set: (k, v) => m.set(k, String(v)) };
@@ -1042,6 +1042,62 @@
     let clicked = 0; const el = T.h("button", { class: "chip-btn", type: "button", data: { k: "v" }, onclick: () => clicked++, "aria-label": "Poke" }, "Poke ", T.h("b", { text: "him" }));
     el.click();
     assert(el.className === "chip-btn" && el.dataset.k === "v" && el.getAttribute("aria-label") === "Poke" && el.textContent === "Poke him" && clicked === 1, el.outerHTML);
+  });
+
+  // ── v16–v18: the eight maps from checked data, their scenery, Arcade unlocks, and the story's end ──
+  test("Eight maps, all from the checked map data, and everything they name is drawn by the code", () => {
+    const M = T.maps(), I = T.implemented(), R = I.registry;
+    assert(M.length === 8 && new Set(M.map(m => m.id)).size === 8, `${M.length} maps`);
+    for (const k of ["skyline", "lane", "props", "foreground", "weather", "moon"]) for (const id of R[k]) assert(I[k].includes(id), `the registry promises ${k} "${id}" but the code draws no such thing`);
+    for (const id of R.props) assert(I.near.includes(id), `no near props for "${id}"`);
+    assert(new Set(M.map(m => m.fragment)).size === 8 && new Set(M.map(m => m.bosses.end)).size === 8, "eight different end bosses, each holding a different piece of Morty");
+    for (const m of M) for (const k of ["mechanic", "throw", "targets", "hazards", "camera", "ambient", "music", "sfx", "transition", "reward"]) assert(m.identity[k], `${m.name} is missing its ${k} in the stage bible`);
+  });
+  test("Every map dresses the scene as itself: its planes, props clear of the lane, its weather, and it draws", () => {
+    const looks = new Set();
+    for (let i = 0; i < 8; i++) {
+      fresh(); const t0 = performance.now(); T.setScene(i); const ms = performance.now() - t0; T.step(0.25);
+      const S = T.scene(), m = T.maps()[i];
+      assert(S.map === i && S.props >= 8 && S.clear, `${m.name}: ${JSON.stringify(S)}`);
+      assert(S.weather === m.look.weather && S.moon === m.look.moon && S.fg >= 1, `${m.name} should wear its own weather, moon and frame (${JSON.stringify(S)})`);
+      assert(ms < 2500, `${m.name} took ${ms.toFixed(0)} ms to dress`);
+      looks.add(S.kinds.join());
+    }
+    assert(looks.size === 8, `eight different sets of props (${looks.size})`);
+    T.setScene(0); const S = T.scene(); assert(S.kinds.includes("digger") && S.kinds.includes("stone") && S.moon === "art", "map 1 is Moonshine Cemetery as it was");
+    T.toTitle();
+  });
+  test("Arcade opens a map once Story has reached it", () => {
+    T.setStats({ ...ZERO });
+    assert(T.mapUnlocked(0) && !T.mapUnlocked(1), "only map 1 at first");
+    T.startArcade(4); assert(T.arcade().map === 0, "a locked map starts map 1 instead");
+    T.setStats({ bestStage: 5 }); assert(T.mapUnlocked(4) && !T.mapUnlocked(5), "reaching map 5 opens maps 1 to 5");
+    T.toTitle(); $("play").click(); document.querySelector('#modePick [data-mode="arcade"]').click();
+    assert(document.querySelectorAll("#mapList .map-card.locked").length === 3, "three maps still locked");
+    document.querySelector('#mapList [data-map="6"]').click(); assert(T.state().sheet === "play", "a locked map can't be picked");
+    T.closeSheet(); T.setStats({ ...ZERO }); T.toTitle();
+  });
+  test("End bosses hold Morty's pieces: map 1's gives his Top Hat, once", () => {
+    T.setStats({ ...ZERO, bestScore: 0 });
+    for (let k = 0; k < 2; k++) { beatCrow(1); toHit(50); T.step(2.9); assert(T.boss().kind === "undertaker", `map 1's end boss is the Undertaker (${T.boss().kind})`); T.hurtBoss(99); T.endThrow(); T.step(3.4); }
+    const p = T.profile(); assert(p.fragments.length === 1 && p.fragments[0] === "tophat" && p.bossLog.undertaker === 2, JSON.stringify({ f: p.fragments, log: p.bossLog }));
+    T.setStats({ ...ZERO, bestScore: 0 }); T.toTitle();
+  });
+  test("The story ends after map 8: THE END, Morty whole again, and The Whole Reel", () => {
+    T.setStats({ ...ZERO, bestScore: 0 });
+    beatCrow(8); toHit(50); T.step(2.9); assert(T.boss().kind === "reaper", `map 8's end boss is the Reel Reaper (${T.boss().kind})`);
+    T.hurtBoss(99); T.endThrow(); T.step(4.2);   // (the knockout's hold, then the 3.4 s ending)
+    const p = T.profile();
+    assert(p.storyClears === 1 && p.fragments.includes("shadow") && p.bestStage === 9, JSON.stringify({ c: p.storyClears, f: p.fragments, b: p.bestStage }));
+    assert(T.state().state === "over" && /THE\s*END/.test(T.goWords()), `the reel should end (${T.state().state}, "${T.goWords()}")`);
+    T.step(2.2);
+    assert(/The end/.test(document.querySelector("#over .rip").textContent), "the results say The end, not Here lies");
+    assert(T.achievements().find(a => a.id === "whole-reel").got, "The Whole Reel should be earned");
+    T.setStats({ ...ZERO, bestScore: 0 }); T.toTitle();
+  });
+  test("A v12 save: stages past four mean map 5 now, and The Whole Reel becomes Half the Reel", () => {
+    const m = T.migrateProfile({ bestStage: 7, achievements: ["whole-reel", "first-toss"] });
+    assert(m.bestStage === 5 && m.achievements.includes("half-reel") && !m.achievements.includes("whole-reel") && m.achievements.includes("first-toss"), JSON.stringify(m));
   });
 
   T.sandbox(false); T.start(); T.pause(false);  // leave the game playable, player's saved data untouched

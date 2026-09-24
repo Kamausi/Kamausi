@@ -1,0 +1,56 @@
+[
+  {
+    "id": "I",
+    "speed": 0.9,
+    "rc": 0.0,
+    "hazardEvery": 0,
+    "targets": 0,
+    "powerRate": 1.0,
+    "precision": 1.0
+  },
+  {
+    "id": "II",
+    "speed": 1.0,
+    "rc": 0.0,
+    "hazardEvery": 9,
+    "targets": 1,
+    "powerRate": 1.0,
+    "precision": 1.0
+  },
+  {
+    "id": "III",
+    "speed": 1.08,
+    "rc": -0.02,
+    "hazardEvery": 7,
+    "targets": 1,
+    "powerRate": 0.95,
+    "precision": 0.97
+  },
+  {
+    "id": "IV",
+    "speed": 1.16,
+    "rc": -0.03,
+    "hazardEvery": 6,
+    "targets": 2,
+    "powerRate": 0.9,
+    "precision": 0.94
+  },
+  {
+    "id": "V",
+    "speed": 1.24,
+    "rc": -0.04,
+    "hazardEvery": 5,
+    "targets": 2,
+    "powerRate": 0.85,
+    "precision": 0.92
+  },
+  {
+    "id": "VI",
+    "speed": 1.32,
+    "rc": -0.05,
+    "hazardEvery": 4,
+    "targets": 3,
+    "powerRate": 0.8,
+    "precision": 0.9
+  }
+]

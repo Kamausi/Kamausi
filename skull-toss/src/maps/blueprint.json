@@ -1,0 +1,39 @@
+{
+  "_doc": "The Spatial & Environmental Blueprint (docs/SPATIAL_BLUEPRINT.md). Metres; x across, y up, z into the screen from the launcher.",
+  "launcher": [
+    0,
+    0.9,
+    0
+  ],
+  "ringPlane": {
+    "z": 6.0,
+    "zMin": 4.4,
+    "zMax": 8.6,
+    "xMax": 2.3,
+    "yMin": 1.25,
+    "yMax": 3.7,
+    "y": 2.3
+  },
+  "corridor": {
+    "halfWidth": 2.4,
+    "zMax": 16,
+    "why": "the throw lane, the ring's space and the boss's patch: scenery never stands in it (behind z 16, decoration may)"
+  },
+  "bossSpace": {
+    "zMin": 9,
+    "zMax": 16,
+    "xMax": 4.5
+  },
+  "planes": {
+    "sky": 400,
+    "far": 70,
+    "world": 30,
+    "near": 3.6,
+    "fg": 2.4
+  },
+  "hudSafe": {
+    "top": 0.12,
+    "bottom": 0.1,
+    "why": "fractions of the screen the HUD owns; no gameplay object is drawn there at rest"
+  }
+}
