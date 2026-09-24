@@ -118,7 +118,7 @@
     const P = profile, N = fmtN, pct = (a, b) => (b ? Math.round((a / b) * 100) + "%" : "—");
     const mins = s => s < 3600 ? `${Math.round(s / 60)}m` : `${Math.floor(s / 3600)}h ${String(Math.round((s % 3600) / 60)).padStart(2, "0")}m`;
     const groups = [
-      ["Career", "", [["Best score", N(P.bestScore)], ["Most hits in a run", P.best], ["Highest stage", P.bestStage || 1], ["Runs", N(P.games)], ["Points, all time", N(P.scoreTotal)], ["Time played", mins(P.playTime)]]],
+      ["Career", "", [["Best score", N(P.bestScore)], ["Most hits in a run", P.best], ["Furthest map", P.bestStage > MAP_COUNT ? "The End" : P.bestStage || 1], ["Runs", N(P.games)], ["Points, all time", N(P.scoreTotal)], ["Time played", mins(P.playTime)]]],
       ["Tossing", "", [["Throws", N(P.throws)], ["Hits", N(P.makes)], ["Accuracy", pct(P.makes, P.throws)], ["Perfects", N(P.perfects)], ["Perfect rate", pct(P.perfects, P.makes)], ["Rim-ins", N(P.rims)],
         ["Best combo", `×${P.bestStreak}`], ["Perfects in a row", P.bestPerfStreak], ["Most skulls held", P.peakLives], ["Last-skull hits", N(P.clutch)], ["Times you grabbed Morty", N(P.grabs)]]],
       ["Bosses", "", [["Mini-bosses beaten", P.miniKills], ["…without a miss", P.miniFlawless], ["End bosses beaten", P.bossKills], ["…without a miss", P.bossFlawless], ["Morty's pieces back", `${P.fragments.length}/${MAP_COUNT}`], ["Story finished", N(P.storyClears)]]],
@@ -129,6 +129,16 @@
     ];
     // the signature shots (07h_shots.js): each one's name and what it takes, and how often you've made it
     const shotRows = SHOT_IDS.map(id => `<div class="stat shot${P.shots[id] ? "" : " unseen"}"><dt>${t(`shot.${id}.name`)}<small>${t(`shot.${id}.desc`)}</small></dt><dd>${P.shots[id] ? N(P.shots[id]) : "—"}</dd></div>`).join("");
+    // the career card (04h_career.js): level, experience to the next, and the highlights of everything so far
+    const L = levelFor(P.xp), a = xpForLevel(L), b = xpForLevel(L + 1), top = L >= CAREER.maxLevel;
+    const chip = (k, v) => `<span class="chip"><i>${k}</i>${v}</span>`;
+    $("careerCard").innerHTML = `<div class="lvl"><b>${L}</b><span>${t("career.level")}</span></div><div class="cx"><div class="k">${t("career.title", { title: titleName() })}</div>`
+      + `<div class="bar"><i style="width:${top ? 100 : Math.round((100 * (P.xp - a)) / Math.max(1, b - a))}%"></i></div><div class="sub">${top ? t("career.max") : t("career.next", { xp: fmtN(b - P.xp), n: L + 1 })} · ${fmtN(P.xp)} XP</div>`
+      + `<div class="chips">${chip(t("career.chip.best"), fmtN(P.bestScore))}${chip(t("career.chip.story"), P.storyClears)}${chip(t("career.chip.pieces"), `${P.fragments.length}/${MAP_COUNT}`)}`
+      + `${chip(t("codex.cat.shot"), `${SHOT_IDS.filter(id => P.shots[id]).length}/${SHOT_IDS.length}`)}${chip(t("career.chip.codex"), `${codexCount()}/${codexTotal()}`)}${chip(t("codex.cat.secret"), `${P.secrets.length}/${SECRETS.length}`)}</div></div>`;
+    // the last ten runs
+    const ago = ms => { const m = Math.round((Date.now() - ms) / 60000); return m < 1 ? t("career.now") : m < 60 ? t("career.mins", { n: m }) : m < 1440 ? t("career.hours", { n: Math.round(m / 60) }) : t("career.days", { n: Math.round(m / 1440) }); };
+    $("history").innerHTML = (P.history || []).length ? `<h3 class="stat-h">${t("career.recent")}</h3><ol class="runs">${P.history.map(h => `<li class="${h.won ? "won" : ""}"><b>${fmtN(h.score)}</b><span>${t(`mode.${h.mode}.name`)} · ${STAGES[h.mode === "story" ? Math.min(h.stage, MAP_COUNT) - 1 : h.map] ? STAGES[h.mode === "story" ? Math.min(h.stage, MAP_COUNT) - 1 : h.map].name : ""}</span><span>${t("career.hits", { n: h.hits })} · +${h.xp} XP</span><i>${ago(h.at)}</i></li>`).join("")}</ol>` : "";
     $("stats").innerHTML = groups.map(([h, cls, rows]) => `<h3 class="stat-h ${cls}">${h}</h3><dl class="stats">${rows.map(([k, v]) => `<div class="stat"><dt>${k}</dt><dd>${v}</dd></div>`).join("")}</dl>`).join("")
       + `<h3 class="stat-h">${t("shot.heading")} <span class="n">${SHOT_IDS.filter(id => P.shots[id]).length}/${SHOT_IDS.length}</span></h3><dl class="stats shots">${shotRows}</dl>`;
   }

@@ -95,6 +95,9 @@
       { id: "bootleg", name: "Bootleg Copy", s: 4, price: 6000, shop: true }
     ],
     title: [
+      { id: "understudy", name: "Understudy", s: 1, req: ["careerLevel", 5] },          { id: "headliner", name: "Headliner", s: 2, req: ["careerLevel", 10] },   // (career levels, v31)
+      { id: "matinee", name: "Matinee Idol", s: 2, req: ["careerLevel", 20] },          { id: "boxoffice", name: "Box Office Draw", s: 3, req: ["careerLevel", 30] },
+      { id: "legend", name: "Picture-Palace Legend", s: 4, req: ["careerLevel", 40] },  { id: "equal", name: "Mortimer's Equal", s: 4, req: ["careerLevel", 50] },
       { id: "airball", name: "Airball Artist", s: 1, req: ["wides", 100], shame: true },       { id: "sky", name: "Sky Botherer", s: 1, req: ["overs", 60], shame: true },
       { id: "worm", name: "Worm Food", s: 1, req: ["lows", 60], shame: true },                { id: "postoffice", name: "Post Office", s: 2, req: ["posts", 25], shame: true },
       { id: "regret", name: "Rim Shot Regret", s: 2, req: ["clanks", 60], shame: true },       { id: "pro", name: "Professional Misser", s: 3, req: ["misses", 500], shame: true },
@@ -199,7 +202,7 @@
   Object.assign(REQ_TEXT, {
     bestScore: n => `Score ${fmtN(n)} in one run`, scoreTotal: n => `${fmtN(n)} points in all`, bestStage: n => `Reach map ${Math.min(n, MAP_DATA.length)}`,
     miniKills: n => n > 1 ? `Beat ${n} mini-bosses` : "Beat a mini-boss", miniFlawless: n => "Beat a mini-boss without a miss",
-    bossKills: n => n > 1 ? `Beat ${n} end bosses` : "Beat an end boss", bossFlawless: n => "Beat an end boss without a miss", storyClears: n => "Finish the story",
+    bossKills: n => n > 1 ? `Beat ${n} end bosses` : "Beat an end boss", bossFlawless: n => "Beat an end boss without a miss", storyClears: n => "Finish the story", careerLevel: n => `Reach career level ${n}`,
     wides: n => `Miss wide ${n} times`, overs: n => `Throw too high ${n} times`, lows: n => `Throw too low ${n} times`, posts: n => `Hit the post ${n} times`,
     shorts: n => `Fall short ${n} times`, clanks: n => `Clank off the rim ${n} times`, seeds: n => `Eat ${n} pumpkin seeds`,
     zeroRuns: n => `End ${n} runs without a hit`, quickDeaths: n => `Lose a run in 5 throws, ${n} times`, powerups: n => `Grab ${n} power-ups`,

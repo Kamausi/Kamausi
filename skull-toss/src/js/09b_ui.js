@@ -164,6 +164,8 @@
     if (r.powerups) rows.push(["Power-ups", r.powerups]);
     if (r.fragments && r.fragments.length) rows.push(["Morty's pieces", r.fragments.map(f => FRAGMENTS[f].name).join(", ")]);
     rows.push(["Skill level", g.stars ? `<span class="stars">${"★".repeat(g.stars)}</span>` : "—"]);
+    if (r.xp) rows.push([t("career.xpRow"), `+${fmtN(r.xp)}`]);   // (04h_career.js)
+    if (r.levelUp) rows.push([t("career.levelUpRow"), t("career.levelUpVal", { from: r.levelUp.from, to: r.levelUp.to, bones: fmtN(r.levelUp.bones) })]);
     const mode = game.mode, M = MODES[mode] || {};
     if (mode === "practice") rows.splice(0, rows.length, [t("res.throws"), game.throws], [t("res.hits"), game.hits], [t("res.perfect"), `${r.perfects}/${game.throws}`], [t("res.accuracy"), game.throws ? Math.round((100 * game.hits) / game.throws) + "%" : "—"]);
     else if (mode === "rush") rows.splice(0, rows.length, ["Score", `<b id="final">${fmtN(game.score)}</b>`], [t("res.bosses"), `${r.bosses}/${modeSt.rush.length}`], ["Time", mmss(r.secs || 0)], ["Perfect", `${r.perfects}/${game.throws}`]);

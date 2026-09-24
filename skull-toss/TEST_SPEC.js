@@ -220,12 +220,12 @@
   const ZERO = { bones: 0, bonks: 0, misses: 0, clutch: 0, bonesTotal: 0, makes: 0, best: 0, perfects: 0, rims: 0, bestStreak: 0, bestPerfStreak: 0, peakLives: 0, games: 0, points: 0, throws: 0, unlocked: [], boardBest: null, fragments: [], bossLog: {} };
   for (const [k, v] of Object.entries(T.profile())) if (typeof v === "number" && !(k in ZERO) && k !== "updatedAt" && k !== "schema") ZERO[k] = k === "bestStage" ? 1 : 0;   // every other counter too
   ZERO.achievements = T.achievements().map(a => a.id); ZERO.arcade = {};   // (all achievements in hand, so none pays out in the middle of a bones test)
-  ZERO.shots = {}; ZERO.modes = {}; ZERO.met = []; ZERO.secrets = [];   // (v25–v27: signature shots, mode records, what the Codex has noted)
+  ZERO.shots = {}; ZERO.modes = {}; ZERO.met = []; ZERO.secrets = []; ZERO.history = [];   // (v25–v27: signature shots, mode records, what the Codex has noted)
   const statFor = { perfStreak: "bestPerfStreak" };
   const DEF = { skull: "bone", eyes: "pie", teeth: "grin", paint: "none", trail: "dust", impact: "classic", ring: "hoop", aim: "bone", reel: "standard", title: "rookie", hat: "none", aura: "none", pole: "wood" };
   const dressDefault = () => { for (const [k, v] of Object.entries(DEF)) T.equip(k, v); };
   test("Skull Vault: thirteen shelves (hats, auras and poles are new), over 350 things, titles earned not bought", () => {
-    const c = T.catalog(), want = { skull: 40, eyes: 24, teeth: 18, paint: 32, trail: 34, impact: 20, ring: 24, aim: 16, reel: 10, title: 42, hat: 52, aura: 31, pole: 21 };
+    const c = T.catalog(), want = { skull: 40, eyes: 24, teeth: 18, paint: 32, trail: 34, impact: 20, ring: 24, aim: 16, reel: 10, title: 48, hat: 52, aura: 31, pole: 21 };   // (titles: six career-level ones, v31)
     for (const [k, n] of Object.entries(want)) { const L = (c[k] || []).filter(i => !i.souls); assert(L.length === n, `${k}: ${L.length} items, wanted ${n} (besides the Soul Shop's, v30)`); }
     const all = Object.values(c).flat(); assert(all.length >= 351, `only ${all.length} cosmetics (117 × 3 = 351)`);
     for (const k of Object.keys(c)) for (const it of c[k]) {
@@ -1671,6 +1671,37 @@
     assert(!("souls" in T.profile()) && !("wallet" in T.profile()), "the profile carries no balance");
     await T.fakeServer("someone-else"); assert(T.cosmetics().band === "classic", `a wallet that doesn't own it takes the look off (${T.cosmetics().band})`);
     T.noServer(); T.toTitle();
+  });
+
+  // ── v31: career levels, the profile card and the runs log ──
+  test("Every real run earns experience; fifty levels on a rising curve; Practice earns none", () => {
+    assert(T.levelFor(0) === 1 && T.levelFor(T.xpForLevel(2)) === 2 && T.levelFor(T.xpForLevel(2) - 1) === 1 && T.levelFor(1e9) === 50, "the curve");
+    for (let L = 2; L < 50; L++) assert(T.xpForLevel(L + 1) - T.xpForLevel(L) >= T.xpForLevel(L) - T.xpForLevel(L - 1), `each level asks at least as much as the last (${L})`);
+    T.setStats(ZERO); fresh(); T.setLives(1); T.calm(); for (let i = 0; i < 4; i++) { T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); }
+    T.endRun(); T.step(1); const P = T.profile(), r = T.runStats();
+    assert(r.xp === 4 + 4 * 2 && P.xp === r.xp, `4 hits + 4 perfects × 2 = 12 XP (${r.xp}, ${P.xp})`);
+    T.setPractice({ ring: "full", half: "A", hazards: true }); T.startMode("practice", 0); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); T.endRun(); T.step(1);
+    assert(T.profile().xp === 12, `Practice earns none (${T.profile().xp})`);
+    T.setStats(ZERO); T.toTitle();
+  });
+  test("A level up pays 25 bones × the level, once, and levels 5, 10, 20, 30, 40 and 50 bring a title", () => {
+    const x5 = T.xpForLevel(5); T.setStats({ ...ZERO, xp: x5 - 3, bones: 0 }); fresh(); T.calm(); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); T.endRun(); T.step(1);
+    const r = T.runStats(), P = T.profile();
+    assert(r.levelUp && r.levelUp.from === 4 && r.levelUp.to === 5 && r.levelUp.bones === 125, JSON.stringify(r.levelUp));
+    assert(P.bones >= 125 && /Level up/.test($("resStats").textContent), "paid, and on the headstone");
+    assert(T.equip("title", "understudy"), "level 5: the Understudy title");
+    fresh(); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); T.endRun(); T.step(1); assert(!T.runStats().levelUp, "and not again next run");
+    T.equip("title", "rookie"); T.setStats(ZERO); T.toTitle();
+  });
+  test("The profile's career card and the last ten runs", () => {
+    T.setStats({ ...ZERO, xp: 2500, fragments: ["tophat", "bowtie"], bestScore: 12345 }); T.toTitle();
+    for (let i = 0; i < 12; i++) { fresh(); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); T.endRun(); T.step(0.8); }
+    assert(T.profile().history.length === 10, `ten kept (${T.profile().history.length})`);
+    T.toTitle(); T.openSheet("profile");
+    const card = $("careerCard").textContent;
+    assert(new RegExp(`^${T.levelFor(T.profile().xp)}`).test(card) && /XP to level/.test(card) && /2\/8/.test(card) && /12,345/.test(card), card);
+    assert(document.querySelectorAll("#history .runs li").length === 10, "the runs log");
+    T.closeSheet(); T.setStats(ZERO); T.toTitle();
   });
 
   (async () => {

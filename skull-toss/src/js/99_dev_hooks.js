@@ -6,7 +6,7 @@
     level, catalog: () => JSON.parse(JSON.stringify(CATALOG)), bandStyle: () => ({ id: cos.band, ...(BANDS[cos.band] || {}) }), wearOutfit: i => wearOutfit(i), saveOutfit: i => saveOutfit(i), surprise: () => surpriseLook(),
     reqText: (k, n) => REQ_TEXT[k](n), cleanProfile: p => cleanProfile(p),
     async fakeServer(uid) { Backend.reset(); Backend.useFake(uid); await Souls.connect(); return Backend.kind; }, noServer() { Backend.reset(); Souls.connect(); },
-    setWallet(w) { Souls.set(w); },   // (the client's view only: for drawing tests)
+    setWallet(w) { Souls.set(w); }, levelFor: xp => levelFor(xp), xpForLevel: L => xpForLevel(L),   // (the client's view only: for drawing tests)
     wallet: () => Souls.wallet && JSON.parse(JSON.stringify(Souls.wallet)), soulsApi: () => Souls, callServer: (name, data) => Backend.call(name, data), exportCode: () => exportCode(), economy: () => Economy,
     start() { startGame(); },
     pause(on = true) { manual = on; },

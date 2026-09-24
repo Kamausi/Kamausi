@@ -1,8 +1,26 @@
-# SKULL TOSS v30
+# SKULL TOSS v31
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)), with a synthesised waltz standing in wherever they can't load.
+
+## New in v31: career levels, the profile card and a log of runs
+
+- **Experience.** Every real run earns it. Practice earns none, because it plays on a copy of your profile.
+
+  | What you did | XP |
+  |---|---|
+  | A hit | 1 |
+  | A perfect | 2 |
+  | A boss | 25 |
+  | A piece of Morty | 50 |
+  | A signature shot | 10 |
+  | A bonus target | 3 |
+  | Every 5,000 points | 1 |
+  | Finishing the story | 300 |
+
+- **Fifty career levels** on a curve that asks a little more each time. Each level pays 25 bones × the level. Levels 5, 10, 20, 30, 40 and 50 bring a title: Understudy, Headliner, Matinee Idol, Box Office Draw, Picture-Palace Legend, and Mortimer's Equal. The headstone shows the experience a run earned and any level gained. The rank (by makes) stays as it was: the level says how much you've played, the rank how well.
+- **The Profile** opens on a career card: your level in a medallion, experience to the next level, your title, and the highlights (best score, story clears, Morty's pieces, signature shots, Codex entries and secrets). Under the stats are your **last ten runs**: mode, map, score, hits, the experience each earned, and when.
 
 ## New in v30: Souls, the Soul Shop, and a Firebase server
 
@@ -780,7 +798,7 @@ From the console, `SkullToss.debug.visualAnimation` lists the pose library (`pos
 
 ## Tests
 
-Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **170 checks**, covering:
+Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **173 checks**, covering:
 
 - **Layout, scoring and aiming.**
   - Everything is centred and every result is classified correctly.
@@ -909,3 +927,7 @@ Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to
   - A Soul look is bought and worn; with too few Souls nothing changes; and the shop shows the wallet.
   - Souls are never on the profile or in a save code, and a wallet that doesn't own a look takes it off.
   - Plus five server tests in `firebase/functions/test`.
+- **v31.**
+  - A real run earns experience on a rising 50-level curve; Practice earns none.
+  - A level up pays 25 bones × the level, once, and level 5 unlocks its title.
+  - The career card shows level, experience to the next, pieces and best score, and the log keeps the last ten runs.

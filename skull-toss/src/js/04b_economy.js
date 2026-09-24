@@ -8,6 +8,7 @@
       case "bestStreak": return Math.max(profile.bestStreak, run ? game.streak : 0);
       case "perfStreak": return Math.max(profile.bestPerfStreak, run ? game.perfStreak : 0);
       case "peakLives": return Math.max(profile.peakLives, run ? game.peakLives : 0);
+      case "careerLevel": return levelFor(profile.xp);   // (04h_career.js)
       default: return profile[k] || 0;
     }
   }

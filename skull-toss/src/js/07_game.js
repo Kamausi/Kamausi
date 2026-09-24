@@ -301,6 +301,7 @@
     if (game.throws <= 5) profile.quickDeaths++;
     profile.playTime += Math.round(game.run.secs);
     challenge("runs", 1); challenge("best", game.hits); challenge("score", game.score);
+    careerAfterRun();   // experience, levels and the run log (04h_career.js)
     game.run.bones = inPractice() ? 0 : runBones(game.run, game.hits, game.newBest, game.score);
     profile.bones += game.run.bones; profile.bonesTotal += game.run.bones;
     checkUnlocks(); persist(300);
