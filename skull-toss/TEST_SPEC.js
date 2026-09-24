@@ -220,7 +220,7 @@
   const ZERO = { bones: 0, bonks: 0, misses: 0, clutch: 0, bonesTotal: 0, makes: 0, best: 0, perfects: 0, rims: 0, bestStreak: 0, bestPerfStreak: 0, peakLives: 0, games: 0, points: 0, throws: 0, unlocked: [], boardBest: null, fragments: [], bossLog: {} };
   for (const [k, v] of Object.entries(T.profile())) if (typeof v === "number" && !(k in ZERO) && k !== "updatedAt" && k !== "schema") ZERO[k] = k === "bestStage" ? 1 : 0;   // every other counter too
   ZERO.achievements = T.achievements().map(a => a.id); ZERO.arcade = {};   // (all achievements in hand, so none pays out in the middle of a bones test)
-  ZERO.shots = {}; ZERO.modes = {}; ZERO.met = []; ZERO.secrets = []; ZERO.history = []; ZERO.mastery = []; ZERO.flawless = {}; ZERO.mapMakes = {};   // (v25–v27: signature shots, mode records, what the Codex has noted)
+  ZERO.shots = {}; ZERO.modes = {}; ZERO.met = []; ZERO.secrets = []; ZERO.history = []; ZERO.mastery = []; ZERO.flawless = {}; ZERO.mapMakes = {}; ZERO.arcadeTables = {}; ZERO.lastIni = "";   // (v25–v27: signature shots, mode records, what the Codex has noted)
   const statFor = { perfStreak: "bestPerfStreak" };
   const DEF = { skull: "bone", eyes: "pie", teeth: "grin", paint: "none", trail: "dust", impact: "classic", ring: "hoop", aim: "bone", reel: "standard", title: "rookie", hat: "none", aura: "none", pole: "wood" };
   const dressDefault = () => { for (const [k, v] of Object.entries(DEF)) T.equip(k, v); };
@@ -1077,7 +1077,7 @@
     T.startArcade(4); assert(T.arcade().map === 0, "a locked map starts map 1 instead");
     T.setStats({ bestStage: 5 }); assert(T.mapUnlocked(4) && !T.mapUnlocked(5), "reaching map 5 opens maps 1 to 5");
     T.toTitle(); $("play").click(); document.querySelector('#modePick [data-mode="arcade"]').click();
-    assert(document.querySelectorAll("#mapList .map-card.locked").length === 3, "three maps still locked");
+    assert(document.querySelectorAll("#mapList .cabinet.locked").length === 3, "three cabinets still out of order (v36)");
     document.querySelector('#mapList [data-map="6"]').click(); assert(T.state().sheet === "play", "a locked map can't be picked");
     T.closeSheet(); T.setStats({ ...ZERO }); T.toTitle();
   });
@@ -1820,6 +1820,32 @@
     T.watchReplay(); for (let i = 0; i < 1200 && T.state().state !== "over"; i++) T.step(0.05); T.step(2);
     assert($("resTitle").textContent === "Replay" && $("shareBtn").hidden, `a replay's stone (${$("resTitle").textContent})`);
     T.stopReplay(); T.setStats(ZERO); T.toTitle();
+  });
+
+  // ── v36: the Diegetic Arcade ──
+  const arcadeRun = (map, makes) => { T.startArcade(map); for (let i = 0; i < makes; i++) { T.calm(); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); } T.endRun(); T.step(1); return T.state().score; };
+  test("The Arcade is a haunted penny arcade: a cabinet a map, its name in lights, its top scores on the screen, Out of Order until reached", () => {
+    T.setStats({ ...ZERO, bestStage: 3, arcadeTables: { 0: [{ ini: "MRT", score: 9000, secs: 60, at: 1 }] } }); T.toTitle(); $("play").click();
+    document.querySelector('#modePick [data-mode="arcade"]').click();
+    const cabs = [...document.querySelectorAll("#mapList .cabinet")];
+    assert(cabs.length === 8 && cabs.filter(c => c.classList.contains("locked")).length === 5 && /OUT OF ORDER/.test(cabs[7].textContent), `8 cabinets, 5 out of order (${cabs.length})`);
+    assert(/Moonshine Cemetery/i.test(cabs[0].querySelector(".marq").textContent) && /MRT/.test(cabs[0].textContent) && /9,000/.test(cabs[0].textContent) && /INSERT BONE/.test(cabs[0].textContent), cabs[0].textContent);
+    cabs[1].click(); assert(T.arcade().map === 1 && T.state().state !== "title", "a coin in the slot starts that cabinet");
+    T.setStats(ZERO); T.toTitle();
+  });
+  test("A score good enough for a cabinet's top five asks for three initials, the old way", () => {
+    T.setStats({ ...ZERO, bestStage: 2 }); T.setName("Ada Lovelace"); const score = arcadeRun(0, 4); T.step(2);
+    const tab = T.profile().arcadeTables["0"]; assert(tab && tab[0].score === score && tab[0].ini === "ALO", `on the table as ALO (${JSON.stringify(tab)})`);
+    assert(!$("iniBox").hidden && /#1 on the Moonshine Cemetery cabinet/.test($("iniRank").textContent), "the headstone asks");
+    document.querySelector('#iniLetters [data-i="0"].up').click();
+    assert(T.profile().arcadeTables["0"][0].ini === "BLO" && T.profile().lastIni === "BLO", `▲ on the first letter (${T.profile().arcadeTables["0"][0].ini})`);
+    T.setName(""); T.setStats(ZERO); T.toTitle();
+  });
+  test("Only the top five: a score below them asks for nothing and leaves the table as it was", () => {
+    const full = [50000, 40000, 30000, 20000, 10000].map((sc, i) => ({ ini: "AAA", score: sc, secs: 30, at: i + 1 }));
+    T.setStats({ ...ZERO, bestStage: 2, arcadeTables: { 0: full } }); arcadeRun(0, 1); T.step(2);
+    assert($("iniBox").hidden && JSON.stringify(T.profile().arcadeTables["0"].map(e => e.score)) === JSON.stringify([50000, 40000, 30000, 20000, 10000]), "unchanged");
+    T.setStats(ZERO); T.toTitle();
   });
 
   (async () => {

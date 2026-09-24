@@ -291,7 +291,7 @@
       const k = String(game.map), A = profile.arcade[k] || (profile.arcade[k] = { score: 0, secs: 0, hits: 0, runs: 0 });
       game.newBest = game.score > A.score; game.run.newTime = Math.floor(game.run.secs) > A.secs;
       A.runs++; A.score = Math.max(A.score, game.score); A.secs = Math.max(A.secs, Math.floor(game.run.secs)); A.hits = Math.max(A.hits, game.hits);
-      profile.arcadeRuns++; challenge("arcadeSecs", Math.floor(game.run.secs));
+      profile.arcadeRuns++; challenge("arcadeSecs", Math.floor(game.run.secs)); arcadeTableAfterRun();   // the cabinet's top five (09o_arcade.js)
     } else if (game.mode !== "story") modeRecords();   // Practice, Boss Rush and the mini-games keep their own (07i_modes.js)
     else {
       game.newBest = game.score > profile.bestScore;

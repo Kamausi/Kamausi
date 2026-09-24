@@ -1,8 +1,16 @@
-# SKULL TOSS v35
+# SKULL TOSS v36
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)), with a synthesised waltz standing in wherever they can't load.
+
+## New in v36: the Diegetic Arcade
+
+Arcade mode is now a place: a haunted penny arcade.
+
+- **Cabinets.** Every map you've reached is a cabinet, with its name in lights on the marquee, its top three scores glowing on the screen, and a coin slot that says INSERT BONE. A map you haven't reached in Story is **Out of Order**.
+- **High scores.** Finish a run good enough for that cabinet's **top five**, and the headstone asks for three initials, the old way: ▲ and ▼ on each letter, or type them. It starts from your headstone name (Ada Lovelace → ALO) or the initials you used last.
+- **Where the tables live.** They're kept on your profile and merged across devices. The best score and longest run per map sit beside them as before.
 
 ## New in v35: cartoon replays, and sharing them
 
@@ -843,7 +851,7 @@ From the console, `SkullToss.debug.visualAnimation` lists the pose library (`pos
 
 ## Tests
 
-Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **184 checks**, covering:
+Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **187 checks**, covering:
 
 - **Layout, scoring and aiming.**
   - Everything is centred and every result is classified correctly.
@@ -991,3 +999,7 @@ Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to
   - A run played only through a player's inputs (throws, card skips, the end) replays to the same score, hits and throws, and changes nothing on the profile or the resume snapshot.
   - A replay survives a link: encoded, decoded and replayed the same. Junk is refused, and the title offers a shared one.
   - The headstone offers Watch replay and Share, and a replay's own stone says Replay.
+- **v36.**
+  - The Arcade shows a cabinet per map: marquee, top scores and coin slot, or Out of Order until reached. A coin starts that cabinet.
+  - A top-five score asks for initials (ALO from Ada Lovelace), and ▲ changes a letter.
+  - A score below the five asks nothing and leaves the table alone.

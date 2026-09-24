@@ -250,7 +250,7 @@
     "powerups", "cursed", "saves", "bonesSpent", "shopBuys", "coffins", "playTime", "grabs", "arcadeRuns", "chalClaims", "achSeen", "storyClears", "targetHits", "hazardHits", "continues", "xp"];   // xp: career experience (04h_career.js)
   // arcade: the best on each map, keyed by map number ({ score, secs, hits, runs }); achievements: the ones unlocked
   const DEFAULT_PROFILE = { name: "", bones: 0, daily: null, weekly: null, monthly: null, unlocked: [], seen: [], achievements: [], arcade: {}, updatedAt: 0, board: false, bestStage: 1, boardBest: null,
-    fragments: [], bossLog: {}, shots: {}, modes: {}, met: [], secrets: [], history: [], mastery: [], flawless: {}, mapMakes: {} };   // mastery: claimed tiers; flawless: end bosses beaten without a miss; mapMakes: makes per map (09n_mastery.js)   // history: the last ten runs (04h_career.js)   // met: what the Codex has noted ("boss:crow", "power:rush"…); secrets: the ones found (09l_mischief.js)   // modes: Boss Rush's and each mini-game's record (07i_modes.js)   // shots: each signature shot, how many times (07h_shots.js)   // fragments: Morty's pieces recovered (ids); bossLog: each boss beaten, how many times
+    fragments: [], bossLog: {}, shots: {}, modes: {}, met: [], secrets: [], history: [], mastery: [], flawless: {}, mapMakes: {}, arcadeTables: {}, lastIni: "" };   // arcadeTables: each cabinet's top five (09o_arcade.js)   // mastery: claimed tiers; flawless: end bosses beaten without a miss; mapMakes: makes per map (09n_mastery.js)   // history: the last ten runs (04h_career.js)   // met: what the Codex has noted ("boss:crow", "power:rush"…); secrets: the ones found (09l_mischief.js)   // modes: Boss Rush's and each mini-game's record (07i_modes.js)   // shots: each signature shot, how many times (07h_shots.js)   // fragments: Morty's pieces recovered (ids); bossLog: each boss beaten, how many times
   for (const k of STAT_KEYS) if (!(k in DEFAULT_PROFILE)) DEFAULT_PROFILE[k] = 0;
   const DEFAULT_COS = { skull: "bone", eyes: "pie", teeth: "grin", paint: "none", trail: "dust", impact: "classic", ring: "hoop", aim: "bone", reel: "standard", title: "rookie", updatedAt: 0 };
   let sandbox = null;   // while the spec runs, nothing is written to the player's storage or cloud
@@ -300,6 +300,9 @@
     out.modes = md;
     out.mastery = Array.isArray(out.mastery) ? [...new Set(out.mastery.filter(k => typeof k === "string" && /^[a-z]{2,6}:[a-z0-9]{1,16}:[0-2]$/.test(k)))].slice(0, 300) : [];
     for (const f of ["flawless", "mapMakes"]) { const o = {}; if (out[f] && typeof out[f] === "object") for (const [k, v] of Object.entries(out[f])) if (/^[a-z0-9]{1,16}$/.test(k)) o[k] = Math.max(0, Math.floor(Number(v) || 0)); out[f] = o; }
+    const tabs = {}; if (out.arcadeTables && typeof out.arcadeTables === "object") for (const [k, list] of Object.entries(out.arcadeTables)) if (/^\d{1,2}$/.test(k) && Array.isArray(list))
+      tabs[k] = list.filter(e => e && /^[A-Z]{3}$/.test(e.ini) && Number(e.score) > 0).map(e => ({ ini: e.ini, score: Math.floor(Number(e.score)), secs: Math.max(0, Math.floor(Number(e.secs) || 0)), at: Number(e.at) || 0 })).sort((a, b) => b.score - a.score).slice(0, 5);
+    out.arcadeTables = tabs; out.lastIni = /^[A-Z]{3}$/.test(out.lastIni || "") ? out.lastIni : "";
     out.history = Array.isArray(out.history) ? out.history.filter(h => h && typeof h === "object").slice(0, 10).map(h => ({ mode: String(h.mode || "story").slice(0, 12), map: Math.max(0, Math.floor(Number(h.map) || 0)), stage: Math.max(1, Math.floor(Number(h.stage) || 1)),
       score: Math.max(0, Math.floor(Number(h.score) || 0)), hits: Math.max(0, Math.floor(Number(h.hits) || 0)), won: !!h.won, xp: Math.max(0, Math.floor(Number(h.xp) || 0)), at: Number(h.at) || 0 })) : [];
     out.secrets = Array.isArray(out.secrets) ? [...new Set(out.secrets.filter(k => typeof k === "string" && /^[a-z]{2,16}$/.test(k)))].slice(0, 40) : [];
@@ -322,6 +325,9 @@
     out.unlocked = [...new Set([...a.unlocked, ...b.unlocked])];
     out.history = (a.updatedAt >= b.updatedAt ? a : b).history.slice(0, 10);   // (the newer device's log)
     out.mastery = [...new Set([...a.mastery, ...b.mastery])];
+    out.arcadeTables = {}; for (const k of new Set([...Object.keys(a.arcadeTables), ...Object.keys(b.arcadeTables)])) {   // (both devices' entries, the best five)
+      const seen = new Set(), all = [...(a.arcadeTables[k] || []), ...(b.arcadeTables[k] || [])].filter(e => !seen.has(e.at + e.ini) && seen.add(e.at + e.ini));
+      out.arcadeTables[k] = all.sort((x, y) => y.score - x.score).slice(0, 5); }
     for (const f of ["flawless", "mapMakes"]) { out[f] = { ...a[f] }; for (const [k, v] of Object.entries(b[f])) out[f][k] = Math.max(out[f][k] || 0, v); }
     out.met = [...new Set([...a.met, ...b.met])]; out.secrets = [...new Set([...a.secrets, ...b.secrets])];
     const newer = b.updatedAt > a.updatedAt ? b : a, older = newer === a ? b : a;

@@ -1,4 +1,10 @@
 {
+ "arcade.insert": "INSERT BONE",
+ "arcade.longest": "LONGEST {t}",
+ "arcade.noScores": "NO SCORES YET",
+ "arcade.outOfOrder": "OUT OF ORDER",
+ "arcade.rank": "#{n} on the {map} cabinet",
+ "arcade.reachIt": "REACH IT IN STORY",
  "archive.censor.body": "The board objects to a skull being thrown about and suggests a ball. The studio replied the same day: \"He enjoys it.\"",
  "archive.censor.date": "June 1933",
  "archive.censor.how": "Reach Reel Two",

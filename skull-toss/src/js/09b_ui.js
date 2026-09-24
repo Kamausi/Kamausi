@@ -60,6 +60,8 @@
     $("storyBest").textContent = profile.bestScore > 0 ? `Best ${fmtN(profile.bestScore)} · ${done ? `finished ${profile.storyClears > 1 ? profile.storyClears + " times" : ""}` : `reached map ${reached}`} · ${profile.fragments.length}/8 pieces` : "";
     const played = STAGES.map((S, i) => arcadeRec(i)).filter(a => a.runs), longest = played.length ? Math.max(...played.map(a => a.secs)) : 0;
     $("arcadeBest").textContent = played.length ? `Longest run ${clockStr(longest)}` : "";
+    $("mapList").classList.toggle("arcade", pickFor !== "practice");
+    if (pickFor !== "practice") { $("mapList").innerHTML = STAGES.map((S, i) => cabinetHTML(S, i)).join(""); return; }   // the Arcade: a row of cabinets (09o_arcade.js)
     $("mapList").innerHTML = STAGES.map((S, i) => {
       const A = arcadeRec(i), open = mapUnlocked(i), prac = pickFor === "practice";
       if (!open) return `<button class="map-card locked" type="button" data-map="${i}" aria-disabled="true" style="--tint:${S.map.look.sky[1]}"><span class="n">Map ${i + 1}</span><b>${S.name}</b><span class="d">Reach it in Story to play it here</span><span class="rec"><span><i>Locked</i></span></span></button>`;
@@ -178,6 +180,7 @@
     $("newBest").textContent = r.story && !best ? "Morty is whole again!" : !arcade ? "A brand new record!" : best ? `New best on ${STAGES[game.map].name}!` : "Your longest run on this map!";
     $("resTitle").textContent = best || longer ? "" : arcade ? `Arcade · ${STAGES[game.map].name}` : titleName();
     $("resBones").textContent = r.bones;
+    renderInitials();   // a cabinet's top five: your initials (09o_arcade.js)
     $("watchBtn").hidden = !Replay.last && !Replay.play; $("shareBtn").hidden = !Replay.last || !!Replay.play;   // (07j_replay.js)
     if (mode !== "story" && mode !== "arcade") {   // the other modes: their own record on the ribbon and the line below
       const R = modeRec(mode), fresh = game.newBest && (r.modeValue || 0) > 0;
