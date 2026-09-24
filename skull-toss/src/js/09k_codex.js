@@ -15,7 +15,8 @@
     power:  { ids: () => POWER_IDS.slice(), seen: id => profile.met.includes("power:" + id), name: id => POWERS[id].name, body: id => `${t(`codex.power.${id}`)} ${POWERS[id].tip}.`, stat: () => "" },
     hazard: { ids: () => ["bats", "wind", "bonefall", "fog", "balloons", "pendulum", "jumpcut"], seen: id => profile.met.includes("hazard:" + id),
               name: id => t(`codex.hazard.${id}.name`), body: id => t(`codex.hazard.${id}.body`), stat: () => "" },
-    target: { ids: () => MAP_DATA.map(m => m.target), seen: id => profile.met.includes("target:" + id), name: id => t(`codex.target.${id}.name`), body: id => t(`codex.target.${id}.body`), stat: () => "" },
+    target: { ids: () => MAP_REGISTRY.targetType.slice(), seen: id => profile.met.includes("target:" + id), name: id => t(`codex.target.${id}.name`), body: id => t(`codex.target.${id}.body`), stat: () => "" },
+    obstacle: { ids: () => MAP_REGISTRY.obstacle.slice(), seen: id => profile.met.includes("obstacle:" + id), name: id => t(`codex.obstacle.${id}.name`), body: id => t(`codex.obstacle.${id}.body`), stat: () => "" },
     shot:   { ids: () => SHOT_IDS.slice(), seen: id => !!profile.shots[id], name: id => t(`shot.${id}.name`), body: id => t(`shot.${id}.desc`), stat: id => (profile.shots[id] ? t("codex.stat.made", { n: profile.shots[id] }) : "") }
   };
   const CODEX_CATS = Object.keys(CODEX);

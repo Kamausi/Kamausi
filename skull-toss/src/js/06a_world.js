@@ -23,7 +23,7 @@
   }
   const halfWidthAt = z => (W / 2) / (F / (z + CAM_BACK));
   // how many clouds and fog banks a map has: none indoors, a low ceiling over the belfry, a thick mist in the crypts and the bayou
-  const skyCloud = () => { const L = look(); return { n: L.moon === "screen" ? 0 : L.moon === "none" ? 11 : 6, fog: L.weather === "mist" || L.ambient.water ? 6 : 3, fogA: L.weather === "mist" ? 1.6 : L.ambient.water ? 1.3 : 1 }; };
+  const skyCloud = () => { const L = look(); return { n: L.moon === "screen" || L.skyline === "caves" || L.skyline === "abyss" ? 0 : L.moon === "none" ? 11 : 6, fog: L.weather === "mist" || L.ambient.water ? 6 : 3, fogA: L.weather === "mist" ? 1.6 : L.ambient.water ? 1.3 : 1 }; };
   function worldResize() {
     const K = skyCloud();
     world.sprites = [0, 1, 2, 3, 4].map(i => makeCloud(900 + i * 37));

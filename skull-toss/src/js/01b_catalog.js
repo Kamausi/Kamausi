@@ -210,7 +210,7 @@
   Object.assign(REQ_TEXT, {
     bestScore: n => `Score ${fmtN(n)} in one run`, scoreTotal: n => `${fmtN(n)} points in all`, bestStage: n => `Reach map ${Math.min(n, MAP_DATA.length)}`,
     miniKills: n => n > 1 ? `Beat ${n} mini-bosses` : "Beat a mini-boss", miniFlawless: n => "Beat a mini-boss without a miss",
-    bossKills: n => n > 1 ? `Beat ${n} end bosses` : "Beat an end boss", bossFlawless: n => "Beat an end boss without a miss", storyClears: n => "Finish the story", careerLevel: n => `Reach career level ${n}`, goldShots: n => `Gold on all ${n} signature shots`,
+    bossKills: n => n > 1 ? `Beat ${n} end bosses` : "Beat an end boss", bossFlawless: n => "Beat an end boss without a miss", storyClears: n => "Finish the Adventure", careerLevel: n => `Reach career level ${n}`, goldShots: n => `Gold on all ${n} signature shots`,
     wides: n => `Miss wide ${n} times`, overs: n => `Throw too high ${n} times`, lows: n => `Throw too low ${n} times`, posts: n => `Hit the post ${n} times`,
     shorts: n => `Fall short ${n} times`, clanks: n => `Clank off the rim ${n} times`, seeds: n => `Eat ${n} pumpkin seeds`,
     zeroRuns: n => `End ${n} runs without a hit`, quickDeaths: n => `Lose a run in 5 throws, ${n} times`, powerups: n => `Grab ${n} power-ups`,
@@ -218,3 +218,48 @@
     playTime: n => `Play for ${Math.round(n / 60)} minutes`, grabs: n => `Grab Morty ${n} times`, saves: n => `Get saved ${n} times`,
     shopBuys: n => `Buy ${n} things at the Curio Cart`
   });
+  // v44 (the corrected roadmap's V29): the new slots. Hair, facial hair and wings are Morty's body parts: each end boss
+  // gives one back (its map sheet's reward), and the Vault sells more. The launcher is the slingshot's frame; Wizard Mort
+  // is the Adventure's own reward, half-earned with four shards of the Black Ring and whole when it is.
+  CATALOG.hair = [
+    { id: "none", name: "Bare Skull" },
+    { id: "bun", name: "Top Knot", s: 1, price: 500 },              { id: "flattop", name: "Flat Top", s: 1, price: 600 },
+    { id: "pompadour", name: "Pompadour", s: 2, price: 1200 },     { id: "pigtails", name: "Pigtails", s: 2, price: 1100 },
+    { id: "mohawk", name: "Mohawk", s: 2, price: 1300 },           { id: "mullet", name: "Mullet", s: 2, price: 1000 },
+    { id: "afro", name: "Afro", s: 3, price: 2800 },               { id: "flame", name: "Flaming Locks", s: 4, price: 6500 },
+    { id: "vines", name: "Pumpkin-Vine Curls", s: 3, req: ["beat:pumpkin", 1], boss: true },
+    { id: "quiff", name: "Showman's Quiff", s: 3, req: ["beat:ringmaster", 1], boss: true },
+    { id: "moss", name: "Swamp-Moss Locks", s: 3, req: ["beat:madame", 1], boss: true }
+  ];
+  CATALOG.beard = [
+    { id: "none", name: "Clean Jaw" },
+    { id: "pencil", name: "Pencil Moustache", s: 1, price: 400 },  { id: "goatee", name: "Goatee", s: 1, price: 500 },
+    { id: "chops", name: "Mutton Chops", s: 2, price: 1000 },      { id: "lumberjack", name: "Lumberjack", s: 2, price: 1200 },
+    { id: "braids", name: "Viking Braids", s: 3, price: 2600 },    { id: "cobweb", name: "Cobweb Beard", s: 3, price: 2800 },
+    { id: "handlebar", name: "The Count's Gilded Handlebar", s: 3, req: ["beat:count", 1], boss: true },
+    { id: "roots", name: "Root Beard", s: 3, req: ["beat:marrowroot", 1], boss: true }
+  ];
+  CATALOG.wings = [
+    { id: "none", name: "No Wings" },
+    { id: "butterfly", name: "Butterfly", s: 2, price: 1400 },     { id: "bat", name: "Bat Wings", s: 2, price: 1500 },
+    { id: "angel", name: "Angel Wings", s: 3, price: 3200 },       { id: "dragon", name: "Dragon Wings", s: 4, price: 8000 },
+    { id: "crow", name: "Crow Wings", s: 3, req: ["beat:crow", 3], boss: true },
+    { id: "vulture", name: "Vulture Wings", s: 3, req: ["beat:undertaker", 1], boss: true },
+    { id: "clockwork", name: "Clockwork Wings", s: 4, req: ["beat:clockking", 1], boss: true },
+    { id: "shadow", name: "Shadow Wings", s: 4, req: ["beat:reaper", 1], boss: true }
+  ];
+  CATALOG.launcher = [
+    { id: "classic", name: "The Old Slingshot" },
+    { id: "branch", name: "Forked Branch", s: 1, price: 600 },     { id: "bone", name: "Bone Fork", s: 1, price: 700 },
+    { id: "iron", name: "Cast Iron", s: 2, price: 1100 },          { id: "candy", name: "Candy Fork", s: 2, price: 1300 },
+    { id: "gold", name: "Gold Plate", s: 3, price: 3000 },         { id: "neon", name: "Neon Fork", s: 4, price: 7000 }
+  ];
+  CATALOG.wizard = [
+    { id: "none", name: "Just Morty" },
+    { id: "apprentice", name: "Apprentice Mort", s: 3, req: ["shards", 4], boss: true },
+    { id: "mort", name: "Wizard Mort", s: 4, req: ["storyClears", 1], boss: true }
+  ];
+  KINDS.push("hair", "beard", "wings", "launcher", "wizard");
+  Object.assign(KIND_LABEL, { hair: "hair", beard: "facial hair", wings: "wings", launcher: "launcher", wizard: "Wizard Mort" });
+  Object.assign(DEFAULT_COS, { hair: "none", beard: "none", wings: "none", launcher: "classic", wizard: "none" });
+  REQ_TEXT.shards = n => `Win ${n} shards of the Black Ring`;

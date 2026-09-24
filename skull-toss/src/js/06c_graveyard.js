@@ -109,9 +109,10 @@
       : k.kind === "scarecrow" || k.kind === "balloons" ? Math.sin(twos(t) * 1.4 + k.ph * 4) * 0.07 : 0;
     ctx.save(); ctx.translate(p.x, p.y); if (k.tilt) ctx.rotate(k.tilt);
     if (sway) ctx.transform(1, 0, sway, 1, 0, 0);
+    reactXform(k);   // hit by a throw: it moves, bends, rotates, squeaks, shakes or falls (07n_environment.js)
     ctx.scale(sc * (1 - bb * 0.04), sc * (1 + bb * 0.06));
     const life = PROP_LIFE[k.kind]; if (life) life(k, sp.S, t);   // light, drawn under the sprite so the prop stands in its own glow
-    ctx.drawImage(sp.c, -sp.ax, -sp.ay, sp.w, sp.h);
+    ctx.drawImage(sp.c, -sp.ax, -sp.ay, sp.w, sp.h); drawCrack(k, sp);
     if (k.kind === "lantern") { const sw = Math.sin(twos(t) * 2 + k.ph) * 0.08; ctx.save(); ctx.translate(0.32 * sp.S, -1.38 * sp.S); ctx.rotate(sw); ctx.strokeStyle = INK; ctx.lineWidth = 0.03 * sp.S; ctx.fillStyle = `rgba(255,${190 + ((Math.sin(t * 13) * 30) | 0)},100,1)`; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, 0.08 * sp.S); ctx.stroke(); ctx.beginPath(); ctx.ellipse(0, 0.2 * sp.S, 0.09 * sp.S, 0.13 * sp.S, 0, 0, TAU); ctx.fill(); ctx.stroke(); ctx.restore(); }
     if (k.face && (k.kind === "stone" || k.kind === "slab")) drawStoneFace(k, sp, t);
     ctx.restore();

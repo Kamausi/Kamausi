@@ -1,0 +1,283 @@
+{
+  "id": "hollow",
+  "n": 1,
+  "name": "Crow Hollow",
+  "reel": "Reel One",
+  "premise": "The hollow where Morty was buried with the reel in 1933. The crows kept it for the Pumpkin King, and the pumpkins learned to grin.",
+  "identity": {
+    "visual": "A harvest hollow at dusk: a crooked barn, a windmill, pumpkin rows, crows on every rail.",
+    "spatial": "Open and shallow: one clean lane between the pumpkin rows, the ring hung from the old oak's branch right over it.",
+    "mechanic": "None: the throw itself. The ring swings side to side on its rope, then flies its triangle.",
+    "throw": "Plain arcs under a still sky. Lead the swing.",
+    "boss": "The Pumpkin King's mouth is the ring and his eyes are targets: shut his eyes to stop the seeds, then throw down his throat.",
+    "targets": "Jack-o'-lanterns hung in the oak, still at first.",
+    "hazards": "None; the bosses bring their own.",
+    "camera": "The rostrum camera at rest: lean, follow, settle.",
+    "ambient": "Crows on the rails, the black cat, a zombie farmhand, the witch across the harvest moon.",
+    "music": "The original waltz at 92 bpm.",
+    "sfx": "Caws, creaking rope, rustling corn.",
+    "transition": "An iris on the moon.",
+    "reward": "Pumpkin-Vine Curls and the first shard of the Black Ring."
+  },
+  "sheet": {
+    "concept": "Teach the throw. Nothing in the hollow is in the way; everything in it watches.",
+    "plane": "The throw lane, launcher to ring (z 0–7.8), between the pumpkin rows.",
+    "launcher": [
+      0,
+      0.9,
+      0
+    ],
+    "zones": {
+      "ring": {
+        "x": [
+          -1.35,
+          1.35
+        ],
+        "y": [
+          1.9,
+          3.2
+        ],
+        "z": [
+          4.8,
+          7.4
+        ]
+      },
+      "targets": {
+        "x": [
+          -1.6,
+          1.6
+        ],
+        "y": [
+          1.4,
+          3.1
+        ],
+        "z": [
+          7.4,
+          9.0
+        ]
+      },
+      "hazards": {
+        "x": [
+          -2.3,
+          2.3
+        ],
+        "y": [
+          0.0,
+          4.2
+        ],
+        "z": [
+          1.8,
+          5.4
+        ]
+      }
+    },
+    "corridor": {
+      "halfWidth": 2.4,
+      "zMax": 16
+    },
+    "camera": {
+      "x": [
+        -0.3,
+        0.3
+      ],
+      "y": [
+        -0.13,
+        0.1
+      ],
+      "z": [
+        -0.4,
+        1.0
+      ]
+    },
+    "parallax": [
+      "sky",
+      "far",
+      "ground",
+      "world",
+      "near",
+      "fg"
+    ],
+    "interactions": [
+      {
+        "on": "pumpkin",
+        "does": "squeak"
+      },
+      {
+        "on": "jack",
+        "does": "squeak"
+      },
+      {
+        "on": "scarecrow",
+        "does": "rotate"
+      },
+      {
+        "on": "corn",
+        "does": "bend"
+      },
+      {
+        "on": "tree",
+        "does": "bend"
+      },
+      {
+        "on": "hay",
+        "does": "shake"
+      },
+      {
+        "on": "rail",
+        "does": "shake"
+      },
+      {
+        "on": "crows",
+        "does": "react"
+      }
+    ],
+    "ambient": [
+      "crows",
+      "cat",
+      "witch",
+      "walkers",
+      "windmill",
+      "weather"
+    ],
+    "lighting": {
+      "key": [
+        -0.55,
+        0.83
+      ],
+      "ambient": "#3A2A30",
+      "rim": "rgba(255,200,120,.35)",
+      "ring": 0.34,
+      "boss": "#FFB84A"
+    },
+    "arenas": {
+      "mini": {
+        "z": [
+          5.0,
+          7.8
+        ],
+        "note": "the Crow King perches along the branch and swoops through depth"
+      },
+      "end": {
+        "z": [
+          7.8,
+          9.4
+        ],
+        "note": "the Pumpkin King rises in the pumpkin rows; his mouth rides in the ring plane"
+      }
+    },
+    "transition": "The oak's leaves blow across the lens, then an iris on the harvest moon.",
+    "reward": {
+      "bodyPart": "hair:vines",
+      "fragment": "hollow",
+      "show": "The Pumpkin King's vines curl onto Morty's crown; the shard spins out of his mouth."
+    }
+  },
+  "look": {
+    "sky": [
+      "#261826",
+      "#4E2A34",
+      "#944A34",
+      "#D08A48"
+    ],
+    "horizon": "rgba(255,190,90,.18)",
+    "moon": "art",
+    "moonColor": "#F2E7C9",
+    "stars": 0.6,
+    "skyline": "farm",
+    "silhouette": "#24140F",
+    "haze": "rgba(208,138,72,.2)",
+    "ground": [
+      "#4E3A24",
+      "#382818",
+      "#261A10",
+      "#150E08"
+    ],
+    "hills": [
+      "#5E4428",
+      "#4E3A22",
+      "#40301C"
+    ],
+    "hillRim": "rgba(255,200,120,.14)",
+    "grass": [
+      "#7A7A3A",
+      "#5E5A2A"
+    ],
+    "lane": "dirt",
+    "light": "rgba(255,170,60,.12)",
+    "props": "patch",
+    "foreground": "branches",
+    "weather": "leaves",
+    "tint": null,
+    "ambient": {
+      "walkers": [
+        "zombie",
+        "skeleton",
+        "werewolf"
+      ],
+      "ghost": true,
+      "bats": 0.6,
+      "witch": true,
+      "digger": true,
+      "cat": true,
+      "lightning": false,
+      "crows": true
+    }
+  },
+  "anchor": "branch",
+  "ring": {
+    "speed": 1.0,
+    "tri": {
+      "a": 1.25,
+      "up": 0.8,
+      "near": 1.2,
+      "far": 1.3,
+      "skew": 0
+    },
+    "seqs": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        0,
+        2,
+        1
+      ]
+    ],
+    "mods": [],
+    "path": "triangle"
+  },
+  "tiers": [
+    "I",
+    "II"
+  ],
+  "mechanic": {
+    "kind": "none"
+  },
+  "obstacles": {
+    "A": [],
+    "B": [],
+    "boss": []
+  },
+  "targetTypes": {
+    "A": [
+      "standard"
+    ],
+    "B": [
+      "standard",
+      "swinging"
+    ]
+  },
+  "bosses": {
+    "mini": "crow",
+    "end": "pumpkin"
+  },
+  "fragment": "hollow",
+  "target": "jack",
+  "music": {
+    "rate": 1.0,
+    "key": 0
+  },
+  "blurb": "The gentlest ring: it swings side to side from the oak, then flies a small triangle"
+}

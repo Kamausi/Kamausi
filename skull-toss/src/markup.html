@@ -127,20 +127,25 @@
     <div class="preview"><canvas id="previewCv" aria-label="Morty on the pedestal, in your looks. Drag to spin him." data-t-aria="ui.morty-on-the-pedestal-in"></canvas><span class="tag" data-t="ui.on-the-pedestal">On the pedestal</span></div>
     <div class="outfits" id="outfits"><span class="k" data-t="ui.outfits">Outfits</span><span class="slots" id="outfitSlots"></span><button class="ghost-btn" id="outfitSave" type="button" data-t="ui.save-look">Save look</button><button class="ghost-btn" id="surpriseBtn" type="button" data-t="ui.surprise-me">Surprise me</button></div>
     <div class="cat-tabs" id="catTabs" role="tablist">
-      <button type="button" role="tab" data-cat="skull" aria-selected="true" data-t="ui.skulls">Skulls</button>
-      <button type="button" role="tab" data-cat="eyes" aria-selected="false" data-t="ui.eyes">Eyes</button>
+      <button type="button" role="tab" data-cat="hat" data-group="Head" aria-selected="false" data-t="ui.hats">Hats</button>
+      <button type="button" role="tab" data-cat="eyes" data-group="Face" aria-selected="false" data-t="ui.eyes">Eyes</button>
       <button type="button" role="tab" data-cat="teeth" aria-selected="false" data-t="ui.teeth">Teeth</button>
-      <button type="button" role="tab" data-cat="paint" aria-selected="false" data-t="ui.paint">Paint</button>
-      <button type="button" role="tab" data-cat="hat" aria-selected="false" data-t="ui.hats">Hats</button>
-      <button type="button" role="tab" data-cat="aura" aria-selected="false" data-t="ui.auras">Auras</button>
+      <button type="button" role="tab" data-cat="hair" data-group="Hair" aria-selected="false" data-t="ui.hair">Hair</button>
+      <button type="button" role="tab" data-cat="beard" data-group="Facial hair" aria-selected="false" data-t="ui.beard">Facial hair</button>
+      <button type="button" role="tab" data-cat="wings" data-group="Wings" aria-selected="false" data-t="ui.wings">Wings</button>
+      <button type="button" role="tab" data-cat="aura" data-group="Effects" aria-selected="false" data-t="ui.auras">Auras</button>
       <button type="button" role="tab" data-cat="trail" aria-selected="false" data-t="ui.trails">Trails</button>
       <button type="button" role="tab" data-cat="impact" aria-selected="false" data-t="ui.impacts">Impacts</button>
-      <button type="button" role="tab" data-cat="ring" aria-selected="false" data-t="ui.rings">Rings</button>
+      <button type="button" role="tab" data-cat="skull" data-group="Skull" aria-selected="true" data-t="ui.skulls">Skulls</button>
+      <button type="button" role="tab" data-cat="paint" aria-selected="false" data-t="ui.paint">Paint</button>
+      <button type="button" role="tab" data-cat="ring" data-group="Ring" aria-selected="false" data-t="ui.rings">Rings</button>
       <button type="button" role="tab" data-cat="pole" aria-selected="false" data-t="ui.poles">Poles</button>
+      <button type="button" role="tab" data-cat="launcher" data-group="Launcher" aria-selected="false" data-t="ui.launchers">Launchers</button>
       <button type="button" role="tab" data-cat="band" aria-selected="false" data-t="ui.bands">Bands</button>
       <button type="button" role="tab" data-cat="aim" aria-selected="false" data-t="ui.aim">Aim</button>
-      <button type="button" role="tab" data-cat="reel" aria-selected="false" data-t="ui.reels">Reels</button>
+      <button type="button" role="tab" data-cat="reel" data-group="Special" aria-selected="false" data-t="ui.reels">Reels</button>
       <button type="button" role="tab" data-cat="title" aria-selected="false" data-t="ui.titles">Titles</button>
+      <button type="button" role="tab" data-cat="wizard" data-group="Wizard Mort" aria-selected="false" data-t="ui.wizard">Wizard Mort</button>
     </div>
     <div class="section-k"><span class="k" id="catLabel">Skulls</span><b id="catCount"></b></div>
     <div class="grid" id="shopGrid"></div>
@@ -156,8 +161,8 @@
   <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back" data-t-aria="ui.back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-play" data-t="ui.play">Play</h2><span></span></div>
   <div class="sheet-body">
     <div class="modes" id="modePick">
-      <button class="mode-card story" type="button" data-mode="story"><span class="mode-ic"><svg><use href="#i-crow"/></svg></span><span class="mode-t"><span class="k" data-t="ui.story-mode">Story mode</span><b data-t="ui.story">Story</b><span class="mode-s" data-t="ui.eight-maps-a-mini-boss">Eight maps, a mini-boss and an end boss on each. Every end boss holds one of Morty's missing pieces: win them all back to end the reel.</span><span class="mode-best" id="storyBest"></span></span></button>
-      <button class="mode-card arcade" type="button" data-mode="arcade"><span class="mode-ic"><svg><use href="#i-retry"/></svg></span><span class="mode-t"><span class="k" data-t="ui.arcade-mode">Arcade mode</span><b data-t="ui.arcade">Arcade</b><span class="mode-s" data-t="ui.any-map-you-ve-reached">Any map you've reached in Story. No bosses, no end: the ring keeps speeding up. Survive as long as you can and beat your best.</span><span class="mode-best" id="arcadeBest"></span></span></button>
+      <button class="mode-card story" type="button" data-mode="story"><span class="mode-ic"><svg><use href="#i-crow"/></svg></span><span class="mode-t"><span class="k" data-t="ui.story-mode">Adventure mode</span><b data-t="ui.story">Adventure</b><span class="mode-s" data-t="ui.eight-maps-a-mini-boss">Eight maps, a mini-boss and an end boss on each. Every end boss holds one of Morty's missing pieces: win them all back to end the reel.</span><span class="mode-best" id="storyBest"></span></span></button>
+      <button class="mode-card arcade" type="button" data-mode="arcade"><span class="mode-ic"><svg><use href="#i-retry"/></svg></span><span class="mode-t"><span class="k" data-t="ui.arcade-mode">Arcade mode</span><b data-t="ui.arcade">Arcade</b><span class="mode-s" data-t="ui.any-map-you-ve-reached">Any map you've reached in Adventure. No bosses, no end: the ring keeps speeding up. Survive as long as you can and beat your best.</span><span class="mode-best" id="arcadeBest"></span></span></button>
       <div class="director-card" id="directorCard"></div>
       <p class="map-k" data-t="ui.more-ways-to-play">More ways to play</p>
       <div class="mode-grid" id="moreModes"></div>
@@ -311,7 +316,10 @@
       <div class="save-actions"><button class="ghost-btn" id="copyCodeBtn" type="button" data-t="ui.copy-save-code">Copy save code</button><button class="ghost-btn" id="loadCodeBtn" type="button" data-t="ui.load-save-code">Load save code</button></div>
       <div class="code-box" id="codeBox" hidden><textarea id="codeText" spellcheck="false" aria-label="Save code" data-t-aria="ui.save-code"></textarea><div class="row-btns"><button class="ghost-btn" id="codeCancel" type="button" data-t="ui.cancel">Cancel</button><button class="ghost-btn" id="codeApply" type="button" data-t="ui.load">Load</button></div></div>
     </div>
+    <div class="card prof-pic"><canvas id="profPic" width="192" height="192" aria-label="Your profile picture" data-t-aria="ui.your-profile-picture" role="img"></canvas>
+      <div class="pic-pick"><div class="k" data-t="ui.picture">Picture</div><div class="chips" id="picFaces"></div><div class="chips" id="picFrames"></div></div></div>
     <label class="field"><span class="k" data-t="ui.name-on-your-headstone">Name on your headstone</span><input id="prof-name" maxlength="16" placeholder="Nameless soul" data-t-ph="ui.nameless-soul" autocomplete="off" autocapitalize="words" spellcheck="false"></label>
+<label class="field"><span class="k" data-t="ui.bio">Bio</span><textarea id="prof-bio" maxlength="120" rows="2" placeholder="A line about yourself" data-t-ph="ui.a-line-about-yourself" spellcheck="true"></textarea></label>
     <span class="prof-title" id="profTitle">Grave Rookie</span>
     <div class="card"><div class="k">Rank</div><div class="rank-name" id="rankName">Gravedigger</div><div class="bar"><i id="rankBar"></i></div><div class="sub" id="rankNext"></div></div>
     <div class="card career" id="careerCard"></div>

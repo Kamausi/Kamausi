@@ -4,7 +4,7 @@
   // (The crypts' mist and the bayou's fog are the world's fog banks, thickened.) Pure background: it never touches
   // a throw. Screen-space bits are capped; reduced motion halves them.
   const WX = { kind: "none", bits: [], t: 0 };
-  const WX_COUNT = { leaves: 26, spores: 40, fireflies: 24, confetti: 42, rain: 110, dust: 46 };
+  const WX_COUNT = { leaves: 26, spores: 40, fireflies: 24, confetti: 42, rain: 110, dust: 46, bubbles: 28, embers: 36 };
   function weatherReset() {
     WX.kind = look().weather; WX.bits = []; WX.t = 0;
     const n = Math.round((WX_COUNT[WX.kind] || 0) * (reduceMotion ? 0.5 : 1));
@@ -19,6 +19,8 @@
     if (k === "confetti") return { x, y, vx: U * rand(-0.03, 0.03), vy: U * rand(0.06, 0.12), rot: rand(0, TAU), vr: rand(-6, 6), s: U * rand(0.006, 0.011), col: WX_CONFETTI[(Math.random() * 5) | 0] };
     if (k === "rain") return { x: rand(-W * 0.2, W), y: anywhere ? Math.random() * H : rand(-H * 0.3, 0), v: U * rand(2.2, 3), len: U * rand(0.03, 0.06) };
     if (k === "dust") return { u: Math.random(), v: Math.random(), du: rand(-0.02, 0.02), dv: rand(-0.015, 0.015), s: rand(0.8, 2), ph: rand(0, TAU) };
+    if (k === "bubbles") return { x, y: anywhere ? rand(HY, H) : H + 10, vy: -U * rand(0.05, 0.12), s: rand(2, 6), ph: rand(0, TAU) };   // (the drowned theatre)
+    if (k === "embers") return { x, y: anywhere ? Math.random() * H : H + 10, vx: U * rand(-0.02, 0.02), vy: -U * rand(0.03, 0.08), s: rand(1, 2.6), ph: rand(0, TAU) };   // (the abyss: the reel burning at its edges)
     return null;
   }
   // the projector's beam: from the booth behind you, over your head, narrowing to the screen
@@ -37,6 +39,8 @@
       else if (k === "confetti") { b.x += b.vx * dt + Math.sin(WX.t * 3 + b.rot) * U * 0.02 * dt; b.y += b.vy * dt; b.rot += b.vr * dt; if (b.y > H + 10) WX.bits[i] = weatherBit(false); }
       else if (k === "rain") { b.y += b.v * dt; b.x += b.v * 0.18 * dt; if (b.y > H) WX.bits[i] = weatherBit(false); }
       else if (k === "dust") { b.u = (b.u + b.du * dt + 1) % 1; b.v = (b.v + b.dv * dt + 1) % 1; }
+      else if (k === "bubbles") { b.y += b.vy * dt; b.x += Math.sin(WX.t * 2 + b.ph) * U * 0.015 * dt; if (b.y < HY * 0.6) WX.bits[i] = weatherBit(false); }
+      else if (k === "embers") { b.y += b.vy * dt; b.x += b.vx * dt + Math.sin(WX.t * 1.3 + b.ph) * U * 0.01 * dt; if (b.y < -10) WX.bits[i] = weatherBit(false); }
     }
   }
   function drawWeather() {
@@ -50,6 +54,8 @@
         const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 5); g.addColorStop(0, `rgba(220,255,140,${0.6 * on})`); g.addColorStop(1, "rgba(220,255,140,0)"); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, r * 5, 0, TAU); ctx.fill(); } }
     else if (k === "confetti") for (const b of WX.bits) { ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.rot); ctx.scale(1, Math.abs(Math.cos(b.rot * 2)) + 0.15); ctx.fillStyle = b.col; ctx.fillRect(-b.s, -b.s * 0.5, b.s * 2, b.s); ctx.restore(); }
     else if (k === "rain") { ctx.strokeStyle = "rgba(200,215,230,.45)"; ctx.lineWidth = 1.2; ctx.beginPath(); for (const b of WX.bits) { ctx.moveTo(b.x, b.y); ctx.lineTo(b.x - b.len * 0.18, b.y - b.len); } ctx.stroke(); }
+    else if (k === "bubbles") { ctx.strokeStyle = "rgba(200,240,250,.55)"; ctx.lineWidth = 1.2; for (const b of WX.bits) { ctx.beginPath(); ctx.arc(b.x, b.y, b.s, 0, TAU); ctx.stroke(); ctx.fillStyle = "rgba(255,255,255,.5)"; ctx.fillRect(b.x - b.s * 0.4, b.y - b.s * 0.5, Math.max(1, b.s * 0.3), Math.max(1, b.s * 0.3)); } }
+    else if (k === "embers") { ctx.globalCompositeOperation = "lighter"; for (const b of WX.bits) { ctx.globalAlpha = 0.35 + 0.35 * Math.sin(WX.t * 4 + b.ph); ctx.fillStyle = b.ph > 3 ? "#C8A0FF" : "#FFB070"; ctx.beginPath(); ctx.arc(b.x, b.y, b.s, 0, TAU); ctx.fill(); } }
     else if (k === "dust") {
       const Q = beamQuad();
       if (Q) {

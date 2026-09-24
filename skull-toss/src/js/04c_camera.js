@@ -94,6 +94,13 @@
     if (game.cine && game.cine.pull) { const c = game.cine, u = clamp(c.t / c.dur, 0, 1); tz -= c.pull * Math.sin(Math.min(1, u * 1.6) * Math.PI / 2) * (u > 0.8 ? (1 - u) / 0.2 : 1); ty += c.pull * 0.08; k = 26; d = 8; }   // cut-scenes: pull back to show the change
     if (cam.snapT > 0) { cam.snapT -= dt; k = 180; d = 15; }   // the snap after release: stiff, with overshoot
     ty = clamp(ty, -0.13, 0.1);                                   // never lift so far that the branches swing into the play
+    // the blueprint's camera limits (src/maps/blueprint.json, and each map's sheet): inside the map's camera bounds, and
+    // never so far that the ring leaves its safe box on the screen (a move that would is scaled back until it doesn't)
+    if (game.state !== "title" && typeof mapData === "function") {
+      const Cb = mapData(game.stage || 1).sheet.camera; tx = clamp(tx, Cb.x[0], Cb.x[1]); ty = clamp(ty, Cb.y[0], Cb.y[1]); tz = clamp(tz, Cb.z[0], Cb.z[1]);
+      const S = BLUEPRINT.camera.ringSafe, p = project(ring.x, ring.y, ring.z), out = p.x < W * S.margin || p.x > W * (1 - S.margin) || p.y < H * S.top || p.y > H * S.bottom;
+      cam.safe = clamp((cam.safe == null ? 1 : cam.safe) + (out ? -dt * 3 : dt * 1.5), 0.35, 1); tx *= cam.safe; ty *= cam.safe; tz *= cam.safe;
+    }
     tx *= A; ty *= A; tz *= A;
     const n = Math.max(1, Math.ceil(dt / 0.008)), h = dt / n;
     for (let i = 0; i < n; i++) {

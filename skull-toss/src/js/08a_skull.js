@@ -103,6 +103,7 @@
     c.translate(x, y); c.rotate(dir); c.scale(along, perp); c.rotate(-dir); c.rotate(o.ang || 0); c.scale(r, r);
     c.lineJoin = "round"; c.lineCap = "round";
     const U = c.getTransform();   // skull units: r = 1
+    drawBodyBehind(c, look, t);   // wings (08i_body.js)
     if (S.behind) S.behind(c, t);
     // cranium, with the skin's texture and any paint job clipped inside it
     c.save(); toArt(c);
@@ -139,6 +140,7 @@
     if (S.jawTop) S.jawTop(c, t, dropA * ART_K, pal, (hinge + (BOX.jaw.y1 - hinge) * js[1] + dropA - ART_CY) * ART_K);
     if (pal.crack && !flat) { c.strokeStyle = pal.crack; c.lineWidth = 0.045; c.beginPath(); c.moveTo(0.22, -1.02); c.lineTo(0.3, -0.84); c.lineTo(0.2, -0.72); c.lineTo(0.32, -0.6); c.moveTo(0.3, -0.84); c.lineTo(0.46, -0.84); c.stroke(); }
     if (S.top) S.top(c, t, pal, f);
+    drawBodyFront(c, look, t, dropA * ART_K);   // hair, facial hair, the wizard's beard (08i_body.js)
     c.restore();
   }
 

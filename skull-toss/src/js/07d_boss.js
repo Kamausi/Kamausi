@@ -116,14 +116,18 @@
     if (q.tell > 0.15 && !B.dead && B.lastCapLeg !== q.leg) { const w = project(body.x + 0.55, body.y + 0.55, body.z); caption("CAW!", w.x, w.y); B.lastCapLeg = q.leg; }
   }
 
-  // ── the Pumpkin King
-  const PK = { x: 0, y: 2.0, z: 14, r: 2.25, mouth: { x: 0, y: 1.25, z: 12.6 } };
-  const PK_TRI = [{ x: -1.3, y: 2.0, z: 5.0 }, { x: 1.35, y: 2.05, z: 7.6 }, { x: 0.05, y: 3.0, z: 6.3 }], PK_SEQ = [0, 1, 2, 0, 2, 1];
+  // ── the Pumpkin King (v44, the corrected roadmap's V20): HIS MOUTH IS THE RING and HIS EYES ARE TARGETS. His great head
+  // rises out of the pumpkin rows and drifts round the ring's space; the ring is clamped in his grin, so a toss through
+  // it goes down his throat (that's what hurts him). He spits seed volleys out through the ring at you, cheeks puffing
+  // first. Hit an eye and it squeezes shut (a hit, not a miss: it costs no skull); shut both and he's blind for a few
+  // seconds: no volleys, his mouth gapes wider, and every throw down it counts double. Then his eyes open again.
+  const PK_TRI = [{ x: -1.2, y: 1.95, z: 5.4 }, { x: 1.25, y: 2.0, z: 7.2 }, { x: 0.05, y: 2.45, z: 6.2 }], PK_SEQ = [0, 1, 2, 0, 2, 1];
+  const PK_HEAD = { dy: 0.8, dz: 0.45, r: 1.4 }, PK_EYE = { dx: 0.66, dy: 1.05, r: 0.22 }, PK_BLIND = 4.5;
   function makePumpkinKing(stage) {
     const max = Math.min(8 + (stage - 1), 12), start = { x: ring.x, y: ring.y, z: ring.z };
-    const B = { kind: "pumpkin", short: "Pumpkin King", hp: max, max, rc: 0.62, flat: false, flawless: true, dead: false, t: 0, deadAt: 0, hurt: 0, start,
-      entry: 2.4, s: 0, rise: 0, volley: { next: 3.4, tell: 0, n: 0 }, ghosts: 0, spit: 0 };
-    B.rate = () => (B.hp <= B.max / 2 ? 0.95 : 0.72) * (0.9 + stage * 0.1);
+    const B = { kind: "pumpkin", short: "Pumpkin King", hp: max, max, rc: 0.56, flat: false, flawless: true, dead: false, t: 0, deadAt: 0, hurt: 0, start,
+      entry: 2.4, s: 0, rise: 0, volley: { next: 3.6, tell: 0, n: 0 }, ghosts: 0, spit: 0, eyes: [0, 0], blind: 0 };   // eyes: how long each stays shut (0 = open)
+    B.rate = () => (B.hp <= B.max / 2 ? 0.8 : 0.6) * (0.9 + stage * 0.1) * (B.blind > 0 ? 0.55 : 1);
     B.pathAt = t => {
       if (B.dead) return { ...B.frozen };
       if (t < B.entry - 0.6) return { ...B.start };
@@ -134,35 +138,45 @@
       return q;
     };
     B.ringAt = p => bossPathAt(B, p);
+    B.eyePos = (i, m = ring) => ({ x: m.x + (i ? PK_EYE.dx : -PK_EYE.dx), y: m.y + PK_EYE.dy, z: m.z });
+    // a throw crossing the mouth's plane: did it hit an open eye? (-1: no)
+    B.eyeAt = P => { if (B.dead || B.t < B.entry) return -1; for (const i of [0, 1]) { const e = B.eyePos(i); if (!B.eyes[i] && Math.hypot(P.x - e.x, P.y - e.y) <= PK_EYE.r + SKULL_R) return i; } return -1; };
+    B.eyeHit = (i, at) => {
+      B.eyes[i] = 99; B.hurt = 0.6;
+      const e = B.eyePos(i), p = project(e.x, e.y, e.z); impact("POKE!", p.x, p.y - U * 0.06, { fill: GOLD, text: INK, scale: 0.6, bits: false }); Sound.toon("boing", panOf(e.x));
+      if (B.eyes[0] && B.eyes[1]) { B.blind = PK_BLIND; B.volley.next = Math.max(B.volley.next, B.t + PK_BLIND + 1.2); seeds.length = 0; caption("HE CAN'T SEE!", W / 2, H * 0.22); Sound.toon("rumble"); }
+      void at;
+    };
     B.update = dt => {
       B.t += dt; B.hurt = Math.max(0, B.hurt - dt * 2); B.rise = Math.min(1, B.rise + dt / 1.6);
       if (B.dead) { B.sink = (B.sink || 0) + dt; return; }
       if (B.t > B.entry) B.s += dt * B.rate();
-      // seed volleys: puff the cheeks (the tell), then ptoo-ptoo-ptoo
+      if (B.blind > 0) { B.blind -= dt; if (B.blind <= 0) { B.blind = 0; B.eyes = [0, 0]; Sound.toon("whistleUp"); } }
+      B.rc = 0.56 + (B.blind > 0 ? 0.14 : 0);
+      // seed volleys, out through the ring: puff the cheeks (the tell), then ptoo-ptoo-ptoo
       const V = B.volley;
-      if (B.t >= V.next - 0.9 && B.t < V.next) V.tell = (B.t - (V.next - 0.9)) / 0.9; else V.tell = 0;
-      if (B.t >= V.next && game.state !== "cine") {
-        const n = B.hp <= B.max / 2 ? 4 : 3, pat = V.n % 3;
+      if (B.blind <= 0 && B.t >= V.next - 0.9 && B.t < V.next) V.tell = (B.t - (V.next - 0.9)) / 0.9; else V.tell = 0;
+      if (B.blind <= 0 && B.t >= V.next && game.state !== "cine") {
+        const n = B.hp <= B.max / 2 ? 4 : 3, pat = V.n % 3, m = B.pathAt(B.t);
         for (let i = 0; i < n; i++) {
           const lane = pat === 0 ? (i / (n - 1)) * 2 - 1 : pat === 1 ? 1 - (i / (n - 1)) * 2 : (i % 2 ? -0.6 : 0.6) * (1 - i * 0.15);
-          seeds.push({ at: B.t + i * 0.16, x: PK.mouth.x, y: PK.mouth.y, z: PK.mouth.z, tx: lane * 1.4, ty: 2.25 + (i % 2) * 0.55, tz: 3.2, rot: rand(0, TAU), live: false });
+          seeds.push({ at: B.t + i * 0.16, x: m.x, y: m.y, z: m.z + 0.1, tx: lane * 1.4, ty: 2.25 + (i % 2) * 0.55, tz: 2.2, rot: rand(0, TAU), live: false });
         }
         V.n++; V.next = B.t + (B.hp <= B.max / 2 ? 3.6 : 4.4); B.spit = 0.3; Sound.toon("ptoo");
-        const mp = project(PK.mouth.x, PK.mouth.y, PK.mouth.z); caption("PTOO!", mp.x + U * 0.1, mp.y - U * 0.08);
+        const mp = project(m.x, m.y, m.z); caption("PTOO!", mp.x + U * 0.12, mp.y - U * 0.1);
       }
       B.spit = Math.max(0, B.spit - dt);
     };
     B.hit = (kind, at) => {
-      const dmg = kind === "perfect" ? 2 : 1, was = B.hp;
+      const dmg = (kind === "perfect" ? 2 : 1) * (B.blind > 0 ? 2 : 1), was = B.hp;   // (blind, a throw down his throat counts double)
       B.hp = Math.max(0, B.hp - dmg); B.hurt = 1;
       bossBonus(dmg, at);
-      const pp = project(PK.x, PK.y, PK.z);
-      for (let i = 0; i < 10; i++) particles.push({ kind: "chunk", x: pp.x + rand(-1, 1) * PK.r * pp.s * 0.5, y: pp.y + rand(-0.5, 0.5) * PK.r * pp.s * 0.5, vx: rand(-1, 1) * U * 0.6, vy: -U * rand(0.3, 0.8), rot: rand(0, TAU), vr: rand(-8, 8), life: rand(0.8, 1.2), max: 1.2, size: rand(5, 10), color: "#E07B2C", g: 1, a: 1 });
+      const m = B.pathAt(B.t), pp = project(m.x, m.y + PK_HEAD.dy, m.z + PK_HEAD.dz);
+      for (let i = 0; i < 10; i++) particles.push({ kind: "chunk", x: pp.x + rand(-1, 1) * PK_HEAD.r * pp.s * 0.5, y: pp.y + rand(-0.5, 0.5) * PK_HEAD.r * pp.s * 0.5, vx: rand(-1, 1) * U * 0.6, vy: -U * rand(0.3, 0.8), rot: rand(0, TAU), vr: rand(-8, 8), life: rand(0.8, 1.2), max: 1.2, size: rand(6, 12), color: i % 2 ? "#E8803A" : "#D9692A", g: 0.9 });
       if (B.hp <= 0) bossDown(B, at);
       else {
         VisualSystem.triggerImpact("boss", { at });
         if (was > B.max / 2 && B.hp <= B.max / 2) { caption("HE'S FURIOUS!", W / 2, H * 0.22); Sound.toon("rumble"); }
-        // a limited Ghost Toss appears at two-thirds and one-third health: a way through the seeds, if you can thread it
         const thirds = [Math.ceil(B.max * 2 / 3), Math.ceil(B.max / 3)];
         if (B.ghosts < 2 && was > thirds[B.ghosts] && B.hp <= thirds[B.ghosts]) { B.ghosts++; B.ghostDue = true; }
       }
@@ -173,65 +187,46 @@
     B.draw = (front) => { if (!front) drawPumpkin(B); };
     return B;
   }
+  // his head behind the ring, the ring clamped in his carved grin, his eyes two glowing targets
   function drawPumpkin(B) {
     const rise = smooth(B.rise), sink = B.sink || 0, t = B.t, tt = Math.floor(t * 12) / 12;
-    const y = PK.y - (1 - rise) * 4.2 - sink * sink * 2.5, p = project(PK.x, y, PK.z), R = PK.r * p.s;
+    const m = B.dead ? B.frozen : { x: ring.x, y: ring.y, z: ring.z }, drop = (1 - rise) * 3.4 + sink * sink * 2.5;
+    const c = project(m.x, m.y + PK_HEAD.dy - drop, m.z + PK_HEAD.dz), R = PK_HEAD.r * c.s;
     const hurt = B.hurt, angry = B.hp <= B.max / 2, V = B.volley, puff = V.tell ? Math.sin(V.tell * Math.PI * 0.5) : 0, split = B.dead ? Math.min(1, (t - B.deadAt) / 0.6) : 0;
-    ctx.save(); ctx.translate(p.x, p.y);
-    const bounce = 1 + Math.sin(tt * 6) * 0.02 + hurt * 0.06;
-    ctx.scale(bounce + puff * 0.08, 1 / bounce - hurt * 0.05);
-    ctx.lineJoin = "round"; ctx.strokeStyle = INK; ctx.lineWidth = Math.max(2.5, R * 0.035);
-    // vine arms: rubber hose, with white cartoon gloves
-    for (const sd of [-1, 1]) {
+    ctx.save(); ctx.translate(c.x, c.y);
+    const bounce = 1 + Math.sin(tt * 6) * 0.02 + hurt * 0.05;
+    ctx.scale(bounce + puff * 0.08, 1 / bounce - hurt * 0.04);
+    ctx.lineJoin = "round"; ctx.strokeStyle = INK;
+    for (const sd of [-1, 1]) {   // vine arms, white gloves
       const wave = Math.sin(tt * 3 + sd) * R * 0.15;
-      ctx.strokeStyle = INK; ctx.lineWidth = R * 0.14; ctx.beginPath(); ctx.moveTo(sd * R * 0.85, R * 0.1); ctx.bezierCurveTo(sd * R * 1.4, R * 0.1 + wave, sd * R * 1.5, -R * 0.5, sd * R * 1.3, -R * 0.7 + wave); ctx.stroke();
+      ctx.strokeStyle = INK; ctx.lineWidth = R * 0.14; ctx.beginPath(); ctx.moveTo(sd * R * 0.9, R * 0.3); ctx.bezierCurveTo(sd * R * 1.4, R * 0.3 + wave, sd * R * 1.55, -R * 0.4, sd * R * 1.35, -R * 0.65 + wave); ctx.stroke();
       ctx.strokeStyle = "#5E7A36"; ctx.lineWidth = R * 0.09; ctx.stroke();
-      ctx.fillStyle = "#F7F1DF"; ctx.strokeStyle = INK; ctx.lineWidth = Math.max(2, R * 0.03); ctx.beginPath(); ctx.arc(sd * R * 1.3, -R * 0.76 + wave, R * 0.15, 0, TAU); ctx.fill(); ctx.stroke();
-      for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.arc(sd * R * (1.2 + k * 0.08), -R * (0.9 + (k % 2) * 0.03) + wave, R * 0.05, 0, TAU); ctx.fill(); ctx.stroke(); }
+      ctx.fillStyle = "#F7F1DF"; ctx.strokeStyle = INK; ctx.lineWidth = Math.max(2, R * 0.03); ctx.beginPath(); ctx.arc(sd * R * 1.35, -R * 0.7 + wave, R * 0.15, 0, TAU); ctx.fill(); ctx.stroke();
     }
-    const halves = split ? [-1, 1] : [0];
-    for (const h of halves) {
+    for (const h of split ? [-1, 1] : [0]) {
       ctx.save();
       if (h) { ctx.translate(h * split * R * 0.5, split * R * 0.1); ctx.rotate(h * split * 0.35); ctx.beginPath(); ctx.rect(h < 0 ? -R * 2 : 0, -R * 2, R * 2, R * 4); ctx.clip(); }
-      // the gourd: ribbed segments, each inked
       const cols = ["#D9692A", "#E8803A", "#F09046", "#E8803A", "#D9692A"];
-      for (let i = 0; i < 5; i++) { const xk = (i - 2) * 0.36; ctx.fillStyle = cols[i]; ctx.strokeStyle = INK; ctx.lineWidth = Math.max(2.5, R * 0.035); ctx.beginPath(); ctx.ellipse(xk * R, 0, R * (0.55 - Math.abs(i - 2) * 0.04), R * 0.86, 0, 0, TAU); ctx.fill(); ctx.stroke(); }
-      ctx.fillStyle = "rgba(255,230,190,.25)"; ctx.beginPath(); ctx.ellipse(-R * 0.35, -R * 0.45, R * 0.15, R * 0.3, -0.3, 0, TAU); ctx.fill();
-      // stem and a crown of leaves
-      ctx.fillStyle = "#5A6B2A"; ctx.beginPath(); ctx.moveTo(-R * 0.1, -R * 0.8); ctx.quadraticCurveTo(-R * 0.05, -R * 1.15, R * 0.18, -R * 1.2); ctx.lineTo(R * 0.2, -R * 1.08); ctx.quadraticCurveTo(R * 0.08, -R * 1.02, R * 0.1, -R * 0.8); ctx.closePath(); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = GOLD; ctx.beginPath(); ctx.moveTo(-R * 0.45, -R * 0.78); for (let k = 0; k <= 4; k++) { const x = -R * 0.45 + k * R * 0.225; ctx.lineTo(x, -R * (k % 2 ? 0.95 : 1.12)); } ctx.lineTo(R * 0.45, -R * 0.78); ctx.closePath(); ctx.fill(); ctx.stroke();
-      // the carved face, lit from inside
+      for (let i = 0; i < 5; i++) { const xk = (i - 2) * 0.36; ctx.fillStyle = cols[i]; ctx.strokeStyle = INK; ctx.lineWidth = Math.max(2.5, R * 0.035); ctx.beginPath(); ctx.ellipse(xk * R, 0, R * (0.55 - Math.abs(i - 2) * 0.04), R * 0.9, 0, 0, TAU); ctx.fill(); ctx.stroke(); }
+      ctx.fillStyle = "#5A6B2A"; ctx.beginPath(); ctx.moveTo(-R * 0.1, -R * 0.85); ctx.quadraticCurveTo(-R * 0.05, -R * 1.2, R * 0.18, -R * 1.25); ctx.lineTo(R * 0.2, -R * 1.12); ctx.quadraticCurveTo(R * 0.08, -R * 1.05, R * 0.1, -R * 0.85); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = GOLD; ctx.beginPath(); ctx.moveTo(-R * 0.45, -R * 0.82); for (let k = 0; k <= 4; k++) ctx.lineTo(-R * 0.45 + k * R * 0.225, -R * (k % 2 ? 1.0 : 1.16)); ctx.lineTo(R * 0.45, -R * 0.82); ctx.closePath(); ctx.fill(); ctx.stroke();
+      // the carved grin: a jagged dark hole round where the ring sits (the ring itself is drawn over it)
+      const mo = project(m.x, m.y - drop, m.z), mx = mo.x - c.x, my = mo.y - c.y, mr = B.rc * mo.s * (1.25 + (B.spit > 0 ? 0.1 : 0));
+      ctx.fillStyle = "#1A0A04"; ctx.beginPath();
+      for (let k = 0; k <= 16; k++) { const a = (k / 16) * TAU, rr2 = mr * (k % 2 ? 1.08 : 1.28) * (1 + (B.blind > 0 ? 0.12 : 0)); ctx.lineTo(mx + Math.cos(a) * rr2 * 1.25, my + Math.sin(a) * rr2); } ctx.closePath(); ctx.fill();
       const glow = angry ? "#FFD04A" : "#FFB84A", fl = 0.8 + 0.2 * Math.sin(t * 13) * Math.sin(t * 4.1);
-      ctx.fillStyle = INK;
-      for (const sd of [-1, 1]) {           // eyes: angry triangles, squeezed shut when hurt
-        ctx.beginPath(); const ex = sd * R * 0.38, ey = -R * 0.22;
-        if (hurt > 0.4) { ctx.moveTo(ex - R * 0.18, ey); ctx.lineTo(ex + R * 0.18, ey - sd * R * 0.04); ctx.lineWidth = R * 0.07; ctx.strokeStyle = INK; ctx.stroke(); continue; }
-        ctx.moveTo(ex - sd * R * 0.22, ey - R * (angry ? 0.2 : 0.12)); ctx.lineTo(ex + sd * R * 0.2, ey - R * (angry ? 0.02 : 0.14)); ctx.lineTo(ex, ey + R * 0.14); ctx.closePath(); ctx.fill();
-        ctx.fillStyle = glow; ctx.globalAlpha = fl; ctx.beginPath(); ctx.arc(ex, ey - R * 0.02, R * 0.07, 0, TAU); ctx.fill(); ctx.globalAlpha = 1; ctx.fillStyle = INK;
-      }
-      // mouth: jagged grin, puckered into an O before a volley
-      if (puff > 0.1 || B.spit > 0) { ctx.beginPath(); ctx.ellipse(0, R * 0.3, R * (0.13 - puff * 0.04), R * (0.12 + (B.spit > 0 ? 0.08 : 0)), 0, 0, TAU); ctx.fill(); ctx.fillStyle = glow; ctx.beginPath(); ctx.ellipse(0, R * 0.32, R * 0.06, R * 0.05, 0, 0, TAU); ctx.fill();
-        for (const sd of [-1, 1]) { ctx.fillStyle = "rgba(255,150,120,.5)"; ctx.beginPath(); ctx.ellipse(sd * R * 0.45, R * 0.2, R * 0.15 * (1 + puff), R * 0.1 * (1 + puff), 0, 0, TAU); ctx.fill(); } }
-      else {
-        ctx.beginPath(); ctx.moveTo(-R * 0.55, R * 0.18);
-        for (let k = 0; k <= 8; k++) { const x = -R * 0.55 + k * R * 0.1375; ctx.lineTo(x, R * (0.18 + (k % 2 ? 0.12 : 0) + Math.sin(k / 8 * Math.PI) * 0.18)); }
-        ctx.lineTo(R * 0.55, R * 0.18);
-        for (let k = 8; k >= 0; k--) { const x = -R * 0.55 + k * R * 0.1375; ctx.lineTo(x, R * (0.3 + Math.sin(k / 8 * Math.PI) * 0.34 - (k % 2 ? 0 : 0.1))); }
-        ctx.closePath(); ctx.fill();
-        ctx.fillStyle = glow; ctx.globalAlpha = 0.6 * fl; ctx.beginPath(); ctx.ellipse(0, R * 0.45, R * 0.3, R * 0.08, 0, 0, TAU); ctx.fill(); ctx.globalAlpha = 1;
+      ctx.fillStyle = glow; ctx.globalAlpha = 0.35 * fl; ctx.beginPath(); ctx.ellipse(mx, my + mr * 0.6, mr * 0.8, mr * 0.25, 0, 0, TAU); ctx.fill(); ctx.globalAlpha = 1;
+      if (puff > 0.1) for (const sd of [-1, 1]) { ctx.fillStyle = "rgba(255,150,120,.5)"; ctx.beginPath(); ctx.ellipse(mx + sd * mr * 1.9, my - mr * 0.1, R * 0.16 * (1 + puff), R * 0.11 * (1 + puff), 0, 0, TAU); ctx.fill(); }
+      // the eyes: targets, a glowing bull's-eye each, squeezed shut once hit
+      for (const i of [0, 1]) {
+        const e = B.eyePos(i, { x: m.x, y: m.y - drop, z: m.z }), ep = project(e.x, e.y, e.z), ex = ep.x - c.x, ey = ep.y - c.y, er = PK_EYE.r * ep.s;
+        if (B.eyes[i] || B.dead) { ctx.strokeStyle = INK; ctx.lineWidth = er * 0.35; ctx.beginPath(); ctx.moveTo(ex - er, ey); ctx.quadraticCurveTo(ex, ey + er * 0.5, ex + er, ey); ctx.stroke(); for (let k = -1; k <= 1; k++) { ctx.beginPath(); ctx.moveTo(ex + k * er * 0.5, ey + er * 0.1); ctx.lineTo(ex + k * er * 0.6, ey + er * 0.5); ctx.lineWidth = er * 0.12; ctx.stroke(); } continue; }
+        ctx.fillStyle = INK; ctx.beginPath(); ctx.moveTo(ex - er * 1.25, ey - er * (angry ? 1.1 : 0.7)); ctx.lineTo(ex + er * 1.25, ey - er * (angry ? 0.2 : 0.7)); ctx.lineTo(ex, ey + er * 1.1); ctx.closePath(); ctx.fill();
+        for (const [k, col] of [[0.85, glow], [0.55, "#1A0A04"], [0.28, glow]]) { ctx.fillStyle = col; ctx.globalAlpha = col === glow ? fl : 1; ctx.beginPath(); ctx.arc(ex, ey - er * 0.05, er * k, 0, TAU); ctx.fill(); } ctx.globalAlpha = 1;
       }
       ctx.restore();
     }
     ctx.restore();
-    // the vine that carries the ring
-    if (!B.dead && B.t > B.entry - 0.6) {
-      const hand = project(PK.x + 1.3 * PK.r, y + 0.76 * PK.r, PK.z - 0.2), top = project(ring.x, ring.y + ring.rc + 0.05, ring.z);
-      const mid = project((ring.x + PK.x + 1) / 2 + 0.6, Math.max(ring.y, y) + 1.2, (ring.z + PK.z) / 2);
-      ctx.lineCap = "round";
-      for (const [col, w] of [[INK, 0.11], ["#5E7A36", 0.065]]) { ctx.strokeStyle = col; ctx.lineWidth = Math.max(2, w * top.s); ctx.beginPath(); ctx.moveTo(hand.x, hand.y); ctx.quadraticCurveTo(mid.x, mid.y, top.x, top.y); ctx.stroke(); }
-      for (let k = 1; k < 4; k++) { const u = k / 4, lx = (1 - u) * (1 - u) * hand.x + 2 * u * (1 - u) * mid.x + u * u * top.x, ly = (1 - u) * (1 - u) * hand.y + 2 * u * (1 - u) * mid.y + u * u * top.y, ls = 0.12 * top.s;
-        ctx.fillStyle = "#7F9447"; ctx.strokeStyle = INK; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(lx + ls * 0.5, ly - ls * 0.2, ls, ls * 0.45, -0.6 + k, 0, TAU); ctx.fill(); ctx.stroke(); }
-    }
   }
   function drawSeeds(front) {
     for (const sd of seeds) {

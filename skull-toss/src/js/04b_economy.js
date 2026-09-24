@@ -10,7 +10,8 @@
       case "peakLives": return Math.max(profile.peakLives, run ? game.peakLives : 0);
       case "careerLevel": return levelFor(profile.xp);   // (04h_career.js)
       case "goldShots": return goldShots();              // (09n_mastery.js)
-      default: return profile[k] || 0;
+      case "shards": return profile.fragments.length;   // (the Black Ring's shards)
+      default: return k.startsWith("beat:") ? profile.bossLog[k.slice(5)] || 0 : profile[k] || 0;   // (beat:<boss>: how often that boss has fallen)
     }
   }
   const findItem = (kind, id) => CATALOG[kind] && CATALOG[kind].find(i => i.id === id);

@@ -28,11 +28,11 @@
   }
   const JUMP_TELL = 0.28;   // the last part of each hold: the film flickers before the cut
   const RING_PATHS = {
-    line:     { flat: true, post: true, at: p => ({ x: ring.amp * Math.sin(p), y: RING_Y + ring.bob * Math.sin(p * 1.7), z: RING_Z }) },
-    static:   { flat: true, post: true, at: () => ({ x: 0, y: RING_Y, z: RING_Z }) },
-    vertical: { flat: true, at: p => ({ x: 0, y: RING_Y + 0.55 * Math.sin(p), z: RING_Z }) },
-    diagonal: { flat: true, at: p => ({ x: ring.amp * Math.sin(p), y: RING_Y + 0.42 * Math.sin(p), z: RING_Z }) },
-    figure8:  { flat: true, at: p => ({ x: ring.amp * Math.sin(p), y: RING_Y + 0.38 * Math.sin(p * 2), z: RING_Z }) },
+    line:     { flat: true, post: true, at: p => ({ x: ring.amp * Math.sin(p), y: RING_Y + ring.bob * Math.sin(p * 1.7), z: ringZ0() }) },
+    static:   { flat: true, post: true, at: () => ({ x: 0, y: RING_Y, z: ringZ0() }) },
+    vertical: { flat: true, at: p => ({ x: 0, y: RING_Y + 0.55 * Math.sin(p), z: ringZ0() }) },
+    diagonal: { flat: true, at: p => ({ x: ring.amp * Math.sin(p), y: RING_Y + 0.42 * Math.sin(p), z: ringZ0() }) },
+    figure8:  { flat: true, at: p => ({ x: ring.amp * Math.sin(p), y: RING_Y + 0.38 * Math.sin(p * 2), z: ringZ0() }) },
     tri:      { at: triAt },
     circle:   { lap: TAU / 3, at: p => ({ x: ring.tri.a * Math.sin(p), y: RING_Y + 0.25 + 0.14 * Math.sin(p * 2), z: RING_Z + 0.55 + 1.35 * Math.cos(p) }) },
     jumpcut:  { at: p => {   // it holds on a corner, then the film cuts it to the next one; depth barely changes, so every cut is fair
@@ -51,27 +51,58 @@
   const TARGET_R = 0.26;
   const TARGET_WORD = { wisp: "WHOOSH!", brazier: "FWOOSH!", jack: "SPLAT!", bonefruit: "CLACK!", frog: "RIBBIT!", duck: "QUACK!", bell: "DONG!", filmcan: "CLUNK!" };
   const TARGET_SOUND = { frog: "ribbit", duck: "quack", bell: "clang", bonefruit: "bonk" };
-  const targetPos = T => ({ x: T.x, y: T.y + (T.kind === "frog" ? 0 : Math.sin(T.t * 2 + T.ph) * 0.08), z: T.z });
-  function spawnTarget() {
-    const kind = mapData(game.stage || 1).target, low = kind === "frog"; sawIt("target", kind);
-    targets.push({ kind, x: rrIn(-1.6, 1.6), y: low ? 0.22 : rrIn(1.4, 3.1), z: RING_Z + rrIn(1.4, 3.0), t: 0, left: 6, pop: 0, ph: rrIn(0, TAU) });
+  // v44 (the corrected roadmap's V19): nine kinds of target, on the map's target zone (its production sheet). Standard ones
+  // hang and bob; swinging ones swing on a rope; runaways scuttle to and fro; pop-ups duck under and come back up (a
+  // rustle first); shielded ones need two hits (the first knocks the lid off); split ones burst into two smaller ones;
+  // golden ones are rare, worth five times as much and bones besides, and don't stay long; secret ones are all but
+  // invisible until hit. Decoys are the odd ones out: painted fakes hung IN FRONT of the ring, and hitting one on the
+  // way is a miss. The map says which kinds each half uses; the tier says how often gold and secrets turn up.
+  const tgR = T => TARGET_R * (T.sz || 1);
+  function targetPos(T) {
+    const t = T.t + T.ph;
+    if (T.type === "swinging") { const a = 0.55 * Math.sin(t * 1.8); return { x: T.x + Math.sin(a) * 1.1, y: T.y + (1 - Math.cos(a)) * 1.1, z: T.z, rope: { x: T.x, y: T.y + 1.1, z: T.z } }; }
+    if (T.type === "runaway") return { x: clamp(T.x + 1.1 * Math.sin(t * 1.3) + (T.flee || 0), -2.2, 2.2), y: T.y + Math.abs(Math.sin(t * 7)) * 0.06, z: T.z };
+    if (T.type === "popup") { const u = ((t % 3.4) + 3.4) % 3.4, up = u < 1.9 ? 1 : u < 2.2 ? 1 - (u - 1.9) / 0.3 : u > 3.1 ? (u - 3.1) / 0.3 : 0; return { x: T.x, y: T.y - (1 - up) * 1.3, z: T.z, up, tell: u > 2.8 && u <= 3.1 }; }
+    return { x: T.x, y: T.y + (T.kind === "frog" ? 0 : Math.sin(T.t * 2 + T.ph) * 0.08), z: T.z };
+  }
+  const targetLive = T => !T.pop && (T.type !== "popup" || targetPos(T).up > 0.6);
+  function targetTypesNow() { const M = mapData(game.stage || 1); return (M.targetTypes && M.targetTypes[game.phase === "A" ? "A" : "B"]) || ["standard"]; }
+  function spawnTarget(forceType) {
+    const M = mapData(game.stage || 1), kind = M.target, Z = M.sheet.zones.targets, H = M.sheet.zones.hazards, T0 = tierNow();
+    const pool = targetTypesNow().filter(ty => ty !== "golden" && ty !== "secret"), has = ty => targets.some(T => T.type === ty && !T.pop);
+    let type = forceType || pool[(runRand() * pool.length) | 0] || "standard";
+    if (!forceType) { const r = runRand(); if (r < (T0.golden || 0) || (targetTypesNow().includes("golden") && r < 0.12)) type = "golden"; else if (r < (T0.golden || 0) + (T0.secret || 0) || (targetTypesNow().includes("secret") && r > 0.86)) type = "secret"; }
+    if (type === "decoy" && has("decoy")) type = "standard";
+    sawIt("target", type);
+    const low = kind === "frog", decoy = type === "decoy";
+    const x = rrIn(Z.x[0], Z.x[1]), y = low && !decoy ? 0.22 : rrIn(Z.y[0], Z.y[1]), z = decoy ? rrIn(Math.max(H.z[0], 3.2), H.z[1] - 0.4) : rrIn(Z.z[0], Z.z[1]);
+    targets.push({ kind, type, x: decoy ? rrIn(-1.0, 1.0) : x, y: decoy ? rrIn(2.0, 3.0) : type === "swinging" ? Math.min(y, Z.y[1] - 0.3) : y, z, t: 0, left: type === "golden" ? 3 : 6, pop: 0, ph: rrIn(0, TAU), shield: type === "shielded", sz: type === "secret" ? 0.9 : 1 });
   }
   function refillTargets() {
     const want = boss || game.state === "title" ? 0 : tierNow().targets * directorTargets();
     for (let i = targets.length - 1; i >= 0; i--) if (targets[i].pop || --targets[i].left <= 0) targets.splice(i, 1);
-    while (targets.length < want) spawnTarget();
+    while (targets.filter(T => T.type !== "half").length < want) spawnTarget();
   }
-  function updateTargets(dt) { for (const T of targets) { T.t += dt; if (T.pop) T.pop += dt; } }
+  function updateTargets(dt) { for (const T of targets) { T.t += dt; if (T.pop) T.pop += dt; if (T.type === "half") { T.x += T.vx * dt; T.vx *= 1 - dt * 2; } } }
+  const TARGET_VALUE = { golden: 5, secret: 4, shielded: 1.5, runaway: 1.5, swinging: 1.25, popup: 1.25, half: 0.75 };
   function hitTarget(T) {
+    const P = targetPos(T), p = project(P.x, P.y, P.z);
+    if (T.shield) {   // the lid comes off: CLANG, a few points, and it's there for the next throw
+      T.shield = false; const pts = Math.max(5, Math.round((50 * stageMult()) / 5) * 5); game.score += pts; profile.scoreTotal += pts;
+      impact("CLANG!", p.x, p.y - U * 0.05, { fill: CREAM, text: INK, scale: 0.5, bits: false }); flyPoints(`+${fmtN(pts)}`, p.x, p.y, false); Sound.toon("clang", panOf(P.x));
+      return;
+    }
     T.pop = 0.001;
-    const pts = Math.max(5, Math.round((200 * stageMult()) / 5) * 5), P = targetPos(T), p = project(P.x, P.y, P.z);
-    game.score += pts; profile.scoreTotal += pts; profile.targetHits++; game.run.targets = (game.run.targets || 0) + 1; addBones(3);
-    impact(TARGET_WORD[T.kind] || "DING!", p.x, p.y - U * 0.05, { fill: GOLD, text: INK, scale: 0.55, bits: false });
-    flyPoints(`+${fmtN(pts)}`, p.x, p.y, false); Sound.toon(TARGET_SOUND[T.kind] || "ding", panOf(P.x));
-    Telemetry.emit("target", { kind: T.kind, stage: game.stage }); challenge("targets", 1);
+    const k = TARGET_VALUE[T.type] || 1, pts = Math.max(5, Math.round((200 * k * stageMult()) / 5) * 5);
+    game.score += pts; profile.scoreTotal += pts; profile.targetHits++; game.run.targets = (game.run.targets || 0) + 1; addBones(T.type === "golden" ? 25 : T.type === "secret" ? 15 : 3);
+    const word = T.type === "golden" ? "JACKPOT!" : T.type === "secret" ? t("target.secret.found") : TARGET_WORD[T.kind] || "DING!";
+    impact(word, p.x, p.y - U * 0.05, { fill: T.type === "secret" ? PURPLE : GOLD, text: T.type === "secret" ? CREAM : INK, scale: T.type === "golden" || T.type === "secret" ? 0.75 : 0.55, bits: T.type === "golden" });
+    flyPoints(`+${fmtN(pts)}`, p.x, p.y, T.type === "golden"); Sound.toon(T.type === "golden" ? "fanfare" : TARGET_SOUND[T.kind] || "ding", panOf(P.x));
+    if (T.type === "secret") { profile.secretTargets = (profile.secretTargets || 0) + 1; }
+    if (T.type === "split") for (const sd of [-1, 1]) targets.push({ kind: T.kind, type: "half", x: P.x, y: P.y, z: P.z + 0.2, vx: sd * 1.4, t: 0, left: 2, pop: 0, ph: T.ph + sd, sz: 0.65 });
+    Telemetry.emit("target", { kind: T.kind, type: T.type, stage: game.stage }); challenge("targets", 1);
     targetShot(p.x, p.y);   // a make that flew on into it: Two for One (07h_shots.js)
   }
-
   // ── hazards: each map's mechanic (src/maps: mechanic.kind), tuned by the tier. Wind blows through the flight; fog
   // hides the ring; bats, falling bones, balloons and the pendulum can knock the skull out of the air. Every hazard
   // gives a tell first (a screech, a shadow, a tick) and none of them run during a boss fight except the wind.
@@ -82,7 +113,7 @@
   function hazardsReset() {
     HZ.kind = mapData(game.stage || 1).mechanic.kind; HZ.wind = 0; HZ.windMul = 1; HZ.fog = 0; HZ.fogT = 0; HZ.list = []; HZ.since = 0; HZ.pendT = 0; HZ.lastTick = 0;
     if (HZ.kind === "balloons") for (let i = 0; i < 2; i++) HZ.list.push(newBalloon(rrIn(0.3, 3.8)));
-    renderWind();
+    renderWind(); obstaclesReset();
   }
   const newBalloon = y => ({ kind: "balloon", x: rrIn(-2.2, 2.2), y, z: rrIn(2.4, 4.8), vy: rrIn(0.28, 0.42), col: ["#A94332", "#C49A42", "#356B68", "#F2E7C9"][(runRand() * 4) | 0], r: 0.24 });
   const windNow = () => (HZ.kind === "wind" && hazardsAllowed() ? HZ.wind : 0);   // m/s² across the throw (positive pushes right)
@@ -167,8 +198,18 @@
     return false;
   }
   function targetCheck(s, prev) {
-    if (!game.result || !game.result.make) return;
-    for (const T of targets) { if (T.pop) continue; const P = targetPos(T); if (sweptDist(prev, s.pos, { ...P, ox: P.x, oy: P.y, oz: P.z }) <= SKULL_R + TARGET_R) hitTarget(T); }
+    for (const T of targets) {
+      if (!targetLive(T)) continue;
+      const P = targetPos(T), d = sweptDist(prev, s.pos, { ...P, ox: P.x, oy: P.y, oz: P.z });
+      if (T.type === "decoy") {   // a decoy in the way: a miss, before the ring
+        if (!game.result && !s.crossed && d <= SKULL_R + tgR(T)) { T.pop = 0.001; const p = project(s.pos.x, s.pos.y, s.pos.z); s.p0 = { ...s.pos }; s.t = 0; s.v0 = { x: (s.pos.x - P.x) * 5, y: 2, z: -1.6 }; s.crossed = true; s.ax = 0;
+          Sound.toon("poof", panOf(P.x)); resolve("decoy", project(ring.x, ring.y, ring.z), p); profile.hazardHits++; return; }
+        continue;
+      }
+      if (!game.result || !game.result.make) continue;
+      if (T.type === "runaway" && d < 1.2 && !T.fled) { T.fled = true; T.flee = (T.flee || 0) + (P.x > s.pos.x ? 0.7 : -0.7); }   // it sees the skull coming and scuttles
+      if (d <= SKULL_R + tgR(T)) hitTarget(T);
+    }
   }
   function clearDirectors() { targets.length = 0; HZ.list = HZ.list.filter(h => h.kind === "balloon"); HZ.fogT = 0; HZ.since = 0; }
   function directorsAfterThrow() { refillTargets(); hazardsAfterThrow(); }
@@ -187,13 +228,21 @@
     if (boss) return;
     for (const T of targets) {
       const P = targetPos(T); if ((P.z < ring.z) !== front) continue;
-      const p = project(P.x, P.y, P.z), r = TARGET_R * p.s, pop = T.pop ? clamp(T.pop / 0.4, 0, 1) : 0;
+      const p = project(P.x, P.y, P.z), r = tgR(T) * p.s, pop = T.pop ? clamp(T.pop / 0.4, 0, 1) : 0;
       if (pop >= 1) continue;
-      ctx.save(); ctx.translate(p.x, p.y); ctx.globalAlpha = 1 - pop; ctx.scale(1 + pop * 0.8, 1 + pop * 0.8);
+      if (P.rope) { const q = project(P.rope.x, P.rope.y, P.rope.z); ctx.strokeStyle = "rgba(20,14,8,.8)"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(p.x, p.y - r); ctx.stroke(); }
+      if (T.type === "popup") { if (P.up < 0.05) { if (P.tell) { ctx.fillStyle = "rgba(242,231,201,.7)"; ctx.fillRect(p.x - r, p.y + r * 1.4 * 1.3, r * 2, 2); } continue; } }
+      const secret = T.type === "secret" && !T.pop;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.globalAlpha = (1 - pop) * (secret ? 0.1 + 0.08 * Math.sin(T.t * 3) : 1); ctx.scale(1 + pop * 0.8, 1 + pop * 0.8);
       ctx.lineWidth = Math.max(1.5, r * 0.12); ctx.strokeStyle = INK; ctx.lineJoin = "round";
+      if (T.type === "golden") { const g = ctx.createRadialGradient(0, 0, r * 0.3, 0, 0, r * 2.2); g.addColorStop(0, "rgba(255,220,110,.6)"); g.addColorStop(1, "rgba(255,220,110,0)"); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, r * 2.2, 0, TAU); ctx.fill(); ctx.filter = "sepia(1) saturate(4) brightness(1.15)"; }
+      if (T.type === "decoy") { ctx.fillStyle = "#C8B28A"; ctx.beginPath(); ctx.rect(-r * 0.06, r * 0.8, r * 0.12, r * 1.2); ctx.fill(); ctx.stroke(); }
       drawTargetKind(T.kind, r, T.t + T.ph);
+      ctx.filter = "none";
+      if (T.type === "decoy") { ctx.strokeStyle = "rgba(60,40,20,.7)"; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.arc(0, 0, r * 1.15, 0, TAU); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = INK; ctx.font = `900 ${Math.max(8, Math.round(r * 0.8))}px ${UIFONT}`; ctx.textAlign = "center"; ctx.fillText("?", r * 0.9, -r * 0.8); }
+      if (T.shield) { ctx.fillStyle = "#8A8E96"; ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1.5, r * 0.1); ctx.beginPath(); ctx.arc(0, -r * 0.1, r * 1.05, Math.PI * 1.05, Math.PI * 1.95); ctx.lineTo(r * 0.9, -r * 0.1); ctx.closePath(); ctx.fill(); ctx.stroke(); }
       ctx.restore();
-      if (!T.pop && P.y > 0.4) { const g = project(P.x, 0, P.z); ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.beginPath(); ctx.ellipse(g.x, g.y, r * 0.8, r * 0.18, 0, 0, TAU); ctx.fill(); }
+      if (!T.pop && P.y > 0.4 && !secret) { const g = project(P.x + shadowShift(P.y), 0, P.z); ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.beginPath(); ctx.ellipse(g.x, g.y, r * 0.8, r * 0.18, 0, 0, TAU); ctx.fill(); }
     }
   }
   function drawTargetKind(kind, r, t) {

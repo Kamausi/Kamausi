@@ -1,0 +1,343 @@
+{
+  "id": "desert",
+  "n": 6,
+  "name": "The Bone Desert",
+  "reel": "Reel Six",
+  "premise": "Everything that ever fell in the desert is still there, bleached white. The bones are patient; the cannons aren't.",
+  "identity": {
+    "visual": "Rust-red dunes, mesas, a giant ribcage on the skyline, a skeleton hand holding up the ring.",
+    "spatial": "Long and open: the ring stands far back, small against the dunes; bone cannons dug in either side of the lane.",
+    "mechanic": "Distance and precision: a smaller, further ring, cannonballs across the lane, vultures dropping bones.",
+    "throw": "Long, flat and exact: more power, less margin.",
+    "boss": "The Undertaker digs the ring in deep and far, fires the cannons himself, and makes you throw the length of the desert.",
+    "targets": "Hanging bones and scuttling runaways.",
+    "hazards": "Cannonballs and falling bones.",
+    "camera": "Wide and hot, the horizon low.",
+    "ambient": "Vultures circling, dust devils, skeletons digging.",
+    "music": "The waltz on a jaw harp and guitar.",
+    "sfx": "Wind over sand, cannon BOOMs, rattling bones.",
+    "transition": "A sandstorm wipes the frame.",
+    "reward": "The Undertaker's Vulture Wings and the sixth shard."
+  },
+  "sheet": {
+    "concept": "Distance: everything is further, smaller and exposed, so power and precision matter more than tricks.",
+    "plane": "The long lane across the sand (z 0–9.2); the cannons sit outside the corridor and fire across the hazard zone.",
+    "launcher": [
+      0,
+      0.9,
+      0
+    ],
+    "zones": {
+      "ring": {
+        "x": [
+          -1.5,
+          1.5
+        ],
+        "y": [
+          1.8,
+          3.3
+        ],
+        "z": [
+          4.9,
+          8.2
+        ]
+      },
+      "targets": {
+        "x": [
+          -1.8,
+          1.8
+        ],
+        "y": [
+          1.4,
+          3.2
+        ],
+        "z": [
+          8.0,
+          9.6
+        ]
+      },
+      "hazards": {
+        "x": [
+          -2.4,
+          2.4
+        ],
+        "y": [
+          0.0,
+          4.4
+        ],
+        "z": [
+          2.4,
+          5.6
+        ]
+      }
+    },
+    "corridor": {
+      "halfWidth": 2.4,
+      "zMax": 16
+    },
+    "camera": {
+      "x": [
+        -0.3,
+        0.3
+      ],
+      "y": [
+        -0.13,
+        0.1
+      ],
+      "z": [
+        -0.3,
+        1.1
+      ]
+    },
+    "parallax": [
+      "sky",
+      "far",
+      "ground",
+      "world",
+      "near",
+      "fg"
+    ],
+    "interactions": [
+      {
+        "on": "cactus",
+        "does": "bend"
+      },
+      {
+        "on": "skullpile",
+        "does": "fall"
+      },
+      {
+        "on": "ribcage",
+        "does": "shake"
+      },
+      {
+        "on": "rock",
+        "does": "crack"
+      },
+      {
+        "on": "digger",
+        "does": "react"
+      }
+    ],
+    "ambient": [
+      "vultures",
+      "dust",
+      "digger",
+      "walkers",
+      "heat"
+    ],
+    "lighting": {
+      "key": [
+        -0.7,
+        0.71
+      ],
+      "ambient": "#5A3A28",
+      "rim": "rgba(255,220,160,.4)",
+      "ring": 0.3,
+      "boss": "#FFD080"
+    },
+    "arenas": {
+      "mini": {
+        "z": [
+          5.2,
+          8.0
+        ],
+        "note": "the Scarecrow sways on his pole out in the sand"
+      },
+      "end": {
+        "z": [
+          10.0,
+          15.0
+        ],
+        "note": "the Undertaker digs in far off, between the cannons"
+      }
+    },
+    "transition": "A sandstorm rolls across the lens.",
+    "reward": {
+      "bodyPart": "wings:vulture",
+      "fragment": "desert",
+      "show": "A pair of ragged vulture wings unfold on Morty's back."
+    }
+  },
+  "look": {
+    "sky": [
+      "#2A1418",
+      "#5A2A22",
+      "#A8502E",
+      "#E8A058"
+    ],
+    "horizon": "rgba(255,200,120,.22)",
+    "moon": "full",
+    "moonColor": "#FFE2B0",
+    "stars": 0.2,
+    "skyline": "desert",
+    "silhouette": "#3A1A12",
+    "haze": "rgba(232,160,88,.24)",
+    "ground": [
+      "#A8703E",
+      "#8A5A30",
+      "#6A4424",
+      "#3E2614"
+    ],
+    "hills": [
+      "#B87C44",
+      "#A06A38",
+      "#8A5A2E"
+    ],
+    "hillRim": "rgba(255,220,160,.2)",
+    "grass": [],
+    "lane": "sand",
+    "light": "rgba(255,190,110,.14)",
+    "props": "desert",
+    "foreground": "ribs",
+    "weather": "dust",
+    "tint": null,
+    "ambient": {
+      "walkers": [
+        "skeleton"
+      ],
+      "ghost": false,
+      "bats": 0.0,
+      "witch": false,
+      "digger": true,
+      "cat": false,
+      "lightning": false
+    }
+  },
+  "anchor": "hand",
+  "ring": {
+    "speed": 1.2,
+    "tri": {
+      "a": 1.5,
+      "up": 0.95,
+      "near": 1.1,
+      "far": 1.9,
+      "skew": 0.25
+    },
+    "seqs": [
+      [
+        0,
+        1,
+        2,
+        1
+      ],
+      [
+        0,
+        2,
+        0,
+        1,
+        2,
+        1
+      ],
+      [
+        2,
+        1,
+        0
+      ]
+    ],
+    "mods": [
+      "shrink"
+    ],
+    "path": "triangle",
+    "depth": 1.4
+  },
+  "tiers": [
+    "IV",
+    "V"
+  ],
+  "mechanic": {
+    "kind": "bonefall"
+  },
+  "obstacles": {
+    "A": [
+      {
+        "kind": "cannon",
+        "side": -1,
+        "y": 2.5,
+        "z": 3.4,
+        "every": [
+          3.2,
+          0.9
+        ],
+        "speed": 6.0,
+        "from": 6
+      }
+    ],
+    "B": [
+      {
+        "kind": "cannon",
+        "side": -1,
+        "y": 2.6,
+        "z": 3.2,
+        "every": [
+          3.0,
+          0.9
+        ],
+        "speed": 6.5,
+        "from": 0
+      },
+      {
+        "kind": "cannon",
+        "side": 1,
+        "y": 2.2,
+        "z": 4.4,
+        "every": [
+          3.4,
+          0.9
+        ],
+        "speed": 6.0,
+        "phase": 1.5,
+        "from": 8
+      }
+    ],
+    "boss": [
+      {
+        "kind": "cannon",
+        "side": -1,
+        "y": 2.5,
+        "z": 3.4,
+        "every": [
+          3.4,
+          0.9
+        ],
+        "speed": 6.0,
+        "from": 0
+      },
+      {
+        "kind": "cannon",
+        "side": 1,
+        "y": 2.3,
+        "z": 4.2,
+        "every": [
+          3.4,
+          0.9
+        ],
+        "speed": 6.0,
+        "phase": 1.7,
+        "from": 0
+      }
+    ]
+  },
+  "targetTypes": {
+    "A": [
+      "standard",
+      "runaway"
+    ],
+    "B": [
+      "runaway",
+      "split",
+      "golden"
+    ]
+  },
+  "bosses": {
+    "mini": "scarecrow",
+    "end": "undertaker"
+  },
+  "fragment": "desert",
+  "target": "bonefruit",
+  "music": {
+    "rate": 1.0,
+    "key": 2
+  },
+  "blurb": "A smaller ring, further off: cannons fire across the lane and vultures drop bones"
+}

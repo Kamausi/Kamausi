@@ -88,14 +88,17 @@ BLUEPRINT = json.loads((MAPDIR / "blueprint.json").read_text())
 REG = json.loads((MAPDIR / "registry.json").read_text())
 TIERS = json.loads((MAPDIR / "tiers.json").read_text())
 HEX = re.compile(r"^#[0-9A-Fa-f]{6}$"); COLOR = re.compile(r"^(#[0-9A-Fa-f]{6}|rgba?\([\d.,\s]+\))$")
+def inside(v, lo, hi, eps=1e-6): return lo - eps <= v <= hi + eps
+def span_ok(r, lo, hi): return isinstance(r, list) and len(r) == 2 and r[0] <= r[1] and inside(r[0], lo, hi) and inside(r[1], lo, hi)
 def map_problems(m, fname):
     bad = []
     need = lambda k, d=m: k in d or bad.append(f"missing \"{k}\"")
-    for k in ["id", "n", "name", "reel", "premise", "identity", "look", "ring", "tiers", "mechanic", "bosses", "fragment", "target", "music", "blurb"]: need(k)
+    for k in ["id", "n", "name", "reel", "premise", "identity", "sheet", "look", "anchor", "ring", "tiers", "mechanic", "obstacles", "targetTypes", "bosses", "fragment", "target", "music", "blurb"]: need(k)
     if bad: return bad
     if fname != f"{m['n']:02d}-{m['id']}.json": bad.append(f"file should be named {m['n']:02d}-{m['id']}.json")
-    for k in ["mechanic", "throw", "targets", "hazards", "camera", "ambient", "music", "sfx", "transition", "reward"]:
-        if not str(m["identity"].get(k, "")).strip(): bad.append(f"identity.{k} is empty (the stage bible needs it)")
+    # identity: theme follows mechanic. Visual, spatial, mechanical, throw and boss identity, then what the stage bible prints
+    for k in BLUEPRINT["sheet"]["identity"] + ["targets", "hazards", "camera", "ambient", "music", "sfx", "transition", "reward"]:
+        if not str(m["identity"].get(k, "")).strip(): bad.append(f"identity.{k} is empty (theme follows mechanic: every map says what it is, how it's laid out, what the player thinks about, how the throw differs and how its boss changes it)")
     L = m["look"]
     for k, n in [("sky", 4), ("ground", 4), ("hills", 3)]:
         if len(L.get(k, [])) != n or not all(HEX.match(c) for c in L.get(k, [])): bad.append(f"look.{k} must be {n} #rrggbb colours")
@@ -108,13 +111,61 @@ def map_problems(m, fname):
         if L.get(k) not in REG[reg]: bad.append(f"look.{k} \"{L.get(k)}\" isn't one the code draws ({', '.join(REG[reg])})")
     for wk in L.get("ambient", {}).get("walkers", []):
         if wk not in REG["walkers"]: bad.append(f"ambient walker \"{wk}\" doesn't exist")
-    R, P = m["ring"], BLUEPRINT["ringPlane"]
+    # ── the Map Production Sheet (V16): every field, in the blueprint's order, and every number inside the blueprint
+    S, P, C = m["sheet"], BLUEPRINT["ringPlane"], BLUEPRINT["corridor"]
+    for k in BLUEPRINT["sheet"]["order"]:
+        if k not in S: bad.append(f"sheet.{k} is missing (the Map Production Sheet has {len(BLUEPRINT['sheet']['order'])} parts)")
+    if bad: return bad
+    if list(k for k in S if k in BLUEPRINT["sheet"]["order"]) != BLUEPRINT["sheet"]["order"]: bad.append("sheet parts must come in the blueprint's order")
+    for k in ["concept", "plane", "transition"]:
+        if not str(S[k]).strip(): bad.append(f"sheet.{k} is empty")
+    if S["launcher"] != BLUEPRINT["launcher"]: bad.append("sheet.launcher must be the blueprint's launcher (the throw is the same on every map)")
+    Z = S["zones"]
+    for zk in ["ring", "targets", "hazards"]:
+        if zk not in Z: bad.append(f"sheet.zones.{zk} is missing"); continue
+        z = Z[zk]
+        for ax in "xyz":
+            if not (isinstance(z.get(ax), list) and len(z[ax]) == 2 and z[ax][0] < z[ax][1]): bad.append(f"sheet.zones.{zk}.{ax} must be [low, high]")
+    if bad: return bad
+    RZ, TZ, HZ = Z["ring"], Z["targets"], Z["hazards"]
+    if not (span_ok(RZ["x"], -P["xMax"], P["xMax"]) and span_ok(RZ["y"], P["yMin"], P["yMax"]) and span_ok(RZ["z"], P["zMin"], P["zMax"])): bad.append("sheet.zones.ring leaves the blueprint's ring plane")
+    if not (span_ok(TZ["x"], -C["halfWidth"], C["halfWidth"]) and span_ok(HZ["x"], -C["halfWidth"], C["halfWidth"])): bad.append("target and hazard zones must stay inside the throw corridor")
+    if TZ["z"][0] < RZ["z"][0]: bad.append("the target zone hangs behind the ring (a make flies on into it); decoys are the only targets in front")
+    if HZ["z"][1] > RZ["z"][1] or HZ["z"][0] < 1.0: bad.append("the hazard zone lies between the launcher and the ring (z 1 to the ring zone's back)")
+    if S["corridor"] != {"halfWidth": C["halfWidth"], "zMax": C["zMax"]}: bad.append("sheet.corridor must be the blueprint's corridor")
+    cam, CB = S["camera"], BLUEPRINT["camera"]
+    if not (span_ok(cam.get("x"), -0.4, 0.4) and span_ok(cam.get("y"), -0.2, 0.15) and span_ok(cam.get("z"), -1.0, 1.2)): bad.append("sheet.camera bounds are wider than the rostrum camera allows (x ±0.4, y −0.2–0.15, z −1–1.2)")
+    if any(pl not in ["sky", "far", "ground", "world", "near", "fg"] for pl in S["parallax"]) or not {"sky", "ground"} <= set(S["parallax"]): bad.append("sheet.parallax names planes the camera doesn't have (or leaves out the sky or the ground)")
+    for it in S["interactions"]:
+        if it.get("does") not in REG["reaction"]: bad.append(f"interaction on {it.get('on')}: \"{it.get('does')}\" isn't a reaction the code has ({', '.join(REG['reaction'])})")
+    if not S["interactions"]: bad.append("sheet.interactions is empty: every map reacts to the throw somewhere")
+    AB = BLUEPRINT["ambientBudget"]
+    if len(S["ambient"]) > AB["max"]: bad.append(f"sheet.ambient has {len(S['ambient'])} animations; the budget is {AB['max']}")
+    if sum(1 for a in S["ambient"] if a in AB["heavyKinds"]) > AB["heavy"]: bad.append(f"more than {AB['heavy']} heavy ambient animations")
+    Lg = S["lighting"]
+    key = Lg.get("key")
+    if not (isinstance(key, list) and len(key) == 2 and abs(key[0] ** 2 + key[1] ** 2 - 1) < 0.02 and key[1] > 0): bad.append("sheet.lighting.key must be a unit direction [x, y] from above (the light the shadows fall from)")
+    if not HEX.match(str(Lg.get("ambient", ""))) or not COLOR.match(str(Lg.get("rim", ""))) or not HEX.match(str(Lg.get("boss", ""))): bad.append("sheet.lighting needs ambient (#rrggbb), rim (a colour) and boss (#rrggbb)")
+    if not (BLUEPRINT["lighting"]["ringReadability"] <= Lg.get("ring", 0) <= 0.6): bad.append(f"sheet.lighting.ring must be at least {BLUEPRINT['lighting']['ringReadability']} (the ring stays readable on every map)")
+    Ar = S["arenas"]
+    if not (span_ok(Ar.get("mini", {}).get("z"), P["zMin"], P["zMax"] + 1.2) and span_ok(Ar.get("end", {}).get("z"), P["zMin"] + 3, BLUEPRINT["bossSpace"]["zMax"])): bad.append("sheet.arenas: the mini-boss fights in the ring's space, the end boss stands back in the boss space")
+    Rw = S["reward"]
+    if Rw.get("fragment") != m["fragment"]: bad.append("sheet.reward.fragment must be the map's fragment")
+    bp = str(Rw.get("bodyPart", "")).split(":")
+    if len(bp) != 2 or bp[0] not in REG["bodySlot"]: bad.append(f"sheet.reward.bodyPart must be <{'|'.join(REG['bodySlot'])}>:<id>")
+    if not str(Rw.get("show", "")).strip(): bad.append("sheet.reward.show: how the reward is presented")
+    # ── the ring, anchored to the environment
+    if m["anchor"] not in REG["anchor"]: bad.append(f"anchor \"{m['anchor']}\" isn't one the code draws ({', '.join(REG['anchor'])})")
+    R = m["ring"]
     if not 0.8 <= R.get("speed", 0) <= 1.8: bad.append("ring.speed must be 0.8–1.8")
+    depth = R.get("depth", 0)
+    if not inside(P["z"] + depth, RZ["z"][0], RZ["z"][1]): bad.append("the ring's first-half depth (ring plane + ring.depth) leaves the map's ring zone")
     T = R.get("tri", {}); a, up, near, far, skew = (T.get(k, 0) for k in ["a", "up", "near", "far", "skew"])
     bob = 0.16 if "bob" in R.get("mods", []) else 0
     for i, (x, y, z) in enumerate([(-a, P["y"] - 0.3, P["z"] - near), (a, P["y"] - 0.3 + skew * 0.4, P["z"] + far), (skew * a, P["y"] + up, P["z"] + 0.05)]):
         if abs(x) > P["xMax"] or y - bob < P["yMin"] or y + bob > P["yMax"] or not P["zMin"] <= z <= P["zMax"]:
             bad.append(f"ring triangle corner {i} ({x:.2f}, {y:.2f}, {z:.2f}) leaves the ring's playable space")
+        if not (inside(x, RZ["x"][0] - 0.3, RZ["x"][1] + 0.3) and inside(z, RZ["z"][0] - 0.3, RZ["z"][1] + 0.6)): bad.append(f"ring triangle corner {i} leaves the map's ring zone")
     for q in R.get("seqs", []):
         if len(q) < 3 or any(v not in (0, 1, 2) for v in q) or any(q[i] == q[(i + 1) % len(q)] for i in range(len(q))):
             bad.append(f"ring sequence {q} must visit corners 0–2, at least three legs, never a corner to itself")
@@ -122,6 +173,28 @@ def map_problems(m, fname):
     if R.get("path") not in REG["path"]: bad.append(f"ring.path \"{R.get('path')}\" isn't one the code flies")
     if len(m["tiers"]) != 2 or any(t not in [x["id"] for x in TIERS] for t in m["tiers"]): bad.append("tiers must name two tiers (first half, second half)")
     if m["mechanic"].get("kind") not in REG["mechanic"]: bad.append(f"mechanic \"{m['mechanic'].get('kind')}\" isn't implemented")
+    if m["mechanic"].get("skin") and m["mechanic"]["skin"] not in REG["skin"]: bad.append(f"mechanic skin \"{m['mechanic']['skin']}\" isn't drawn")
+    # ── obstacles (V19): each registered, each inside the hazard zone (cannons stand outside the corridor and fire into it)
+    O = m["obstacles"]
+    for ph in ["A", "B", "boss"]:
+        if not isinstance(O.get(ph), list): bad.append(f"obstacles.{ph} must be a list"); continue
+        for o in O[ph]:
+            k = o.get("kind")
+            if k not in REG["obstacle"]: bad.append(f"obstacle \"{k}\" isn't one the code has"); continue
+            if not isinstance(o.get("from"), int) or o["from"] < 0: bad.append(f"obstacle {k}: \"from\" is the hit count it comes in at")
+            pts = []
+            if "at" in o: pts.append(o["at"])
+            if "box" in o and k in ("fan",): x0, x1, y0, y1, z0, z1 = o["box"]; pts += [[x0, y0, z0], [x1, y1, z1]]
+            if "box" in o and k == "barrier": x0, x1, y0, y1, z = o["box"]; pts += [[x0, y0, z], [x1, y1, z]]
+            if "box" in o and k == "crusher": x0, x1, z0, z1 = o["box"]; pts += [[x0, o.get("low", 1), z0], [x1, o.get("top", 4), z1]]
+            if k == "spikes": pts += [[o["span"][0], 0, o["z"]], [o["span"][1], o["h"], o["z"]]]
+            if k == "cannon": pts.append([0, o["y"], o["z"]])
+            for (x, y, z) in pts:
+                if not (inside(x, HZ["x"][0] - 0.05, HZ["x"][1] + 0.05) and inside(y, HZ["y"][0] - 0.05, HZ["y"][1] + 0.4) and inside(z, HZ["z"][0] - 1.2, HZ["z"][1] + 0.1)):
+                    bad.append(f"obstacle {k} ({x}, {y}, {z}) leaves the map's hazard zone")
+    for ph in ["A", "B"]:
+        tt = m["targetTypes"].get(ph)
+        if not tt or any(t not in REG["targetType"] for t in tt): bad.append(f"targetTypes.{ph} must list registered target types ({', '.join(REG['targetType'])})")
     if m["bosses"].get("mini") not in REG["mini"] or m["bosses"].get("end") not in REG["end"]: bad.append("bosses must name a registered mini-boss and end boss")
     if m["fragment"] not in REG["fragment"]: bad.append(f"fragment \"{m['fragment']}\" isn't registered")
     if m.get("target") not in REG["target"]: bad.append(f"target \"{m.get('target')}\" isn't one the code draws ({', '.join(REG['target'])})")

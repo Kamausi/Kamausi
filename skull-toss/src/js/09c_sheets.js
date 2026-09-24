@@ -123,8 +123,32 @@
   }));
 
   // ───────────────────────── profile ─────────────────────────
+  // v44 (the corrected roadmap's V31): a profile picture (Morty in your look, the face you pick, in a frame each map's
+  // end boss earns you) and a short bio. Both are saved with the profile; the bio never leaves it.
+  const PIC_FACES = ["happy", "excited", "perfect", "deadpan", "dizzy", "confused", "fear", "idle"];
+  const PIC_FRAMES = [["plain", "#26364A", 0], ...MAP_DATA.map(M => [M.id, M.look.sky[2], M.n])];
+  const picNow = () => profile.pic || { face: "happy", frame: "plain" };
+  function drawProfilePic(cv, pic = picNow(), look = cos) {
+    const c = cv.getContext("2d"), n = cv.width, F = PIC_FRAMES.find(f => f[0] === pic.frame) || PIC_FRAMES[0], M = F[2] ? mapData(F[2]) : null;
+    c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, n, n);
+    const g = c.createLinearGradient(0, 0, 0, n); g.addColorStop(0, M ? M.look.sky[1] : MIDNIGHT); g.addColorStop(1, F[1]); c.fillStyle = g; c.fillRect(0, 0, n, n);
+    c.fillStyle = INK; for (let i = 0; i < 6; i++) { c.fillRect(0, i * n / 6 + n * 0.03, n * 0.07, n * 0.08); c.fillRect(n * 0.93, i * n / 6 + n * 0.03, n * 0.07, n * 0.08); }   // a frame of film
+    c.strokeStyle = M ? GOLD : CREAM; c.lineWidth = n * 0.03; c.strokeRect(n * 0.1, n * 0.03, n * 0.8, n * 0.94);
+    drawSkull(c, n / 2, n * 0.56, n * 0.27, { t: 0.5, look, face: faceFor(pic.face, 0.5) }); drawHat(c, n / 2, n * 0.56, n * 0.27, 0, 0.5, null, 1, hatOf(look));
+  }
+  function renderPicPick() {
+    const pic = picNow(), faces = $("picFaces"), frames = $("picFrames"); if (!faces) return;
+    faces.textContent = ""; frames.textContent = "";
+    PIC_FACES.forEach((f, i) => faces.append(h("button", { type: "button", data: { face: f }, "aria-pressed": String(pic.face === f), "aria-label": t("pic.face", { n: i + 1 }) }, String(i + 1))));
+    for (const [id, , n] of PIC_FRAMES) { const open = !n || profile.bestStage > n; frames.append(h("button", { type: "button", data: { frame: id }, "aria-pressed": String(pic.frame === id), disabled: open ? null : "", "aria-label": n ? mapData(n).name : t("pic.plain") }, n ? String(n) : "·")); }
+    drawProfilePic($("profPic"), pic);
+  }
+  $("picFaces").addEventListener("click", e => { const b = e.target.closest("[data-face]"); if (!b) return; profile.pic = { ...picNow(), face: b.dataset.face }; persist(800); renderPicPick(); Sound.ui("tick"); });
+  $("picFrames").addEventListener("click", e => { const b = e.target.closest("[data-frame]"); if (!b || b.disabled) return; profile.pic = { ...picNow(), frame: b.dataset.frame }; persist(800); renderPicPick(); Sound.ui("tick"); });
+  $("prof-bio").addEventListener("input", e => { profile.bio = e.target.value.replace(/[<>]/g, "").slice(0, 120); persist(2500); });
   function renderProfile() {
     const n = $("prof-name"); if (document.activeElement !== n) n.value = profile.name;
+    const bio = $("prof-bio"); if (document.activeElement !== bio) bio.value = profile.bio || ""; renderPicPick();
     const r = rankFor(profile.makes);
     $("rankName").textContent = r.name;
     $("profTitle").textContent = titleName();
@@ -136,7 +160,7 @@
       ["Career", "", [["Best score", N(P.bestScore)], ["Most hits in a run", P.best], ["Furthest map", P.bestStage > MAP_COUNT ? "The End" : P.bestStage || 1], ["Runs", N(P.games)], ["Points, all time", N(P.scoreTotal)], ["Time played", mins(P.playTime)]]],
       ["Tossing", "", [["Throws", N(P.throws)], ["Hits", N(P.makes)], ["Accuracy", pct(P.makes, P.throws)], ["Perfects", N(P.perfects)], ["Perfect rate", pct(P.perfects, P.makes)], ["Rim-ins", N(P.rims)],
         ["Best combo", `×${P.bestStreak}`], ["Perfects in a row", P.bestPerfStreak], ["Most skulls held", P.peakLives], ["Last-skull hits", N(P.clutch)], ["Times you grabbed Morty", N(P.grabs)]]],
-      ["Bosses", "", [["Mini-bosses beaten", P.miniKills], ["…without a miss", P.miniFlawless], ["End bosses beaten", P.bossKills], ["…without a miss", P.bossFlawless], ["Morty's pieces back", `${P.fragments.length}/${MAP_COUNT}`], ["Story finished", N(P.storyClears)]]],
+      ["Bosses", "", [["Mini-bosses beaten", P.miniKills], ["…without a miss", P.miniFlawless], ["End bosses beaten", P.bossKills], ["…without a miss", P.bossFlawless], ["Black Ring shards", `${P.fragments.length}/${MAP_COUNT}`], ["Adventure finished", N(P.storyClears)]]],
       ["Power-ups", "", [["Grabbed", N(P.powerups)], ["Cursed skulls taken", P.cursed], ["Second chances used", P.saves]]],
       ["Hall of Shame", "shame", [["Misses", N(P.misses)], ["Bonks", N(P.bonks)], ["Wide", N(P.wides)], ["Too high", N(P.overs)], ["Too low", N(P.lows)], ["Fell short", N(P.shorts)],
         ["Hit the post", N(P.posts)], ["Clanked off the rim", N(P.clanks)], ["Seeds to the face", N(P.seeds)], ["Runs without a hit", N(P.zeroRuns)], ["Out in 5 throws", N(P.quickDeaths)]]],

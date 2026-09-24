@@ -4,14 +4,14 @@
   function drawTrackAndShadow() {
     const R = RINGS[cos.ring];
     ctx.lineCap = "round";
-    const p = project(ring.x, 0, ring.z);
+    const p = project(ring.x + shadowShift(ring.y), 0, ring.z);   // (it lies a little away from the map's key light)
     const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, ring.rc * p.s * 2.2);
     g.addColorStop(0, `rgba(${R.rgb},${0.1 + ring.flash * 0.18})`); g.addColorStop(1, `rgba(${R.rgb},0)`);
     ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(p.x, p.y, ring.rc * p.s * 2.2, ring.rc * p.s * 0.45, 0, 0, TAU); ctx.fill();
     if (look().ambient.water) {   // over water the ring has a reflection where its shadow would be, rippling (the fog never hides it)
       const r = ring.rc * p.s, wob = Math.sin(game.time * 3.1) * 0.06;
       ctx.save(); ctx.globalAlpha = 0.38; ctx.translate(p.x, p.y + r * 0.18); ctx.scale(1 + wob, -0.26); drawRingShape(ctx, 0, 0, r, RING_TUBE * 2 * p.s, cos.ring, game.time, 0); ctx.restore();
-    } else { ctx.fillStyle = "rgba(0,0,0,.45)"; ctx.beginPath(); ctx.ellipse(p.x, p.y, ring.rc * p.s * 0.95, 0.07 * p.s, 0, 0, TAU); ctx.fill(); }
+    } else { ctx.fillStyle = `rgba(0,0,0,${BLUEPRINT.shadow.ring.opacity})`; ctx.beginPath(); ctx.ellipse(p.x, p.y, ring.rc * p.s * 0.95, 0.07 * p.s, 0, 0, TAU); ctx.fill(); }
   }
   // cartoon wings: the ring has shaken loose and flies the triangle on its own
   function drawRingWings(x, y, r, lw) {
@@ -32,8 +32,7 @@
     const p = project(ring.x, ring.y, ring.z), T = VENT.ring || { t: game.time, sq: 0, dir: 0 };
     const wob = ring.wobble > 0 ? Math.sin(T.t * 38) * 0.035 * ring.wobble : 0, morph = ring.morph || 0;
     const r = ring.rc * p.s * (1 + wob + morph * 0.25 * Math.sin(morph * 18)), lw = RING_TUBE * 2 * p.s;
-    const base = project(ring.x, 0, ring.z), pw = POST_HALF * 2 * p.s, top = p.y + r + lw * 0.35;
-    if (hasPost()) { const PL = POLES[cos.pole]; if ((PL && PL.hang) || base.y > top) drawPole(p.x, top, base.y, pw, p.s, cos.pole, ctx, game.time, p.y - r - lw * 0.4); }
+    drawAnchorHanger(p, r, lw);   // the ring belongs to the map: its rope, chain, rod, post or hand (07n_environment.js)
     if (ringFlies()) drawRingWings(p.x, p.y, r, lw);
     const cut = ring.mode === "jumpcut" ? RING_PATHS.jumpcut.tell(ring.phase) : 0;   // the Final Reel: the film flickers a beat before it cuts
     if (cut > 0 && Math.floor(game.time * 24) % 2) { ctx.save(); ctx.strokeStyle = `rgba(242,231,201,${0.7 * Math.max(0.3, flashK())})`; ctx.lineWidth = 2; ctx.setLineDash([6, 4]); ctx.strokeRect(p.x - r * 1.5, p.y - r * 1.5, r * 3, r * 3); ctx.restore(); }
@@ -41,7 +40,8 @@
     const squashed = Math.abs(T.sq) > 0.003;   // a contact squashes the ring along the line of the hit, then it springs back
     if (squashed) { ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(T.dir); ctx.scale(1 - T.sq, 1 + T.sq * 0.6); ctx.rotate(-T.dir); ctx.translate(-p.x, -p.y); }
     if (settings.contrast) contrastHalo(p.x, p.y, r, lw * 1.6 + 3);
-    drawRingShape(ctx, p.x, p.y, r, lw, cos.ring, T.t, ring.flash);
+    const rim = drawRingLight(p.x, p.y, r, lw);   // the backing that keeps it readable on any background, and its rim light
+    drawRingShape(ctx, p.x, p.y, r, lw, cos.ring, T.t, ring.flash); rim();
     if (squashed) ctx.restore();
     if (powerOn("deadeye")) {          // Deadeye shows its doubled perfect window
       const pr = (ring.rc - RING_TUBE - SKULL_R) * 0.76 * p.s;
@@ -75,6 +75,7 @@
     const reaches = tg >= tc;
     if (guide === "off") return { front, back, cross: null, land: null };
     const tEnd = guide === "short" ? Math.min(tg, tc * 0.36) : Math.min(tg, tc + 0.7);
+    if (obstacleForcesLive()) return forcedPreview(v, guide, tc, tEnd);   // fans and lodestones bend it (07m_obstacles.js)
     const rest = project(0, START_Y, 0), off = pullOffset(), kx = rest.x + off.x, ky = rest.y + off.y, kr = SKULL_R * rest.s * 1.35;
     let lx = null, ly = null, i = 0;
     for (let t = 0.004; t < tEnd; t += 0.004) {
@@ -89,6 +90,24 @@
     return { front, back,
       cross: reaches ? { x: v.x * tc + wx * tc * tc, y: START_Y + v.y * tc - 0.5 * G * tc * tc, z: zr } : null,
       land: reaches ? null : { x: v.x * tg + wx * tg * tg, z: v.z * tg } };
+  }
+  function forcedPreview(v, guide, tc0, tEnd0) {
+    const zr = ring.z, path = forcedPath(v, tc0 * 1.6 + 0.8), front = [], back = [];
+    const k = path.findIndex(q => q.z >= zr), cross = k > 0 ? (() => { const a = path[k - 1], b = path[k], u = (zr - a.z) / (b.z - a.z); return { x: a.x + (b.x - a.x) * u, y: a.y + (b.y - a.y) * u, z: zr, t: a.t + (b.t - a.t) * u }; })() : null;
+    const land = cross ? null : path[path.length - 1], tc = cross ? cross.t : tc0, tEnd = guide === "short" ? Math.min(tEnd0, tc * 0.36) : cross ? tc + 0.7 : tEnd0;
+    const rest = project(0, START_Y, 0), off = pullOffset(), kx = rest.x + off.x, ky = rest.y + off.y, kr = SKULL_R * rest.s * 1.35;
+    let lx = null, ly = null, i = 0;
+    for (const q0 of path) {
+      if (q0.t > tEnd) break;
+      const q = { ...q0, tc }, p = project(q.x, q.y, q.z);
+      if (Math.hypot(p.x - kx, p.y - ky) < kr) continue;
+      const r = clamp(SKULL_R * 0.2 * p.s, 1.4, 4.6);
+      if (lx !== null && Math.hypot(p.x - lx, p.y - ly) < Math.max(9, r * 3.4)) continue;
+      lx = p.x; ly = p.y; q.p = p; q.r = r; q.i = i++; q.fade = guide === "short" ? 1 - q.t / tEnd : 1;
+      (q.z < zr ? front : back).push(q);
+    }
+    if (guide === "short") return { front, back, cross: null, land: null };
+    return { front, back, cross, land: land && { x: land.x, z: land.z } };
   }
   function aimColorOf(A, i, t) {
     if (A.rainbow) return `hsl(${(i * 24 + t * 140) % 360},80%,66%)`;
@@ -133,6 +152,7 @@
   // off: where the pouch is (the pull, or the twang); fy: the frame's jump after a shot; sq: how hard the pull
   // squeezes the fork. The bands are drawn here because they stretch, tip to pouch, between the asset's anchors.
   function drawLauncher(sx, sy, r, off, fy = 0, sq = 0) {
+    if (LAUNCHERS[cos.launcher]) { drawFrameLauncher(sx, sy, r, off, fy, cos.launcher); return; }   // a launcher from the Vault (08i_body.js)
     const A = ASSETS.launcher; if (!A) { drawSling(sx, sy, r, off, fy); return; }
     const M = A.meta, N = M.anchors, k = r / M.unit, [ax, ay] = N.seat, fx = k * (1 - sq), fyk = k * (1 + sq * 0.35);
     const onFrame = ([x, y]) => ({ x: sx + (x - ax) * fx, y: sy + fy + (y - ay) * fyk }), onPouch = ([x, y]) => ({ x: sx + off.x + (x - ax) * k, y: sy + off.y + (y - ay) * k });
@@ -229,7 +249,7 @@
     if (settings.contrast && s.alpha * fade > 0.3) contrastHalo(x, y, r * 1.18, 0, true);
     if (V.smear > 0 && s.alpha * fade > 0.05) drawSmear(ctx, x, y, r, V.mdir == null ? V.dir : V.mdir, V.smear, s.alpha * fade * ghostly, V.t);
     drawSkull(ctx, x, y, r, { ang: V.angle + V.tilt, alpha: s.alpha * fade * ghostly, a: V.a, dir: V.dir, t: V.t, look: cos, face: V.face, jaw: V.jaw });
-    if (s.alpha * fade > 0.05) { drawAura(ctx, x, y, r, V.t, true); drawHat(ctx, x, y, r, V.angle + V.tilt, V.t, hat, s.alpha * fade * ghostly, cos.hat, V.a, V.dir); voice.anchor = { x, y, r }; }
+    if (s.alpha * fade > 0.05) { drawAura(ctx, x, y, r, V.t, true); drawHat(ctx, x, y, r, V.angle + V.tilt, V.t, hat, s.alpha * fade * ghostly, hatOf(cos), V.a, V.dir); voice.anchor = { x, y, r }; }
     if (rig.mood === "deadpan" && rig.dots > 0) drawThought(x, y, r, rig.dots * s.alpha * fade);
     if (rig.mood === "dizzy" && s.alpha * fade > 0.1) dizzyStars(x, y - r * 1.2, r);
   }
@@ -260,13 +280,15 @@
       ctx.fillStyle = MUSTARD; ctx.strokeStyle = INK; ctx.lineWidth = 1.2; star(ctx, px, py, Math.max(3, r * 0.3), 5, 0.45, a); ctx.fill(); ctx.stroke();
     }
   }
+  // the skull's shadow (the blueprint's shadow system): the higher it flies, the smaller and fainter it is and the
+  // further along the key light it lies; at landing the two meet
   function drawSkullShadow() {
     if (game.state !== "flying") return;
-    const s = skull.pos, q = project(s.x, 0, s.z);
+    const s = skull.pos, h = Math.max(0, s.y - SKULL_R), q = project(s.x + shadowShift(h), 0, s.z);
     if (q.y > H + 20 || skull.alpha <= 0) return;
-    const h = Math.max(0, s.y - SKULL_R), k = 1 / (1 + h * 0.6);
-    ctx.fillStyle = `rgba(0,0,0,${0.42 * k})`;
-    ctx.beginPath(); ctx.ellipse(q.x, q.y, SKULL_R * q.s * 1.15 * (0.5 + 0.5 * k), SKULL_R * q.s * 0.28, 0, 0, TAU); ctx.fill();
+    const B = BLUEPRINT.shadow.skull, k = 1 / (1 + h * B.height), sc = B.scale[0] + (B.scale[1] - B.scale[0]) * k, op = B.opacity[0] + (B.opacity[1] - B.opacity[0]) * k;
+    ctx.fillStyle = `rgba(0,0,0,${op})`;
+    ctx.beginPath(); ctx.ellipse(q.x, q.y, SKULL_R * q.s * 1.15 * sc, SKULL_R * q.s * 0.28, 0, 0, TAU); ctx.fill();
   }
 
   function draw() {
@@ -288,8 +310,10 @@
       ctx.globalCompositeOperation = "source-over"; const g = ctx.createRadialGradient(W * 0.5, H * 0.58, U * 0.15, W * 0.5, H * 0.58, Math.max(W, H) * 0.75);
       g.addColorStop(0, "rgba(232,137,58,.12)"); g.addColorStop(1, "rgba(8,6,20,.38)"); ctx.fillStyle = g; ctx.fillRect(-20, -20, W + 40, H + 40); ctx.restore();
     }
+    drawBossLight();   // a boss fight: the scenery dims and a spot finds the ring (07n_environment.js)
+    drawAnchorSupport();   // the branch, arch, signpost, batten or rail the ring hangs from
     if (boss) boss.draw(false);
-    drawSeeds(false); drawTargets(false); drawHazards(false);
+    drawSeeds(false); drawTargets(false); drawObstacles(false); drawHazards(false);
     const onStage = game.state !== "title";
     if (onStage) drawTrackAndShadow();
     drawPlayWorld();
@@ -302,7 +326,7 @@
     if (flying && behind) drawFlyingSkull();
     if (onStage) { drawRing(); drawPickup(); }
     if (boss) boss.draw(true);
-    drawSeeds(true); drawTargets(true); drawHazards(true);
+    drawSeeds(true); drawTargets(true); drawObstacles(true); drawHazards(true);
     drawImpactStars(ctx, false);   // contact stars: over the ring they hit, behind the skull that hit it
     if (pv) { drawDots(pv.front, false); drawReticle(pv); }
     if (game.state === "ready" || game.state === "cine" || game.state === "continue") {
@@ -319,7 +343,7 @@
       drawSkull(ctx, sx, sy, r * k, { ang, a: V.a, dir: V.dir, t: V.t, look: cos, face: V.face, jaw: V.jaw, alpha: powerOn("ghost") ? 0.6 : 1 });
       drawLauncherFront(rest.x, rest.y, r, off);
       if (V.effort && aim.active) drawEffort(ctx, sx, sy, r * k, V.effort);
-      drawAura(ctx, sx, sy, r * k, V.t, true); drawHat(ctx, sx, sy, r * k, ang, V.t, hat, powerOn("ghost") ? 0.6 : 1, cos.hat, V.a, V.dir);
+      drawAura(ctx, sx, sy, r * k, V.t, true); drawHat(ctx, sx, sy, r * k, ang, V.t, hat, powerOn("ghost") ? 0.6 : 1, hatOf(cos), V.a, V.dir);
       voice.anchor = { x: sx, y: sy, r };
       if (!aim.active && game.throws < 2 && skull.spawn >= 1 && game.state === "ready") drawChevrons(rest.x, rest.y, r);
     } else {

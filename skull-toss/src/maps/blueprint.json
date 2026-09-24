@@ -1,39 +1,75 @@
 {
-  "_doc": "The Spatial & Environmental Blueprint (docs/SPATIAL_BLUEPRINT.md). Metres; x across, y up, z into the screen from the launcher.",
-  "launcher": [
-    0,
-    0.9,
-    0
-  ],
-  "ringPlane": {
-    "z": 6.0,
-    "zMin": 4.4,
-    "zMax": 8.6,
-    "xMax": 2.3,
-    "yMin": 1.25,
-    "yMax": 3.7,
-    "y": 2.3
-  },
+  "_doc": "The Spatial & Environmental Blueprint (docs/SPATIAL_BLUEPRINT.md): the master specification every map is built to, and the gate the build checks each map against. Metres; x across, y up, z into the screen from the launcher. The camera sits 3 m behind the launcher.",
+  "launcher": [0, 0.9, 0],
+  "ringPlane": { "z": 6.0, "zMin": 4.4, "zMax": 8.6, "xMax": 2.3, "yMin": 1.25, "yMax": 3.7, "y": 2.3 },
   "corridor": {
-    "halfWidth": 2.4,
-    "zMax": 16,
-    "why": "the throw lane, the ring's space and the boss's patch: scenery never stands in it (behind z 16, decoration may)"
+    "halfWidth": 2.4, "zMax": 16,
+    "why": "the throw lane, the ring's space and the boss's patch: scenery never stands in it (behind z 16, decoration may). Only gameplay objects (the ring, its anchor's hanger, targets and obstacles) cross it."
   },
-  "bossSpace": {
-    "zMin": 9,
-    "zMax": 16,
-    "xMax": 4.5
+  "bossSpace": { "zMin": 9, "zMax": 16, "xMax": 4.5 },
+  "gameplayPlanes": {
+    "foreground": { "z": [0, 9.6], "holds": ["launcher", "skull", "ring", "targets", "obstacles", "anchor hangers", "power-ups"], "rule": "gameplay-critical: everything the throw can touch" },
+    "midground": { "z": [9.6, 30], "holds": ["large props", "structures", "secondary hazards", "moving scenery", "impact-reactive objects", "bosses"], "rule": "gameplay and interaction: it reacts to the throw, it never blocks it" },
+    "background": { "z": [30, 400], "holds": ["skyline", "moon", "clouds", "distant characters", "environmental animation"], "rule": "atmosphere: nothing here competes with the ring (no ring-coloured glow within its screen band)" }
   },
-  "planes": {
-    "sky": 400,
-    "far": 70,
-    "world": 30,
-    "near": 3.6,
-    "fg": 2.4
+  "planes": { "sky": 400, "far": 70, "world": 30, "near": 3.6, "fg": 2.4 },
+  "parallax": {
+    "compress": 0.6, "fx": 1.0,
+    "why": "camera distances are compressed toward the ring's (a multiplane rig), so far planes still move: this is physical depth, not decorative scrolling",
+    "respondsTo": ["camera", "flight", "impacts", "boss", "weather"]
   },
-  "hudSafe": {
-    "top": 0.12,
-    "bottom": 0.1,
-    "why": "fractions of the screen the HUD owns; no gameplay object is drawn there at rest"
-  }
+  "camera": {
+    "base": { "skullAt": 0.77, "ringAt": 0.34, "why": "fixed readable framing: the skull rests at 77% down the screen, the ring hangs at 34%" },
+    "aim": { "lean": [0.2, 0.1], "back": 0.32 },
+    "flight": { "follow": [0.22, 0.045, 0.5] },
+    "impact": { "jolt": 2.2, "slip": 1.5, "maxPunch": 0.12, "maxRotate": 0.05 },
+    "spectacle": { "pushIn": 0.6, "hold": 0.6, "only": ["perfect", "signature", "boss", "discovery"] },
+    "drift": [0.03, 0.014, 0.05],
+    "fps": 24,
+    "ringSafe": { "margin": 0.06, "top": 0.12, "bottom": 0.62, "why": "no camera move may push the ring out of this box on the screen (fractions of the width and height)" }
+  },
+  "anchors": {
+    "branch": { "support": "overhead", "hanger": "rope", "y": 4.35, "react": "bend" },
+    "arch": { "support": "overhead", "hanger": "chain", "y": 4.35, "react": "shake" },
+    "sign": { "support": "overhead", "hanger": "rope", "y": 4.35, "react": "squeak" },
+    "rope": { "support": "overhead", "hanger": "rope", "y": 4.4, "react": "move" },
+    "post": { "support": "ground", "hanger": "pole", "react": "shake" },
+    "hand": { "support": "ground", "hanger": "hand", "react": "move" },
+    "gear": { "support": "overhead", "hanger": "rod", "y": 4.35, "react": "rotate" },
+    "chain": { "support": "overhead", "hanger": "chain", "y": 4.6, "react": "shake" }
+  },
+  "reactions": {
+    "move": "slides or swings away from the hit, then settles",
+    "rotate": "turns about its pivot, then turns back",
+    "bend": "leans away from the hit and springs back past upright",
+    "crack": "a crack is drawn in and stays for the map",
+    "fall": "topples over and lies there for the map",
+    "squeak": "a short squash and a squeak",
+    "shake": "shivers on the spot",
+    "react": "a character looks, jumps or shouts"
+  },
+  "ambientBudget": { "max": 7, "heavy": 2, "heavyKinds": ["lightning", "weather", "bosslight"], "why": "alive but mechanically quiet: at most seven ambient animations a map, two of them big" },
+  "lighting": {
+    "ringReadability": 0.3,
+    "shadowFrom": "key",
+    "impact": { "flash": 0.2, "why": "a hit lights the frame for a moment" },
+    "boss": { "dim": 0.32, "spot": 1.35, "why": "the scenery darkens and a spot finds the ring" },
+    "transition": { "iris": true, "why": "maps change on an iris" }
+  },
+  "shadow": {
+    "skull": { "offset": 0.22, "scale": [0.5, 1.0], "opacity": [0.12, 0.42], "height": 0.6, "why": "the higher the skull, the smaller, fainter and further along the light it lies" },
+    "ring": { "opacity": 0.45, "ringLine": false, "why": "the ring's shadow says how deep it is. Nothing joins them: no dotted line, no plumb line" },
+    "landing": { "squash": true, "why": "at landing the shadow and the skull meet" }
+  },
+  "occlusion": {
+    "protect": ["skull", "ring", "trajectory", "targets", "obstacles", "collision zones"],
+    "fgMaxAlpha": 0.12,
+    "why": "nothing decorative covers these; the foreground frame keeps to the edges, and an element that crosses the gameplay plane must have a gameplay reason (an anchor, an obstacle)"
+  },
+  "sheet": {
+    "_doc": "The Map Production Sheet: every map file carries one, in this order. The build refuses a map that leaves any out.",
+    "order": ["concept", "plane", "launcher", "zones", "corridor", "camera", "parallax", "interactions", "ambient", "lighting", "arenas", "transition", "reward"],
+    "identity": ["visual", "spatial", "mechanic", "throw", "boss"]
+  },
+  "hudSafe": { "top": 0.12, "bottom": 0.1, "why": "fractions of the screen the HUD owns; no gameplay object is drawn there at rest" }
 }

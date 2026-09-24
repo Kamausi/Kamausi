@@ -336,3 +336,5 @@ details.row.sent{display:block}details.row.sent summary{cursor:pointer;font:700 
 .season-track .reward.none{align-items:center;opacity:.35}
 .season-none{margin:18px 4px;font:600 14px/1.5 var(--ui);color:var(--cream-dim)}
 .ribbon.season{background:#E8893A;color:var(--ink)}
+.cat-tabs button[data-group]:not(:first-child){margin-left:14px}
+.prof-pic{display:flex;gap:12px;align-items:center}.prof-pic canvas{width:96px;height:96px;flex:none;border-radius:8px}.pic-pick{min-width:0;flex:1}.pic-pick .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.pic-pick button{min-width:44px;min-height:44px;border:2px solid var(--ink);border-radius:8px;background:var(--paper);color:var(--ink);font:700 13px var(--ui,inherit);padding:4px 8px}.pic-pick button[aria-pressed=true]{background:var(--gold,#E3B64B)}.pic-pick button:disabled{opacity:.4}#prof-bio{width:100%;resize:none;font:inherit;border:2px solid var(--ink);border-radius:8px;padding:8px;box-sizing:border-box}

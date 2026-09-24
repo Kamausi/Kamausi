@@ -227,7 +227,7 @@
   // older profile there. Every profile that comes in (this device, the cloud, a save code) runs the steps it hasn't
   // had, in order, so an old save reaches today's shape the same way wherever it comes from. A profile written by a
   // newer build keeps its number and its fields.
-  const SAVE_SCHEMA = 3;
+  const SAVE_SCHEMA = 4;
   const MIGRATIONS = {
     // v14: the leaderboard stops posting bestScore (a save code can carry any number) and posts boardBest instead,
     // the best Story run actually played to its end. Nothing carries over: the board takes runs finished from now on.
@@ -240,6 +240,14 @@
       if (Number(p.bestStage) > 5) p.bestStage = 5;
       if (Array.isArray(p.achievements)) p.achievements = p.achievements.map(a => a === "whole-reel" ? "half-reel" : a);
       p.fragments = []; p.bossLog = {};
+    },
+    // v44: the eight maps were rebuilt (Crow Hollow to the Black Abyss) and Morty's pieces became the Black Ring's
+    // shards. Progress carries over map for map: the piece an old map's end boss held becomes the shard of the map in its
+    // place, and how far you'd got stays how far you've got. Bosses keep their names, so their tallies stand.
+    4: p => {
+      const OLD = ["tophat", "bowtie", "gloves", "cane", "spats", "whistle", "watch", "shadow"], NEW = ["hollow", "gilded", "whistle", "drowned", "marsh", "desert", "clockwork", "abyss"];
+      if (Array.isArray(p.fragments)) p.fragments = [...new Set(p.fragments.map(f => (OLD.includes(f) ? NEW[OLD.indexOf(f)] : f)))];
+      p.bio = ""; p.pic = null;
     }
   };
   function migrateProfile(p) {
@@ -257,7 +265,7 @@
     "powerups", "cursed", "saves", "bonesSpent", "shopBuys", "coffins", "playTime", "grabs", "arcadeRuns", "chalClaims", "achSeen", "storyClears", "targetHits", "hazardHits", "continues", "xp"];   // xp: career experience (04h_career.js)
   // arcade: the best on each map, keyed by map number ({ score, secs, hits, runs }); achievements: the ones unlocked
   const DEFAULT_PROFILE = { name: "", bones: 0, daily: null, weekly: null, monthly: null, unlocked: [], seen: [], achievements: [], arcade: {}, updatedAt: 0, board: false, bestStage: 1, boardBest: null,
-    fragments: [], bossLog: {}, shots: {}, modes: {}, met: [], secrets: [], history: [], mastery: [], flawless: {}, mapMakes: {}, arcadeTables: {}, lastIni: "", streakDays: 0, streakLast: "", director: null, firsts: [], season: null };   // season: this season's Ticket (07l_season.js)   // firsts: the funnel, the first time of each thing (04g_telemetry.js)   // director: this week's Director's Challenge stars and best (07k_director.js)   // streak: days played in a row (v37)   // arcadeTables: each cabinet's top five (09o_arcade.js)   // mastery: claimed tiers; flawless: end bosses beaten without a miss; mapMakes: makes per map (09n_mastery.js)   // history: the last ten runs (04h_career.js)   // met: what the Codex has noted ("boss:crow", "power:rush"…); secrets: the ones found (09l_mischief.js)   // modes: Boss Rush's and each mini-game's record (07i_modes.js)   // shots: each signature shot, how many times (07h_shots.js)   // fragments: Morty's pieces recovered (ids); bossLog: each boss beaten, how many times
+    fragments: [], bossLog: {}, bio: "", pic: null, shots: {}, modes: {}, met: [], secrets: [], history: [], mastery: [], flawless: {}, mapMakes: {}, arcadeTables: {}, lastIni: "", streakDays: 0, streakLast: "", director: null, firsts: [], season: null };   // season: this season's Ticket (07l_season.js)   // firsts: the funnel, the first time of each thing (04g_telemetry.js)   // director: this week's Director's Challenge stars and best (07k_director.js)   // streak: days played in a row (v37)   // arcadeTables: each cabinet's top five (09o_arcade.js)   // mastery: claimed tiers; flawless: end bosses beaten without a miss; mapMakes: makes per map (09n_mastery.js)   // history: the last ten runs (04h_career.js)   // met: what the Codex has noted ("boss:crow", "power:rush"…); secrets: the ones found (09l_mischief.js)   // modes: Boss Rush's and each mini-game's record (07i_modes.js)   // shots: each signature shot, how many times (07h_shots.js)   // fragments: Morty's pieces recovered (ids); bossLog: each boss beaten, how many times
   for (const k of STAT_KEYS) if (!(k in DEFAULT_PROFILE)) DEFAULT_PROFILE[k] = 0;
   const DEFAULT_COS = { skull: "bone", eyes: "pie", teeth: "grin", paint: "none", trail: "dust", impact: "classic", ring: "hoop", aim: "bone", reel: "standard", title: "rookie", updatedAt: 0 };
   let sandbox = null;   // while the spec runs, nothing is written to the player's storage or cloud
@@ -288,6 +296,8 @@
     const out = { ...DEFAULT_PROFILE, ...migrateProfile(p && typeof p === "object" ? { ...p } : {}) };
     for (const k of STAT_KEYS) out[k] = Math.max(0, Math.floor(Number(out[k]) || 0));
     out.name = String(out.name || "").slice(0, 16);
+    out.bio = String(out.bio || "").replace(/[<>]/g, "").slice(0, 120);   // (v44: the profile's bio and picture)
+    out.pic = out.pic && typeof out.pic === "object" && typeof out.pic.face === "string" && typeof out.pic.frame === "string" ? { face: out.pic.face.slice(0, 12), frame: out.pic.frame.slice(0, 12) } : null;
     const keys = a => Array.isArray(a) ? [...new Set(a.filter(s => typeof s === "string").map(migrateKey))].slice(0, 800) : [];
     out.unlocked = keys(out.unlocked); out.seen = keys(out.seen);
     out.updatedAt = Number(out.updatedAt) || 0;
@@ -353,6 +363,7 @@
     for (const f of ["flawless", "mapMakes"]) { out[f] = { ...a[f] }; for (const [k, v] of Object.entries(b[f])) out[f][k] = Math.max(out[f][k] || 0, v); }
     out.met = [...new Set([...a.met, ...b.met])]; out.secrets = [...new Set([...a.secrets, ...b.secrets])]; out.firsts = [...new Set([...a.firsts, ...b.firsts])];
     out.season = mergeSeason(a.season, b.season);
+    out.bio = a.bio || b.bio; out.pic = a.pic || b.pic;
     const newer = b.updatedAt > a.updatedAt ? b : a, older = newer === a ? b : a;
     out.name = newer.name || older.name;
     out.bones = newer.bones;   // a spendable balance: the most recent save wins (max() would refund purchases)

@@ -1,0 +1,365 @@
+{
+  "id": "woods",
+  "n": 3,
+  "name": "The Whistling Woods",
+  "reel": "Reel Three",
+  "premise": "The trees here whistle when the wind goes through them, and the signposts all point the wrong way.",
+  "identity": {
+    "visual": "Tall black trunks, hollow logs, crooked signposts, will-o'-wisps in the ferns.",
+    "spatial": "A narrow cutting through the trees; hollow logs lie across the lane's edges and blow up it.",
+    "mechanic": "Trajectory and deception: the wind turns every throw, hollow logs gust the skull, and painted decoys hang in the way.",
+    "throw": "Read the wind sign and the leaves, aim off, and never trust a target that's in front of the ring.",
+    "boss": "Marrowroot whistles up a gale and hangs his decoys in the lane: the ring you see sway may not be the one to throw at.",
+    "targets": "Will-o'-wisps, and cardboard decoys that only look like them.",
+    "hazards": "Wind and hollow-log gusts.",
+    "camera": "Tall and narrow, the trunks framing the lane.",
+    "ambient": "Owls, fireflies of wisps, leaves always blowing one way.",
+    "music": "The waltz on a penny whistle.",
+    "sfx": "Whistling wind, creaks, hoots.",
+    "transition": "A gust of leaves across the lens.",
+    "reward": "Marrowroot's Root Beard and the third shard."
+  },
+  "sheet": {
+    "concept": "Make the path of the throw the puzzle: things push it, and things lie about where it should go.",
+    "plane": "A cutting through the trunks (z 0–7.8); logs blow across the hazard zone at waist to head height.",
+    "launcher": [
+      0,
+      0.9,
+      0
+    ],
+    "zones": {
+      "ring": {
+        "x": [
+          -1.45,
+          1.45
+        ],
+        "y": [
+          1.8,
+          3.3
+        ],
+        "z": [
+          4.7,
+          7.5
+        ]
+      },
+      "targets": {
+        "x": [
+          -1.6,
+          1.6
+        ],
+        "y": [
+          1.4,
+          3.1
+        ],
+        "z": [
+          7.4,
+          9.0
+        ]
+      },
+      "hazards": {
+        "x": [
+          -2.3,
+          2.3
+        ],
+        "y": [
+          1.0,
+          4.2
+        ],
+        "z": [
+          2.2,
+          5.4
+        ]
+      }
+    },
+    "corridor": {
+      "halfWidth": 2.4,
+      "zMax": 16
+    },
+    "camera": {
+      "x": [
+        -0.26,
+        0.26
+      ],
+      "y": [
+        -0.12,
+        0.1
+      ],
+      "z": [
+        -0.4,
+        1.0
+      ]
+    },
+    "parallax": [
+      "sky",
+      "far",
+      "ground",
+      "world",
+      "near",
+      "fg"
+    ],
+    "interactions": [
+      {
+        "on": "tree",
+        "does": "bend"
+      },
+      {
+        "on": "signpost",
+        "does": "rotate"
+      },
+      {
+        "on": "log",
+        "does": "squeak"
+      },
+      {
+        "on": "mushroom",
+        "does": "squeak"
+      },
+      {
+        "on": "owls",
+        "does": "react"
+      }
+    ],
+    "ambient": [
+      "owls",
+      "wisps",
+      "weather",
+      "walkers",
+      "ghost"
+    ],
+    "lighting": {
+      "key": [
+        -0.35,
+        0.94
+      ],
+      "ambient": "#1C2A28",
+      "rim": "rgba(200,240,210,.3)",
+      "ring": 0.38,
+      "boss": "#A8F0C8"
+    },
+    "arenas": {
+      "mini": {
+        "z": [
+          5.0,
+          7.8
+        ],
+        "note": "the Owl perches on the signpost arms"
+      },
+      "end": {
+        "z": [
+          9.4,
+          14.6
+        ],
+        "note": "Marrowroot stands among the trunks, arms out across the lane"
+      }
+    },
+    "transition": "Leaves whip across the lens on a whistle.",
+    "reward": {
+      "bodyPart": "beard:roots",
+      "fragment": "whistle",
+      "show": "Marrowroot's roots curl into a beard on Morty's jaw."
+    }
+  },
+  "look": {
+    "sky": [
+      "#0E1A1C",
+      "#1C2E30",
+      "#2E4A48",
+      "#4A6660"
+    ],
+    "horizon": "rgba(160,220,190,.12)",
+    "moon": "crescent",
+    "moonColor": "#E6F2DC",
+    "stars": 0.7,
+    "skyline": "woods",
+    "silhouette": "#0A1210",
+    "haze": "rgba(74,102,96,.26)",
+    "ground": [
+      "#2E3A2A",
+      "#222C20",
+      "#182018",
+      "#0E140E"
+    ],
+    "hills": [
+      "#34422E",
+      "#2C3828",
+      "#243022"
+    ],
+    "hillRim": "rgba(200,240,210,.12)",
+    "grass": [
+      "#4A6A3A",
+      "#3A5A2E"
+    ],
+    "lane": "dirt",
+    "light": "rgba(190,240,210,.08)",
+    "props": "woods",
+    "foreground": "vines",
+    "weather": "leaves",
+    "tint": null,
+    "ambient": {
+      "walkers": [
+        "werewolf",
+        "ghost"
+      ],
+      "ghost": true,
+      "bats": 0.8,
+      "witch": false,
+      "digger": false,
+      "cat": false,
+      "lightning": false,
+      "crows": true
+    }
+  },
+  "anchor": "sign",
+  "ring": {
+    "speed": 1.12,
+    "tri": {
+      "a": 1.4,
+      "up": 0.9,
+      "near": 1.35,
+      "far": 1.45,
+      "skew": -0.25
+    },
+    "seqs": [
+      [
+        0,
+        2,
+        1
+      ],
+      [
+        0,
+        1,
+        2,
+        1
+      ],
+      [
+        1,
+        0,
+        2,
+        0
+      ]
+    ],
+    "mods": [
+      "bob"
+    ],
+    "path": "triangle"
+  },
+  "tiers": [
+    "II",
+    "III"
+  ],
+  "mechanic": {
+    "kind": "wind",
+    "max": 1.6
+  },
+  "obstacles": {
+    "A": [
+      {
+        "kind": "fan",
+        "box": [
+          -2.3,
+          -0.6,
+          1.2,
+          3.6,
+          2.4,
+          4.2
+        ],
+        "push": [
+          4.5,
+          1.0
+        ],
+        "pulse": [
+          2.6,
+          1.6
+        ],
+        "from": 8
+      }
+    ],
+    "B": [
+      {
+        "kind": "fan",
+        "box": [
+          -2.3,
+          -0.4,
+          1.2,
+          3.6,
+          2.2,
+          4.0
+        ],
+        "push": [
+          4.8,
+          1.2
+        ],
+        "pulse": [
+          2.4,
+          1.4
+        ],
+        "from": 0
+      },
+      {
+        "kind": "fan",
+        "box": [
+          0.4,
+          2.3,
+          1.2,
+          3.6,
+          4.6,
+          5.4
+        ],
+        "push": [
+          -4.8,
+          0.8
+        ],
+        "pulse": [
+          2.8,
+          1.2
+        ],
+        "from": 8
+      }
+    ],
+    "boss": [
+      {
+        "kind": "fan",
+        "box": [
+          -2.3,
+          2.3,
+          1.2,
+          3.8,
+          3.2,
+          4.4
+        ],
+        "push": [
+          4.0,
+          0.6
+        ],
+        "pulse": [
+          3.0,
+          1.5
+        ],
+        "flip": true,
+        "from": 0
+      }
+    ]
+  },
+  "targetTypes": {
+    "A": [
+      "standard",
+      "decoy"
+    ],
+    "B": [
+      "swinging",
+      "decoy",
+      "runaway"
+    ]
+  },
+  "bosses": {
+    "mini": "owl",
+    "end": "marrowroot"
+  },
+  "fragment": "whistle",
+  "target": "wisp",
+  "music": {
+    "rate": 1.03,
+    "key": 1
+  },
+  "blurb": "The wind turns every throw, hollow logs gust up the lane, and decoys hang in front of the ring"
+}

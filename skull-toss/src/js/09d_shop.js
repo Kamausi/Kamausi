@@ -1,7 +1,7 @@
   // ───────────────────────── the Skull Vault ─────────────────────────
   // An old cartoon prop room: pick a shelf, tap an item, and the skull hops onto the pedestal wearing it.
   const shop = { cat: "skull", sel: null, slot: 0 };
-  const CAT_LABEL = { skull: "Skulls", eyes: "Eyes", teeth: "Teeth", paint: "Paint jobs", hat: "Hats", aura: "Auras", trail: "Trails", impact: "Impacts", ring: "Rings", pole: "Ring poles", band: "Bands", aim: "Aim lines", reel: "Film reels", title: "Titles" };
+  const CAT_LABEL = { skull: "Skulls", eyes: "Eyes", teeth: "Teeth", paint: "Paint jobs", hat: "Hats", aura: "Auras", trail: "Trails", impact: "Impacts", ring: "Rings", pole: "Ring poles", band: "Bands", aim: "Aim lines", reel: "Film reels", title: "Titles", hair: "Hair", beard: "Facial hair", wings: "Wings", launcher: "Launchers", wizard: "Wizard Mort" };
   const fmt = n => n.toLocaleString("en-US");
   const starsText = it => "★".repeat(starsOf(it)) + "☆".repeat(4 - starsOf(it));
   const vault = { R: makeRig(), y: -140, vy: 0, ang: 0, spin: 0, parts: [], bursts: [], trail: [], loop: 0, nextHop: 0, nextReact: 0, react: null, reactUntil: 0, dragX: null };
@@ -50,6 +50,10 @@
     if (kind === "aim") { drawAimArc(c, 8, 44, 42, 30, 1, id, 0); return; }
     if (kind === "reel") { reelFrame(c, 26, 26, 44, 34, id, t); return; }
     if (kind === "impact") { const I = IMPACTS[id], b = makeBurst(I.word, 26, 27, I, { scale: 0.78 }, 300); b.t = b.dur * 0.3; b.rot = -0.08; b.seed = 7; drawBurstList(c, [b], 120); return; }
+    if (kind === "hair" || kind === "wizard") { drawSkull(c, 26, 33, 13, { t, look: { ...cos, hat: "none", [kind]: id }, face: faceFor("idle", t, { ly: -0.2 }) }); if (kind === "wizard") drawHat(c, 26, 33, 13, 0, t, null, 1, hatOf({ ...cos, wizard: id })); return; }
+    if (kind === "beard") { drawSkull(c, 26, 22, 15, { t, look: { ...cos, beard: id, wizard: "none" }, face: faceFor("idle", t) }); return; }
+    if (kind === "wings") { drawSkull(c, 26, 28, 10, { t, look: { ...cos, wings: id }, face: faceFor("happy", t) }); return; }
+    if (kind === "launcher") { const L = LAUNCHERS[id] || { wood: "#6B4526", hi: "rgba(242,231,201,.25)" }; c.lineCap = "round"; for (const [col, w] of [[INK, 7], [L.wood, 4.5]]) { c.strokeStyle = col; c.lineWidth = w; c.beginPath(); c.moveTo(26, 49); c.lineTo(26, 31); c.lineTo(12, 11); c.moveTo(26, 31); c.lineTo(40, 11); c.stroke(); } c.lineCap = "butt"; return; }
     if (kind === "hat") { drawSkull(c, 26, 36, 14, { t, look: { ...cos, hat: id }, face: faceFor("idle", t, { ly: -0.2 }) }); drawHat(c, 26, 36, 14, 0, t, null, 1, id); return; }
     if (kind === "aura") { drawAura(c, 26, 29, 12, t, false, id); drawSkull(c, 26, 29, 12, { t, look: cos, face: faceFor("happy", t) }); drawAura(c, 26, 29, 12, t, true, id); return; }
     if (kind === "pole") { if (POLES[id] && POLES[id].hang) { drawRingShape(c, 26, 40, 9, 3.2, cos.ring, t); drawPole(26, 50, 52, 1.2, 14, id, c, t, 30.5); return; } drawRingShape(c, 26, 14, 9, 3.2, cos.ring, t); drawPole(26, 25, 50, 3.2, 14, id, c, t, 4.5); return; }
@@ -103,7 +107,7 @@
       const sa = V.ang + R.tilt + (R.mood === "confused" ? 0.5 : 0), sy = floor + V.y + sink;
       drawAura(c, px, sy, sr, T, false, look.aura);
       drawSkull(c, px, sy, sr, { ang: sa, a: R.a, dir: R.dir, t: T, look, face: f, jaw: R.jaw });
-      drawAura(c, px, sy, sr, T, true, look.aura); drawHat(c, px, sy, sr, sa, T, { lift: Math.max(0, -V.vy) * 0.0006, tilt: 0, spin: T * 6 }, 1, look.hat, R.a, R.dir);
+      drawAura(c, px, sy, sr, T, true, look.aura); drawHat(c, px, sy, sr, sa, T, { lift: Math.max(0, -V.vy) * 0.0006, tilt: 0, spin: T * 6 }, 1, hatOf(look), R.a, R.dir);
       if (onStand) { const rx = w * 0.72, ry = h * 0.36, rr3 = h * 0.2; if (kind === "pole") drawPole(rx, ry + rr3 + h * 0.03, h * 0.92, h * 0.035, h * 0.4, look.pole, c, T, ry - rr3 - h * 0.02); drawRingShape(c, rx, ry, rr3, h * 0.06, look.ring, T); drawAimArc(c, px + sr * 0.9, floor - sr * 0.9, rx, ry, h / 90, look.aim, T); }
       if (kind === "title") {
         const txt = `${(profile.name || "Nameless soul").toUpperCase()} · ${(findItem("title", look.title) || {}).name || ""}`;

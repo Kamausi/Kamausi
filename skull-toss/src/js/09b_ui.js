@@ -43,7 +43,7 @@
     particles = []; bursts = []; waves = []; clearFlies(); resetSkull(); showCombo(0); setHint("");
     showScreen("title"); updateHud();
   }
-  $("play").addEventListener("click", () => openSheet("play"));   // Story or Arcade?
+  $("play").addEventListener("click", () => openSheet("play"));   // Adventure or Arcade?
   $("again").addEventListener("click", () => startGame({ mode: game.mode, map: game.map }));   // the same again (the same map, in Arcade and Practice)
 
   // ───────────────────────── Play: Story or Arcade, and Arcade's map ─────────────────────────
@@ -65,7 +65,7 @@
     if (pickFor !== "practice") { $("mapList").innerHTML = STAGES.map((S, i) => cabinetHTML(S, i)).join(""); return; }   // the Arcade: a row of cabinets (09o_arcade.js)
     $("mapList").innerHTML = STAGES.map((S, i) => {
       const A = arcadeRec(i), open = mapUnlocked(i), prac = pickFor === "practice";
-      if (!open) return `<button class="map-card locked" type="button" data-map="${i}" aria-disabled="true" style="--tint:${S.map.look.sky[1]}"><span class="n">Map ${i + 1}</span><b>${S.name}</b><span class="d">Reach it in Story to play it here</span><span class="rec"><span><i>Locked</i></span></span></button>`;
+      if (!open) return `<button class="map-card locked" type="button" data-map="${i}" aria-disabled="true" style="--tint:${S.map.look.sky[1]}"><span class="n">Map ${i + 1}</span><b>${S.name}</b><span class="d">Reach it in Adventure to play it here</span><span class="rec"><span><i>Locked</i></span></span></button>`;
       return `<button class="map-card" type="button" data-map="${i}" style="--tint:${S.map.look.sky[1]}"><span class="n">Map ${i + 1}</span><b>${S.name}</b><span class="d">${S.blurb}</span>`
         + `<span class="rec">${prac ? "" : A.runs ? `<span><i>Best</i> ${fmtN(A.score)}</span><span><i>Longest</i> ${clockStr(A.secs)}</span>` : "<span><i>Not played yet</i></span>"}</span></button>`;
     }).join("");
@@ -261,7 +261,7 @@
     const sink = R.a < 1 ? sr * (1 - R.a) * 0.9 : 0;
     drawAura(cb, cx, cy + sink, sr, T, false);   // the aura's far side, behind the lettering; its near side goes over it
     drawSkull(c, cx, cy + sink, sr, { ang: M.ang + R.tilt, a: R.a, dir: R.dir, t: T, look: cos, face: f, jaw: R.jaw });
-    drawAura(c, cx, cy + sink, sr, T, true); drawHat(c, cx, cy + sink, sr, M.ang + R.tilt, T, null, 1, cos.hat, R.a, R.dir);
+    drawAura(c, cx, cy + sink, sr, T, true); drawHat(c, cx, cy + sink, sr, M.ang + R.tilt, T, null, 1, hatOf(cos), R.a, R.dir);
   }
   // the round is over, so the skull has left the building: X eyes, jaw hanging open, and a wisp where the rest of him was
   function drawSleeper(T) {
@@ -285,7 +285,7 @@
     const f = faceFor("idle", T); f.glyph = "x"; f.jawT = 0.66; f.sockL = f.sockR = 1.06; f.blink = 0;
     const ang = -0.09 + Math.sin(T * 1.5) * 0.06;
     drawSkull(c, cx, cy, sr, { ang, a: 1, dir: 0, t: T, look: cos, face: f });
-    drawHat(c, cx, cy, sr, ang, T, null, 1, cos.hat, 1, 0);
+    drawHat(c, cx, cy, sr, ang, T, null, 1, hatOf(cos), 1, 0);
     c.strokeStyle = INK; c.lineWidth = Math.max(1.6, s * 0.022);   // the knocked-out ticks
     for (const [a, l] of [[-2.55, 0.32], [-2.05, 0.22], [-0.6, 0.32], [-1.1, 0.22]]) {
       const x0 = cx + Math.cos(a) * sr * 1.3, y0 = cy + Math.sin(a) * sr * 1.3;

@@ -58,6 +58,7 @@
       s.hang -= dt;
       if (s.hang <= 0) { const v = velAt(s, s.t); s.p0 = posAt(s, s.t); s.v0 = { x: v.x * 0.1, y: -2.5, z: v.z * 0.1 }; s.t = 0; s.spin = 0; Sound.toon("whistleDown"); }
     }
+    obstaclePush(s, dt);   // fans and lodestones push the flight (07m_obstacles.js)
     let remaining = s.hang > 0 ? 0 : dt, elapsed = 0, guard = 0;
     while (remaining > 1e-9 && guard++ < 10) {
       let tE = Infinity, kind = null;
@@ -71,6 +72,8 @@
     const prevPos = s.pos; s.pos = posAt(s, s.t);
     if (!game.result && !s.crossed && seeds.length) seedCheck(s, prevPos);
     if (!game.result && !s.crossed) hazardCheck(s, prevPos);
+    if (!game.result && !s.crossed) obstacleCheck(s, prevPos);   // the map's obstacles: bumpers bounce, fans and lodestones push, the rest block (07m_obstacles.js)
+    envAfterFlight(s, prevPos);   // props it brushes answer (07n_environment.js)
     if (targets.length) targetCheck(s, prevPos);
     if (s.pos.z < -CAM_BACK + 0.9 || s.pos.z > 48) s.alpha = 0;
     const fade = game.result ? clamp(game.endTimer / 0.3, 0, 1) : 1;
@@ -83,7 +86,7 @@
     } else if (s.flightTime > 4) resolve("wide", null);
   }
 
-  const hasPost = () => ring.mode === "line";
+  const hasPost = () => ring.mode === "line" && anchorDef().support === "ground";   // (a post or the desert's hand stands under the ring; a hanging ring has nothing below it)
   function hitRing(s, rp) {
     s.crossed = true;
     const dx = s.p0.x - rp.x, dy = s.p0.y - rp.y, d = Math.hypot(dx, dy), zr = rp.z;
@@ -92,7 +95,10 @@
     game.lastCross = { x: s.p0.x, y: s.p0.y, ringX: rp.x, ringY: rp.y, ringZ: zr, d, rc, perfR, t: s.flightTime };
     const at = project(rp.x, rp.y, zr), pan = panOf(rp.x);
     const strength = Math.hypot(s.v0.x, s.v0.y, s.v0.z) / IMPACT_REF;   // how hard it arrives (1 = a normal throw)
+    if (d > rc - RING_TUBE - SKULL_R && d < rc + RING_TUBE + SKULL_R + 0.02 && anchorHolds()) anchorReact(strength);   // a knock on the ring swings its anchor
     const ux = d > 1e-6 ? dx / d : 0, uy = d > 1e-6 ? dy / d : 1;
+    if (d > inner && boss && boss.eyeAt) { const e = boss.eyeAt(s.p0); if (e >= 0) {   // the Pumpkin King's eyes: a hit, not a miss
+      const ep = boss.eyePos(e); boss.eyeHit(e, at); s.v0 = { x: (s.p0.x - ep.x) * 4, y: 1.5, z: -Math.abs(s.v0.z) * 0.3 }; resolve("eye", at, project(ep.x, ep.y, ep.z)); return; } }
     if (d <= inner) { const kind = d <= perfR ? "perfect" : "swish"; VisualSystem.triggerImpact(kind, { at, strength, pan }); resolve(kind, at, null, d); }
     else if (d >= outer) {
       if (hasPost() && dy < -(rc + RING_TUBE) && Math.abs(dx) < POST_HALF + SKULL_R) {
@@ -116,7 +122,7 @@
     const p = s.p0, at = project(p.x, 0, p.z), first = s.bounces === 0;
     const short = !s.crossed && !game.result;
     if (short) { s.crossed = true; resolve("short", project(p.x, p.y + 0.4, p.z)); }
-    s.bounces++;
+    s.bounces++; if (first) envImpact(p.x, p.z, clamp(Math.abs(s.v0.y) / GROUND_REF, 0.5, 1.3));   // the ground shakes what's near
     // FLAT SKULL, then BOING back into shape (how flat depends on how fast it came down)
     VisualSystem.triggerImpact(!first ? "bounce" : short ? "short" : "ground", { at, strength: Math.abs(s.v0.y) / GROUND_REF, pan: panOf(p.x) });
     if (first && game.result && !game.result.make) {
@@ -143,7 +149,15 @@
     bat:     { make: false, hit: true },
     bone:    { make: false, hit: true },
     balloon: { make: false, hit: true },
-    pendulum: { make: false, hit: true }
+    pendulum: { make: false, hit: true },
+    bar:     { make: false, hit: true },   // (the obstacles: 07m_obstacles.js)
+    spikes:  { make: false, hit: true },
+    cannon:  { make: false, hit: true },
+    magnet:  { make: false, hit: true },
+    crusher: { make: false, hit: true },
+    barrier: { make: false, hit: true },
+    decoy:   { make: false, hit: true },   // (a decoy target hung in front of the ring: 07e_directors.js)
+    eye:     { make: false, hit: true, safe: true }   // (the Pumpkin King's eyes: a hit, not a miss; it costs no skull)
   };
   // the words are strings: result.<kind>.word for a make, result.<kind>.call and .sub for a miss; coach.<kind> the tip after one
   const MISS_STAT = { wide: "wides", over: "overs", low: "lows", post: "posts", short: "shorts", clank: "clanks", seed: "seeds" };
@@ -195,10 +209,10 @@
     } else {
       const saved = powerOn("second");   // Second Chance: this miss is on the house
       if (saved) { usePower("second"); profile.saves++; impact(t("result.saved"), W / 2, H * 0.3, { fill: TEAL, text: CREAM, scale: 0.7, delay: 0.25, bits: false }); Sound.life(); }
-      else if (!freeMiss()) game.lives--;   // (Practice, Curtain Call and the encore: misses are free)
+      else if (!freeMiss() && !R.safe) game.lives--;   // (an eye poke costs nothing)   // (Practice, Curtain Call and the encore: misses are free)
       game.streak = 0; game.perfStreak = 0; run.misses++; profile.misses++;
       if (MISS_STAT[kind]) profile[MISS_STAT[kind]]++;
-      if (boss) boss.flawless = false;
+      if (boss && !R.safe) boss.flawless = false;
       showCombo(0);
       skull.missed = true;
       if (R.hit) {  // it actually hit something (the visual system already squashed it): see stars, BONK
@@ -236,7 +250,7 @@
     powersAfterThrow();
     if (boss && boss.after) boss.after();
     if (!modeCheck() && !stageCheck()) {
-      pickupSchedule(); directorsAfterThrow();
+      pickupSchedule(); directorsAfterThrow(); obstaclesSync();
       if (game.throws < 2 && !hintEl.textContent) setHint(t("hint.start"));
     }
     saveRunSnapshot();
@@ -273,7 +287,7 @@
     resetSkull(); aim.active = false; Sound.pullEnd(); Sound.flightStop(true);
     paused = false; Sound.setPaused(false); showCombo(0); gameOverCard(false); contEl.hidden = true; game.cont = null;
     showScreen("play");
-    hazardsReset(); refillTargets();
+    OB.off = false; hazardsReset(); refillTargets();
     misc.lastMap = 0; misc.lastThrow = -99; misc.kind = null;   // (mischief's once-a-map is per run)
     modeBegin();   // each mode's own opening (07i_modes.js)
     if (opts.quiet || (mode !== "story" && mode !== "arcade" && mode !== "practice")) setHint(game.mode === "rush" ? "" : t("hint.start")); else introReel(mode, map);   // the leader and the reel's title card (09i_reel.js)
@@ -370,7 +384,7 @@
     }
     ring.x = rp.x; ring.y = rp.y; ring.z = rp.z;
     if (boss) updateBoss(dt);
-    updateSeeds(dt); updatePickup(dt); updatePowers(dt); updateTargets(dt); updateHazards(dt);
+    updateSeeds(dt); updatePickup(dt); updatePowers(dt); updateTargets(dt); updateHazards(dt); updateObstacles(dt);
 
     if (game.state === "flying") updateFlight(dt, phase0);
     else if (game.state === "cine") { updateCine(dt); skull.spawn = Math.min(1, skull.spawn + dt / 0.3); }

@@ -1,8 +1,27 @@
-# SKULL TOSS v43
+# SKULL TOSS v44
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)), with a synthesised waltz standing in wherever they can't load.
+
+## New in v44: the corrected roadmap, rebuilt around the throw
+
+The maps are playable environments first and themed backgrounds second.
+
+- **The Spatial & Environmental Blueprint is a gate** ([docs/SPATIAL_BLUEPRINT.md](docs/SPATIAL_BLUEPRINT.md)). `src/maps/blueprint.json` defines the gameplay planes, the camera (base, aim, flight, impact, spectacle, and a ring-safe box), parallax, the ring's anchors, the reactions, the ambient budget, lighting, the shadow system and occlusion. Every map carries a **Map Production Sheet** (concept, plane, launcher, ring/target/hazard zones, corridor, camera bounds, parallax, interactions, ambient, lighting, arenas, transition, reward), and the build refuses a map whose sheet is missing a part or leaves the blueprint.
+- **Eight new maps, theme following mechanic:** Crow Hollow (the throw), the Gilded Graveyard (environmental interaction: urns bounce the skull), the Whistling Woods (trajectory and deception: wind, gusting logs, decoys), the Drowned Theater (timing: revolving flats, a ghost scrim), the Black Marsh (environmental hazards: thorns, a crusher, fog), the Bone Desert (distance and precision: a further, smaller ring, cannons), the Clockwork Caves (mechanical timing: a lodestone, pistons, the pendulum) and the Black Abyss (everything, and the last shard).
+- **The ring belongs to the map:** it hangs from the oak's branch, a gilded arch, a signpost, a theatre's fly rope, a gear rail or a chain out of the dark, stands on a mooring post, or is held up by a giant skeleton hand. Knock it and its anchor swings; when it grows wings the rope is left swinging.
+- **The environment answers:** props move, rotate, bend, crack, fall, squeak or shake when the skull lands by them, each map its own way. Each map has a key light: shadows fall away from it, the ring gets a backing and a rim so it reads on any background, and in a boss fight the scenery dims and a spot finds the ring. The skull's shadow shrinks, fades and slides with height. No line joins the ring to its shadow.
+- **Eight obstacles** (bumper, rotating bar, spikes, cannon, fan, lodestone, crusher, ghost barrier), each with a footprint, a collision volume, a tell and a sound, brought in on the map's beats. The aim guide bends with fans and lodestones.
+- **Nine targets:** standard, swinging, runaway, pop-up, shielded, split, decoy (hung in front of the ring: hitting it is a miss), golden and secret.
+- **Tiers have names:** I The Toss, II The Distraction, III The Hazard, IV The Puzzle, V The Chaos, VI The Secrets.
+- **Progression:** end boss → a body-part reward (hair, facial hair or wings) → a shard of the **Black Ring** → the mini-game (the encore) → the next map. With the eighth shard the Black Ring is whole and Morty becomes **Wizard Mort**.
+- **The Pumpkin King:** his mouth is the ring and his eyes are targets. Poke both eyes shut and he's blind: no seeds, a wider mouth, and every throw down it counts double.
+- **The end bosses bring their map's machinery into the fight** (the Count's urns circle with him, the Clock King's crushers stamp on his tick, and so on).
+- **Power-ups:** 2% a hit, scaled by stage; score milestones from 2,000 points; pity; at most four a stage; weighted, no repeats, nothing you're carrying or just lost.
+- **New Vault slots:** Hair, Facial hair, Wings, Launchers and Wizard Mort, with the Vault's tabs grouped Head, Face, Hair, Facial hair, Wings, Effects, Skull, Ring, Launcher, Special, Wizard Mort.
+- **Profile picture and bio**, and **Story is now the Adventure**.
+- Saves move to schema 4: Morty's old pieces become the matching shards, and progress carries over map for map.
 
 ## New in v43: Google Analytics, behind the same yes
 
@@ -952,7 +971,7 @@ From the console, `SkullToss.debug.visualAnimation` lists the pose library (`pos
 
 ## Tests
 
-Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **216 checks**, covering:
+Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **231 checks**, covering:
 
 - **Layout, scoring and aiming.**
   - Everything is centred and every result is classified correctly.

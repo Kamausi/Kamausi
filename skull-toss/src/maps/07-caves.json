@@ -1,0 +1,392 @@
+{
+  "id": "caves",
+  "n": 7,
+  "name": "The Clockwork Caves",
+  "reel": "Reel Seven",
+  "premise": "Under the mountain someone built a clock the size of a cathedral, and it's still keeping time, badly.",
+  "identity": {
+    "visual": "Stalactites, glowing mine lamps, great gears in the rock, a pendulum swinging through the dark.",
+    "spatial": "A mine gallery on rails; machinery on both walls reaches into the lane: pistons, lodestones, the pendulum.",
+    "mechanic": "Mechanical timing and complex trajectories: a lodestone bends the flight, a piston stamps, the pendulum swings, gear spokes turn.",
+    "throw": "Curve it round the lodestone and land it between the ticks.",
+    "boss": "The Clock King winds every machine to his own tick: they all move on his beat, faster as he angers.",
+    "targets": "Bells on gear arms, some that split in two.",
+    "hazards": "The pendulum.",
+    "camera": "Tight and rhythmic, stepping on the tick.",
+    "ambient": "Dripping water, mine lamps, turning gears, bats.",
+    "music": "The waltz on a music box and cowbells.",
+    "sfx": "Ticks, clanks, the piston's hiss.",
+    "transition": "The gears lock, then an iris.",
+    "reward": "The Clock King's Clockwork Wings and the seventh shard."
+  },
+  "sheet": {
+    "concept": "Machinery: everything moves on a timetable and bends the throw, so the shot is a sum of curves and ticks.",
+    "plane": "The mine gallery on rails (z 0–7.8); machinery reaches into the hazard zone from both walls.",
+    "launcher": [
+      0,
+      0.9,
+      0
+    ],
+    "zones": {
+      "ring": {
+        "x": [
+          -1.55,
+          1.55
+        ],
+        "y": [
+          1.8,
+          3.35
+        ],
+        "z": [
+          4.5,
+          7.6
+        ]
+      },
+      "targets": {
+        "x": [
+          -1.6,
+          1.6
+        ],
+        "y": [
+          1.4,
+          3.1
+        ],
+        "z": [
+          7.4,
+          9.0
+        ]
+      },
+      "hazards": {
+        "x": [
+          -2.3,
+          2.3
+        ],
+        "y": [
+          0.0,
+          4.6
+        ],
+        "z": [
+          2.0,
+          5.4
+        ]
+      }
+    },
+    "corridor": {
+      "halfWidth": 2.4,
+      "zMax": 16
+    },
+    "camera": {
+      "x": [
+        -0.24,
+        0.24
+      ],
+      "y": [
+        -0.12,
+        0.08
+      ],
+      "z": [
+        -0.4,
+        0.9
+      ]
+    },
+    "parallax": [
+      "sky",
+      "far",
+      "ground",
+      "world",
+      "near",
+      "fg"
+    ],
+    "interactions": [
+      {
+        "on": "gear",
+        "does": "rotate"
+      },
+      {
+        "on": "lamppost",
+        "does": "move"
+      },
+      {
+        "on": "crate",
+        "does": "fall"
+      },
+      {
+        "on": "barrel",
+        "does": "fall"
+      },
+      {
+        "on": "stalagmite",
+        "does": "crack"
+      },
+      {
+        "on": "minecart",
+        "does": "move"
+      },
+      {
+        "on": "bell",
+        "does": "squeak"
+      }
+    ],
+    "ambient": [
+      "gears",
+      "drips",
+      "lamps",
+      "bats",
+      "walkers",
+      "lightning"
+    ],
+    "lighting": {
+      "key": [
+        0.6,
+        0.8
+      ],
+      "ambient": "#2A2018",
+      "rim": "rgba(255,200,120,.35)",
+      "ring": 0.44,
+      "boss": "#FFC060"
+    },
+    "arenas": {
+      "mini": {
+        "z": [
+          6.0,
+          7.8
+        ],
+        "note": "the Cuckoo ticks round its clock face"
+      },
+      "end": {
+        "z": [
+          9.4,
+          14.6
+        ],
+        "note": "the Clock King stands in the great gear, the pistons either side"
+      }
+    },
+    "transition": "The gears lock with a CLUNK, then an iris.",
+    "reward": {
+      "bodyPart": "wings:clockwork",
+      "fragment": "clockwork",
+      "show": "Brass wings tick open on Morty's back."
+    }
+  },
+  "look": {
+    "sky": [
+      "#0A0806",
+      "#16100C",
+      "#241A12",
+      "#32241A"
+    ],
+    "horizon": "rgba(255,190,110,.1)",
+    "moon": "none",
+    "moonColor": "#FFE0A0",
+    "stars": 0.0,
+    "skyline": "caves",
+    "silhouette": "#080604",
+    "haze": "rgba(60,44,30,.3)",
+    "ground": [
+      "#3A2E24",
+      "#2C221A",
+      "#1E1812",
+      "#120E0A"
+    ],
+    "hills": [
+      "#40342A",
+      "#382E24",
+      "#30281E"
+    ],
+    "hillRim": "rgba(255,200,120,.12)",
+    "grass": [],
+    "lane": "rails",
+    "light": "rgba(255,190,110,.1)",
+    "props": "caves",
+    "foreground": "stalactites",
+    "weather": "rain",
+    "tint": null,
+    "ambient": {
+      "walkers": [
+        "skeleton",
+        "zombie"
+      ],
+      "ghost": false,
+      "bats": 1.4,
+      "witch": false,
+      "digger": false,
+      "cat": false,
+      "lightning": false
+    }
+  },
+  "anchor": "gear",
+  "ring": {
+    "speed": 1.34,
+    "tri": {
+      "a": 1.55,
+      "up": 1.0,
+      "near": 1.5,
+      "far": 1.6,
+      "skew": -0.3
+    },
+    "seqs": [
+      [
+        0,
+        1,
+        2,
+        1
+      ],
+      [
+        2,
+        0,
+        1
+      ],
+      [
+        1,
+        2,
+        0,
+        2
+      ]
+    ],
+    "mods": [
+      "shrink"
+    ],
+    "path": "triangle"
+  },
+  "tiers": [
+    "IV",
+    "V"
+  ],
+  "mechanic": {
+    "kind": "pendulum"
+  },
+  "obstacles": {
+    "A": [
+      {
+        "kind": "magnet",
+        "at": [
+          1.9,
+          2.9,
+          3.6
+        ],
+        "k": 9.0,
+        "R": 1.9,
+        "from": 6
+      },
+      {
+        "kind": "crusher",
+        "box": [
+          -1.6,
+          -0.4,
+          2.2,
+          3.0
+        ],
+        "top": 4.4,
+        "low": 1.0,
+        "cycle": [
+          1.4,
+          0.7,
+          0.9
+        ],
+        "from": 14
+      }
+    ],
+    "B": [
+      {
+        "kind": "magnet",
+        "at": [
+          -1.9,
+          2.7,
+          3.8
+        ],
+        "k": 10.0,
+        "R": 2.0,
+        "from": 0
+      },
+      {
+        "kind": "crusher",
+        "box": [
+          0.4,
+          1.6,
+          2.2,
+          3.0
+        ],
+        "top": 4.4,
+        "low": 1.0,
+        "cycle": [
+          1.3,
+          0.6,
+          0.9
+        ],
+        "from": 0
+      },
+      {
+        "kind": "bar",
+        "at": [
+          0.0,
+          3.3,
+          4.6
+        ],
+        "len": 0.95,
+        "spin": 1.5,
+        "from": 10
+      }
+    ],
+    "boss": [
+      {
+        "kind": "crusher",
+        "box": [
+          -1.6,
+          -0.4,
+          2.2,
+          3.0
+        ],
+        "top": 4.4,
+        "low": 1.0,
+        "cycle": [
+          1.5,
+          0.7,
+          0.9
+        ],
+        "tick": true,
+        "from": 0
+      },
+      {
+        "kind": "crusher",
+        "box": [
+          0.4,
+          1.6,
+          2.2,
+          3.0
+        ],
+        "top": 4.4,
+        "low": 1.0,
+        "cycle": [
+          1.5,
+          0.7,
+          0.9
+        ],
+        "phase": 1.55,
+        "tick": true,
+        "from": 0
+      }
+    ]
+  },
+  "targetTypes": {
+    "A": [
+      "standard",
+      "split"
+    ],
+    "B": [
+      "split",
+      "shielded",
+      "swinging"
+    ]
+  },
+  "bosses": {
+    "mini": "cuckoo",
+    "end": "clockking"
+  },
+  "fragment": "clockwork",
+  "target": "bell",
+  "music": {
+    "rate": 1.02,
+    "key": -3
+  },
+  "blurb": "A lodestone bends the flight, a piston stamps and the pendulum swings: curve it and time it"
+}

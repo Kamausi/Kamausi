@@ -12,19 +12,28 @@
     cursed:  { name: "Cursed Skull",  throws: 5, color: "#9A6BC0", tip: "Ring ×1.5 speed · score ×3" }
   };
   const POWER_IDS = Object.keys(POWERS);
-  // ── the Power-Up Director. After every make there's a chance a prop floats into the ring; the tier sets how likely
-  // (tiers.json: powerRate). Every make without one raises the odds (pity) until one is certain; there are never more
-  // than three in half a map (Arcade's endless second half excepted), none before the fourth hit of a half, never one
-  // of the last two props again, and the Cursed Skull only in a second half. A prop you're already carrying is less
-  // likely. The dice are the run's seeded stream (07e_directors.js), so a replay rolls the same.
+  // ── the Power-Up Director (v44, the corrected roadmap's V21). Drops are rare and fair:
+  //   · 2% a successful ring hit, scaled by the stage (+12% a stage) and the tier (tiers.json: powerRate);
+  //   · score milestones: crossing 2,000 points, then each next milestone further off (×1.6 + 1,000), is an opportunity
+  //     at 45%;
+  //   · pity: every opportunity that pays nothing adds to an accumulator; once it's high enough the next one is certain;
+  //   · at most four normal drops a stage (the Pumpkin King's Ghost Tosses at his thirds aren't normal: they don't count);
+  //   · weighted: some props are commoner than others; anti-repeat: never one of the last two again; temporary
+  //     exclusion: nothing you're carrying, and nothing that ran out in the last five throws; the Cursed Skull only in a
+  //     second half;
+  //   · readable: never while the ring is hidden in fog, never in a boss fight, never before the third hit of a stage.
+  // The dice are the run's seeded stream (07e_directors.js), so a replay rolls the same.
   //   Stacking: the same prop again refreshes its throws (it never doubles). Different props stack; Cursed Skull and
   //   BONK Blast multiply (×9). Nothing cancels anything.
   const POWER_POOL = { deadeye: 1.0, rush: 1.0, blast: 0.8, magnet: 0.9, second: 0.8, ghost: 0.7, cursed: 0.5 };
-  const POWER_RULES = { base: 0.14, pity: 0.045, certain: 11, perHalf: 3, fromHit: 4 };
-  const PD = { pity: 0, last: [], half: 0, halfKey: "" };
-  function powerDirectorReset() { PD.pity = 0; PD.last = []; PD.half = 0; PD.halfKey = ""; }
+  const POWER_RULES = { perHit: 0.02, stageScale: 0.12, milestone: 2000, milestoneGrow: 1.6, milestoneAdd: 1000, milestoneChance: 0.45, pityStep: 0.05, pityHit: 0.004, certain: 0.3, perStage: 4, fromHit: 3, exclude: 5 };
+  const PD = { acc: 0, last: [], stage: 0, stageKey: "", next: POWER_RULES.milestone, gone: {} };   // gone: prop → the throw it ran out on
+  function powerDirectorReset() { Object.assign(PD, { acc: 0, last: [], stage: 0, stageKey: "", next: POWER_RULES.milestone, gone: {} }); }
   function rollPower() {
-    const pool = Object.entries(POWER_POOL).filter(([id]) => (id !== "cursed" || game.phase === "B") && !PD.last.includes(id)).map(([id, w]) => [id, w * (powers[id] ? 0.3 : 1)]);
+    const ok = id => (id !== "cursed" || game.phase === "B") && !PD.last.includes(id) && !powers[id] && !(PD.gone[id] != null && game.throws - PD.gone[id] < POWER_RULES.exclude);
+    let pool = Object.entries(POWER_POOL).filter(([id]) => ok(id));
+    if (!pool.length) pool = Object.entries(POWER_POOL).filter(([id]) => id !== "cursed" && !powers[id]);
+    if (!pool.length) pool = [["deadeye", 1]];
     let r = runRand() * pool.reduce((a, [, w]) => a + w, 0);
     for (const [id, w] of pool) if ((r -= w) <= 0) { PD.last = [id, ...PD.last].slice(0, 2); return id; }
     const id = pool[pool.length - 1][0]; PD.last = [id, ...PD.last].slice(0, 2); return id;
@@ -46,20 +55,21 @@
   function clearPickups() { pickup = null; }
   // every throw spends a charge (bonk blast, ghost and second chance also run out if you never use them)
   function powersAfterThrow() {
-    for (const [id, p] of Object.entries(powers)) { p.left--; if (p.left <= 0) delete powers[id]; }
+    for (const [id, p] of Object.entries(powers)) { p.left--; if (p.left <= 0) { delete powers[id]; PD.gone[id] = game.throws; } }
     if (pickup && !pickup.pop) { pickup.left--; if (pickup.left <= 0) { pickup.pop = -1; } }
     renderPowers();
   }
   function updatePowers(dt) { for (const p of Object.values(powers)) p.t += dt; }
-  function pickupSchedule() {   // called as each throw settles: one roll per make
+  function pickupSchedule() {   // called as each throw settles: a make is an opportunity, and so is a milestone crossed
     if (boss || pickup || game.state !== "ready" || !game.result || !game.result.make) return;
-    const key = game.stage + game.phase; if (key !== PD.halfKey) { PD.halfKey = key; PD.half = 0; }
-    const into = game.stageHits - (game.phase === "A" ? 0 : STAGE_MINI), endless = arcadeLike() && game.stageHits > STAGE_BOSS;
-    if (into < POWER_RULES.fromHit || (!endless && PD.half >= POWER_RULES.perHalf)) return;
-    PD.pity++;
-    const chance = POWER_RULES.base * tierNow().powerRate + POWER_RULES.pity * (PD.pity - 1);
-    if (PD.pity < POWER_RULES.certain && runRand() >= chance) return;
-    PD.half++; PD.pity = 0; spawnPickup(rollPower());
+    const key = String(game.stage); if (key !== PD.stageKey) { PD.stageKey = key; PD.stage = 0; }
+    const endless = arcadeLike() && game.stageHits > STAGE_BOSS, R = POWER_RULES;
+    const milestone = game.score >= PD.next; while (game.score >= PD.next) PD.next = Math.round(PD.next * R.milestoneGrow + R.milestoneAdd);
+    if (game.stageHits < R.fromHit || (!endless && PD.stage >= R.perStage) || HZ.fog > 0.3) return;
+    const scale = (1 + R.stageScale * ((game.stage || 1) - 1)) * tierNow().powerRate;
+    const chance = milestone ? R.milestoneChance + PD.acc * 2 : R.perHit * scale + PD.acc;
+    if (PD.acc < R.certain && runRand() >= chance) { PD.acc += milestone ? R.pityStep : R.pityHit; return; }
+    PD.stage++; PD.acc = 0; spawnPickup(rollPower());
   }
   function spawnPickup(id) {
     pickup = { id, t: 0, left: 4, pop: 0 };
@@ -69,7 +79,7 @@
   }
   // the grab: the skull has to overlap the power-up as it's drawn (its circle, where it has bobbed to), by a good
   // part of its own width. Before, only the skull's centre counted, so a toss could go through the icon and miss it.
-  const PICK_R = 0.42, PICK_OVERLAP = 0.6;   // the icon's radius as a share of the ring's; how much of the skull must cover it
+  const PICK_R = 0.42, PICK_OVERLAP = 0.72;   // (v44: a little more generous than before, never a mere graze)   // the icon's radius as a share of the ring's; how much of the skull must cover it
   const pickupBob = () => (pickup ? Math.sin(Math.floor(pickup.t * 12) / 12 * 3) * 0.12 : 0);   // in icon radii, down the screen
   function pickupHit(lc) {
     if (!pickup || pickup.pop || !lc) return false;

@@ -61,7 +61,7 @@
     const rnd = mulberry32(1931 + sceneMap * 7), x0 = -B, x1 = W + B, kind = L.moon === "art" && !MOON_ART ? "full" : L.moon;
     sceneFX.screen = null;
     // the drawn moon has a face to read, so it is hung a size up from the plain disc; a harvest moon sits big and low
-    const mr = kind === "harvest" ? U * 0.13 : kind === "screen" ? U * 0.25 : U * (kind === "art" ? 0.09 : 0.065);
+    const mr = kind === "harvest" ? U * 0.13 : kind === "screen" ? U * 0.25 : kind === "eclipse" ? U * 0.1 : U * (kind === "art" ? 0.09 : 0.065);
     const mx = kind === "screen" ? W / 2 : W / 2 - Math.min(W * 0.33, U * 0.8);
     const my = kind === "harvest" ? HY - mr * 0.55 : kind === "screen" ? Math.max(HY * 0.45, H * BLUEPRINT.hudSafe.top + mr * 0.65 + 12) : Math.max(HY * 0.3, 96 + mr);   // (the screen hangs clear of the HUD)
     moon = { x: mx, y: my, r: kind === "none" ? 0 : mr, kind };
@@ -210,7 +210,7 @@
     i = clamp(i | 0, 0, MAP_DATA.length - 1);
     if (i === sceneMap) return false;
     sceneMap = i;
-    layOutProps();
+    layOutProps(); envReset();
     if (W) { buildSky(); buildFar(); buildGround(); buildMid(); buildForeground(); buildVignette(); graveyardResize(); worldForScene(); }
     Telemetry.emit("scene", { map: i + 1 });
     return true;

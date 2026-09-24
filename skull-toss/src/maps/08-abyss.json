@@ -1,0 +1,389 @@
+{
+  "id": "abyss",
+  "n": 8,
+  "name": "The Black Abyss",
+  "reel": "Reel Eight",
+  "premise": "Past the last frame of the reel there's only black, and the Black Ring waiting to be whole. The Reaper cut it into eight; tonight Morty puts it back.",
+  "identity": {
+    "visual": "Black on black: floating broken frames, torn film, a black ring eclipsing the moon.",
+    "spatial": "A film-strip bridge over nothing; everything the other maps threw at you hangs in the dark around it.",
+    "mechanic": "Final Ring completion: the ring cuts between frames, ghost barriers flicker, bumpers and a lodestone drift in the void.",
+    "throw": "Everything you've learned at once: lead the cut, time the barrier, bank the bumper, curve the pull.",
+    "boss": "The Reel Reaper cuts the film itself: every obstacle jumps with the cut, and the Black Ring's last shard is in his scythe.",
+    "targets": "Film cans, golden frames and secrets hidden in the dark.",
+    "hazards": "The jump cuts.",
+    "camera": "Unsteady, the gate weaving.",
+    "ambient": "Floating frames, the eclipse, drifting ghosts.",
+    "music": "The waltz, scratched and skipping.",
+    "sfx": "Projector clatter, reversed bells, the silence between.",
+    "transition": "THE END card, burning out.",
+    "reward": "The Reaper's Shadow Wings, the last shard, the Black Ring whole, and Wizard Mort."
+  },
+  "sheet": {
+    "concept": "The finale: every mechanic the reel has taught, in the dark, around the last shard of the Black Ring.",
+    "plane": "A film-strip bridge over the void (z 0–7.8); the barrier hangs across the hazard zone, the rest drifts beside it.",
+    "launcher": [
+      0,
+      0.9,
+      0
+    ],
+    "zones": {
+      "ring": {
+        "x": [
+          -1.6,
+          1.6
+        ],
+        "y": [
+          1.8,
+          3.35
+        ],
+        "z": [
+          4.5,
+          7.7
+        ]
+      },
+      "targets": {
+        "x": [
+          -1.7,
+          1.7
+        ],
+        "y": [
+          1.4,
+          3.2
+        ],
+        "z": [
+          7.4,
+          9.2
+        ]
+      },
+      "hazards": {
+        "x": [
+          -2.3,
+          2.3
+        ],
+        "y": [
+          0.0,
+          4.4
+        ],
+        "z": [
+          2.4,
+          5.4
+        ]
+      }
+    },
+    "corridor": {
+      "halfWidth": 2.4,
+      "zMax": 16
+    },
+    "camera": {
+      "x": [
+        -0.3,
+        0.3
+      ],
+      "y": [
+        -0.13,
+        0.1
+      ],
+      "z": [
+        -0.4,
+        1.0
+      ]
+    },
+    "parallax": [
+      "sky",
+      "far",
+      "ground",
+      "world",
+      "near",
+      "fg"
+    ],
+    "interactions": [
+      {
+        "on": "frame",
+        "does": "rotate"
+      },
+      {
+        "on": "seatwreck",
+        "does": "fall"
+      },
+      {
+        "on": "filmcans",
+        "does": "fall"
+      },
+      {
+        "on": "pillar",
+        "does": "crack"
+      },
+      {
+        "on": "ghost",
+        "does": "react"
+      }
+    ],
+    "ambient": [
+      "frames",
+      "eclipse",
+      "ghost",
+      "weather",
+      "gate"
+    ],
+    "lighting": {
+      "key": [
+        0.0,
+        1.0
+      ],
+      "ambient": "#0E0C16",
+      "rim": "rgba(180,140,255,.4)",
+      "ring": 0.48,
+      "boss": "#C8A0FF"
+    },
+    "arenas": {
+      "mini": {
+        "z": [
+          5.6,
+          7.0
+        ],
+        "note": "the Projectionist cuts the ring between frames"
+      },
+      "end": {
+        "z": [
+          9.6,
+          15.0
+        ],
+        "note": "the Reel Reaper floats in the black, scythe up"
+      }
+    },
+    "transition": "THE END, burning out of the frame.",
+    "reward": {
+      "bodyPart": "wings:shadow",
+      "fragment": "abyss",
+      "show": "The last shard flies home: the Black Ring closes, and Morty stands up as Wizard Mort."
+    }
+  },
+  "look": {
+    "sky": [
+      "#040406",
+      "#0A0A10",
+      "#14121C",
+      "#1E1A28"
+    ],
+    "horizon": "rgba(180,140,255,.1)",
+    "moon": "eclipse",
+    "moonColor": "#E8E0FF",
+    "stars": 0.5,
+    "skyline": "abyss",
+    "silhouette": "#050508",
+    "haze": "rgba(40,30,60,.3)",
+    "ground": [
+      "#16141E",
+      "#100E16",
+      "#0A0A10",
+      "#050508"
+    ],
+    "hills": [
+      "#1A1824",
+      "#16141E",
+      "#121018"
+    ],
+    "hillRim": "rgba(180,140,255,.12)",
+    "grass": [],
+    "lane": "void",
+    "light": "rgba(180,140,255,.08)",
+    "props": "abyss",
+    "foreground": "chains",
+    "weather": "embers",
+    "tint": null,
+    "ambient": {
+      "walkers": [
+        "ghost",
+        "skeleton"
+      ],
+      "ghost": true,
+      "bats": 0.3,
+      "witch": false,
+      "digger": false,
+      "cat": false,
+      "lightning": false
+    }
+  },
+  "anchor": "chain",
+  "ring": {
+    "speed": 1.42,
+    "tri": {
+      "a": 1.6,
+      "up": 1.05,
+      "near": 1.5,
+      "far": 1.65,
+      "skew": 0.25
+    },
+    "seqs": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        0,
+        2,
+        1,
+        2
+      ],
+      [
+        1,
+        0,
+        2,
+        0
+      ]
+    ],
+    "mods": [
+      "bob",
+      "shrink"
+    ],
+    "path": "jumpcut"
+  },
+  "tiers": [
+    "V",
+    "VI"
+  ],
+  "mechanic": {
+    "kind": "jumpcut"
+  },
+  "obstacles": {
+    "A": [
+      {
+        "kind": "barrier",
+        "box": [
+          -2.2,
+          2.2,
+          1.2,
+          3.8,
+          4.2
+        ],
+        "cycle": [
+          2.2,
+          1.8
+        ],
+        "from": 6
+      },
+      {
+        "kind": "bumper",
+        "at": [
+          1.5,
+          3.0,
+          4.8
+        ],
+        "r": 0.28,
+        "drift": [
+          0.35,
+          4.6
+        ],
+        "from": 14
+      }
+    ],
+    "B": [
+      {
+        "kind": "barrier",
+        "box": [
+          -2.2,
+          2.2,
+          1.2,
+          3.8,
+          4.4
+        ],
+        "cycle": [
+          2.0,
+          1.6
+        ],
+        "from": 0
+      },
+      {
+        "kind": "magnet",
+        "at": [
+          -1.9,
+          2.6,
+          3.4
+        ],
+        "k": 9.0,
+        "R": 1.8,
+        "from": 0
+      },
+      {
+        "kind": "bumper",
+        "at": [
+          1.4,
+          3.1,
+          4.9
+        ],
+        "r": 0.28,
+        "drift": [
+          0.35,
+          4.2
+        ],
+        "from": 8
+      },
+      {
+        "kind": "bar",
+        "at": [
+          0.0,
+          1.6,
+          3.0
+        ],
+        "len": 1.0,
+        "spin": 1.3,
+        "from": 14
+      }
+    ],
+    "boss": [
+      {
+        "kind": "barrier",
+        "box": [
+          -2.2,
+          2.2,
+          1.2,
+          3.8,
+          4.4
+        ],
+        "cycle": [
+          2.4,
+          1.6
+        ],
+        "cut": true,
+        "from": 0
+      },
+      {
+        "kind": "magnet",
+        "at": [
+          1.9,
+          2.8,
+          3.6
+        ],
+        "k": 8.0,
+        "R": 1.8,
+        "from": 0
+      }
+    ]
+  },
+  "targetTypes": {
+    "A": [
+      "standard",
+      "golden",
+      "decoy"
+    ],
+    "B": [
+      "golden",
+      "secret",
+      "split",
+      "runaway"
+    ]
+  },
+  "bosses": {
+    "mini": "projectionist",
+    "end": "reaper"
+  },
+  "fragment": "abyss",
+  "target": "filmcan",
+  "music": {
+    "rate": 1.0,
+    "key": 0
+  },
+  "blurb": "Everything at once: ghost barriers, bumpers and a lodestone in the void, and the ring cuts between frames"
+}

@@ -15,7 +15,7 @@
     li.appendChild(who);
     const sc = document.createElement("b"); sc.className = "sc"; sc.textContent = fmtN(Math.max(0, +r.score || 0)); li.appendChild(sc);
     const c = cv.getContext("2d"), look = validLook(r.look);
-    c.setTransform(1, 0, 0, 1, 0, 0); drawSkull(c, 36, 40, 19, { t: 0.4, look, face: faceFor(rank === 1 ? "happy" : "idle", 0.4) }); drawHat(c, 36, 40, 19, 0, 0.4, null, 1, look.hat);
+    c.setTransform(1, 0, 0, 1, 0, 0); drawSkull(c, 36, 40, 19, { t: 0.4, look, face: faceFor(rank === 1 ? "happy" : "idle", 0.4) }); drawHat(c, 36, 40, 19, 0, 0.4, null, 1, hatOf(look));
     return li;
   }
   function renderBoard() {

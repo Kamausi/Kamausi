@@ -20,6 +20,15 @@
       sceneFX.screen = { x, y, w, h };
       return;
     }
+    if (kind === "eclipse") {   // the Black Abyss: a black ring over a pale moon, the Black Ring the whole reel is about
+      const rgb2 = rgbOf(col), h2 = b.createRadialGradient(x, y, r * 0.9, x, y, r * 2.8); h2.addColorStop(0, `rgba(${rgb2},.35)`); h2.addColorStop(1, `rgba(${rgb2},0)`);
+      b.fillStyle = h2; b.beginPath(); b.arc(x, y, r * 2.8, 0, TAU); b.fill();
+      b.fillStyle = col; b.beginPath(); b.arc(x, y, r * 1.08, 0, TAU); b.fill();
+      b.fillStyle = "#050508"; b.beginPath(); b.arc(x, y, r, 0, TAU); b.fill();
+      b.strokeStyle = "#1A1622"; b.lineWidth = r * 0.22; b.beginPath(); b.arc(x, y, r * 0.72, 0, TAU); b.stroke();
+      b.strokeStyle = `rgba(${rgb2},.5)`; b.lineWidth = 1.5; b.beginPath(); b.arc(x, y, r * 0.83, -2.4, -1.2); b.stroke();
+      return;
+    }
     const halo = b.createRadialGradient(x, y, r * 0.8, x, y, r * (kind === "harvest" ? 3.2 : 2.6));
     halo.addColorStop(0, `rgba(${rgb},.28)`); halo.addColorStop(1, `rgba(${rgb},0)`);
     b.fillStyle = halo; b.beginPath(); b.arc(x, y, r * 3.2, 0, TAU); b.fill();
@@ -168,7 +177,12 @@
     if (Wh) {
       const a = t * (Wh.kind === "ferris" ? 0.18 : 0.6);
       ctx.save(); ctx.translate(Wh.x, Wh.y); ctx.strokeStyle = Wh.col; ctx.fillStyle = Wh.col; ctx.lineCap = "round";
-      if (Wh.kind === "ferris") {
+      if (Wh.kind === "gear") {   // the caves' great gear, turning in the rock a tooth at a time
+        const k = Math.floor(t * 2) * 0.13, n = 14; ctx.rotate(k); ctx.beginPath();
+        for (let i = 0; i < n * 2; i++) { const a = (i / (n * 2)) * TAU, r = i % 2 ? Wh.r : Wh.r * 1.13; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); } ctx.closePath(); ctx.fill();
+        ctx.globalCompositeOperation = "destination-out"; for (let i = 0; i < 5; i++) { const a = (i / 5) * TAU; ctx.beginPath(); ctx.arc(Math.cos(a) * Wh.r * 0.55, Math.sin(a) * Wh.r * 0.55, Wh.r * 0.2, 0, TAU); ctx.fill(); }
+        ctx.globalCompositeOperation = "source-over";
+      } else if (Wh.kind === "ferris") {
         ctx.lineWidth = Math.max(1.5, Wh.r * 0.05); ctx.beginPath(); ctx.arc(0, 0, Wh.r, 0, TAU); ctx.stroke();
         ctx.lineWidth = Math.max(1, Wh.r * 0.025);
         for (let i = 0; i < 8; i++) { const k = a + (i / 8) * TAU, x = Math.cos(k) * Wh.r, y = Math.sin(k) * Wh.r; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(x, y); ctx.stroke();

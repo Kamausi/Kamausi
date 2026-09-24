@@ -26,8 +26,8 @@
       clear: GY.props.every(p => p.kind === "digger" || clearOfLane(p.x, p.z)), clouds: world.clouds.length }),
     maps: () => JSON.parse(JSON.stringify(MAP_DATA)),
     implemented: () => ({ skyline: Object.keys(SKYLINES), lane: Object.keys(LANES), props: Object.keys(PROPSETS), foreground: Object.keys(FOREGROUNDS), near: Object.keys(NEAR_SETS),
-      weather: ["none", "mist", ...Object.keys(WX_COUNT)], moon: ["art", "none", "crescent", "harvest", "full", "screen"], registry: MAP_REGISTRY }),
-    calm() { HZ.kind = "none"; HZ.list = []; HZ.wind = 0; HZ.fogT = 0; HZ.fog = 0; renderWind(); },   // (for set-up throws that aren't about hazards)
+      weather: ["none", "mist", ...Object.keys(WX_COUNT)], moon: ["art", "none", "crescent", "harvest", "full", "screen", "eclipse"], registry: MAP_REGISTRY }),
+    calm() { HZ.kind = "none"; HZ.list = []; HZ.wind = 0; HZ.fogT = 0; HZ.fog = 0; renderWind(); OB.off = true; OB.list = []; },   // (for set-up throws that aren't about hazards)
     setLives(n) { game.lives = n; updateHud(); }, cont: () => game.cont && { ...game.cont }, continueRule: () => continueRule(),
     fakeAds(on) { Ads = on ? { available: () => true, show: () => ({ then: f => f(true) }) } : { available: () => false, show: () => Promise.resolve(false) }; },   // (a synchronous reel, for the spec)
     continues(on = true) { if (sandbox) sandbox.contOn = on; },
@@ -88,7 +88,9 @@
         if (M.n !== i + 1) P.push(`map ${i + 1} is numbered ${M.n}`);
         for (const k of ["mini", "end"]) if (!BOSS_IDS.includes(M.bosses[k])) P.push(`map ${M.n}: its ${k} boss "${M.bosses[k]}" doesn't exist`);
         if (!MOTIFS["map" + M.n]) P.push(`map ${M.n} has no motif`);
-        if (!CODEX.target.ids().includes(M.target)) P.push(`map ${M.n}: target "${M.target}" isn't in the Codex`);
+        for (const ph of ["A", "B"]) for (const ty of M.targetTypes[ph]) if (!CODEX.target.ids().includes(ty)) P.push(`map ${M.n}: target type "${ty}" isn't in the Codex`);
+        for (const ph of ["A", "B", "boss"]) for (const o of M.obstacles[ph]) if (!CODEX.obstacle.ids().includes(o.kind) || !OB_DRAW[o.kind]) P.push(`map ${M.n}: obstacle "${o.kind}" isn't drawn or in the Codex`);
+        if (!BODY_PART[M.bosses.end] || !findItem(BODY_PART[M.bosses.end].kind, BODY_PART[M.bosses.end].id)) P.push(`map ${M.n}: its body-part reward isn't in the Vault`);
       });
       for (const id of BOSS_IDS) { if (onMaps(id) !== 1) P.push(`boss ${id} is on ${onMaps(id)} maps`); for (const f of ["name", "short", "tell", "hint"]) str(`boss.${id}.${f}`); str(`codex.boss.${id}`); if (!MOTIFS[id]) P.push(`boss ${id} has no motif`); }
       if (Object.keys(FRAGMENTS).length !== MAP_COUNT) P.push(`${Object.keys(FRAGMENTS).length} pieces for ${MAP_COUNT} maps`);
@@ -97,6 +99,7 @@
       for (const id of POWER_IDS) { if (!POWERS[id].name || !POWERS[id].tip) P.push(`power-up ${id} has no name or tip`); str(`codex.power.${id}`); }
       for (const id of CODEX.hazard.ids()) { str(`codex.hazard.${id}.name`); str(`codex.hazard.${id}.body`); }
       for (const id of CODEX.target.ids()) { str(`codex.target.${id}.name`); str(`codex.target.${id}.body`); }
+      for (const id of CODEX.obstacle.ids()) { str(`codex.obstacle.${id}.name`); str(`codex.obstacle.${id}.body`); str(`obstacle.${id}.intro`); }
       for (const id of SHOT_IDS) { str(`shot.${id}.name`); str(`shot.${id}.desc`); }
       const statKnown = k => STAT_KEYS.includes(k) || typeof DEFAULT_PROFILE[k] === "number";
       const achIds = new Set();
@@ -140,12 +143,13 @@
     snapOn(on = true) { if (sandbox) { sandbox.snapOn = on; sandbox.snap = null; } }, snapshot: () => readRunSnapshot(),
     tier: () => ({ ...tierNow() }),
     // the Power-Up Director alone: n makes in a row from the start of the first half, noting the hits where a prop turned up
-    powerRolls(n, phase = "A") { const out = [], was = game.result; game.phase = phase; game.stageHits = phase === "A" ? 0 : STAGE_MINI; powerDirectorReset();
-      for (let i = 0; i < n; i++) { game.stageHits++; game.result = { make: true }; pickupSchedule(); if (pickup) { out.push({ hit: game.stageHits, id: pickup.id }); pickup = null; } }
-      game.result = was; return out; }, setWind(w) { HZ.wind = w; renderWind(); }, hz: () => ({ kind: HZ.kind, wind: HZ.wind, fog: HZ.fog, list: HZ.list.map(h => ({ kind: h.kind, fixed: !!h.fixed, x: h.x, y: h.y, z: h.z })), bob: pendBob() }),
+    powerRolls(n, phase = "A", per = 250) { const out = [], was = game.result, score = game.score; game.phase = phase; game.stageHits = phase === "A" ? 0 : STAGE_MINI; game.score = 0; powerDirectorReset();
+      for (let i = 0; i < n; i++) { game.stageHits++; game.score += per; game.throws++; game.result = { make: true }; pickupSchedule(); if (pickup) { out.push({ hit: game.stageHits, id: pickup.id, score: game.score }); pickup = null; } }
+      game.result = was; game.score = score; return out; }, setWind(w) { HZ.wind = w; renderWind(); }, hz: () => ({ kind: HZ.kind, wind: HZ.wind, fog: HZ.fog, list: HZ.list.map(h => ({ kind: h.kind, fixed: !!h.fixed, x: h.x, y: h.y, z: h.z })), bob: pendBob() }),
     fogIn() { HZ.fogT = 3.6; }, hazardsAfterThrow: () => hazardsAfterThrow(), setPendT(t) { HZ.pendT = t; }, pend: () => ({ ...PEND, period: pendPeriod() }),
     plantHazard(kind, x, y, z, r = 0.28) { HZ.list = HZ.list.filter(h => h.kind !== kind); HZ.list.push({ kind, x, y, z, ox: x, oy: y, oz: z, r, fixed: true, t: 0, at: 0, dir: 1 }); },
     targets: () => targets.map(T => ({ kind: T.kind, ...targetPos(T), pop: T.pop, left: T.left })), refillTargets: () => refillTargets(),
+    plantDecoy(x, y, z) { targets.length = 0; targets.push({ kind: mapData(game.stage || 1).target, type: "decoy", x, y, z, t: 0, left: 6, pop: 0, ph: 0 }); },
     plantTarget(x, y, z) { targets.length = 0; targets.push({ kind: mapData(game.stage || 1).target, x, y, z, t: 0, left: 6, pop: 0, ph: 0 }); },
     ringPath(mode, phases) { const was = ring.mode; setRingMode(mode, false); const out = phases.map(p => ({ ...ringAt(p), tell: RING_PATHS[mode].tell ? RING_PATHS[mode].tell(p) : 0 })); setRingMode(was, false); return out; },
     ringPaths: () => Object.keys(RING_PATHS), seedRun: s => seedRun(s), runSeed: () => game.seed,
@@ -158,7 +162,16 @@
     setRingPhase(p) { ring.phase = p; const q = ringAt(p); ring.x = q.x; ring.y = q.y; ring.z = q.z; },
     setScore(n) { game.stageHits = n; game.hits = n; snapRing(); updateHud(); },   // (in hits: how far into the stage)
     setHits(n) { game.stageHits = n; game.hits = Math.max(game.hits, n); snapRing(); updateHud(); },
-    setStage(n) { game.stage = n; hazardsReset(); snapRing(); updateHud(); },
+    setStage(n) { game.stage = n; setScene(n - 1); hazardsReset(); snapRing(); updateHud(); },
+    setPoints(n) { game.score = n; }, blueprint: () => JSON.parse(JSON.stringify(BLUEPRINT)), tiers: () => JSON.parse(JSON.stringify(TIER_DATA)),
+    plantObstacle(o) { OB.off = false; OB.list.push({ ...o, key: "test" + OB.list.length, born: OB.t, hitAt: -9, fired: -1, balls: o.balls || [] }); }, clearObstacles() { OB.list = []; }, banked: () => skull.banked || 0,
+    reactAt(x, z, k = 1) { envImpact(x, z, k); return GY.props.filter(p => p.react || p.fallen || p.cracked).map(p => ({ kind: p.kind, does: p.react ? p.react.does : p.fallen ? "fall" : "crack" })); },
+    spawnTargetType(type) { spawnTarget(type); return { ...targets[targets.length - 1] }; }, hitTargetNow(i = 0) { hitTarget(targets[i]); return targets.map(T => ({ type: T.type, pop: T.pop, shield: !!T.shield })); }, targetLive: i => targetLive(targets[i]), targetPos: i => targetPos(targets[i]),
+    pk: () => boss && boss.kind === "pumpkin" ? { eyes: boss.eyes.slice(), blind: boss.blind, rc: boss.rc, hp: boss.hp, eye: [boss.eyePos(0), boss.eyePos(1)] } : null,
+    fgAlphaAt(pts) { let a = 0; for (const P of fgLayer) { const g = P.c.getContext("2d"); for (const q of pts) { const x = Math.round((q.x - P.x0) * P.c.width / P.w), y = Math.round((q.y - P.y0) * P.c.height / P.h); if (x < 0 || y < 0 || x >= P.c.width || y >= P.c.height) continue; a = Math.max(a, g.getImageData(x, y, 1, 1).data[3] / 255); } } return a; },
+    ringScreen: (x, y, z) => { const p = projectBase(x, y, z); return { x: p.x, y: p.y }; },
+    obstacles: () => OB.list.map(I => ({ kind: I.kind, key: I.key, balls: I.balls.length })), syncObstacles() { obstaclesSync(true); }, obClock(t) { if (t != null) OB.t = t; return OB.t; }, obForce: (x, y, z) => obstacleForce({ x, y, z }),
+    anchor: () => ({ kind: anchorKind(), holds: anchorHolds(), z0: ringZ0() }), envReacts: () => ENV.reacts, light: () => LIGHT(),
     stageCheck() { return modeCheck() || stageCheck(); }, endThrow() { if (game.state === "ready") { powersAfterThrow(); if (boss && boss.after) boss.after(); modeCheck() || stageCheck() || pickupSchedule(); } },
     boss: () => boss && { kind: boss.kind, hp: boss.hp, max: boss.max, dead: boss.dead, flawless: boss.flawless, t: boss.t },
     hurtBoss(n = 1) { if (boss) { for (let i = 0; i < n && !boss.dead; i++) boss.hit("swish", null); } },
@@ -173,7 +186,7 @@
     aimFor(x, y, z = RING_Z) { const T = flightT(), tc = z * T / RING_Z, vy = (y - START_Y + 0.5 * G * tc * tc) / tc; return { AX: x * RING_Z / z, AY: START_Y + vy * T - 0.5 * G * T * T }; },
     throwThrough(x, y, z) { const a = this.aimFor(x, y, z); return this.throwAt(a.AX, a.AY); },
     aimFromDrag(dx, dy) { const m = mapDrag(dx, dy); return { ...m, ...aimPoint(m.nx, m.ny) }; },
-    predictCrossing(AX, AY) { const v = aimVelocity(AX, AY), tc = ring.z / v.z; return { x: v.x * tc + 0.5 * windNow() * tc * tc, y: START_Y + v.y * tc - 0.5 * G * tc * tc, z: ring.z }; },
+    predictCrossing(AX, AY) { const v = aimVelocity(AX, AY), tc = ring.z / v.z; if (obstacleForcesLive()) { const P = forcedPath(v, tc * 1.6 + 0.8), k = P.findIndex(q => q.z >= ring.z); if (k > 0) { const a = P[k - 1], b = P[k], u = (ring.z - a.z) / (b.z - a.z); return { x: a.x + (b.x - a.x) * u, y: a.y + (b.y - a.y) * u, z: ring.z }; } } return { x: v.x * tc + 0.5 * windNow() * tc * tc, y: START_Y + v.y * tc - 0.5 * G * tc * tc, z: ring.z }; },
     previewInfo(AX, AY) { const p = buildPreview(AX, AY, settings.guide); return { dots: p.front.length + p.back.length, crosshair: !!p.cross }; },
     ringAhead(sec) { return ringAt(ring.phase + ring.omega * sec); },
     state() {
@@ -281,7 +294,7 @@
       const look = { ...cos, ...(o.look || {}) }, cy = n * (o.cy || 0.46), sr = n * (o.r || 0.3);
       drawAura(c, n / 2, cy, sr, o.t || 0, false, look.aura);
       drawSkull(c, n / 2, cy, sr, { look, face: f, jaw: o.jaw == null ? f.jawT : o.jaw, a: o.a, dir: o.dir, ang: o.ang, t: o.t || 0 });
-      drawAura(c, n / 2, cy, sr, o.t || 0, true, look.aura); drawHat(c, n / 2, cy, sr, o.ang || 0, o.t || 0, null, 1, look.hat, o.a || 1, o.dir || 0);
+      drawAura(c, n / 2, cy, sr, o.t || 0, true, look.aura); drawHat(c, n / 2, cy, sr, o.ang || 0, o.t || 0, null, 1, hatOf(look), o.a || 1, o.dir || 0);
       if (o.power) drawPowerIcon(c, o.power, n / 2, n / 2, n * 0.3, o.t || 0);
       if (o.pole) { c.fillStyle = o.bg || "#26364A"; c.fillRect(0, 0, n, n); drawRingShape(c, n / 2, n * 0.28, n * 0.2, n * 0.05, o.ring || "hoop", o.t || 0); drawPole(n / 2, n * 0.5, n * 0.95, n * 0.04, n * 0.45, o.pole, c, o.t || 0, n * 0.06); }
       if (o.ring && !o.pole) { c.fillStyle = o.bg || "#26364A"; c.fillRect(0, 0, n, n); drawRingShape(c, n / 2, n / 2, n * 0.3, n * 0.07, o.ring, o.t || 0); }

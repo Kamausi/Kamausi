@@ -209,6 +209,13 @@
     } else if (kind === "seat") {   // a row of theatre seat-backs
       for (let i = 0; i < 3; i++) { const x = -side * i * 0.3 * s; ctx.beginPath(); rr(ctx, x - 0.13 * s, -0.55 * s, 0.26 * s, 0.4 * s, 0.07 * s); ctx.fill(); ctx.fillRect(x - 0.1 * s, -0.16 * s, 0.2 * s, 0.16 * s); }
       ctx.strokeStyle = "rgba(227,182,75,.3)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0.13 * s, -0.5 * s); ctx.lineTo(-side * 0.6 * s - 0.13 * s, -0.5 * s); ctx.stroke();
+    } else if (kind === "cactus") {   // a saguaro, arms up
+      const w = 0.08 * s, h = 0.75 * s; ctx.beginPath(); rr(ctx, -w / 2, -h, w, h, w / 2); ctx.fill();
+      for (const [sd, y, up] of [[-1, 0.55, 0.35], [1, 0.72, 0.28]]) { ctx.beginPath(); rr(ctx, sd < 0 ? -w * 2.2 : w * 0.5, -y * h, w * 1.7, w * 0.8, w * 0.4); ctx.fill(); ctx.beginPath(); rr(ctx, sd < 0 ? -w * 2.2 : w * 1.4, -(y + up) * h, w * 0.8, up * h + w * 0.4, w * 0.4); ctx.fill(); }
+      ctx.strokeStyle = RIM; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-w * 0.3, -h * 0.95); ctx.lineTo(-w * 0.3, -h * 0.05); ctx.stroke();
+    } else if (kind === "stalagmite") {
+      const w = 0.24 * s, h = 0.9 * s; ctx.beginPath(); ctx.moveTo(-w, 0); ctx.quadraticCurveTo(-w * 0.4, -h * 0.4, -w * 0.08, -h); ctx.lineTo(w * 0.1, -h * 0.96); ctx.quadraticCurveTo(w * 0.4, -h * 0.4, w, 0); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = RIM; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-w * 0.6, -h * 0.1); ctx.quadraticCurveTo(-w * 0.35, -h * 0.5, -w * 0.08, -h * 0.95); ctx.stroke();
     } else if (kind === "rope") {
       for (const x of [0, -side * 0.7]) { ctx.fillRect(x * s - 0.025 * s, -0.7 * s, 0.05 * s, 0.7 * s); ctx.beginPath(); ctx.arc(x * s, -0.72 * s, 0.05 * s, 0, TAU); ctx.fill(); }
       ctx.strokeStyle = "rgba(122,30,30,.9)"; ctx.lineWidth = Math.max(2, s * 0.03); ctx.beginPath(); ctx.moveTo(0, -0.62 * s); ctx.quadraticCurveTo(-side * 0.35 * s, -0.4 * s, -side * 0.7 * s, -0.62 * s); ctx.stroke();

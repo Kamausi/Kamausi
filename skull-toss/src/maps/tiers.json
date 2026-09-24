@@ -1,62 +1,8 @@
 [
-  {
-    "id": "I",
-    "speed": 1.0,
-    "rc": 0.0,
-    "hazardEvery": 0,
-    "targets": 0,
-    "powerRate": 1.0,
-    "precision": 1.0,
-    "hazard": 0.0
-  },
-  {
-    "id": "II",
-    "speed": 1.0,
-    "rc": 0.0,
-    "hazardEvery": 6,
-    "targets": 1,
-    "powerRate": 1.0,
-    "precision": 1.0,
-    "hazard": 0.6
-  },
-  {
-    "id": "III",
-    "speed": 1.04,
-    "rc": -0.01,
-    "hazardEvery": 5,
-    "targets": 1,
-    "powerRate": 0.95,
-    "precision": 0.97,
-    "hazard": 0.75
-  },
-  {
-    "id": "IV",
-    "speed": 1.08,
-    "rc": -0.02,
-    "hazardEvery": 4,
-    "targets": 2,
-    "powerRate": 0.9,
-    "precision": 0.94,
-    "hazard": 0.85
-  },
-  {
-    "id": "V",
-    "speed": 1.12,
-    "rc": -0.03,
-    "hazardEvery": 4,
-    "targets": 2,
-    "powerRate": 0.85,
-    "precision": 0.92,
-    "hazard": 0.95
-  },
-  {
-    "id": "VI",
-    "speed": 1.16,
-    "rc": -0.04,
-    "hazardEvery": 3,
-    "targets": 3,
-    "powerRate": 0.8,
-    "precision": 0.9,
-    "hazard": 1.0
-  }
+  { "id": "I",   "name": "The Toss",        "speed": 1.0,  "rc": 0.0,   "hazardEvery": 0, "targets": 0, "powerRate": 1.0,  "precision": 1.0,  "hazard": 0.0,  "objects": 0.85, "golden": 0.0,  "secret": 0.0 },
+  { "id": "II",  "name": "The Distraction", "speed": 1.0,  "rc": 0.0,   "hazardEvery": 6, "targets": 1, "powerRate": 1.0,  "precision": 1.0,  "hazard": 0.6,  "objects": 0.9,  "golden": 0.03, "secret": 0.0 },
+  { "id": "III", "name": "The Hazard",      "speed": 1.04, "rc": -0.01, "hazardEvery": 5, "targets": 1, "powerRate": 0.95, "precision": 0.97, "hazard": 0.75, "objects": 1.0,  "golden": 0.04, "secret": 0.0 },
+  { "id": "IV",  "name": "The Puzzle",      "speed": 1.08, "rc": -0.02, "hazardEvery": 4, "targets": 2, "powerRate": 0.9,  "precision": 0.94, "hazard": 0.85, "objects": 1.08, "golden": 0.05, "secret": 0.0 },
+  { "id": "V",   "name": "The Chaos",       "speed": 1.12, "rc": -0.03, "hazardEvery": 4, "targets": 2, "powerRate": 0.85, "precision": 0.92, "hazard": 0.95, "objects": 1.16, "golden": 0.06, "secret": 0.04 },
+  { "id": "VI",  "name": "The Secrets",     "speed": 1.16, "rc": -0.04, "hazardEvery": 3, "targets": 3, "powerRate": 0.8,  "precision": 0.9,  "hazard": 1.0,  "objects": 1.24, "golden": 0.08, "secret": 0.22 }
 ]

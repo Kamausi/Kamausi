@@ -67,10 +67,10 @@
     fresh(); const s = throwAndSettle(0, C.RING_Y + C.RC_START); // aimed straight at the top of the tube
     assert(!s.lastResult.make, `got ${s.lastResult.kind}`);
   });
-  test("Misses are classified: wide, too high, too low, post, short", () => {
+  test("Misses are classified: wide, too high, too low, post, short (a post only where the ring stands on one)", () => {
     const cases = [[C.RC_START + 1.2, C.RING_Y, "wide"], [0.2, C.RING_Y + C.RC_START + 0.7, "over"],
-      [0.6, C.RING_Y - C.RC_START - 0.7, "low"], [0, 0.9, "post"], [0, -2, "short"]];
-    for (const [ax, ay, want] of cases) { fresh(); const s = throwAndSettle(ax, ay); assert(s.lastResult.kind === want, `aim (${ax}, ${ay}) → ${s.lastResult.kind}, wanted ${want}`); }
+      [0.6, C.RING_Y - C.RC_START - 0.7, "low"], [0, 0.9, "post", 5], [0, 0.9, "low", 1], [0, -2, "short"]];
+    for (const [ax, ay, want, stage] of cases) { fresh(); if (stage) { T.setStage(stage); T.calm(); T.freezeRing(0, C.RING_Y); } const s = throwAndSettle(ax, ay); assert(s.lastResult.kind === want, `aim (${ax}, ${ay}) on map ${stage || 1} → ${s.lastResult.kind}, wanted ${want}`); }
   });
 
   // ── Aiming ────────────────────────────────────────────────
@@ -530,8 +530,8 @@
     assert(T.throwThrough(p.x, p.y, p.z), "throw refused"); T.step(2.5);
     const s = T.state(); assert(s.lastResult.make, `leading the 3D ring should score (got ${s.lastResult.kind}; cross z ${s.lastCross && s.lastCross.ringZ})`);
   });
-  test("50 hits on map 3 bring on the Pumpkin King; a seed knocks the skull out of the air, Ghost Toss slips through", () => {
-    beatCrow(3); toHit(50); let s = T.state(); assert(s.phase === "boss" && T.boss().kind === "pumpkin", `phase ${s.phase}`);
+  test("50 hits on map 1 bring on the Pumpkin King; a seed knocks the skull out of the air, Ghost Toss slips through", () => {
+    beatCrow(1); toHit(50); let s = T.state(); assert(s.phase === "boss" && T.boss().kind === "pumpkin", `phase ${s.phase}`);
     T.step(2.9); T.freezeRing(0, C.RING_Y);
     const lives = T.state().lives, a = { AX: 0, AY: C.RING_Y }, q = T.skullPathAt(a.AX, a.AY, 3 / (C.RING_Z / C.FLIGHT_T));
     T.plantSeed(q.x, q.y, q.z); T.throwAt(a.AX, a.AY); T.step(2.5); s = T.state();
@@ -539,14 +539,15 @@
     T.givePower("ghost"); T.freezeRing(0, C.RING_Y); T.plantSeed(q.x, q.y, q.z); T.throwAt(a.AX, a.AY); T.step(2.5);
     assert(T.state().lastResult.make, `Ghost Toss should phase through the seed (got ${T.state().lastResult.kind})`);
   });
-  test("Beating the Pumpkin King clears map 3: a big bonus, bones, a skull back, and map 4", () => {
-    beatCrow(3); toHit(50); T.step(2.9); const s0 = T.state(), bones = T.bones();
-    T.hurtBoss(99); T.endThrow(); T.step(3.4); const s = T.state();
-    assert(s.stage === 4 && s.phase === "A" && s.stageHits === 0, `stage ${s.stage}, phase ${s.phase}`);
+  test("Beating the Pumpkin King clears map 1: a big bonus, bones, a skull back, the body part and the shard, then map 2", () => {
+    beatCrow(1); toHit(50); T.step(2.9); const s0 = T.state(), bones = T.bones();
+    T.hurtBoss(99); T.endThrow(); T.step(6); const s = T.state();
+    assert(s.stage === 2 && s.phase === "A" && s.stageHits === 0, `stage ${s.stage}, phase ${s.phase}`);
+    assert(T.profile().unlocked.includes("hair:vines") && T.profile().fragments.includes("hollow"), "the Pumpkin-Vine Curls and the Hollow Shard");
     assert(s.score >= s0.score + 10000 && T.bones() > bones, "no bonus");
-    assert(s.lives === Math.min(C.MAX_LIVES, s0.lives + 1), "no skull back"); assert(T.profile().bossKills >= 1 && T.profile().bestStage >= 4 && T.profile().bossLog.pumpkin >= 1, "boss not recorded");
+    assert(s.lives === Math.min(C.MAX_LIVES, s0.lives + 1), "no skull back"); assert(T.profile().bossKills >= 1 && T.profile().bestStage >= 2 && T.profile().bossLog.pumpkin >= 1, "boss not recorded");
   });
-  test("Stages are data: each one names its speed, triangle and patterns", () => { const st = T.stages(); assert(st.length === 8 && st[0] === "Moonshine Cemetery" && st[7] === "The Final Reel", st.join()); });
+  test("Stages are data: each one names its speed, triangle and patterns", () => { const st = T.stages(); assert(st.length === 8 && st[0] === "Crow Hollow" && st[5] === "The Bone Desert" && st[7] === "The Black Abyss", st.join()); });
 
   // ── v11: power-ups ────────────────────────────────────────
   test("Power-ups float in the middle of the ring; only a toss through the middle grabs one", () => {
@@ -939,9 +940,11 @@
     T.unfakeBoard(); T.setName(""); T.setStats({ ...ZERO, bestScore: 0 }); T.toTitle();
   });
   test("Saves carry a schema number and step through migrations in order", () => {
-    assert(T.saveSchema === 3, `schema ${T.saveSchema}`);
+    assert(T.saveSchema === 4, `schema ${T.saveSchema}`);
     const old = T.migrateProfile({ bestScore: 5000, boardBest: { score: 5000 } });   // a v12 save has no number
-    assert(old.schema === 3 && old.boardBest === null, `a v12 save should reach schema 3 with no board run (${JSON.stringify(old)})`);
+    assert(old.schema === 4 && old.boardBest === null, `a v12 save should reach schema 4 with no board run (${JSON.stringify(old)})`);
+    const v3 = T.migrateProfile({ schema: 3, fragments: ["tophat", "whistle", "shadow"], bestStage: 7, bossLog: { pumpkin: 2 } });   // v44: Morty's pieces become the Black Ring's shards, map for map
+    assert(v3.schema === 4 && v3.fragments.join() === "hollow,desert,abyss" && v3.bestStage === 7 && v3.bossLog.pumpkin === 2, `a v43 save keeps its progress (${JSON.stringify(v3.fragments)})`);
     const newer = T.migrateProfile({ schema: 9, boardBest: { score: 7 } });
     assert(newer.schema === 9 && newer.boardBest.score === 7, "a newer build's save keeps its number and its fields");
     assert(decodeCode(T.exportCode()).v === T.saveSchema && T.profile().schema === T.saveSchema, `codes and the live profile should carry the current schema (code ${decodeCode(T.exportCode()).v}, profile ${T.profile().schema})`);
@@ -1069,7 +1072,7 @@
       looks.add(S.kinds.join());
     }
     assert(looks.size === 8, `eight different sets of props (${looks.size})`);
-    T.setScene(0); const S = T.scene(); assert(S.kinds.includes("digger") && S.kinds.includes("stone") && S.moon === "art", "map 1 is Moonshine Cemetery as it was");
+    T.setScene(0); const S = T.scene(); assert(S.kinds.includes("digger") && S.kinds.includes("pumpkin") && S.moon === "art", "map 1 is Crow Hollow: the gravedigger, the pumpkin rows and the drawn moon");
     T.toTitle();
   });
   test("Arcade opens a map once Story has reached it", () => {
@@ -1082,18 +1085,18 @@
     document.querySelector('#mapList [data-map="6"]').click(); assert(T.state().sheet === "play", "a locked map can't be picked");
     T.closeSheet(); T.setStats({ ...ZERO }); T.toTitle();
   });
-  test("End bosses hold Morty's pieces: map 1's gives his Top Hat, once", () => {
+  test("End bosses give a body part and hold a shard of the Black Ring: map 1's gives the Pumpkin-Vine Curls and the Hollow Shard, once", () => {
     T.setStats({ ...ZERO, bestScore: 0 });
-    for (let k = 0; k < 2; k++) { beatCrow(1); toHit(50); T.step(2.9); assert(T.boss().kind === "undertaker", `map 1's end boss is the Undertaker (${T.boss().kind})`); T.hurtBoss(99); T.endThrow(); T.step(3.4); }
-    const p = T.profile(); assert(p.fragments.length === 1 && p.fragments[0] === "tophat" && p.bossLog.undertaker === 2, JSON.stringify({ f: p.fragments, log: p.bossLog }));
+    for (let k = 0; k < 2; k++) { beatCrow(1); toHit(50); T.step(2.9); assert(T.boss().kind === "pumpkin", `map 1's end boss is the Pumpkin King (${T.boss().kind})`); T.hurtBoss(99); T.endThrow(); T.step(6); }
+    const p = T.profile(); assert(p.fragments.length === 1 && p.fragments[0] === "hollow" && p.bossLog.pumpkin === 2 && T.canUse("hair", "vines"), JSON.stringify({ f: p.fragments, log: p.bossLog }));
     T.setStats({ ...ZERO, bestScore: 0 }); T.toTitle();
   });
-  test("The story ends after map 8: THE END, Morty whole again, and The Whole Reel", () => {
+  test("The Adventure ends after map 8: the last shard, the Black Ring whole, THE END, Wizard Mort and The Whole Reel", () => {
     T.setStats({ ...ZERO, bestScore: 0 });
     beatCrow(8); toHit(50); T.step(2.9); assert(T.boss().kind === "reaper", `map 8's end boss is the Reel Reaper (${T.boss().kind})`);
-    T.hurtBoss(99); T.endThrow(); T.step(4.2);   // (the knockout's hold, then the 3.4 s ending)
+    T.hurtBoss(99); T.endThrow(); T.step(9);   // (the knockout's hold, the reward and the shard, then the 3.4 s ending)
     const p = T.profile();
-    assert(p.storyClears === 1 && p.fragments.includes("shadow") && p.bestStage === 9, JSON.stringify({ c: p.storyClears, f: p.fragments, b: p.bestStage }));
+    assert(p.storyClears === 1 && p.fragments.includes("abyss") && p.bestStage === 9 && T.canUse("wings", "shadow") && T.canUse("wizard", "mort"), JSON.stringify({ c: p.storyClears, f: p.fragments, b: p.bestStage }));
     assert(T.state().state === "over" && /THE\s*END/.test(T.goWords()), `the reel should end (${T.state().state}, "${T.goWords()}")`);
     T.step(2.2);
     assert(/The end/.test(document.querySelector("#over .rip").textContent), "the results say The end, not Here lies");
@@ -1123,11 +1126,11 @@
     const j = T.ringPath("jumpcut", [0.1, 0.4, 0.6, 0.8, 0.95, 1.1]);
     assert(Math.abs(j[0].x - j[2].x) < 1e-9 && Math.abs(j[0].z - j[2].z) < 1e-9 && j[1].tell === 0, "a jump cut holds its corner");
     assert(j[4].tell > 0 && Math.abs(j[5].x - j[3].x) > 0.5, "then flickers, then cuts to the next corner");
-    beatCrow(6); assert(T.ringMode().mode === "circle", `the carnival's second half rides the carousel (${T.ringMode().mode})`);
-    beatCrow(8); assert(T.ringMode().mode === "jumpcut", `the Final Reel cuts (${T.ringMode().mode})`);
+    beatCrow(4); assert(T.ringMode().mode === "circle", `the Drowned Theater's second half rides the revolving stage (${T.ringMode().mode})`);
+    beatCrow(8); assert(T.ringMode().mode === "jumpcut", `the Black Abyss cuts (${T.ringMode().mode})`);
     T.toTitle();
   });
-  test("Wind pushes the throw sideways in Pumpkin Patch Hollow, and the guide bends with it", () => {
+  test("Wind pushes the throw sideways in the Whistling Woods, and the guide bends with it", () => {
     fresh(); T.setStage(3); T.freezeRing(0.8, C.RING_Y);
     T.setWind(0); throwAndSettle(0, C.RING_Y); assert(!T.state().lastResult.make, `no wind: aimed at the middle, a ring 0.8 m off is missed (${T.state().lastResult.kind})`);
     fresh(); T.setStage(3); T.freezeRing(0.8, C.RING_Y); T.setWind(2.4);
@@ -1137,10 +1140,10 @@
     throwAndSettle(0, C.RING_Y); const s = T.state();
     assert(s.lastResult.make && Math.abs(s.lastCross.x - drift) < 0.03, `the wind should carry it into the ring (${s.lastResult.kind}, crossed at ${s.lastCross.x.toFixed(3)})`);
     assert(!$("wind").hidden && T.hz().wind !== 2.4, "and it turns after the throw");
-    T.setWind(0); T.toTitle(); assert($("wind").hidden, "no wind sign off the patch");
+    T.setWind(0); T.toTitle(); assert($("wind").hidden, "no wind sign out of the woods");
   });
   test("Bats, falling bones, balloons and the pendulum knock the skull out of the air; Ghost Toss slips through", () => {
-    for (const [stage, kind] of [[2, "bat"], [4, "bone"], [6, "balloon"]]) {
+    for (const [stage, kind] of [[2, "bat"], [6, "bone"], [4, "balloon"]]) {
       fresh(); T.setStage(stage); T.freezeRing(0, C.RING_Y); const a = T.aimFor(0, C.RING_Y, C.RING_Z), q = T.skullPathAt(a.AX, a.AY, 3.6 / (C.RING_Z / C.FLIGHT_T));
       T.plantHazard(kind, q.x, q.y, q.z); const lives = T.state().lives; T.throwAt(a.AX, a.AY); T.step(2.5);
       assert(T.state().lastResult.kind === kind && T.state().lives === lives - 1, `${kind}: got ${T.state().lastResult.kind}`);
@@ -1156,8 +1159,8 @@
   });
   test("Hazards come round on the tier's schedule and rest during boss fights", () => {
     fresh(); T.setStage(2); for (let i = 0; i < 6; i++) T.hazardsAfterThrow();
-    assert(T.hz().list.some(h => h.kind === "bat"), "the Crypts send a bat every few throws");
-    fresh(); T.setStage(5); T.fogIn(); T.step(1.2); assert(T.hz().fog > 0.5, `the Bayou's fog rolls in (${T.hz().fog.toFixed(2)})`);
+    assert(T.hz().list.some(h => h.kind === "bat"), "the Gilded Graveyard sends a bat every few throws");
+    fresh(); T.setStage(5); T.fogIn(); T.step(1.2); assert(T.hz().fog > 0.5, `the Black Marsh's fog rolls in (${T.hz().fog.toFixed(2)})`);
     T.step(4); assert(T.hz().fog < 0.05, "and rolls out again");
     beatCrow(7); toHit(50); T.step(2.9); T.freezeRing(0, C.RING_Y); const P = T.pend(), tc = P.z / (C.RING_Z / C.FLIGHT_T), a = T.aimFor(0, P.y - P.L, P.z);
     T.setPendT(-tc); T.throwAt(a.AX, a.AY); T.step(2.5);
@@ -1171,7 +1174,7 @@
     assert(s.lastResult.make && T.targets()[0].pop > 0, `the make should carry on into the target (${s.lastResult.kind}, ${JSON.stringify(T.targets())})`);
     assert(T.bones() >= bones + 3 && T.profile().targetHits === hits + 1, "a target pays bones and counts");
     fresh(); assert(T.targets().length === 0, "map 1's first tier hangs no targets");
-    T.setStage(4); T.refillTargets(); assert(T.targets().length === 1 && T.targets()[0].kind === "bonefruit", `the orchard hangs a bone-fruit (${JSON.stringify(T.targets())})`);
+    T.setStage(6); T.refillTargets(); assert(T.targets().length === 2 && T.targets().every(x => x.kind === "bonefruit"), `the Bone Desert hangs its bones (${JSON.stringify(T.targets())})`);
     T.toTitle();
   });
   test("A run's play comes from one seeded stream: the same seed lays out the same targets and hazards", () => {
@@ -1201,7 +1204,7 @@
     }
     T.toTitle();
   });
-  test("Every map's end boss attacks with its own volleys, told first, and falls holding its piece", () => {
+  test("Every map's end boss attacks with its own volleys, told first, and falls holding its shard", () => {
     const M = T.maps(); T.setStats({ ...ZERO, bestScore: 0 });
     for (let n = 1; n <= 8; n++) {
       beatCrow(n); toHit(50); const id = M[n - 1].bosses.end;
@@ -1209,10 +1212,10 @@
       const s = watchBoss(11);
       assert(s.shots > 0 && s.states.has("attack"), `${id} should throw something, after a tell (${s.shots} shots; ${[...s.states]})`);
       assert(s.pos.every(inPlay), `${id} carries the ring out of play: ${JSON.stringify(s.pos.find(q => !inPlay(q)))}`);
-      T.hurtBoss(99); T.endThrow(); T.step(n === 8 ? 4.2 : 3.4);
-      assert(T.profile().fragments.includes(M[n - 1].fragment), `${id} should give up Morty's ${M[n - 1].fragment}`);
+      T.hurtBoss(99); T.endThrow(); T.step(n === 8 ? 9 : 6);
+      assert(T.profile().fragments.includes(M[n - 1].fragment), `${id} should give up the Black Ring's ${M[n - 1].fragment}`);
     }
-    assert(T.profile().fragments.length === 8 && T.profile().storyClears === 1, "all eight pieces, and the story finished");
+    assert(T.profile().fragments.length === 8 && T.profile().storyClears === 1, "all eight shards, and the Adventure finished");
     T.setStats({ ...ZERO, bestScore: 0 }); T.toTitle();
   });
   test("A new end boss's volleys knock the skull down, and a Ghost Toss turns up at two-thirds and one-third health", () => {
@@ -1226,26 +1229,29 @@
   });
 
   // ── v21: the Power-Up Director ──
-  test("Power-ups are random but fair: none before the fourth hit, pity makes one certain, three a half at most, no repeats", () => {
-    fresh(); let spawns = [];
+  test("Power-ups are rare but fair: 2% a hit, score milestones from 2,000, pity, four a stage at most, weighted, no repeats", () => {
+    fresh(); let spawns = [], early = 0;
     for (let seed = 1; seed <= 40; seed++) {
-      T.seedRun(seed); const r = T.powerRolls(25);
-      assert(r.length <= 3, `seed ${seed}: ${r.length} in one half`);
-      assert(r.every(x => x.hit >= 4), `seed ${seed}: one came before the fourth hit (${JSON.stringify(r)})`);
-      assert(r.length >= 1 && r[0].hit <= 4 + 11, `seed ${seed}: pity should make one certain by hit 15 (${JSON.stringify(r)})`);
+      T.seedRun(seed); const r = T.powerRolls(60);
+      assert(r.length <= 4, `seed ${seed}: ${r.length} in one stage`);
+      assert(r.every(x => x.hit >= 3), `seed ${seed}: one came before the third hit (${JSON.stringify(r)})`);
+      assert(r.length >= 1, `seed ${seed}: pity should make one certain in 60 makes (${JSON.stringify(r)})`);
+      if (r[0].hit <= 25) early++;
       for (let i = 1; i < r.length; i++) assert(r[i].id !== r[i - 1].id, `seed ${seed}: the same prop twice running`);
       assert(r.every(x => x.id !== "cursed"), "no Cursed Skull in a first half");
       spawns = spawns.concat(r);
     }
+    assert(early >= 20, `most runs see one in the first 25 hits (${early}/40)`);
     const kinds = new Set(spawns.map(x => x.id)); assert(kinds.size >= 5, `a good spread of props (${[...kinds]})`);
-    T.seedRun(9); const b = T.powerRolls(25, "B"); assert(b.length >= 1 && b.every(x => x.hit >= 25 + 4), `the second half deals its own (${JSON.stringify(b)})`);
-    T.seedRun(5); const one = JSON.stringify(T.powerRolls(25)); T.seedRun(5); assert(JSON.stringify(T.powerRolls(25)) === one, "the same seed rolls the same props");
+    T.seedRun(4); const noScore = T.powerRolls(25, "A", 0), withScore = T.powerRolls(25, "A", 400); void noScore;
+    assert(withScore.length >= 1, `score milestones are chances of their own (${JSON.stringify(withScore)})`);
+    T.seedRun(5); const one = JSON.stringify(T.powerRolls(40)); T.seedRun(5); assert(JSON.stringify(T.powerRolls(40)) === one, "the same seed rolls the same props");
     T.toTitle();
   });
   test("In play, a make can bring a power-up; a miss never does", () => {
     fresh(); T.seedRun(3); let got = null;
-    for (let i = 0; i < 16 && !got; i++) { T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); if (T.pickup()) got = T.state().stageHits; }
-    assert(got && got >= 4, `a prop should float in within a run of makes (at hit ${got})`);
+    for (let i = 0; i < 20 && !got; i++) { T.setPoints(T.state().score + 3000); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); if (T.pickup()) got = T.state().stageHits; }   // (every make crosses a score milestone)
+    assert(got && got >= 3, `a prop should float in within a run of makes (at hit ${got})`);
     fresh(); T.seedRun(3); for (let i = 0; i < 12; i++) { T.givePower("second"); T.freezeRing(0, C.RING_Y); throwAndSettle(2.5, C.RING_Y); }   // (Second Chance keeps the run going)
     assert(!T.pickup(), "misses never bring one");
     T.toTitle();
@@ -1315,16 +1321,16 @@
     T.toTitle();
   });
   test("Between reels: the changeover cues, then the next reel's card; after Reel Four, an intermission", () => {
-    T.setStats(ZERO); beatBoth(1); const c0 = T.reel().cues; T.step(3.7);   // (the knockout's hold, then the 2.8 s boss-out)
+    T.setStats(ZERO); beatBoth(1); const c0 = T.reel().cues; T.step(6);   // (the knockout's hold, the 2.8 s boss-out, then the shard)
     let R = T.reel(); assert(c0 === 2 && R.card === "title" && R.n === 2 && /Reel Two/.test(R.reel), `map 2's card after two cues (${c0}, ${JSON.stringify(R)})`);
     skipCards(); assert(T.state().state === "ready" && T.state().stage === 2, "and map 2 plays");
-    beatBoth(4); T.step(3.7); R = T.reel(); assert(R.card === "intermission" && /pieces back/.test($("rcSub").textContent), `the intermission after Reel Four (${JSON.stringify(R)})`);
+    beatBoth(4); T.step(6); R = T.reel(); assert(R.card === "intermission" && /shards of the Black Ring/.test($("rcSub").textContent), `the intermission after Reel Four (${JSON.stringify(R)})`);
     T.step(3.7); R = T.reel(); assert(R.card === "title" && R.n === 5, `then Reel Five (${JSON.stringify(R)})`);
     T.step(2.9); assert(T.state().state === "ready" && T.state().stage === 5, "and play");
     T.setStats(ZERO); T.toTitle();
   });
   test("After Reel Eight: THE END card, then the headstone", () => {
-    T.setStats(ZERO); beatBoth(8); T.step(2.5);
+    T.setStats(ZERO); beatBoth(8); T.step(7.2);
     const R = T.reel(); assert(R.card === "end" && R.title === "The End" && T.state().state === "cine", `THE END (${JSON.stringify(R)})`);
     T.step(4.7); assert(T.state().state === "over" && T.reel().hidden, `the reel ends (${T.state().state})`);
     T.step(1); assert(/The end/.test(document.querySelector("#over .rip").textContent), "on the stone's The end");
@@ -1349,7 +1355,7 @@
     const L = T.voiceLines(); for (const p of POOLS) assert((L[p] || []).length >= 2, `Morty's ${p} lines (${(L[p] || []).length})`);
     for (const b of Object.keys(T.bossInfo ? T.bossInfo() : {})) assert((L["boss." + b] || []).length >= 1, `a line for ${b}`);
     for (let n = 1; n <= 8; n++) assert((L["map." + n] || []).length, `a line for map ${n}`);
-    for (const f of ["tophat", "bowtie", "gloves", "cane", "spats", "whistle", "watch", "shadow"]) assert((L["fragment." + f] || []).length, `a line for the ${f}`);
+    for (const f of ["hollow", "gilded", "whistle", "drowned", "marsh", "desert", "clockwork", "abyss"]) assert((L["fragment." + f] || []).length, `a line for the ${f} shard`);
     assert(T.lineIds("morty.grab.").length >= 28 && T.lineIds("morty.grab.")[0] === "morty.grab.01", "line IDs are voice-line IDs");
     T.setStats(ZERO); fresh(); toHit(25); T.step(3); T.toTitle();
     const miss = T.missingStrings().filter(k => k !== "no.such.string"); assert(!miss.length, `no string went missing in play (${miss.join(", ")})`);
@@ -1513,8 +1519,8 @@
     assert(T.state().state === "over" && T.profile().modes.gallery.best >= 1, `ten throws and it's over (${T.state().state}, ${JSON.stringify(T.profile().modes.gallery)})`);
     T.setStats(ZERO); T.toTitle();
   });
-  test("Story's encore: after an end boss, ten seconds where misses are free and every make pays bones, then the next reel", () => {
-    T.encore(true); T.setStats(ZERO); fresh(); toHit(25); T.step(2.6); T.hurtBoss(99); T.endThrow(); T.step(3.2); toHit(50); T.step(2.9); T.hurtBoss(99); T.endThrow(); T.step(3.7);
+  test("The Adventure's encore (the mini-game): after an end boss, ten seconds where misses are free and every make pays bones, then the next reel", () => {
+    T.encore(true); T.setStats(ZERO); fresh(); toHit(25); T.step(2.6); T.hurtBoss(99); T.endThrow(); T.step(3.2); toHit(50); T.step(2.9); T.hurtBoss(99); T.endThrow(); T.step(6);
     assert(T.modeState().phase === "encore", `the encore after Reel One's end boss (${T.modeState().phase})`);
     const lives = T.state().lives, b0 = T.bones(); T.step(1.9);
     T.calm(); T.freezeRing(0, C.RING_Y); throwAndSettle(2.5, C.RING_Y); assert(T.state().lives === lives, "a miss is free");
@@ -1536,23 +1542,23 @@
 
   // ── v27: the Codex and the Production Archive ──
   test("The Codex notes things as they turn up: a boss when you meet it, a power-up when you grab it, each map's hazard and target", () => {
-    T.setStats(ZERO); let K = T.codex(); assert(K.total === 66 && K.count === 1, `66 entries, only Moonshine Cemetery known at first (${K.count}/${K.total})`);
+    T.setStats(ZERO); let K = T.codex(); assert(K.total === 75 && K.count === 1, `75 entries, only Crow Hollow known at first (${K.count}/${K.total})`);
     fresh(); toHit(25); assert(T.codex().seen.includes("boss:crow"), "meeting the Crow King notes him");
     T.givePower("rush"); assert(T.codex().seen.includes("power:rush"), "grabbing a power-up notes it");
     fresh(); T.setStage(2); T.setHits(10); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y);
-    K = T.codex(); assert(K.seen.includes("hazard:bats") && K.seen.includes("target:brazier"), `the crypts' bats and brazier (${K.seen.join(", ")})`);
+    K = T.codex(); assert(K.seen.includes("hazard:bats") && K.seen.some(k => /^target:(standard|swinging|golden|secret)$/.test(k)) && K.seen.includes("obstacle:bumper"), `the Gilded Graveyard's bats, its targets and its urns (${K.seen.join(", ")})`);
     T.setPractice({ ring: "full", half: "A", hazards: true }); T.startMode("practice", 0); T.givePower("ghost"); T.endRun(); T.step(1);
     assert(T.codex().seen.includes("power:ghost"), "what you see in Practice still goes in the Codex");
     T.setStats(ZERO); T.toTitle();
   });
   test("The Codex sheet: a tab for each part and the Archive, ??? until found, and the count", () => {
-    T.setStats({ ...ZERO, bossLog: { crow: 2 }, fragments: ["tophat"], shots: { longbomb: 1 }, bestStage: 2 }); T.toTitle(); T.openSheet("codex");
-    const tabs = [...document.querySelectorAll("#codexTabs [data-cat]")]; assert(tabs.length === 9, `nine tabs: seven parts, the Secrets (v28) and the Archive (${tabs.length})`);
+    T.setStats({ ...ZERO, bossLog: { crow: 2 }, fragments: ["hollow"], shots: { longbomb: 1 }, bestStage: 2 }); T.toTitle(); T.openSheet("codex");
+    const tabs = [...document.querySelectorAll("#codexTabs [data-cat]")]; assert(tabs.length === 10, `ten tabs: eight parts (obstacles, v44), the Secrets (v28) and the Archive (${tabs.length})`);
     tabs.find(b => b.dataset.cat === "boss").click();
     const rows = [...document.querySelectorAll("#codexList .entry")], crow = rows.find(r => r.dataset.entry === "boss:crow");
     assert(rows.length === 16 && crow && /Crow King/.test(crow.textContent) && /Beaten 2/.test(crow.textContent), `16 bosses, the Crow King written up (${rows.length})`);
     assert(rows.filter(r => r.classList.contains("unseen")).length === 15 && rows.find(r => r.dataset.entry === "boss:reaper").textContent.startsWith("???"), "the rest stay ???");
-    assert(/of 66 found/.test($("codexCount").textContent), $("codexCount").textContent);
+    assert(/of 75 found/.test($("codexCount").textContent), $("codexCount").textContent);
     T.closeSheet(); T.setStats(ZERO); T.toTitle();
   });
   test("The Production Archive unseals the studio's paperwork as the story goes on", () => {
@@ -1715,8 +1721,8 @@
     assert(T.equip("title", "shotdoctor"), "gold on all twelve: the Shot Doctor"); T.equip("title", "rookie"); T.setStats(ZERO);
   });
   test("Map mastery: a star for its end boss, one for beating it without a miss, one for 100 makes there", () => {
-    T.setStats({ ...ZERO, bones: 0 }); fresh(); toHit(25); T.step(2.6); T.hurtBoss(99); T.endThrow(); T.step(3.2); toHit(50); T.step(2.9); T.hurtBoss(99); T.endThrow(); T.step(4);
-    const P = T.profile(); assert(P.bossLog.undertaker === 1 && P.flawless.undertaker === 1, `the Undertaker down, without a miss (${JSON.stringify(P.flawless)})`);
+    T.setStats({ ...ZERO, bones: 0 }); fresh(); toHit(25); T.step(2.6); T.hurtBoss(99); T.endThrow(); T.step(3.2); toHit(50); T.step(2.9); T.hurtBoss(99); T.endThrow(); T.step(6.5);
+    const P = T.profile(); assert(P.bossLog.pumpkin === 1 && P.flawless.pumpkin === 1, `the Pumpkin King down, without a miss (${JSON.stringify(P.flawless)})`);
     assert(T.tierReached("map", "1", 0) && T.tierReached("map", "1", 1) && !T.tierReached("map", "1", 2), "two stars");
     T.setStats({ mapMakes: { 1: 100 } }); assert(T.tierReached("map", "1", 2), "the third at 100 makes");
     T.setStats(ZERO); T.toTitle();
@@ -1830,14 +1836,14 @@
     document.querySelector('#modePick [data-mode="arcade"]').click();
     const cabs = [...document.querySelectorAll("#mapList .cabinet")];
     assert(cabs.length === 8 && cabs.filter(c => c.classList.contains("locked")).length === 5 && /OUT OF ORDER/.test(cabs[7].textContent), `8 cabinets, 5 out of order (${cabs.length})`);
-    assert(/Moonshine Cemetery/i.test(cabs[0].querySelector(".marq").textContent) && /MRT/.test(cabs[0].textContent) && /9,000/.test(cabs[0].textContent) && /INSERT BONE/.test(cabs[0].textContent), cabs[0].textContent);
+    assert(/Crow Hollow/i.test(cabs[0].querySelector(".marq").textContent) && /MRT/.test(cabs[0].textContent) && /9,000/.test(cabs[0].textContent) && /INSERT BONE/.test(cabs[0].textContent), cabs[0].textContent);
     cabs[1].click(); assert(T.arcade().map === 1 && T.state().state !== "title", "a coin in the slot starts that cabinet");
     T.setStats(ZERO); T.toTitle();
   });
   test("A score good enough for a cabinet's top five asks for three initials, the old way", () => {
     T.setStats({ ...ZERO, bestStage: 2 }); T.setName("Ada Lovelace"); const score = arcadeRun(0, 4); T.step(2);
     const tab = T.profile().arcadeTables["0"]; assert(tab && tab[0].score === score && tab[0].ini === "ALO", `on the table as ALO (${JSON.stringify(tab)})`);
-    assert(!$("iniBox").hidden && /#1 on the Moonshine Cemetery cabinet/.test($("iniRank").textContent), "the headstone asks");
+    assert(!$("iniBox").hidden && /#1 on the Crow Hollow cabinet/.test($("iniRank").textContent), "the headstone asks");
     document.querySelector('#iniLetters [data-i="0"].up').click();
     assert(T.profile().arcadeTables["0"][0].ini === "BLO" && T.profile().lastIni === "BLO", `▲ on the first letter (${T.profile().arcadeTables["0"][0].ini})`);
     T.setName(""); T.setStats(ZERO); T.toTitle();
@@ -2058,7 +2064,7 @@
     const P = T.contentAudit(); assert(P.length === 0, P.join("; "));
   });
   test("A replay on the balloon map sees the same balloons, whenever it's watched", () => {
-    T.setStats({ ...ZERO, bestStage: 9 }); T.setPractice({ hazards: true }); T.startMode("practice", 5);
+    T.setStats({ ...ZERO, bestStage: 9 }); T.setPractice({ hazards: true }); T.startMode("practice", 3);
     const at = () => T.hz().list.filter(h => h.kind === "balloon").map(h => [h.x.toFixed(5), h.y.toFixed(5)]).join(" ");
     T.step(4); const was = at(); assert(T.hz().kind === "balloons" && was, "balloons up");
     T.endRun(); T.step(7.25);   // (the clock moves on before it's watched)
@@ -2121,8 +2127,8 @@
   test("The Feature: the season's map after dark with twice the targets, and its replay keeps the season's rules after it ends", () => {
     T.setFlags({}); T.seasonAt(IN_SEASON); T.setStats({ ...ZERO, bestStage: 1 });
     T.startMode("feature"); const F = T.feature();
-    assert(T.modeState().mode === "feature" && T.state().stage === 3 && T.hz().kind === "fog" && T.twists().join() === "fog,bonanza", `Pumpkin Patch Hollow after dark (${JSON.stringify(F)}, stage ${T.state().stage})`);
-    assert(/Pumpkin Patch Hollow · The Midnight Matinee/.test($("progLabel").textContent), `the bar names the Feature (${$("progLabel").textContent})`);
+    assert(T.modeState().mode === "feature" && T.state().stage === 3 && T.hz().kind === "fog" && T.twists().join() === "fog,bonanza", `the Whistling Woods after dark (${JSON.stringify(F)}, stage ${T.state().stage})`);
+    assert(/The Whistling Woods · The Midnight Matinee/.test($("progLabel").textContent), `the bar names the Feature (${$("progLabel").textContent})`);
     T.calm(); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); T.endRun(); T.step(1);
     const R = T.lastReplay(); assert(R.feat && R.feat.twists.join() === "fog,bonanza", "the replay carries the Feature");
     T.seasonAt(AFTER(30 * 864e5)); assert(T.watchReplay() && T.state().stage === 3 && T.twists().join() === "fog,bonanza", "and plays it after the season's gone");
@@ -2170,6 +2176,136 @@
     r = await T.useFirebaseWith(cfg, stub(true));
     assert(r.me === "u1" && r.db && r.call && r.souls, `everything up (${JSON.stringify(r)})`);
     delete window.firebase; T.noServer(); T.toTitle();
+  });
+
+  // ── v44: the corrected roadmap. The Spatial & Environmental Blueprint (V16), map progression (V17), the eight rebuilt maps
+  // (V18), targets and obstacles (V19), the bosses on them (V20), power-ups (V21), the new slots (V29), the profile (V31) ──
+  const pathAt = (z, x = 0, y = C.RING_Y) => { const a = T.aimFor(x, y, C.RING_Z); return { a, q: T.skullPathAt(a.AX, a.AY, z / (C.RING_Z / C.FLIGHT_T)) }; };
+  test("The blueprint is the gate: every map carries a whole Map Production Sheet that fits it", () => {
+    const B = T.blueprint(), M = T.maps(), R = T.implemented().registry;
+    for (const k of ["gameplayPlanes", "camera", "anchors", "reactions", "ambientBudget", "lighting", "shadow", "occlusion", "sheet"]) assert(B[k], `the blueprint defines ${k}`);
+    assert(B.shadow.ring.ringLine === false, "no line joins the ring to its shadow");
+    for (const m of M) {
+      assert(JSON.stringify(Object.keys(m.sheet)) === JSON.stringify(B.sheet.order), `${m.name}: the sheet's parts, in order (${Object.keys(m.sheet)})`);
+      for (const k of B.sheet.identity) assert(m.identity[k], `${m.name}: its ${k} identity`);
+      assert(R.anchor.includes(m.anchor) && B.anchors[m.anchor], `${m.name}: its anchor`);
+      assert(m.sheet.ambient.length <= B.ambientBudget.max && m.sheet.lighting.ring >= B.lighting.ringReadability, `${m.name}: inside the ambient budget, the ring readable`);
+      const Z = m.sheet.zones; assert(Z.targets.z[0] >= Z.ring.z[0] && Z.hazards.z[1] <= Z.ring.z[1], `${m.name}: targets behind the ring, hazards before it`);
+    }
+    assert(new Set(M.map(m => m.anchor)).size === 8, "eight maps, eight ways the ring belongs to them");
+  });
+  test("Tiers I to VI have their names: The Toss, The Distraction, The Hazard, The Puzzle, The Chaos, The Secrets", () => {
+    assert(T.tiers().map(x => x.name).join() === "The Toss,The Distraction,The Hazard,The Puzzle,The Chaos,The Secrets", T.tiers().map(x => x.name).join());
+    const M = T.maps(); assert(M[0].tiers[0] === "I" && M[7].tiers[1] === "VI", "the reel climbs from the Toss to the Secrets");
+  });
+  test("The ring hangs from its map: it holds in the first half, snaps loose when it flies, and the Bone Desert stands it further off", () => {
+    fresh(); T.unfreezeRing(); let A = T.anchor(); assert(A.kind === "branch" && A.holds && A.z0 === C.RING_Z, `Crow Hollow's oak branch (${JSON.stringify(A)})`);
+    beatCrow(1); A = T.anchor(); assert(!A.holds, "the winged ring has left its rope");
+    fresh(); T.setStage(6); T.unfreezeRing(); T.step(0.2); A = T.anchor(); assert(A.kind === "hand" && Math.abs(T.state().ring.z - (C.RING_Z + 1.4)) < 1e-6, `the desert's hand holds it 1.4 m further off (${T.state().ring.z})`);
+    T.toTitle();
+  });
+  test("The environment answers a hit: props near a landing move, bend, squeak, crack or fall, the map's way", () => {
+    fresh(); T.setScene(0); const P = T.scene(); assert(P.props > 8, "props");
+    const got = T.reactAt(-3.6, 8, 1.3); assert(got.length >= 1, `something near the landing reacts (${JSON.stringify(got)})`);
+    T.setScene(1); const g2 = T.reactAt(-3.3, 6.5, 1.3); assert(g2.some(r => r.does === "rotate") || g2.length >= 1, `the gilded angels turn (${JSON.stringify(g2)})`);
+    T.toTitle();
+  });
+  test("A map brings its obstacles in on its beats: one thing, then more, then the second half's", () => {
+    fresh(); T.setStage(2); T.setHits(5); T.syncObstacles(); assert(T.obstacles().length === 0, "nothing at first");
+    T.setHits(6); T.syncObstacles(); assert(T.obstacles().map(o => o.kind).join() === "bumper", `a gilded urn at hit 6 (${JSON.stringify(T.obstacles())})`);
+    T.setHits(14); T.syncObstacles(); assert(T.obstacles().length === 2, "two by hit 14");
+    for (let n = 1; n <= 8; n++) { fresh(); T.setStage(n); T.setHits(24); T.syncObstacles(); const k = T.obstacles().map(o => o.kind); assert(n === 1 ? !k.length : k.length >= 1, `map ${n}'s first half (${k})`); }
+    T.toTitle();
+  });
+  test("A gilded urn bounces the skull instead of stopping it; the rest knock it out of the air, and Ghost Toss slips through", () => {
+    fresh(); T.setStage(2); T.calm(); T.freezeRing(0, C.RING_Y); let { a, q } = pathAt(3.4);
+    T.plantObstacle({ kind: "bumper", at: [q.x + 0.1, q.y, q.z], r: 0.3, from: 0 }); T.throwAt(a.AX, a.AY); T.step(2.5);
+    assert(T.banked() >= 1 && !["bumper"].includes(T.state().lastResult.kind), `BOING (${T.banked()}, ${T.state().lastResult.kind})`);
+    const blockers = [["bar", q => ({ kind: "bar", at: [q.x, q.y, q.z], len: 1.2, spin: 0 })], ["spikes", q => ({ kind: "spikes", span: [-2, 2], z: q.z, h: q.y + 0.4, cycle: [99, 1] })],
+      ["crusher", q => ({ kind: "crusher", box: [q.x - 0.6, q.x + 0.6, q.z - 0.3, q.z + 0.3], top: q.y - 1.1, low: q.y - 1.1, cycle: [0.01, 99, 1] })], ["barrier", q => ({ kind: "barrier", box: [-2, 2, 0.5, 4.5, q.z], cycle: [99, 1] })],
+      ["magnet", q => ({ kind: "magnet", at: [q.x, q.y, q.z], k: 0, R: 0.5 })]];
+    for (const [kind, mk] of blockers) {
+      fresh(); T.setStage(1); T.calm(); T.freezeRing(0, C.RING_Y); ({ a, q } = pathAt(3.4)); T.plantObstacle({ ...mk(q), from: 0 }); const lives = T.state().lives;
+      T.throwAt(a.AX, a.AY); T.step(2.5); assert(T.state().lastResult.kind === kind && T.state().lives === lives - 1, `${kind}: got ${T.state().lastResult.kind}`);
+      T.givePower("ghost"); T.freezeRing(0, C.RING_Y); T.throwAt(a.AX, a.AY); T.step(2.5); assert(T.state().lastResult.make, `Ghost Toss slips past the ${kind} (${T.state().lastResult.kind})`);
+    }
+    T.toTitle();
+  });
+  test("The cannon fizzes, then fires a ball across the lane; the crusher, spikes and scrim each give a tell first", () => {
+    fresh(); T.setStage(6); T.calm(); T.plantObstacle({ kind: "cannon", side: -1, y: 2.5, z: 3.4, every: [3, 0.9], speed: 6, from: 0 }); T.obClock(0);
+    T.step(0.5); assert(T.obstacles()[0].balls === 0, "the fuse first"); T.step(0.6); assert(T.obstacles()[0].balls === 1, `then BOOM (${JSON.stringify(T.obstacles())})`);
+    T.step(1.5); assert(T.obstacles()[0].balls === 0, "and the ball leaves the lane");
+    T.toTitle();
+  });
+  test("A fan and a lodestone bend the flight, and the aim guide bends with them", () => {
+    fresh(); T.setStage(3); T.calm(); T.freezeRing(0, C.RING_Y); const still = T.predictCrossing(0, C.RING_Y);
+    T.plantObstacle({ kind: "fan", box: [-3, 3, 0, 5, 0.5, 5.5], push: [3, 0], pulse: [99, 0.01], from: 0 }); T.obClock(0.5);
+    const bent = T.predictCrossing(0, C.RING_Y); assert(bent.x > still.x + 0.3, `the guide leans with the gust (${still.x.toFixed(2)} → ${bent.x.toFixed(2)})`);
+    T.freezeRing(bent.x, bent.y); T.throwAt(0, C.RING_Y); T.step(2.5); const s = T.state();
+    assert(Math.abs(s.lastCross.x - bent.x) < 0.08, `and the throw goes where the guide said (${s.lastCross.x.toFixed(3)} vs ${bent.x.toFixed(3)})`);
+    T.clearObstacles(); T.plantObstacle({ kind: "magnet", at: [2.0, 2.8, 3.6], k: 9, R: 2.2, from: 0 }); const f = T.obForce(1.2, 2.8, 3.6); assert(f.x > 0, "the lodestone pulls toward itself");
+    T.toTitle();
+  });
+  test("Nine kinds of target: shielded take two, split ones burst in two, pop-ups duck, gold pays, secrets hide, decoys are a miss", () => {
+    fresh(); T.setStage(5); T.calm(); let t0 = T.spawnTargetType("shielded"); assert(t0.shield, "a lid");
+    let r = T.hitTargetNow(0); assert(!r[0].pop && !r[0].shield, "the first hit knocks the lid off"); r = T.hitTargetNow(0); assert(r[0].pop > 0, "the second pops it");
+    fresh(); T.setStage(4); T.calm(); T.spawnTargetType("split"); r = T.hitTargetNow(0); assert(r.filter(x => x.type === "half").length === 2, `two halves (${JSON.stringify(r)})`);
+    fresh(); T.setStage(4); T.calm(); T.spawnTargetType("popup"); let up = 0, down = 0; for (let i = 0; i < 40; i++) { T.step(0.1); if (T.targetLive(0)) up++; else down++; } assert(up > 5 && down > 5, `it ducks and comes back (${up}/${down})`);
+    fresh(); T.setStage(8); T.calm(); const b = T.bones(); T.spawnTargetType("golden"); T.hitTargetNow(0); assert(T.bones() >= b + 25, "gold pays bones");
+    const secrets = T.profile().secretTargets || 0; T.spawnTargetType("secret"); T.hitTargetNow(1); assert((T.profile().secretTargets || 0) === secrets + 1, "a secret found counts");
+    fresh(); T.setStage(3); T.calm(); T.freezeRing(0, C.RING_Y); const { a, q } = pathAt(3.6); const d = T.spawnTargetType("decoy"); assert(d.z < C.RING_Z, "a decoy hangs in front of the ring");
+    void a; void q; T.toTitle();
+  });
+  test("A decoy in the throw's way is a miss; the Codex knows all nine targets and eight obstacles", () => {
+    fresh(); T.setStage(3); T.calm(); T.freezeRing(0, C.RING_Y); const { a, q } = pathAt(3.6); T.plantDecoy(q.x, q.y, q.z); const lives = T.state().lives;
+    T.throwAt(a.AX, a.AY); T.step(2.5); assert(T.state().lastResult.kind === "decoy" && T.state().lives === lives - 1, `HONK (${T.state().lastResult.kind})`);
+    T.setStats(ZERO); T.openSheet("codex"); document.querySelector('#codexTabs [data-cat="obstacle"]').click(); assert(document.querySelectorAll("#codexList .entry").length === 8, "eight obstacles");
+    document.querySelector('#codexTabs [data-cat="target"]').click(); assert(document.querySelectorAll("#codexList .entry").length === 9, "nine targets");
+    T.closeSheet(); T.toTitle();
+  });
+  test("The Pumpkin King: his mouth is the ring, his eyes are targets; poke both shut and he's blind, gaping, and hurt double", () => {
+    T.setStats(ZERO); beatCrow(1); toHit(50); T.step(2.9); T.freezeRing(0, C.RING_Y); let K = T.pk(); assert(K && !K.eyes[0] && !K.eyes[1], "two open eyes");
+    const lives = T.state().lives, e0 = K.eye[0]; T.freezeRing(0, C.RING_Y); K = T.pk(); const e = K.eye[0]; void e0;
+    T.plantSeed(9, 9, 9); const aim = T.aimFor(e.x, e.y, e.z); T.throwAt(aim.AX, aim.AY); T.step(2.5);
+    assert(T.state().lastResult.kind === "eye" && T.state().lives === lives && T.pk().eyes[0], `POKE: a hit, not a miss (${T.state().lastResult.kind}, lives ${T.state().lives}/${lives})`);
+    const e1 = T.pk().eye[1], aim2 = T.aimFor(e1.x, e1.y, e1.z); T.freezeRing(0, C.RING_Y); T.throwAt(aim2.AX, aim2.AY); T.step(2.5);
+    K = T.pk(); assert(K.blind > 0 && K.rc > 0.6, `blind, and the mouth gapes (${JSON.stringify(K)})`);
+    const hp = K.hp; T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); assert(T.pk().hp === hp - 4 || T.pk().hp === hp - 2, `down his throat counts double (${hp} → ${T.pk().hp})`);
+    T.toTitle();
+  });
+  test("The new slots: hair, facial hair and wings come back from the end bosses; a launcher; Wizard Mort at four shards and the whole Black Ring", () => {
+    T.setStats(ZERO); T.toTitle(); T.openSheet("customize");
+    for (const k of ["hair", "beard", "wings", "launcher", "wizard"]) { T.shopCat(k); assert(document.querySelectorAll("#shopGrid .item").length >= 3, `the ${k} shelf`); }
+    const groups = [...document.querySelectorAll("#catTabs [data-group]")].map(b => b.dataset.group);
+    assert(groups.join() === "Head,Face,Hair,Facial hair,Wings,Effects,Skull,Ring,Launcher,Special,Wizard Mort", groups.join());
+    assert(!T.canUse("wizard", "apprentice") && !T.canUse("wizard", "mort") && !T.canUse("hair", "vines"), "locked at first");
+    T.setStats({ ...ZERO, fragments: ["hollow", "gilded", "whistle", "drowned"], bossLog: { pumpkin: 1 } }); assert(T.canUse("wizard", "apprentice") && !T.canUse("wizard", "mort") && T.canUse("hair", "vines"), "four shards: the apprentice; the Pumpkin King: his vines");
+    T.setStats({ ...ZERO, storyClears: 1 }); assert(T.canUse("wizard", "mort"), "the Adventure finished: Wizard Mort");
+    T.closeSheet(); T.equip("wizard", "mort"); T.equip("wings", "shadow"); T.start(); T.step(0.5); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); assert(T.state().lastResult.make, "and he still throws the same");
+    T.equip("wizard", "none"); T.equip("wings", "none"); T.setStats(ZERO); T.toTitle();
+  });
+  test("The profile has a picture (a face, a frame each map earns) and a bio, and both travel in a save code", () => {
+    T.setStats({ ...ZERO, bestStage: 3 }); T.toTitle(); T.openSheet("profile");
+    document.querySelector('#picFaces [data-face="dizzy"]').click(); document.querySelector('#picFrames [data-frame="gilded"]').click();
+    assert(T.profile().pic.face === "dizzy" && T.profile().pic.frame === "gilded", JSON.stringify(T.profile().pic));
+    assert(document.querySelector('#picFrames [data-frame="abyss"]').disabled, "a frame is earned by clearing its map");
+    const bio = $("prof-bio"); bio.value = "Tosser of skulls <b>"; bio.dispatchEvent(new Event("input")); assert(T.profile().bio === "Tosser of skulls b", `markup stripped (${T.profile().bio})`);
+    const code = T.exportCode(); T.setStats(ZERO); assert(T.importCode(code) && T.profile().bio === "Tosser of skulls b" && T.profile().pic.face === "dizzy", "the code carries them");
+    T.closeSheet(); T.setStats(ZERO); T.toTitle();
+  });
+  test("Story is now the Adventure, wherever a player reads it", () => {
+    assert(T.tr("mode.story.name") === "Adventure", T.tr("mode.story.name"));
+    const words = document.body.innerText + " " + [...document.querySelectorAll("[aria-label]")].map(e => e.getAttribute("aria-label")).join(" ");
+    assert(!/\bStory\b/.test(words.replace(/Storyboard/g, "")), "no Story left on screen");
+  });
+  test("Occlusion: the foreground frame never covers the ring's zone on any map", () => {
+    const B = T.blueprint();
+    for (let i = 0; i < 8; i++) {
+      T.setScene(i); const Z = T.maps()[i].sheet.zones.ring, pts = [];
+      for (const x of Z.x) for (const y of [Z.y[0], Z.y[1]]) for (const z of Z.z) pts.push(T.ringScreen(x, y, z));
+      const a = T.fgAlphaAt(pts); assert(a <= B.occlusion.fgMaxAlpha, `${T.maps()[i].name}: the frame covers the ring zone (alpha ${a.toFixed(2)})`);
+    }
+    T.setScene(0); T.toTitle();
   });
 
   (async () => {

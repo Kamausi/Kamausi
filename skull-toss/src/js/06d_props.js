@@ -33,6 +33,7 @@
       for (const [x, z] of [[-5.2, 11], [6.4, 17], [-7.4, 25]]) place("scarecrow", x, z);
       for (const [x, z] of [[-6.2, 20], [6.6, 27], [-3.6, 29]]) place("rail", x, z);
       for (const [x, z, s] of [[-9, 22, 1.2], [9.6, 30, 1.3]]) place("tree", x, z, { size: s });
+      place("digger", -2.9, 12.5);   // (Crow Hollow: the gravedigger who buried the reel is still at it)
     },
     orchard(place, rnd) {
       for (let z = 6; z < 38; z += 3.6) for (const side of [-1, 1]) place("bonetree", side * (3.6 + (rnd() - 0.5) * 0.8 + z * 0.05), z + rnd(), { size: 0.9 + rnd() * 0.3 });
