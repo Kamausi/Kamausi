@@ -139,7 +139,7 @@
       const usable = canUse(kind, it), on = cos[kind] === it.id, selected = shop.sel && shop.sel.kind === kind && shop.sel.id === it.id, rar = rarityOf(it);
       const b = document.createElement("button");
       b.type = "button"; b.dataset.kind = kind; b.dataset.id = it.id;
-      b.className = "item " + (on ? "equipped" : usable ? "owned" : "locked") + (selected ? " selected" : "");
+      b.className = "item rar-" + rar + " " + (on ? "equipped" : usable ? "owned" : "locked") + (selected ? " selected" : "");
       b.setAttribute("aria-pressed", String(on));
       b.setAttribute("aria-label", `${it.name} ${KIND_LABEL[kind]}, ${starsOf(it)} star ${STAR_NAME[starsOf(it)]}${on ? ", equipped" : usable ? ", owned" : it.souls ? `, ${fmt(it.souls)} Souls at the Soul Shop` : it.season ? `, ${t("season.vaultState", { n: SEASONS[it.season].n })}` : it.price ? `, ${fmt(it.price)} bones` : `, locked: ${REQ_TEXT[it.req[0]](it.req[1])}`}`);
       const state = on ? "Equipped" : usable ? (kind === "title" ? "Earned" : "Owned") : it.souls ? `<span class="price soul">◆ ${fmt(it.souls)}</span>` : it.season ? t("season.vaultState", { n: SEASONS[it.season].n }) : it.shop ? "Curio Cart" : it.price ? `<span class="price">${BONE_SVG}${fmt(it.price)}</span>` : `${fmt(Math.min(statNow(it.req[0]), it.req[1]))}/${fmt(it.req[1])}`;

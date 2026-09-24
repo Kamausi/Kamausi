@@ -143,8 +143,13 @@
     snapOn(on = true) { if (sandbox) { sandbox.snapOn = on; sandbox.snap = null; } }, snapshot: () => readRunSnapshot(),
     tier: () => ({ ...tierNow() }),
     // the Power-Up Director alone: n makes in a row from the start of the first half, noting the hits where a prop turned up
+    powerDeal(n) { const was = game.phase; game.phase = "B"; powerDirectorReset(); const out = []; for (let i = 0; i < n; i++) out.push(rollPower()); game.phase = was; return out; },
+    powerMilestones() { const out = [], score = game.score, st = game.stage, ph = game.phase, res = game.result, hits = game.stageHits; powerDirectorReset(); game.result = { make: true, pts: 0 }; game.stageHits = 0;
+      for (const [s2, p2] of [[1, "A"], [1, "B"], [2, "A"], [2, "B"]]) { game.stage = s2; game.phase = p2; pickupSchedule(); out.push(PD.step); }
+      Object.assign(game, { score, stage: st, phase: ph, result: res, stageHits: hits }); powerDirectorReset(); return out; },
+    ringHeat: () => ringHeatGoal(),
     powerRolls(n, phase = "A", per = 250) { const out = [], was = game.result, score = game.score; game.phase = phase; game.stageHits = phase === "A" ? 0 : STAGE_MINI; game.score = 0; powerDirectorReset();
-      for (let i = 0; i < n; i++) { game.stageHits++; game.score += per; game.throws++; game.result = { make: true }; pickupSchedule(); if (pickup) { out.push({ hit: game.stageHits, id: pickup.id, score: game.score }); pickup = null; } }
+      for (let i = 0; i < n; i++) { game.stageHits++; game.score += per; game.throws++; game.result = { make: true, pts: per }; pickupSchedule(); if (pickup) { out.push({ hit: game.stageHits, id: pickup.id, score: game.score }); pickup = null; } }
       game.result = was; game.score = score; return out; }, setWind(w) { HZ.wind = w; renderWind(); }, hz: () => ({ kind: HZ.kind, wind: HZ.wind, fog: HZ.fog, list: HZ.list.map(h => ({ kind: h.kind, fixed: !!h.fixed, x: h.x, y: h.y, z: h.z })), bob: pendBob() }),
     fogIn() { HZ.fogT = 3.6; }, hazardsAfterThrow: () => hazardsAfterThrow(), setPendT(t) { HZ.pendT = t; }, pend: () => ({ ...PEND, period: pendPeriod() }),
     plantHazard(kind, x, y, z, r = 0.28) { HZ.list = HZ.list.filter(h => h.kind !== kind); HZ.list.push({ kind, x, y, z, ox: x, oy: y, oz: z, r, fixed: true, t: 0, at: 0, dir: 1 }); },

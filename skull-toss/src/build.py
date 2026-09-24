@@ -282,6 +282,12 @@ for ext, mime in ((".webp", "image/webp"), (".png", "image/png")):
     MOON_ART = {"src": f"data:{mime};base64," + base64.b64encode(f.read_bytes()).decode(), "cx": m["cx"], "cy": m["cy"], "r": m["r"]}
     break
 js = "  const MOON_ART = " + json.dumps(MOON_ART, separators=(",", ":")) + ";\n" + js
+# ── optional studio logo, shown on launch before the curtains open: src/art/logo/logo.(png|webp|svg) ──
+LOGO_ART = None
+for ext, mime in [(".png", "image/png"), (".webp", "image/webp"), (".svg", "image/svg+xml")]:
+    f = root / "art" / "logo" / ("logo" + ext)
+    if f.exists(): LOGO_ART = f"data:{mime};base64," + base64.b64encode(f.read_bytes()).decode(); break
+js = "  const LOGO_ART = " + json.dumps(LOGO_ART) + ";\n" + js
 
 # ── optional: carry the music loops (four acts, pause and shop) inside the file itself, for a copy that plays offline on its own ──
 embed_music = "--with-music" in sys.argv

@@ -484,13 +484,14 @@
   // ── v11: score, progress, stages and bosses ───────────────
   const toHit = n => { T.calm(); T.setHits(n - 1); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); T.unfreezeRing(); };
   const beatCrow = (stage = 1) => { fresh(); if (stage > 1) T.setStage(stage); toHit(25); T.step(2.6); T.hurtBoss(99); T.endThrow(); T.step(3.2); };
-  test("HUD: the score centred, the hits under it, the best under that, all in the game's numerals; small skulls and combo", () => {
+  test("HUD: the score centred in the title's lettering, the hits under it, the best under that; small skulls and combo", () => {
     fresh(); throwAndSettle(0, C.RING_Y);
     assert($("score").dataset.v === "250" && $("hits").textContent === "1", `score ${$("score").dataset.v}, hits ${$("hits").textContent}`);
     const s = $("score").getBoundingClientRect(), h = $("hits").parentElement.getBoundingClientRect(), b = $("best").getBoundingClientRect(), mid = r => (r.left + r.right) / 2;
     assert(Math.abs(mid(s) - innerWidth / 2) < 3, `the score should be centred (${mid(s).toFixed(1)} of ${innerWidth})`);
     assert(h.top >= s.bottom - 4 && b.top >= h.bottom - 2 && Math.abs(mid(h) - mid(s)) < 3, "the hits should sit under the score, and the best under the hits");
-    for (const id of ["score", "hits", "best"]) assert(/Bebas Neue/.test(getComputedStyle($(id)).fontFamily), `${id} should use the game's numerals`);
+    assert(/Luckiest Guy/.test(getComputedStyle($("score")).fontFamily), "v45: the score is in the title's lettering");
+    for (const id of ["hits", "best"]) assert(/Bebas Neue/.test(getComputedStyle($(id)).fontFamily), `${id} should use the game's numerals`);
     const skull = $("lives").querySelector("svg").getBoundingClientRect();
     assert(skull.width <= 18, `the skulls should be small (${skull.width}px)`);
   });
@@ -892,8 +893,8 @@
   });
   test("A toss that clips the drawn power-up grabs it; one that misses the drawing doesn't", () => {
     fresh(); toHit(6); T.spawnPickup("deadeye"); assert(T.pickup(), "the power-up should float in the ring");
-    const rc = T.state().ring.rc, icon = rc * 0.42;
-    const clip = icon + C.SKULL_R * 0.45, wide = icon + C.SKULL_R * 0.8;
+    const rc = T.state().ring.rc, icon = rc * 0.46;   // (v45: the grab takes in the whole drawn prop)
+    const clip = icon + C.SKULL_R * 0.5, wide = icon + C.SKULL_R * 0.95;
     assert(!T.pickupHit({ x: wide, y: C.RING_Y, ringX: 0, ringY: C.RING_Y }), "a toss that only grazes the glow shouldn't grab it");
     T.freezeRing(0, C.RING_Y); throwAndSettle(clip, C.RING_Y);
     assert(T.state().lastResult.make && Object.keys(T.powers()).length === 1, `a toss whose skull overlaps the drawn power-up should grab it (off by ${clip.toFixed(3)}, old window ${(rc * 0.45).toFixed(3)})`);
@@ -1229,7 +1230,7 @@
   });
 
   // ── v21: the Power-Up Director ──
-  test("Power-ups are rare but fair: 2% a hit, score milestones from 2,000, pity, four a stage at most, weighted, no repeats", () => {
+  test("Power-ups are rare but fair: 2% a hit, score milestones from 2,000, pity, four a stage at most, no repeats", () => {
     fresh(); let spawns = [], early = 0;
     for (let seed = 1; seed <= 40; seed++) {
       T.seedRun(seed); const r = T.powerRolls(60);
@@ -1246,6 +1247,30 @@
     T.seedRun(4); const noScore = T.powerRolls(25, "A", 0), withScore = T.powerRolls(25, "A", 400); void noScore;
     assert(withScore.length >= 1, `score milestones are chances of their own (${JSON.stringify(withScore)})`);
     T.seedRun(5); const one = JSON.stringify(T.powerRolls(40)); T.seedRun(5); assert(JSON.stringify(T.powerRolls(40)) === one, "the same seed rolls the same props");
+    T.toTitle();
+  });
+  test("v45: power-ups come round in a shuffled cycle, four a stage, milestones from 2,000 growing each stage", () => {
+    fresh(); const firsts = new Set(), orders = new Set();
+    for (let seed = 1; seed <= 30; seed++) {
+      T.seedRun(seed); const d = T.powerDeal(14);   // fourteen drops in a row, the stage cap and the carry rules aside
+      const a = d.slice(0, 7), b = d.slice(7);
+      assert(new Set(a).size === 7 && new Set(b).size === 7, `seed ${seed}: every prop once before any comes again (${d})`);
+      for (let i = 1; i < d.length; i++) assert(d[i] !== d[i - 1], `seed ${seed}: the same prop twice running (${d})`);
+      firsts.add(d[0]); orders.add(a.join());
+    }
+    assert(firsts.size >= 5 && orders.size >= 25, `the order changes run to run (${firsts.size} first props, ${orders.size} orders)`);
+    const m = T.powerMilestones();
+    assert(m[0] === 2000 && m[1] > m[0] && m[2] > m[1] && m[3] > m[2], `milestone steps grow each stage (${m})`);
+    T.seedRun(7); const A = T.powerRolls(25, "A", 900), B = T.powerRolls(25, "B", 900);
+    assert(A.length <= 4 && B.length <= 4 && A.length + B.length >= 3, `four a stage at most, each stage its own four (${A.length} + ${B.length})`);
+    T.toTitle();
+  });
+  test("v45: a hot streak sets the ring on fire, and a miss puts it out", () => {
+    fresh(); assert(T.ringHeat() === 0, "a cold ring to start");
+    for (let i = 0; i < 6; i++) { T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); }
+    assert(T.state().streak >= 6 && T.ringHeat() > 0, `six in a row lights it (${T.state().streak}, ${T.ringHeat()})`);
+    T.freezeRing(0, C.RING_Y); throwAndSettle(3, C.RING_Y);
+    assert(T.ringHeat() === 0, "a miss puts it out");
     T.toTitle();
   });
   test("In play, a make can bring a power-up; a miss never does", () => {

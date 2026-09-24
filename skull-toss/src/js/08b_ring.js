@@ -132,6 +132,11 @@
       c.drawImage(im, x - half, y - half, half * 2, half * 2); c.restore();
     }
   }
+  // how far out a ring's drawing reaches (a painted ring is far wider than its tube): the ring's fire roots there
+  function ringOuter(r, lw, id) {
+    const art = ringArt(id);
+    return art ? Math.max(1, r - lw / 2) / art.A.inner * (art.A.outer || 0.96) : r + lw * 0.6;
+  }
   function drawRingShape(c, x, y, r, lw, id, t, flash = 0) {
     const R = RINGS[id] || RINGS.hoop;
     const art = ringArt(id);

@@ -99,13 +99,20 @@
       if (!ambOn()) return; const k = 2 + ((Math.random() * 3) | 0);
       for (let i = 0; i < k; i++) tone(6500 + Math.random() * 2500, "sine", 0.025, 0.028, i * (0.07 + Math.random() * 0.08), 9500, { bus: ambBus, pan, att: 0.003, low: true });
     },
+    // v45: the crack comes with the flash (crack), the rumble a moment later (thunder). The rumble loops its noise so a
+    // long one never runs off the end of the buffer (that was the click at the end), and swells and fades smoothly.
+    crack(v = 1) {
+      if (!ambOn()) return; const t = ac.currentTime + SAFE;
+      noise(0.07, 0.14 * v, "highpass", 2200, null, 0, 1, { bus: ambBus, at: t, low: true });
+      noise(0.16, 0.1 * v, "bandpass", 900, null, 0, 1.2, { bus: ambBus, at: t + 0.02, low: true });
+    },
     thunder(delay, v = 1) {
-      if (!ambOn()) return; const t = ac.currentTime + SAFE + delay;
-      noise(0.09, 0.18 * v, "highpass", 1800, null, 0, 1, { bus: ambBus, at: t, low: true });
-      if (!room(true)) return; const s = track(ac.createBufferSource()); s.buffer = brownBuf; const f = ac.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 260;
+      if (!ambOn() || !room(true)) return; const t = ac.currentTime + SAFE + delay;
+      const s = track(ac.createBufferSource()); s.buffer = brownBuf; s.loop = true;
+      const f = ac.createBiquadFilter(); f.type = "lowpass"; f.frequency.setValueAtTime(320, t); f.frequency.linearRampToValueAtTime(140, t + 3.5);
       const g = ac.createGain(); g.gain.setValueAtTime(0.0001, t);
-      let k = t; for (let i = 0; i < 4; i++) { k += 0.2 + Math.random() * 0.5; g.gain.exponentialRampToValueAtTime((0.9 - i * 0.18) * v, k); }
-      g.gain.exponentialRampToValueAtTime(0.0001, k + 1.8);
-      s.connect(f); f.connect(g); g.connect(ambBus); s.start(t, Math.random() * 2); s.stop(k + 2);
+      let k = t; for (let i = 0; i < 3; i++) { const peak = (0.55 - i * 0.14) * v; g.gain.setTargetAtTime(peak, k, 0.08); k += 0.35 + Math.random() * 0.35; g.gain.setTargetAtTime(peak * 0.45, k - 0.12, 0.18); }
+      g.gain.setTargetAtTime(0.0001, k, 0.6);
+      s.connect(f); f.connect(g); g.connect(ambBus); s.start(t, Math.random() * 3); s.stop(k + 3.5);
     }
   };

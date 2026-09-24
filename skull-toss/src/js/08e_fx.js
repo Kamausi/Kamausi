@@ -170,11 +170,11 @@
       c.font = font; const tw = c.measureText(b.word).width, R = b.shape === "tag" ? tw * 0.5 + b.size * 0.7 : Math.max(tw * 0.58, b.size * 0.9);
       const rnd = mulberry32(b.seed);
       c.fillStyle = INK; c.save(); c.translate(b.size * 0.08, b.size * 0.1); burstShape(c, b, R, rnd); c.fill(); c.restore();   // drop shadow
-      const rnd2 = mulberry32(b.seed); burstShape(c, b, R, rnd2); c.fillStyle = b.fill; c.fill(); c.lineWidth = Math.max(2, b.size * 0.08); c.strokeStyle = INK; c.lineJoin = "round"; c.stroke();
+      const rnd2 = mulberry32(b.seed); burstShape(c, b, R, rnd2); c.fillStyle = b.fill; c.save(); c.filter = "saturate(1.45) contrast(1.08)"; c.fill(); c.restore(); c.lineWidth = Math.max(2.5, b.size * 0.12);   // (v45: bolder colours, a heavier outline) c.strokeStyle = INK; c.lineJoin = "round"; c.stroke();
       if (b.shape === "rough") { c.lineWidth = Math.max(1, b.size * 0.04); for (let i = 0; i < 10; i++) { const an = (i / 10) * TAU; c.beginPath(); c.moveTo(Math.cos(an) * R * 1.25, Math.sin(an) * R * 0.95); c.lineTo(Math.cos(an) * R * 1.5, Math.sin(an) * R * 1.15); c.stroke(); } }
       if (b.shape === "news") { c.fillStyle = "rgba(23,19,15,.18)"; for (let y = -R * 0.5; y < R * 0.55; y += b.size * 0.16) for (let x = -R; x < R; x += b.size * 0.16) { c.beginPath(); c.arc(x, y, b.size * 0.03, 0, TAU); c.fill(); } }
       c.textAlign = "center"; c.textBaseline = "middle"; c.font = font; c.lineJoin = "round";
-      if (b.shape !== "tag") { c.lineWidth = b.size * 0.16; c.strokeStyle = b.text === INK ? CREAM : INK; c.strokeText(b.word, 0, b.size * 0.04); }
+      if (b.shape !== "tag") { c.lineWidth = b.size * 0.22; c.strokeStyle = b.text === INK ? CREAM : INK; c.strokeText(b.word, 0, b.size * 0.04); }
       c.fillStyle = b.text; c.fillText(b.word, 0, b.size * 0.04);
       if (b.sub) {
         c.font = `800 ${Math.max(10, Math.round(b.size * 0.3))}px ${UIFONT}`; const sw = c.measureText(b.sub.toUpperCase()).width + b.size * 0.4, sy = R * 0.82 + b.size * 0.22;

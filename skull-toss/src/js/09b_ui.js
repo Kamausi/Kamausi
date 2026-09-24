@@ -197,16 +197,29 @@
     $("bestLine").innerHTML = arcade ? `Map best <b>${fmtN(A.score)}</b> · longest <b>${mmss(A.secs)}</b>` : `Best <b>${fmtN(profile.bestScore)}</b> · ${rankFor(profile.makes).name}`;
     if (Replay.play) { $("newBest").hidden = true; $("resTitle").textContent = t("replay.ribbon"); }
     // the progress panel: what's next in the Vault, with the bones this run earned sitting in its top-right corner
-    const nx = nextUnlock(), txt = $("nextText"), bar = $("nextBar");
+    const nx = resultsGoal(), txt = $("nextText"), bar = $("nextBar");
     bar.hidden = !nx;
     if (!nx) { txt.innerHTML = "The Skull Vault is yours: <b>everything's unlocked</b>"; return; }
-    const name = `${nx.it.name} ${KIND_LABEL[nx.kind]}`, need = (nx.it.price || 0) - profile.bones;
-    const goal = nx.it.req ? `${REQ_TEXT[nx.it.req[0]](nx.it.req[1]).toLowerCase()} (${Math.min(nx.have, nx.it.req[1])}/${nx.it.req[1]})` : "";
-    txt.innerHTML = nx.it.price && need <= 0 ? `<b>${name}</b> is in reach · ${nx.it.price.toLocaleString("en-US")} bones in the Skull Vault`
-      : `Next: <b>${name}</b> · ${nx.it.price ? `${need.toLocaleString("en-US")} more bones` : ""}${nx.it.price && goal ? ", or " : ""}${goal}`;
+    const name = `${nx.it.name} ${KIND_LABEL[nx.kind]}`, fmt2 = n => n.toLocaleString("en-US");
+    if (nx.afford) txt.innerHTML = `You can buy <b>${name}</b> now · ${fmt2(nx.it.price)} bones in the Skull Vault (you have ${fmt2(profile.bones)})`;
+    else if (nx.it.price) txt.innerHTML = `Next: <b>${name}</b> · ${fmt2(profile.bones)} / ${fmt2(nx.it.price)} bones`;
+    else txt.innerHTML = `Next: <b>${name}</b> · ${REQ_TEXT[nx.it.req[0]](nx.it.req[1]).toLowerCase()} (${fmt2(Math.min(nx.have, nx.it.req[1]))}/${fmt2(nx.it.req[1])})`;
     bar.firstElementChild.style.width = `${Math.round(clamp(nx.k, 0, 1) * 100)}%`;
   }
-
+  // v45: what the results panel points at. The bones goal is the next Vault item your balance doesn't yet cover (the bar is
+  // your balance against its price); a free goal counts its own progress. Only if you can already afford everything left
+  // does it say what you could buy now.
+  function resultsGoal() {
+    let best = null, cheap = null;
+    for (const kind of KINDS) for (const it of CATALOG[kind]) {
+      if (canUse(kind, it) || kind === "title" || it.souls || it.season || it.shop) continue;
+      if (it.price) {
+        if (profile.bones >= it.price) { if (!cheap || it.price < cheap.it.price) cheap = { kind, it, k: 1, afford: true }; continue; }
+        const k = profile.bones / it.price; if (!best || k > best.k) best = { kind, it, k };
+      } else if (it.req) { const have = statNow(it.req[0]), k = have / it.req[1]; if (k < 1 && (!best || k > best.k)) best = { kind, it, k, have }; }
+    }
+    return best || cheap;
+  }
   // ───────────────────────── the skull on stage (menu) and asleep (results) ─────────────────────────
   const ui = { px: -1, py: -1, shownAt: 0, tick: -1, kbd: false, last: 0 };
   const mascot = { R: makeRig(), y: 0, vy: 0, spin: 0, ang: 0, nextHop: 2, pokeAt: -9, enter: true };
@@ -267,7 +280,7 @@
   function drawSleeper(T) {
     const [c, r] = fitCanvas($("sleeper")); if (!r.width) return;
     const s = r.width, k = easeOutBack(clamp((T - ui.shownAt) / 0.3, 0, 1));
-    const cx = s * 0.47, cy = s * 0.44 + Math.sin(T * 1.5) * s * 0.02, sr = s * 0.25 * k, wob = Math.sin(T * 2.2) * sr * 0.14;
+    const cx = s * 0.47, cy = s * 0.44 + Math.sin(T * 1.5) * s * 0.02, sr = s * 0.31 * k, wob = Math.sin(T * 2.2) * sr * 0.14;
     c.lineJoin = "round"; c.lineCap = "round";
     c.fillStyle = CREAM; c.strokeStyle = INK; c.lineWidth = Math.max(1.6, s * 0.026);
     c.beginPath();                                   // the wisp, trailing off under the jaw

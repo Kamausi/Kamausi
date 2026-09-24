@@ -73,7 +73,7 @@
     let bx = pts[bi][0], by = pts[bi][1];
     for (let i = 0; i < 4; i++) { bx += rand(0.2, 1) * U * 0.04 * (Math.random() < 0.5 ? -1 : 1); by += U * 0.035; branch.push([bx, by]); }
     world.bolt = { t: 0, pts, branch };
-    world.thunderAt = world.t + rand(0.4, 1.6);
+    world.thunderAt = world.t + rand(0.4, 1.6); Sound.voice.crack(0.9);   // (the crack with the flash; the rumble when it reaches you)
   }
 
   function updateWorld(dt) {
@@ -135,7 +135,7 @@
     if (w.shooting) { w.shooting.t += dt; w.shooting.x += w.shooting.vx * dt; w.shooting.y += w.shooting.vy * dt; if (w.shooting.t > w.shooting.dur) w.shooting = null; }
     if (w.bolt) { w.bolt.t += dt; if (w.bolt.t > 0.9) w.bolt = null; }
     if (w.thunderAt && w.t >= w.thunderAt) {
-      w.thunderAt = 0; Sound.voice.thunder(0, 1);
+      w.thunderAt = 0; if (!paused) Sound.voice.thunder(0, 1);
       if (!paused) camJolt("thunder");
     }
   }

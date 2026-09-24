@@ -6,8 +6,7 @@
   box-shadow:inset 0 0 0 2px #8C6239,inset 0 4px 0 rgba(255,225,170,.18),0 6px 0 var(--ink),0 12px 22px rgba(0,0,0,.4);
   transition:transform .14s var(--snap),box-shadow .14s,filter .14s}
 .btn::before{content:"";position:absolute;inset:3px;border-radius:8px;pointer-events:none;opacity:.5;
-  background:repeating-linear-gradient(176deg,rgba(0,0,0,.14) 0 2px,transparent 2px 11px),
-    radial-gradient(circle at 12px 50%,#C8A77A 0 2.5px,var(--ink) 3px 4px,transparent 4.5px),radial-gradient(circle at calc(100% - 12px) 50%,#C8A77A 0 2.5px,var(--ink) 3px 4px,transparent 4.5px)}
+  background:radial-gradient(circle at 12px 50%,#C8A77A 0 2.5px,var(--ink) 3px 4px,transparent 4.5px),radial-gradient(circle at calc(100% - 12px) 50%,#C8A77A 0 2.5px,var(--ink) 3px 4px,transparent 4.5px)}
 .btn .icon{width:24px;height:24px;filter:drop-shadow(0 2px 0 var(--ink))}
 .btn .toss{position:absolute;left:50%;top:-6px;width:30px;height:30px;margin-left:-15px;color:var(--cream);opacity:0;transform:translateY(14px) scale(.4) rotate(-30deg);
   filter:drop-shadow(0 2px 0 var(--ink)) drop-shadow(0 -1px 0 var(--ink)) drop-shadow(1px 0 0 var(--ink)) drop-shadow(-1px 0 0 var(--ink));transition:transform .22s var(--snap),opacity .12s;pointer-events:none;z-index:1}
@@ -184,3 +183,18 @@ html.hc .rc-text{text-shadow:0 0 2px var(--ink),0 0 4px var(--ink)}
 /* a replay playing (v35): a badge under the score, with its speed and a way out */
 .replay-badge{position:fixed;top:calc(env(safe-area-inset-top,0px) + 92px);left:50%;transform:translateX(-50%);z-index:6;display:flex;align-items:center;gap:6px;padding:5px 6px 5px 12px;border-radius:999px;background:#A94332;border:2px solid var(--ink);box-shadow:0 3px 0 var(--ink);font:16px/1 var(--num);letter-spacing:.12em;color:var(--cream);text-transform:uppercase}
 .replay-badge button{min-width:32px;height:26px;border-radius:999px;border:2px solid var(--ink);background:var(--cream);color:var(--ink);font:15px/1 var(--num);cursor:pointer}
+
+/* v45: the score in the title's lettering, heavier; the multiplier bolder */
+#score{font-family:var(--display);letter-spacing:.02em;color:#FFD85A;text-shadow:var(--outline),0 0 0 var(--ink),2px 2px 0 var(--ink),-2px 2px 0 var(--ink),0 5px 0 var(--ink);-webkit-text-stroke:1.5px var(--ink)}
+.combo{background:#FFC83A;border-width:3px;box-shadow:0 3px 0 var(--ink)}
+.combo .x{font:19px/1 var(--display);letter-spacing:.01em}
+.combo .word{font-size:11px}
+
+/* v45: a grabbed power-up says what it does in the middle of the screen, then gets out of the way */
+.power-card{position:fixed;left:50%;top:52%;z-index:3;transform:translate(-50%,-50%);display:grid;justify-items:center;gap:2px;min-width:min(78vw,300px);max-width:88vw;padding:6px 18px 12px;border-radius:18px;background:rgba(14,10,18,.78);border:3px solid var(--c,#E3B64B);box-shadow:0 0 0 3px #0B0810,0 10px 30px rgba(0,0,0,.45);text-align:center;pointer-events:none;opacity:0}
+.power-card canvas{width:66px;height:66px;margin-top:-34px;filter:drop-shadow(0 3px 0 rgba(0,0,0,.4))}
+.power-card b{font:400 clamp(26px,7vw,38px)/1 var(--display);letter-spacing:.02em;color:var(--c,#E3B64B);-webkit-text-stroke:1.5px #0B0810;paint-order:stroke fill;text-shadow:0 3px 0 #0B0810}
+.power-card span{font:900 13px/1.35 var(--ui);letter-spacing:.1em;text-transform:uppercase;color:var(--cream)}
+.power-card.show{animation:powerCard 2.3s ease both}
+@keyframes powerCard{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}10%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}16%{transform:translate(-50%,-50%) scale(1)}82%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-56%) scale(.96)}}
+@media (prefers-reduced-motion:reduce){.power-card.show{animation:powerCardFade 2.3s linear both}@keyframes powerCardFade{0%,85%{opacity:1}100%{opacity:0}}}

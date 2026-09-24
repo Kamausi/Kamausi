@@ -211,6 +211,7 @@
       else if (kind === "ding") tone(1568, "sine", 0.35, 0.05, 0.03);
       else if (kind === "knock") { noise(0.03, 0.12, "bandpass", 700, null, 0, 6); tone(520, "sine", 0.05, 0.07, 0, 380); }
       else if (kind === "iris") noise(0.16, 0.05, "bandpass", 2400, 700, 0, 1.2);
+      else if (kind === "ignite") { noise(0.55, 0.16, "bandpass", 350, 2400, 0, 0.8, { ...o, brown: true }); noise(0.4, 0.05, "highpass", 3200, null, 0.06, 1, o); tone(90, "sine", 0.35, 0.12, 0, 60, o); }   // the ring catches fire: a whoomph
       // the bosses' band: a brass stab when one arrives, a fanfare when it falls
       else if (kind === "brass") { for (const [f, d] of [[73.4, 0], [87.3, 0], [103.8, 0], [146.8, 0.02]]) tone(f, "sawtooth", 0.9, 0.06, d, f * 0.97, { lp: 900, att: 0.02 }); tone(55, "sine", 0.7, 0.3, 0, 40); noise(0.5, 0.12, "lowpass", 300, 90, 0, 1, { brown: true }); }
       else if (kind === "fanfare") [[523, 0], [659, 0.12], [784, 0.24], [1047, 0.38]].forEach(([f, d], i) => { tone(f, "sawtooth", i === 3 ? 0.7 : 0.14, 0.05, d, null, { lp: 2600, vib: i === 3 ? [6, 8] : null }); tone(f * 0.5, "triangle", 0.2, 0.05, d); });

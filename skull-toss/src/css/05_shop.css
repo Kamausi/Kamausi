@@ -338,3 +338,14 @@ details.row.sent{display:block}details.row.sent summary{cursor:pointer;font:700 
 .ribbon.season{background:#E8893A;color:var(--ink)}
 .cat-tabs button[data-group]:not(:first-child){margin-left:14px}
 .prof-pic{display:flex;gap:12px;align-items:center}.prof-pic canvas{width:96px;height:96px;flex:none;border-radius:8px}.pic-pick{min-width:0;flex:1}.pic-pick .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.pic-pick button{min-width:44px;min-height:44px;border:2px solid var(--ink);border-radius:8px;background:var(--paper);color:var(--ink);font:700 13px var(--ui,inherit);padding:4px 8px}.pic-pick button[aria-pressed=true]{background:var(--gold,#E3B64B)}.pic-pick button:disabled{opacity:.4}#prof-bio{width:100%;resize:none;font:inherit;border:2px solid var(--ink);border-radius:8px;padding:8px;box-sizing:border-box}
+
+/* v45: rarity colours that read at a glance: Stock bone-grey, Featured blue, Special purple, Lost gold */
+:root{--r-stock:#CFC6B4;--r-featured:#5FA8E8;--r-special:#B07CE8;--r-lost:#FFB43A}
+.item .stars,.item .stars.r-stock{color:var(--r-stock);text-shadow:0 1px 0 var(--ink)}
+.item .stars.r-featured{color:var(--r-featured);text-shadow:0 1px 0 var(--ink)}
+.item .stars.r-special{color:var(--r-special);text-shadow:0 1px 0 var(--ink)}
+.item .stars.r-lost{color:var(--r-lost);text-shadow:0 0 6px rgba(255,180,58,.9),0 1px 0 var(--ink)}
+.item.rar-featured{box-shadow:0 4px 0 var(--ink),inset 0 0 0 2px var(--r-featured)}
+.item.rar-special{box-shadow:0 4px 0 var(--ink),inset 0 0 0 2px var(--r-special)}
+.item.rar-lost{box-shadow:0 4px 0 var(--ink),inset 0 0 0 2px var(--r-lost),inset 0 0 18px rgba(255,180,58,.25)}
+.rar-name.t-stock{color:var(--r-stock)}.rar-name.t-featured{color:var(--r-featured)}.rar-name.t-special{color:var(--r-special)}.rar-name.t-lost{color:var(--r-lost)}

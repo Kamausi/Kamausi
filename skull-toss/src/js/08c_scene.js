@@ -28,6 +28,41 @@
     }
     ctx.restore();
   }
+  // v45: a hot streak sets the ring alight. It catches at ×3.5 (six in a row), burns hotter with every make, and roars
+  // at the ×6 cap; a miss puts it out. The flames flare from behind the band, outward and up, and never cover the hole.
+  const FIRE_FROM = 6, FIRE_FULL = 11;
+  const ringHeatGoal = () => (inRun() || game.state === "over") && game.streak >= FIRE_FROM ? clamp(0.35 + 0.65 * (game.streak - FIRE_FROM) / (FIRE_FULL - FIRE_FROM), 0.35, 1) : 0;
+  let ringHeat = 0, ringHeatAt = 0;
+  function drawRingFire(x, y, r, lw, k, t) {   // drawn behind the ring: the band covers the roots and the flames flare out past it
+    const tt = Math.floor(t * 12) / 12, n = 18;
+    ctx.save();
+    const E = ringOuter(r, lw, cos.ring), g = ctx.createRadialGradient(x, y, E * 0.6, x, y, E * (1.3 + 0.3 * k));   // the heat glow
+    g.addColorStop(0, `rgba(255,140,40,${0.34 * k})`); g.addColorStop(1, "rgba(255,90,20,0)");
+    ctx.globalCompositeOperation = "lighter"; ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, E * (1.3 + 0.3 * k), 0, TAU); ctx.fill();
+    ctx.globalCompositeOperation = "source-over"; ctx.lineJoin = "round";
+    const edge = E, out = edge * 0.9;   // the tongues root under the ring's outer edge and lick outward and up, never in toward the hole
+    for (const pass of [0, 1, 2]) {   // ink, then orange, then the yellow heart of each tongue
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * TAU + 0.08, ca = Math.cos(a), sa = Math.sin(a);
+        if (sa > 0.55) continue;   // (none underneath: fire goes up)
+        let dx = ca * 0.7, dy = sa * 0.7 - 0.85; const dl = Math.hypot(dx, dy); dx /= dl; dy /= dl;
+        const bx = x + ca * out, by = y + sa * out, nx = -dy, ny = dx;   // the tongue's direction, and across it
+        const flick = 0.62 + 0.38 * Math.sin(tt * 13 + i * 2.3) * Math.sin(tt * 7.1 + i * 1.1);
+        const h = (edge - out + r * (0.3 + 0.5 * k)) * flick * (0.7 + 0.45 * Math.max(0, -sa)), w = Math.max(lw * 0.7, edge * 0.1) * (pass === 2 ? 0.55 : 1);
+        const sway = Math.sin(tt * 9 + i) * w * 0.6, hh = pass === 2 ? h * 0.7 : h;
+        const tx = bx + dx * hh + nx * sway, ty = by + dy * hh + ny * sway, mx = bx + dx * hh * 0.55, my = by + dy * hh * 0.55;
+        ctx.beginPath(); ctx.moveTo(bx - nx * w, by - ny * w); ctx.quadraticCurveTo(mx - nx * w * 0.9, my - ny * w * 0.9, tx, ty); ctx.quadraticCurveTo(mx + nx * w * 0.9, my + ny * w * 0.9, bx + nx * w, by + ny * w);
+        ctx.arc(bx, by, w, Math.atan2(ny, nx), Math.atan2(ny, nx) + Math.PI); ctx.closePath();
+        if (pass === 0) { ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1.5, lw * 0.3); ctx.stroke(); }
+        else { ctx.fillStyle = pass === 1 ? (i % 3 ? "#F2702A" : "#E24A22") : "#FFD34A"; ctx.fill(); }
+      }
+    }
+    for (let j = 0; j < 5 + Math.round(k * 5); j++) {   // embers drifting up off the top
+      const ph = (t * 0.8 + j * 0.37) % 1, ex = x + Math.sin(j * 12.9) * E * 0.8 + Math.sin(t * 3 + j) * r * 0.12, ey = y - E * 0.6 - ph * r * (1 + k);
+      ctx.globalAlpha = (1 - ph) * k; ctx.fillStyle = j % 2 ? "#FFD34A" : "#F2702A"; ctx.beginPath(); ctx.arc(ex, ey, Math.max(1.2, lw * 0.22) * (1 - ph * 0.5), 0, TAU); ctx.fill();
+    }
+    ctx.restore();
+  }
   function drawRing() {
     const p = project(ring.x, ring.y, ring.z), T = VENT.ring || { t: game.time, sq: 0, dir: 0 };
     const wob = ring.wobble > 0 ? Math.sin(T.t * 38) * 0.035 * ring.wobble : 0, morph = ring.morph || 0;
@@ -40,6 +75,9 @@
     const squashed = Math.abs(T.sq) > 0.003;   // a contact squashes the ring along the line of the hit, then it springs back
     if (squashed) { ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(T.dir); ctx.scale(1 - T.sq, 1 + T.sq * 0.6); ctx.rotate(-T.dir); ctx.translate(-p.x, -p.y); }
     if (settings.contrast) contrastHalo(p.x, p.y, r, lw * 1.6 + 3);
+    const now = performance.now() / 1000, dtH = clamp(now - ringHeatAt, 0, 0.1); ringHeatAt = now;
+    ringHeat += (ringHeatGoal() - ringHeat) * Math.min(1, dtH * (ringHeatGoal() > ringHeat ? 4 : 2.5));
+    if (ringHeat > 0.02) drawRingFire(p.x, p.y, r, lw, ringHeat, T.t);
     const rim = drawRingLight(p.x, p.y, r, lw);   // the backing that keeps it readable on any background, and its rim light
     drawRingShape(ctx, p.x, p.y, r, lw, cos.ring, T.t, ring.flash); rim();
     if (squashed) ctx.restore();
@@ -133,10 +171,7 @@
   }
   function drawReticle(pv) {
     if (pv.cross) {
-      const p = project(pv.cross.x, pv.cross.y, pv.cross.z), r = Math.max(4, SKULL_R * p.s), gnd = project(pv.cross.x, 0, pv.cross.z), col = aimColor(pv.front.length);
-      ctx.lineWidth = 1; ctx.strokeStyle = "rgba(232,216,180,.25)"; ctx.setLineDash([3, 5]);
-      if (gnd.y > p.y + r) { ctx.beginPath(); ctx.moveTo(p.x, p.y + r + 3); ctx.lineTo(gnd.x, gnd.y); ctx.stroke(); }
-      ctx.setLineDash([]);
+      const p = project(pv.cross.x, pv.cross.y, pv.cross.z), r = Math.max(4, SKULL_R * p.s), col = aimColor(pv.front.length);
       for (const [c, w] of [[INK, 3.8], [col, 1.8]]) {
         ctx.strokeStyle = c; ctx.lineWidth = w; ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, TAU);
         for (const [ax, ay] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { ctx.moveTo(p.x + ax * (r + 3), p.y + ay * (r + 3)); ctx.lineTo(p.x + ax * (r + 3 + r * 0.75), p.y + ay * (r + 3 + r * 0.75)); }

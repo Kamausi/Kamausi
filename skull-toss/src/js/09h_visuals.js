@@ -23,7 +23,7 @@
     const sp = flying ? project(skull.pos.x, skull.pos.y, skull.pos.z) : project(0, START_Y, 0);
     return {
       ring: { x: p.x, y: p.y, clean: inner * s, perfect: inner * 0.38 * (powerOn("deadeye") ? 2 : 1) * s, miss: (rc + RING_TUBE + SKULL_R) * s,
-        tubeIn: (rc - RING_TUBE) * s, tubeOut: (rc + RING_TUBE) * s, grab: pickup ? (rc * PICK_R + SKULL_R * PICK_OVERLAP) * s : 0,
+        tubeIn: (rc - RING_TUBE) * s, tubeOut: (rc + RING_TUBE) * s, grab: pickup ? pickupReach(rc) * s : 0,
         post: ring.mode === "line" ? { half: POST_HALF * s, top: p.y + (rc + RING_TUBE) * s, foot: project(ring.x, 0, ring.z).y } : null },
       skull: { x: sp.x, y: sp.y, r: SKULL_R * sp.s }
     };
