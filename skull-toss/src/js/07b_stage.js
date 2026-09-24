@@ -133,7 +133,7 @@
   }
   function startMiniBoss() {
     game.phase = "mini"; clearPickups(); clearPowers(); Sound.toon("brass"); Sound.setAct("boss");
-    boss = makeCrowKing(game.stage); setRingMode("boss"); snapRing();
+    boss = makeCrowKing(game.stage); setRingMode("boss"); snapRing(); Telemetry.emit("boss_start", { kind: boss.kind, stage: game.stage });
     stageCard("Mini-boss", "The Crow King", `Toss through his ring ${boss.max} times`, 2.3, "boss");
     cine("mini-in", 2.3, () => setHint("He swoops near and far: lead the ring"));
     updateHud();
@@ -151,7 +151,7 @@
   }
   function startMainBoss() {
     game.phase = "boss"; clearPickups(); clearPowers(); Sound.toon("brass"); Sound.setAct("boss");
-    boss = makePumpkinKing(game.stage); setRingMode("boss"); snapRing();
+    boss = makePumpkinKing(game.stage); setRingMode("boss"); snapRing(); Telemetry.emit("boss_start", { kind: boss.kind, stage: game.stage });
     stageCard("Main boss", "The Pumpkin King", "Seeds knock Morty away. Time your toss.", 2.6, "boss");
     cine("boss-in", 2.6, () => setHint("Throw between his seed volleys"), 0.35);
     updateHud();

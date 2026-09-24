@@ -41,7 +41,7 @@
   $("set-board").addEventListener("click", () => {
     if (Board.state === "readonly") return;
     profile.board = !profile.board; persist(600); Sound.ui("toggle");
-    if (profile.board) { if (!profile.bestScore) toast("Posting on. Your next scored run goes up on the board"); else Board.push(true).then(ok => { if (ok) toast("<b>Posted</b> · your best is on the board"); }); }
+    if (profile.board) { if (!profile.boardBest) toast("Posting on. Your next scored run goes up on the board"); else Board.push(true).then(ok => { if (ok) toast("<b>Posted</b> · your best is on the board"); }); }
     else Board.remove().then(() => toast("Taken down from the board"));
     renderBoard();
   });

@@ -1,6 +1,7 @@
-// Skull Toss v11 — behavioural acceptance tests.
+// Skull Toss v14 — behavioural acceptance tests.
 //
-// How to run: put this file next to index.html and open  index.html?test
+// How to run: build the dev version (python3 src/build.py --dev), put this file next to index-dev.html and open
+// index-dev.html?test. The release build leaves the test hooks out, so it can't run the spec.
 // Results appear on screen and in the console (window.__skullTossResults).
 // The tests drive the game through window.SkullToss.debug with the clock paused,
 // so every result is deterministic. Port these behaviours when moving to a native engine.
@@ -215,8 +216,8 @@
   });
 
   // ── Cosmetics ─────────────────────────────────────────────
-  const ZERO = { bones: 0, bonks: 0, misses: 0, clutch: 0, bonesTotal: 0, makes: 0, best: 0, perfects: 0, rims: 0, bestStreak: 0, bestPerfStreak: 0, peakLives: 0, games: 0, points: 0, throws: 0, unlocked: [] };
-  for (const [k, v] of Object.entries(T.profile())) if (typeof v === "number" && !(k in ZERO) && k !== "updatedAt") ZERO[k] = k === "bestStage" ? 1 : 0;   // every other counter too
+  const ZERO = { bones: 0, bonks: 0, misses: 0, clutch: 0, bonesTotal: 0, makes: 0, best: 0, perfects: 0, rims: 0, bestStreak: 0, bestPerfStreak: 0, peakLives: 0, games: 0, points: 0, throws: 0, unlocked: [], boardBest: null };
+  for (const [k, v] of Object.entries(T.profile())) if (typeof v === "number" && !(k in ZERO) && k !== "updatedAt" && k !== "schema") ZERO[k] = k === "bestStage" ? 1 : 0;   // every other counter too
   ZERO.achievements = T.achievements().map(a => a.id); ZERO.arcade = {};   // (all achievements in hand, so none pays out in the middle of a bones test)
   const statFor = { perfStreak: "bestPerfStreak" };
   const DEF = { skull: "bone", eyes: "pie", teeth: "grin", paint: "none", trail: "dust", impact: "classic", ring: "hoop", aim: "bone", reel: "standard", title: "rookie", hat: "none", aura: "none", pole: "wood" };
@@ -589,7 +590,7 @@
   });
   test("Leaderboard: opt-in, only your headstone name, and other names shown as plain text", () => {
     const fk = T.fakeBoard([{ id: "a", name: "<img src=x onerror=alert(1)>", score: 9000, hits: 20, stage: 2 }, { id: "b", name: "Mort", score: 12000, hits: 30, stage: 3 }]);
-    T.setName("Blake"); T.setStats({ ...ZERO, bestScore: 5000, best: 12, board: false }); T.openSheet("board");
+    T.setName("Blake"); T.setStats({ ...ZERO, bestScore: 5000, best: 12, board: false, boardBest: { score: 5000, hits: 12, stage: 1, at: 1 } }); T.openSheet("board");
     let rows = $("boardList").querySelectorAll("li");
     assert(rows.length === 2 && rows[0].textContent.includes("Mort"), `rows ${rows.length}`); assert(!$("boardList").querySelector("img"), "a name was rendered as HTML");
     assert(fk.writes.length === 0, "posted without opting in");
@@ -914,6 +915,87 @@
     const t0 = performance.now(); for (let i = 0; i < 120; i++) T.step(1 / 60);
     const ms = (performance.now() - t0) / 120;
     assert(ms < 60, `${ms.toFixed(1)} ms a frame with four wanderers on screen`);
+  });
+
+  // ── v14 foundation: the leaderboard, the save schema and its backup, the fixed step, the gamepad, telemetry ──
+  const decodeCode = c => JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(c.slice(7)), ch => ch.charCodeAt(0))));
+  const encodeCode = o => "SKULL1." + btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(o)))).replace(/=+$/, "");
+  test("The leaderboard posts Story runs played to the end, never the numbers in a save code", () => {
+    const fk = T.fakeBoard([]); T.setName("Blake"); T.setStats({ ...ZERO, bestScore: 0, board: true });
+    const forged = decodeCode(T.exportCode()); forged.p.bestScore = 88888888; forged.p.boardBest = { score: 88888888, hits: 999, stage: 9, at: 1 };
+    assert(T.importCode(encodeCode(forged)), "a well-formed code should still load");
+    assert(T.profile().bestScore === 88888888 && T.profile().boardBest === null, "the code's best stays on the profile and brings no leaderboard run with it");
+    T.boardPush(); assert(fk.writes.length === 0, `a save code's score reached the board: ${JSON.stringify(fk.writes)}`);
+    T.setStats({ ...ZERO, bestScore: 0, board: true }); fresh(); throwAndSettle(0, C.RING_Y);
+    const score = T.state().score; assert(score > 0, "the make should score");
+    T.endRun(); T.step(1);
+    assert(T.profile().boardBest && T.profile().boardBest.score === score, `the finished run should be the board's run (${JSON.stringify(T.profile().boardBest)})`);
+    assert(fk.writes.length === 1 && fk.writes[0].d.score === score, `the finished run should post (${JSON.stringify(fk.writes)})`);
+    T.unfakeBoard(); T.setName(""); T.setStats({ ...ZERO, bestScore: 0 }); T.toTitle();
+  });
+  test("Saves carry a schema number and step through migrations in order", () => {
+    assert(T.saveSchema === 2, `schema ${T.saveSchema}`);
+    const old = T.migrateProfile({ bestScore: 5000, boardBest: { score: 5000 } });   // a v12 save has no number
+    assert(old.schema === 2 && old.boardBest === null, `a v12 save should reach schema 2 with no board run (${JSON.stringify(old)})`);
+    const newer = T.migrateProfile({ schema: 3, boardBest: { score: 7 } });
+    assert(newer.schema === 3 && newer.boardBest.score === 7, "a newer build's save keeps its number and its fields");
+    assert(decodeCode(T.exportCode()).v === 2 && T.profile().schema === 2, `codes and the live profile should carry the current schema (code ${decodeCode(T.exportCode()).v}, profile ${T.profile().schema})`);
+    assert(!T.importCode(encodeCode({ v: 3, p: { makes: 1 } })), "a code from a newer build should be refused, not half-read");
+  });
+  test("A save that won't read falls back to the last copy that did", () => {
+    const m = new Map(), st = { get: (k, d) => (m.has(k) ? m.get(k) : d), set: (k, v) => m.set(k, String(v)) };
+    assert(T.readSaved("p", st) === null, "no save: nothing to load");
+    m.set("p", JSON.stringify({ bones: 42 }));
+    assert(T.readSaved("p", st).bones === 42 && m.get("p.bak") === m.get("p"), "a clean load should become the backup");
+    m.set("p", '{"bones": 4');   // a write cut off halfway
+    const got = T.readSaved("p", st);
+    assert(got && got.bones === 42, `a broken save should load the backup (${JSON.stringify(got)})`);
+    assert(m.get("p.corrupt") === '{"bones": 4', "the broken text should be kept for recovery");
+  });
+  test("The game runs on a fixed step: a throw ends the same at any frame rate", () => {
+    const run = frames => {
+      fresh(); T.simReset(); T.throwThrough(0.25, C.RING_Y + 0.1, C.RING_Z);
+      let n = 0; for (const f of frames) n += T.simAdvance(f);
+      const s = T.state(); return { n, skull: s.skull, result: s.lastResult && s.lastResult.kind, score: s.score, phase: T.ringMode().phase };
+    };
+    const at60 = run(Array(90).fill(1 / 60));
+    const mixed = [], pat = [1 / 144, 1 / 90, 1 / 30, 1 / 120, 1 / 75, 1 / 48]; let left = 1.5;
+    for (let i = 0; left > 1e-9; i++) { const f = Math.min(pat[i % pat.length], left); mixed.push(f); left -= f; }
+    const other = run(mixed);
+    assert(at60.n === Math.round(1.5 / T.simStep) && other.n === at60.n, `steps: ${at60.n} at 60 Hz, ${other.n} mixed`);
+    assert(other.result === at60.result && other.score === at60.score, `the outcome changed with the frame rate: ${at60.result} vs ${other.result}`);
+    for (const k of ["x", "y", "z"]) near(other.skull[k], at60.skull[k], 1e-9, `skull ${k}`);
+    near(other.phase, at60.phase, 1e-9, "ring phase");
+  });
+  test("A gamepad aims and throws through the same model as a finger", () => {
+    const gp = { connected: true, axes: [0, 0], buttons: Array.from({ length: 17 }, () => ({ pressed: false, value: 0 })) };
+    Object.defineProperty(navigator, "getGamepads", { value: () => [gp], configurable: true });
+    const press = (i, on) => { gp.buttons[i] = { pressed: on, value: on ? 1 : 0 }; T.pollPad(); };
+    try {
+      fresh();
+      gp.axes = [0.1, 0.12]; T.pollPad(); assert(!T.aim().active, "a stick inside the dead zone shouldn't pull");
+      gp.axes = [-0.3, 0.8]; T.pollPad(); const a = T.aim();
+      assert(a.active && a.source === "pad" && a.valid && a.tension > 0.5, `the stick should pull the band (${JSON.stringify(a)})`);
+      const mag = Math.hypot(-0.3, 0.8), k = (mag - 0.22) / (1 - 0.22) / mag, L = T.layout().pullMax, d = T.aimFromDrag(-0.3 * k * L, 0.8 * k * L);
+      near(a.AX, d.AX, 1e-9, "the stick should aim where the same drag would (x)"); near(a.AY, d.AY, 1e-9, "(y)");
+      press(0, true); assert(T.state().state === "flying", `A should let go (${T.state().state})`); press(0, false);
+      gp.axes = [0, 0]; T.pollPad(); T.step(3);
+      gp.axes = [0, 0.7]; T.pollPad(); assert(T.aim().active, "pulling again"); gp.axes = [0, 0]; T.pollPad();
+      assert(!T.aim().active && T.state().state === "ready", "letting the stick spring back should throw nothing");
+      press(9, true); assert(T.state().screen === "pause", `Start should pause (${T.state().screen})`); press(9, false);
+      press(9, true); assert(T.state().screen === "play", `Start again should resume (${T.state().screen})`); press(9, false);
+    } finally { delete navigator.getGamepads; }
+  });
+  test("Telemetry: a run is logged on this device, start to end", () => {
+    fresh(); throwAndSettle(0, C.RING_Y); T.endRun(); T.step(1);
+    const all = T.telemetry(), ev = all.slice(all.map(e => e.name).lastIndexOf("run_start")), names = ev.map(e => e.name);
+    assert(names[0] === "run_start" && names.includes("throw") && names[names.length - 1] === "run_end", names.join(", "));
+    const th = ev.find(e => e.name === "throw"), end = ev[ev.length - 1];
+    assert(th.make === true && typeof th.result === "string" && th.stage === 1, JSON.stringify(th));
+    assert(end.quit === true && end.hits === 1 && end.throws >= 1, JSON.stringify(end));
+    assert(all.length <= 500, `the log should keep only the last 500 events (${all.length})`);
+    assert(typeof window.SkullToss.telemetry === "function", "every build can read it from the console");
+    T.setStats({ ...ZERO, bestScore: 0 }); T.toTitle();
   });
 
   T.sandbox(false); T.start(); T.pause(false);  // leave the game playable, player's saved data untouched

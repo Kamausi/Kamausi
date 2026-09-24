@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Assemble index.html from src/page.html + src/css/*.css + src/markup.html + src/js/*.js (filename order)."""
+"""Assemble index.html from src/page.html + src/css/*.css + src/markup.html + src/js/*.js (filename order).
+
+--dev adds the test hooks (js/99_dev_hooks.js) and writes index-dev.html; --with-music embeds the six loops."""
 import pathlib, re, sys
 root = pathlib.Path(__file__).resolve().parent
 page = (root / "page.html").read_text()
@@ -12,7 +14,9 @@ faces = "".join(f'@font-face{{font-family:"{fam}";font-style:normal;font-weight:
                 for fam, fn, w in FACES if (root / "fonts" / fn).exists())
 css = faces + css
 markup = (root / "markup.html").read_text()
-parts = sorted((root / "js").glob("*.js"))
+# 99_dev_hooks.js holds the test hooks, which can change bones, stats and the leaderboard: only --dev builds carry it
+dev = "--dev" in sys.argv
+parts = [p for p in sorted((root / "js").glob("*.js")) if dev or p.name != "99_dev_hooks.js"]
 js = "\n".join(p.read_text() for p in parts)
 # ── vector assets: src/art/<asset>/asset.json + SVG, read by svgart.py (named layers, versions, anchors) ──
 import json, xml.etree.ElementTree as ET
@@ -101,12 +105,14 @@ for a, b in names:
     (dupes if n in seen else seen).add(n)
 if dupes: sys.exit("build refused: duplicate top-level names across parts: " + ", ".join(sorted(dupes)))
 out = page.replace("/*__STYLE__*/", css).replace("<!--__MARKUP__-->", markup).replace("/*__SCRIPT__*/", '"use strict";\n(() => {\n' + js + "\n})();")
-if not embed_music: (root.parent / "index.html").write_text(out)
+args = [a for a in sys.argv[1:] if not a.startswith("--")]
+if dev and args and not embed_music: sys.exit("build refused: the published build never carries the test hooks; drop --dev")
+suffix = "-dev" if dev else ""
+if not embed_music: (root.parent / f"index{suffix}.html").write_text(out)
 art = out  # artifact build: no document wrapper, no test loader
 for pat in [r'<!doctype html>\s*', r'<html lang="en">\s*', r'<head>\s*', r'</head>\s*', r'<body>\s*', r'</body>\s*', r'</html>\s*', r'<meta charset="utf-8">\s*', r'<meta name="viewport"[^>]*>\s*']:
     art = re.sub(pat, '', art, flags=re.I)
 art = re.sub(r'\n\s*if \(/\[\?&\]test.*\n', '\n', art)
-args = [a for a in sys.argv[1:] if not a.startswith("--")]
-dest = pathlib.Path(args[0]) if args else (root.parent / ("skull-toss-with-music.html" if embed_music else "index.html"))
+dest = pathlib.Path(args[0]) if args else (root.parent / (f"skull-toss-with-music{suffix}.html" if embed_music else f"index{suffix}.html"))
 if embed_music or args: dest.write_text(out if embed_music else art)
-print(f"{'with music: ' + dest.name if embed_music else 'index.html'} {len(out)} bytes from {len(parts)} js parts")
+print(f"{'with music: ' + dest.name if embed_music else 'index' + suffix + '.html'} {len(out)} bytes from {len(parts)} js parts{' (dev: test hooks in)' if dev else ''}")

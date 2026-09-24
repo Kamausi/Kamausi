@@ -15,8 +15,11 @@
       this.db = db; this.me = me; this.state = "loading";
       this.db.doc("leaderboard/" + me.id).get().then(snap => { this.mine = snap.exists ? snap.data() : null; this.state = "live"; if (sheet === "board") renderBoard(); }, () => { this.state = "error"; });
     },
+    // the entry is your best Story run played to its end in this game (profile.boardBest), never the profile's own
+    // bests: those can arrive in a save code, so they stay on your profile and headstone and off the shared board
     entry() {
-      return { name: cleanName(profile.name) || "Nameless soul", score: Math.floor(profile.bestScore), hits: Math.floor(profile.best), stage: Math.floor(profile.bestStage || 1),
+      const R = profile.boardBest || { score: 0, hits: 0, stage: 1 };
+      return { name: cleanName(profile.name) || "Nameless soul", score: R.score, hits: R.hits, stage: R.stage,
         title: cos.title, look: { skull: cos.skull, eyes: cos.eyes, teeth: cos.teeth, paint: cos.paint, hat: cos.hat || "none" }, at: Date.now() };
     },
     // after every run: keep the device's top runs, and (if you've opted in) post a new best to the shared board

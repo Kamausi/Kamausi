@@ -2,14 +2,14 @@
   function pullOffset() {
     const L = pullMax(), maxLen = U * 0.2;
     let x, y;
-    if (aim.source === "pointer") { x = (aim.cx - aim.sx) * 0.6; y = (aim.cy - aim.sy) * 0.6; if (aim.upward) { x *= 0.25; y *= 0.25; } }
+    if (aim.source !== "key") { x = (aim.cx - aim.sx) * 0.6; y = (aim.cy - aim.sy) * 0.6; if (aim.upward) { x *= 0.25; y *= 0.25; } }
     else { x = aim.nx * L * 0.8 * 0.6; y = aim.ny * L * 0.6; }
     const len = Math.hypot(x, y);
     if (len > maxLen) { x *= maxLen / len; y *= maxLen / len; }
     return { x, y };
   }
   function refreshAim() {
-    if (aim.source === "pointer") {
+    if (aim.source !== "key") {   // a finger, a mouse or the gamepad's stick: all three are a drag
       const m = mapDrag(aim.cx - aim.sx, aim.cy - aim.sy);
       aim.nx = m.nx; aim.ny = m.ny; aim.valid = m.valid; aim.upward = m.upward;
       aim.tension = aim.upward ? 0 : clamp(Math.hypot(aim.cx - aim.sx, aim.cy - aim.sy) / pullMax(), 0, 1);
@@ -64,6 +64,36 @@
     else return;
     e.preventDefault(); refreshAim();
   });
+
+  // ── the gamepad: its left stick is a virtual drag, so it aims exactly as a finger pulling the pouch does ──
+  // Pull the stick down (sideways steers: left throws right) and press A or the right trigger to let go. B lets the
+  // band go slack, and so does letting the stick spring back to the middle. Start pauses and resumes. The menus are
+  // still pointer and keyboard. Polled once a frame from the loop (and by the spec).
+  const PAD_DEAD = 0.22;   // stick travel ignored around the middle
+  const padIn = { prev: [] };   // the buttons held on the last poll
+  function firstPad() {
+    try { for (const g of navigator.getGamepads ? navigator.getGamepads() : []) if (g && g.connected !== false) return g; } catch (e) {}
+    return null;
+  }
+  function pollPad() {
+    const gp = firstPad();
+    if (!gp) { if (aim.active && aim.source === "pad") cancelAim(); padIn.prev = []; return; }
+    const held = i => !!(gp.buttons[i] && (gp.buttons[i].pressed || gp.buttons[i].value > 0.5)), pressed = i => held(i) && !padIn.prev[i];
+    const sx = gp.axes[0] || 0, sy = gp.axes[1] || 0, mag = Math.hypot(sx, sy);
+    if (pressed(9)) {
+      if (screen === "pause") resumeRun();
+      else if (inRun() && !sheet) { cancelAim(); pauseRun(); }
+    } else if (screen === "play" && game.state === "ready" && !paused && !sheet) {
+      if (mag > PAD_DEAD) {
+        const L = pullMax(), k = Math.min(1, (mag - PAD_DEAD) / (1 - PAD_DEAD)) / mag;   // full travel is a full draw
+        if (!(aim.active && aim.source === "pad")) { Object.assign(aim, { active: true, source: "pad", sx: 0, sy: 0 }); cvs.classList.add("aiming"); Sound.pullStart(); skullGrabbed(); }
+        aim.cx = sx * k * L; aim.cy = sy * k * L; refreshAim();
+        if (pressed(0) || pressed(7)) release();
+        else if (pressed(1)) cancelAim();
+      } else if (aim.active && aim.source === "pad") cancelAim();
+    }
+    padIn.prev = gp.buttons.map((b, i) => held(i));
+  }
 
   window.addEventListener("resize", resize);
   document.addEventListener("visibilitychange", () => {

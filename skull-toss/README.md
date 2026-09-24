@@ -1,8 +1,27 @@
-# SKULL TOSS v12
+# SKULL TOSS v14
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)), with a synthesised waltz standing in wherever they can't load.
+
+## New in v14: the foundation pass
+
+This is the first code pass on the V14 gate from the [roadmap audit](../docs/skull-toss/ROADMAP_V14_AUDIT.md). The game plays and looks the same. All 103 earlier checks still pass, and 6 new ones cover what changed.
+
+- **The release build no longer carries the test hooks.** Until now, anyone could open the browser console and set their bones or stats, or post any score to the leaderboard. `python3 src/build.py` now leaves those hooks out. `python3 src/build.py --dev` puts them back, as `index-dev.html`, for the spec. The published build refuses `--dev`. Every build keeps the visual debug overlay and its console switches, which can't change a score or a save.
+- **The leaderboard posts runs, not numbers.** Your board entry is now your best Story run actually played to its end. A save code still carries your stats, best score and unlocks, but never a leaderboard run, so a hand-edited code can't put a score on the board. The board only takes runs finished from v14 on. An entry already on the board stays until a better run replaces it.
+- **Saves have a schema number.** The profile is now schema 2. An older save, whether on this device, in the cloud or in a code, steps through the migrations in order when it loads, so it reaches today's shape the same way wherever it comes from. A code from a newer build is refused rather than half-read.
+- **A save that won't read no longer starts you over.** The game keeps a copy of the last profile and cosmetics that loaded cleanly. If the main copy is ever cut off or garbled, it loads that copy instead and keeps the broken text aside.
+- **A fixed step.** The game now moves in fixed 1/240 s steps however fast the screen refreshes, the same step the spec uses. A throw lands the same way at 60, 90, 120 or 144 Hz. Replays and shot checks will need this later. Gameplay itself uses no randomness; only particles and camera jolts do.
+- **Gamepad.** Pull the left stick down to draw the band, then press A (or the right trigger) to let go. The stick works exactly like dragging with a finger: sideways steers, and left throws right. B lets the band go slack, and so does letting the stick spring back. Start pauses and resumes. The menus still need a pointer or the keyboard.
+- **A play log on the device.** For playtests, a small log records runs starting and ending, every throw's result, bosses and power-ups. Nothing is sent anywhere, and the log is gone on reload. Read it from the console with `SkullToss.telemetry()`.
+
+Still open, waiting on decisions in the audit:
+- The Story card and two achievements still say "four stages". That's still true of this build.
+- Whether power-ups stay on a schedule or become random.
+- Where a server would check scores.
+
+A hand-edited save code can still raise your own bones, stats and unlocks. That stays a soft-currency problem until Souls exist and balances live on a server.
 
 ## New in v12: Story and Arcade, achievements, longer challenges
 
@@ -251,6 +270,8 @@ Press **PLAY** and choose **Story** or **Arcade** (then a map). Then:
 
 Every 5 makes in a row earns a skull, and bonus skulls stack up to 5.
 
+With a gamepad, pull the left stick down and press **A** (or the right trigger) to throw; **Start** pauses.
+
 On desktop, use ← → ↑ ↓ to aim and **Space** to throw. **Esc** or **P** pauses the game, and **Esc** also closes any open panel.
 
 ## Scoring
@@ -341,8 +362,9 @@ off the end first, or it will dip every time it comes round. Mono or stereo, 96-
 
 - **Published version.** Progress saves to a private slot on your account, which only you can see, and syncs on any signed-in device. When two devices disagree, every counter keeps its higher value, unlocks and achievements are combined, and each Arcade map keeps its better record. Your bones balance and your challenges come from whichever save is newer, so a purchase can't be refunded by a merge.
 - **This file on its own.** Progress is saved in the browser. To move it to another device, use **Copy save code** there and **Load save code** here.
+- **Save schema and backup.** Your profile carries a schema number (2 in v14), and older saves step up to it in order as they load. The game also keeps a copy of the last profile and cosmetics that loaded cleanly (`skullToss.profile.v1.bak`, `skullToss.cosmetics.v1.bak`). If the main copy won't read, that copy loads instead, and the broken text is kept as `….corrupt`.
 - **Older saves** load normally, and their unlocks move to the new item names. An old best score becomes your best number of hits in a run.
-- **The leaderboard** (published version only) is shared by everyone the game is shared with. Each player has one entry, which only they can write, and posting is off until you turn it on. Opting out deletes your entry.
+- **The leaderboard** (published version only) is shared by everyone the game is shared with. Your entry is your best Story run played to its end in the game, never a number that arrived in a save code. Each player has one entry, which only they can write, and posting is off until you turn it on. Opting out deletes your entry.
 
 ## Scene artwork (optional)
 
@@ -472,9 +494,12 @@ Colours in any of these SVGs can be the game's palette names (`fill="ink"`, `str
   3. The game and its two modes (`07`), stages and the Arcade rules (`07b`), power-ups (`07c`) and bosses (`07d`)
   4. Drawing: the skull and its rig (`08a`), rings, the scene, skins and paint (`08d`), trails and impacts (`08e`), hats and auras (`08f`), the skull's voice (`08g`), and the v11 looks (`08h`)
   5. Input, screens (with the Play sheet and the GAME OVER card), sheets, the Skull Vault, the film overlay, the leaderboard sheet (`09f`), the Curio Cart (`09g`) and the visual debug overlay (`09h`)
-  6. Boot
+  6. Boot, and the console handle every build carries (the overlay's switches, the animation inspectors, `telemetry()`)
+  7. `99_dev_hooks.js`: the test hooks the spec drives. Only `--dev` builds include them.
 
-Run `python3 src/build.py` to rebuild. The build refuses to run if two script parts define the same top-level name.
+The play log is `04g_telemetry.js`, and the gamepad lives with the rest of the input in `09a_input.js`.
+
+Run `python3 src/build.py` to rebuild the release `index.html`, or `python3 src/build.py --dev` for `index-dev.html` with the test hooks (add `--with-music` to either). The build refuses to run if two script parts define the same top-level name, and it won't put the test hooks in the published build.
 
 ## Performance
 
@@ -527,7 +552,7 @@ From the console, `SkullToss.debug.visualAnimation` lists the pose library (`pos
 
 ## Tests
 
-Put `TEST_SPEC.js` next to `index.html` and open **`index.html?test`**. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **103 checks**, covering:
+Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **109 checks**, covering:
 
 - **Layout, scoring and aiming.**
   - Everything is centred and every result is classified correctly.
@@ -571,3 +596,10 @@ Put `TEST_SPEC.js` next to `index.html` and open **`index.html?test`**. The test
   - Achievements pay once, the medal drops in (under the score mid-run), and the sheet lists them all.
   - The pause menu and the Cart have their own music and hand back to the act, and the three recorded sounds are embedded.
   - The title skull's canvases spill past its letter so an aura is never cut off, and the tagline is the new one.
+- **v14.**
+  - The leaderboard posts a Story run played to its end. A hand-edited save code keeps its best on the profile, but it never reaches the board.
+  - Saves carry schema 2: a v12 save steps up to it, a newer build's save keeps its number, and a newer build's code is refused.
+  - A save that won't read loads the last copy that did, and keeps the broken text.
+  - The fixed step: one throw ends in exactly the same state at 60 Hz and at a jittery mix of 30–144 Hz frames.
+  - A gamepad aims where the same finger drag would, throws on A, throws nothing when the stick springs back, and pauses on Start.
+  - The play log records a run from start to end on the device.

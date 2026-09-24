@@ -292,6 +292,7 @@
   // the knockout: freeze the frame, K.O.!, and the boss's defeat plays out once the throw has settled
   function bossDown(B, at) {
     B.frozen = { ...B.ringAt(ring.phase) }; B.dead = true; B.deadAt = B.t;
+    Telemetry.emit("boss_down", { kind: B.kind, stage: game.stage, flawless: !!B.flawless });
     VisualSystem.triggerImpact("ko", { at });   // doonk, the knockout bell, the hold, the big flash: the director's
     const p = at || { x: W / 2, y: H * 0.35 };
     impact("K.O.!", p.x, p.y - U * 0.18, { fill: GOLD, text: INK, scale: 1.35, sub: `${B.short} is down${B.flawless ? " · flawless" : ""}` });

@@ -142,6 +142,7 @@
 
   function resolve(kind, at, hitAt, d = null, ghosted = false) {
     const R = RESULT[kind], run = game.run;
+    Telemetry.emit("throw", { result: kind, make: !!R.make, stage: game.stage, stageHits: game.stageHits, lives: game.lives, boss: boss ? boss.kind : null, n: game.throws });
     game.result = { kind, make: R.make, at: game.time, bonked: false, pts: 0 };
     game.endTimer = R.make ? 0.95 : R.hit ? 1.0 : 1.45;
     const x = at ? at.x : W / 2, y = at ? at.y - ring.rc * at.s - U * 0.05 : H * 0.3;
@@ -250,6 +251,7 @@
     setHint("Pull down · aim · let go");
     if (mode === "arcade") stageCard("Arcade", STAGES[map].name, "No bosses, no end: survive as long as you can", 2);
     updateHud();
+    Telemetry.emit("run_start", { mode, map, stage: game.stage, career: profile.games });   // career: runs finished before this one
   }
   const arcadeSecs = () => Math.max(0, game.time - (game.run.t0 || 0));
   const arcadeRec = (map = game.map) => profile.arcade[String(map)] || { score: 0, secs: 0, hits: 0, runs: 0 };
@@ -268,6 +270,7 @@
       game.newBest = game.score > profile.bestScore;
       if (game.newBest) profile.bestScore = game.score;
       profile.bestStage = Math.max(profile.bestStage, game.stage);
+      if (game.score > (profile.boardBest ? profile.boardBest.score : 0)) profile.boardBest = { score: game.score, hits: game.hits, stage: game.stage, at: Date.now() };   // what the leaderboard posts
     }
     profile.games++;
     profile.best = Math.max(profile.best, game.hits);
@@ -280,6 +283,7 @@
     checkUnlocks(); persist(300);
     showCombo(0); setHint(""); Sound.over(); Sound.setAct("menu"); VisualSystem.emit("death"); updateHud();
     renderResults(); if (game.mode !== "arcade") Board.post();
+    Telemetry.emit("run_end", { mode: game.mode, map: game.map, score: game.score, hits: game.hits, stage: game.stage, secs: Math.round(game.run.secs), throws: game.throws, quit: !card });
   }
   function endRun() { if (inRun()) { aim.active = false; Sound.pullEnd(); gameOver(false); game.overAt = game.time - 0.6; } }
 

@@ -179,9 +179,29 @@ After V18, every map still goes through the audit's per-map pipeline: design →
 4. **Where will the live game's backend run?** Checking scores and Souls on a server needs somewhere to run those checks. The current host gives each player a document that only they can write. That's fine for saves, but nothing checks what goes into it. This decides V30 and V34.
 5. **Where should the source live?** This document is on `Kamausi/Kamausi`, the GitHub profile repo whose README shows on your profile. The game source is still only in a zip. A dedicated repo (for example `skull-toss`) would give it history and CI.
 
+## 7. V14 progress: first code pass
+
+The game source now lives on this branch under [`skull-toss/`](../../skull-toss/), with the pass described in its README. The spec has 109 checks, all passing on the dev build.
+
+| V14 item | Status | Where |
+|---|---|---|
+| Release build without the debug hooks (2.1) | Done. The hooks are in a separate part that only `--dev` builds include, and the published build refuses `--dev`. | `src/js/99_dev_hooks.js`, `src/build.py` |
+| Leaderboard takes finished runs, never imported stats (2.2) | Done in the client. The board posts `boardBest`, a Story run played to its end, and save codes can't carry one. It still needs a server that checks scores (2.3). | `01_data.js`, `03b_board.js`, `07_game.js` |
+| Save schema with ordered migrations | Done: schema 2, with steps in `MIGRATIONS` | `01_data.js` |
+| Backups and corruption recovery | Done: the last clean load is kept as `.bak`, and a broken main copy is kept as `.corrupt` | `readSaved` in `01_data.js` |
+| Seeded, fixed-step simulation (2.6) | Fixed 1/240 s step done, and the spec uses the same step. Gameplay has no randomness to seed; `mulberry32` is ready if power-ups become random. | `advance()` in `10_boot.js` |
+| Local telemetry event bus | Done. It's kept in memory only, and `SkullToss.telemetry()` reads it. | `04g_telemetry.js` |
+| Input abstraction: pointer, keys and gamepad feed one aim model | The gamepad's stick is a virtual drag in play. Menus aren't covered yet (V15 UI layer). | `09a_input.js` |
+| Source in git | On this branch | `skull-toss/` |
+| CI runs the spec headless | Not yet. The appendix runner works against `index-dev.html`, but no workflow runs it. | — |
+| Canon sync fixes (2.4) | Waiting on decisions 2 and 3 | — |
+| Server-side score validation (2.3) | Waiting on decision 4 | — |
+
+A hand-edited save code can still raise the player's own bones, stats and unlocks. That's acceptable for a soft currency, and it stops being acceptable when Souls arrive (V30).
+
 ## Appendix: how the baseline was measured
 
-Build the light version from the zip with `python3 src/build.py`. Put `index.html`, `TEST_SPEC.js` and `music/` in one folder, then run this with Node and Playwright:
+Build the light version from the zip with `python3 src/build.py`. Put `index.html`, `TEST_SPEC.js` and `music/` in one folder, then run this with Node and Playwright. Since v14, build with `--dev` and point the script at `index-dev.html`, because the release build no longer carries the hooks the spec drives.
 
 ```js
 // run-spec.mjs: node run-spec.mjs <folder with index.html and TEST_SPEC.js>

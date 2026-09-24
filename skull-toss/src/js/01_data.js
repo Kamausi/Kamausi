@@ -211,6 +211,22 @@
 
   // ───────────────────────── saved data ─────────────────────────
   const KEYS = { best: "skullToss.best", mute: "skullToss.muted", settings: "skullToss.settings.v1", profile: "skullToss.profile.v1", cos: "skullToss.cosmetics.v1" };
+  // The profile's schema. Whenever what a saved field means changes, bump SAVE_SCHEMA and add the step that gets an
+  // older profile there. Every profile that comes in (this device, the cloud, a save code) runs the steps it hasn't
+  // had, in order, so an old save reaches today's shape the same way wherever it comes from. A profile written by a
+  // newer build keeps its number and its fields.
+  const SAVE_SCHEMA = 2;
+  const MIGRATIONS = {
+    // v14: the leaderboard stops posting bestScore (a save code can carry any number) and posts boardBest instead,
+    // the best Story run actually played to its end. Nothing carries over: the board takes runs finished from now on.
+    2: p => { p.boardBest = null; }
+  };
+  function migrateProfile(p) {
+    const from = Math.max(1, Math.floor(Number(p.schema) || 1));
+    for (let v = from + 1; v <= SAVE_SCHEMA; v++) MIGRATIONS[v](p);
+    p.schema = Math.max(from, SAVE_SCHEMA);
+    return p;
+  }
   const DEFAULT_SETTINGS = { sound: true, music: 45, sfx: 80, amb: 50, vibe: true, shake: true, guide: "full", film: reduceMotion ? "light" : "full", camera: reduceMotion ? "still" : "full", voice: "babble" };
   // "best" is the most hits in one run (what older saves called their best score); "bestScore" is the arcade score
   const STAT_KEYS = ["games", "throws", "makes", "perfects", "rims", "bestStreak", "bestPerfStreak", "peakLives", "points", "best", "bonesTotal", "bonks", "misses", "clutch",
@@ -218,7 +234,7 @@
     "wides", "overs", "lows", "posts", "shorts", "clanks", "seeds", "zeroRuns", "quickDeaths",
     "powerups", "cursed", "saves", "bonesSpent", "shopBuys", "coffins", "playTime", "grabs", "arcadeRuns", "chalClaims", "achSeen"];
   // arcade: the best on each map, keyed by map number ({ score, secs, hits, runs }); achievements: the ones unlocked
-  const DEFAULT_PROFILE = { name: "", bones: 0, daily: null, weekly: null, monthly: null, unlocked: [], seen: [], achievements: [], arcade: {}, updatedAt: 0, board: false, bestStage: 1 };
+  const DEFAULT_PROFILE = { name: "", bones: 0, daily: null, weekly: null, monthly: null, unlocked: [], seen: [], achievements: [], arcade: {}, updatedAt: 0, board: false, bestStage: 1, boardBest: null };
   for (const k of STAT_KEYS) if (!(k in DEFAULT_PROFILE)) DEFAULT_PROFILE[k] = 0;
   const DEFAULT_COS = { skull: "bone", eyes: "pie", teeth: "grin", paint: "none", trail: "dust", impact: "classic", ring: "hoop", aim: "bone", reel: "standard", title: "rookie", updatedAt: 0 };
   let sandbox = null;   // while the spec runs, nothing is written to the player's storage or cloud
@@ -227,9 +243,24 @@
     let v = null; try { v = JSON.parse(store.get(k, "null")); } catch (e) {}
     return v && typeof v === "object" ? { ...d, ...v } : { ...d };
   }
+  // The profile and the cosmetics keep a copy of the last version that loaded cleanly (<key>.bak). If the main copy
+  // won't read (a write cut off by a crash, a storage fault), the game loads that copy instead of starting over, and
+  // keeps the broken text in <key>.corrupt so it can still be recovered by hand.
+  function readSaved(k, st = store) {
+    const raw = st.get(k, null);
+    if (raw !== null) {
+      try { const v = JSON.parse(raw); if (v && typeof v === "object") { st.set(k + ".bak", raw); return v; } } catch (e) {}
+      st.set(k + ".corrupt", raw);
+    }
+    try { const v = JSON.parse(st.get(k + ".bak", "null")); if (v && typeof v === "object") return v; } catch (e) {}
+    return null;
+  }
   const migrateKey = key => { const [k, id] = String(key).split(":"); const m = MIGRATE[k] && MIGRATE[k][id]; return m ? k + ":" + m : key; };
+  // a run the leaderboard can post: { score, hits, stage, at }, or null
+  const cleanRun = r => r && typeof r === "object" && Math.floor(Number(r.score)) > 0
+    ? { score: Math.floor(Number(r.score)), hits: Math.max(0, Math.floor(Number(r.hits) || 0)), stage: Math.max(1, Math.floor(Number(r.stage) || 1)), at: Number(r.at) || 0 } : null;
   function cleanProfile(p) {
-    const out = { ...DEFAULT_PROFILE, ...(p && typeof p === "object" ? p : {}) };
+    const out = { ...DEFAULT_PROFILE, ...migrateProfile(p && typeof p === "object" ? { ...p } : {}) };
     for (const k of STAT_KEYS) out[k] = Math.max(0, Math.floor(Number(out[k]) || 0));
     out.name = String(out.name || "").slice(0, 16);
     const keys = a => Array.isArray(a) ? [...new Set(a.filter(s => typeof s === "string").map(migrateKey))].slice(0, 800) : [];
@@ -240,6 +271,7 @@
     out.board = !!out.board; out.bestStage = Math.max(1, out.bestStage);
     out.achievements = Array.isArray(out.achievements) ? [...new Set(out.achievements.filter(s => typeof s === "string"))].slice(0, 200) : [];
     out.arcade = cleanArcade(out.arcade);
+    out.boardBest = cleanRun(out.boardBest);
     return out;
   }
   function cleanArcade(a) {
@@ -268,6 +300,8 @@
       for (const f of ["score", "secs", "hits", "runs"]) out.arcade[k][f] = Math.max(x[f] || 0, y[f] || 0);
     }
     out.board = newer.board;
+    out.boardBest = b.boardBest && (!a.boardBest || b.boardBest.score > a.boardBest.score) ? b.boardBest : a.boardBest;
+    out.schema = Math.max(a.schema, b.schema);
     out.gift = a.gift || b.gift ? 1 : 0;
     out.updatedAt = Math.max(a.updatedAt, b.updatedAt);
     return out;
@@ -288,9 +322,9 @@
     if (!["full", "light", "off"].includes(settings.film)) settings.film = DEFAULT_SETTINGS.film;
     if (!["full", "gentle", "still"].includes(settings.camera)) settings.camera = DEFAULT_SETTINGS.camera;
     if (!["babble", "spoken", "off"].includes(settings.voice)) settings.voice = DEFAULT_SETTINGS.voice;
-    profile = cleanProfile(readJSON(KEYS.profile, DEFAULT_PROFILE));
+    profile = cleanProfile(readSaved(KEYS.profile));
     profile.best = Math.max(profile.best, Number(store.get(KEYS.best, 0)) || 0);
-    cos = cleanCos(readJSON(KEYS.cos, DEFAULT_COS));
+    cos = cleanCos(readSaved(KEYS.cos));
   }
   function persist(cloudDelay = 4000) {
     if (sandbox) return;
@@ -302,7 +336,7 @@
 
   // Save codes: a portable copy of progress + cosmetics (works anywhere, offline).
   function exportCode() {
-    const json = JSON.stringify({ v: 1, p: profile, c: cos });
+    const json = JSON.stringify({ v: SAVE_SCHEMA, p: profile, c: cos });   // v: the profile schema it was written in
     const bytes = new TextEncoder().encode(json); let bin = "";
     for (const b of bytes) bin += String.fromCharCode(b);
     return "SKULL1." + btoa(bin).replace(/=+$/, "");
@@ -313,8 +347,8 @@
     try {
       const bin = atob(m[1]), bytes = Uint8Array.from(bin, ch => ch.charCodeAt(0));
       const data = JSON.parse(new TextDecoder().decode(bytes));
-      if (!data || data.v !== 1 || typeof data.p !== "object") return false;
-      profile = mergeProfiles(profile, data.p);
+      if (!data || !Number.isInteger(data.v) || data.v < 1 || data.v > SAVE_SCHEMA || !data.p || typeof data.p !== "object") return false;   // (a newer build's code can't be read here)
+      profile = mergeProfiles(profile, { ...data.p, boardBest: null });   // a code never brings a leaderboard run with it
       cos = cleanCos({ ...cos, ...(data.c || {}) });
       return true;
     } catch (e) { return false; }

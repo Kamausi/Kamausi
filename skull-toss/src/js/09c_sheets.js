@@ -93,7 +93,8 @@
   });
   $("resetBtn").addEventListener("click", e => arm(e.currentTarget, "Tap to confirm", () => {
     profile = cleanProfile({ name: profile.name, gift: 1 }); cos = { ...DEFAULT_COS, updatedAt: Date.now() };
-    ensureDaily(); persist(300); applyCosmetics(); updateHud(); renderSettings(); toast("Progress reset"); Sound.ui("deny");
+    ensureDaily(); persist(300); if (!sandbox) store.set(KEYS.profile + ".bak", JSON.stringify(profile));   // (the backup mustn't bring the old progress back)
+    applyCosmetics(); updateHud(); renderSettings(); toast("Progress reset"); Sound.ui("deny");
   }));
 
   // ───────────────────────── profile ─────────────────────────
