@@ -2308,6 +2308,14 @@
     T.setScene(0); T.toTitle();
   });
 
+  test("App Check (reCAPTCHA Enterprise) is configured, stays out of Firebase's own options, and never runs off the https site", async () => {
+    const opts = []; const app = { auth: () => ({ currentUser: { uid: "u1", displayName: "" } }), firestore: () => ({}), functions: () => ({ httpsCallable: () => () => Promise.resolve({ data: {} }) }) };
+    const stub = { apps: [], initializeApp: o => { opts.push(o); return app; }, app: () => app, auth: {}, firestore: {}, functions: {}, appCheck: () => { throw new Error("should not activate here"); } };
+    const r = await T.useFirebaseWith({ apiKey: "k", projectId: "p", appId: "a", appCheck: { recaptchaEnterprise: "site-key" } }, stub);
+    assert(r.kind === "firebase" && !r.appCheck && opts[0] && !("appCheck" in opts[0]), `off the https site, no App Check, and Firebase never sees the key as an option (${JSON.stringify(r)})`);
+    delete window.firebase; T.noServer(); T.toTitle();
+  });
+
   (async () => {
     for (const q of queue) {
       if (q.step) { q.fn(); continue; }

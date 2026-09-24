@@ -29,11 +29,20 @@
     // saves stay on the device, the board is local, the Soul Shop waits. Sign-in can fail too (Anonymous not switched
     // on yet): the app still starts, so Google Analytics works whatever else doesn't.
     async useFirebase(cfg) {
-      const svc = { firestore: true, functions: true, ...(cfg.services || {}) }, { services: _services, functionsRegion, ...options } = cfg;   // (options: what Firebase itself takes)
+      const svc = { firestore: true, functions: true, ...(cfg.services || {}) }, { services: _services, functionsRegion, appCheck, ...options } = cfg;   // (options: what Firebase itself takes)
       const need = [["app", "firebase-app-compat.js"], ["auth", "firebase-auth-compat.js"], ...(svc.firestore ? [["firestore", "firebase-firestore-compat.js"]] : []), ...(svc.functions ? [["functions", "firebase-functions-compat.js"]] : [])];
       for (const [part, file] of need) if (!(window.firebase && (part === "app" || window.firebase[part]))) await loadScript(FIREBASE_SDK + file);
       const fb = window.firebase, app = fb.apps.length ? fb.app() : fb.initializeApp(options);
       Object.assign(this, { kind: "firebase", app, cfg });
+      // App Check (reCAPTCHA Enterprise): proves to Firestore and the functions that a request comes from this game on
+      // this site, not a script. Web only (the app stores' shells would need their own attestation), invisible to the
+      // player (no challenge, no checkbox), and nothing breaks if it can't load: the project only enforces it once it's
+      // switched on in the Firebase console.
+      this.appCheck = false;
+      if (appCheck && appCheck.recaptchaEnterprise && location.protocol === "https:" && !window.Capacitor && !window.skullTossDesktop) {
+        try { if (!fb.appCheck) await loadScript(FIREBASE_SDK + "firebase-app-check-compat.js"); fb.appCheck().activate(new fb.appCheck.ReCaptchaEnterpriseProvider(appCheck.recaptchaEnterprise), true); this.appCheck = true; }
+        catch (e) { this.error = "app check: " + String((e && e.message) || e); }
+      }
       let user = null;
       try { const auth = app.auth(); user = auth.currentUser || (await auth.signInAnonymously()).user; } catch (e) { this.error = "sign-in: " + String((e && e.message) || e); }
       const fns = user && svc.functions ? app.functions(functionsRegion || "us-central1") : null;

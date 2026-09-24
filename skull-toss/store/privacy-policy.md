@@ -33,7 +33,7 @@ storage so you can pick up where you left off. A copy of your progress is also k
 non-personalised ads from Google AdMob. Where the law requires it, Google's consent form asks you first. We don't
 use your data to track you across other companies' apps or websites.
 
-**Who else is involved.** Google Firebase (hosting, sign-in, database, server functions), Google Analytics (with
+**Who else is involved.** Google Firebase (hosting, sign-in, database, server functions, and App Check, which uses Google reCAPTCHA Enterprise on the website to tell the game apart from automated scripts; it shows you nothing and may read basic signals from your browser), Google Analytics (with
 your consent), Google AdMob (ads, iOS and Android), Apple and Google (purchases), and Valve (Steam, on the desktop).
 We don't sell or share your data with anyone else.
 

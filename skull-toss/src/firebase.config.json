@@ -1,5 +1,5 @@
 {
-  "_doc": "Your Firebase web app's config (Firebase console → Project settings → Your apps → Web app); left empty, the game runs without a server. services says which parts of the project are up yet: set firestore to true once the Firestore database exists, and functions to true once the Cloud Functions are deployed (they need the Blaze plan). See firebase/README.md.",
+  "_doc": "Your Firebase web app's config (Firebase console \u2192 Project settings \u2192 Your apps \u2192 Web app); left empty, the game runs without a server. services says which parts of the project are up yet: set firestore to true once the Firestore database exists, and functions to true once the Cloud Functions are deployed (they need the Blaze plan). See firebase/README.md. appCheck: the reCAPTCHA Enterprise site key for App Check (public by design; enforce it in the Firebase console).",
   "apiKey": "AIzaSyDAAEmkMcdY75U7tpN1cQlTzAjMTyQT0Bg",
   "authDomain": "skull-toss-c7099.firebaseapp.com",
   "projectId": "skull-toss-c7099",
@@ -11,5 +11,8 @@
   "services": {
     "firestore": true,
     "functions": false
+  },
+  "appCheck": {
+    "recaptchaEnterprise": "6LfAG8wtAAAAAOtgALuI7j0Sg6Y0FqD7XbpkF2F5"
   }
 }

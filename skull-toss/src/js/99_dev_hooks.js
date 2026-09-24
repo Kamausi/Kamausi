@@ -134,7 +134,7 @@
     claimSeason: (i, prem = false) => claimSeasonTier(i, prem), seasonPips: () => seasonClaimableCount(), twists: () => twistsNow().slice(), feature: () => game.feature && { ...game.feature },
     shopCat(k) { shop.cat = k; if (sheet === "customize") renderShop(); }, canUse: (kind, id) => { const it = findItem(kind, id); return !!it && canUse(kind, it); },
     async useFirebaseWith(cfg, stub) { window.firebase = stub; Backend.reset(); await Backend.useFirebase(cfg); await Souls.connect(); renderConsent();
-      return { kind: Backend.kind, me: Backend.me && Backend.me.id, db: !!Backend.db, call: !!Backend.call, error: Backend.error, ga: GA.configured(), souls: Souls.available() }; },
+      return { kind: Backend.kind, appCheck: !!Backend.appCheck, me: Backend.me && Backend.me.id, db: !!Backend.db, call: !!Backend.call, error: Backend.error, ga: GA.configured(), souls: Souls.available() }; },
     gaWith(cfg) { gaTest = cfg; GA.state = "off"; GA.sdk = null; GA.pending = []; }, gaState: () => GA.state, gaStart: () => GA.start(),
     economyAudit: () => economyAudit(), analyticsOn(on = true) { if (sandbox) sandbox.analyticsOn = on; }, playData: () => ({ q: PlayData.q.map(e => ({ ...e })), sent: PlayData.sent, consent: PlayData.consent(), allowed: PlayData.allowed() }),
     flushPlayData: () => PlayData.flush(), setConsent: v => PlayData.set(v), resetConsent() { settings.analytics = "ask"; PlayData.q = []; PlayData.sent = 0; PlayData.errorsSent = 0; }, firsts: () => realProfile().firsts.slice(),
