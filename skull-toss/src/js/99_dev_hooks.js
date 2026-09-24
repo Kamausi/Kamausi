@@ -14,6 +14,10 @@
     implemented: () => ({ skyline: Object.keys(SKYLINES), lane: Object.keys(LANES), props: Object.keys(PROPSETS), foreground: Object.keys(FOREGROUNDS), near: Object.keys(NEAR_SETS),
       weather: ["none", "mist", ...Object.keys(WX_COUNT)], moon: ["art", "none", "crescent", "harvest", "full", "screen"], registry: MAP_REGISTRY }),
     calm() { HZ.kind = "none"; HZ.list = []; HZ.wind = 0; HZ.fogT = 0; HZ.fog = 0; renderWind(); },   // (for set-up throws that aren't about hazards)
+    setLives(n) { game.lives = n; updateHud(); }, cont: () => game.cont && { ...game.cont }, continueRule: () => continueRule(),
+    fakeAds(on) { Ads = on ? { available: () => true, show: () => ({ then: f => f(true) }) } : { available: () => false, show: () => Promise.resolve(false) }; },   // (a synchronous reel, for the spec)
+    continues(on = true) { if (sandbox) sandbox.contOn = on; },
+    snapOn(on = true) { if (sandbox) { sandbox.snapOn = on; sandbox.snap = null; } }, snapshot: () => readRunSnapshot(),
     tier: () => ({ ...tierNow() }),
     // the Power-Up Director alone: n makes in a row from the start of the first half, noting the hits where a prop turned up
     powerRolls(n, phase = "A") { const out = [], was = game.result; game.phase = phase; game.stageHits = phase === "A" ? 0 : STAGE_MINI; powerDirectorReset();

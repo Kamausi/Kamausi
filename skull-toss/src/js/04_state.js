@@ -34,7 +34,7 @@
   const buzz = ms => { if (!userActed || sandbox || !settings.vibe) return; try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
 
   // ───────────────────────── state ─────────────────────────
-  const freshRun = () => ({ perfects: 0, swishes: 0, rims: 0, misses: 0, bestCombo: 0, bones: 0, powerups: 0, bosses: 0, t0: 0, secs: 0 });
+  const freshRun = () => ({ perfects: 0, swishes: 0, rims: 0, misses: 0, bestCombo: 0, bones: 0, powerups: 0, bosses: 0, t0: 0, secs: 0, continues: 0, contMaps: [] });
   // score: the arcade number (leaderboards). hits: every make, the progression that summons the bosses.
   const game = { state: "title", mode: "story", map: 0, score: 0, hits: 0, stage: 1, stageHits: 0, phase: "A", cine: null, freeze: 0,
     lives: START_LIVES, slots: START_LIVES, streak: 0, perfStreak: 0, peakLives: START_LIVES, throws: 0,

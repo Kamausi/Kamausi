@@ -1,8 +1,20 @@
-# SKULL TOSS v21
+# SKULL TOSS v22
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)), with a synthesised waltz standing in wherever they can't load.
+
+## New in v22: one more skull, and runs that survive a reload
+
+When the last skull goes, the run doesn't have to end. **One more skull?** comes up over the picture with an eight-second clock, and Morty's ghost waits in the empty pouch:
+
+- **Spend bones:** 200 the first time, then 400, then 800.
+- **Watch a short reel,** where the build has an ad provider. The web build has none; the native shells plug one in (`Ads` in `07g_continue.js`). The clock stops while the reel plays.
+- **No thanks,** Esc, or the clock running out ends the run as before.
+
+A continue gives back one skull and nothing else: the score stays, and the combo was already broken by the miss. You get one continue per map and three per Story run, or one per Arcade run. A run that used a continue still counts for your own best, but never goes on the leaderboard.
+
+**Runs survive a reload.** The run is kept in this browser as each throw settles, when a continue is offered and when the page is hidden. If the phone reclaims the page (during an ad, say), the title screen offers **Resume run** for up to a day. A run caught in a boss fight comes back at the start of that fight. A run that was waiting on a continue comes back to the offer. A finished run leaves nothing to resume.
 
 ## New in v21: power-ups turn up at random, fairly
 
@@ -629,7 +641,7 @@ From the console, `SkullToss.debug.visualAnimation` lists the pose library (`pos
 
 ## Tests
 
-Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **132 checks**, covering:
+Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **137 checks**, covering:
 
 - **Layout, scoring and aiming.**
   - Everything is centred and every result is classified correctly.
@@ -709,3 +721,9 @@ Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to
   - Across 40 seeds, the Power-Up Director never deals a prop before the fourth hit or more than three a half, pity makes one certain by the fifteenth hit, and no prop comes twice running.
   - A first half never deals the Cursed Skull, the second half deals its own, and the same seed rolls the same props.
   - In play, a run of makes brings a prop, and misses never do.
+- **v22.**
+  - Out of skulls, a continue for 200 bones gives one skull back and keeps the score; the run and the profile count it.
+  - No thanks ends the run, and so does the eight-second clock.
+  - One continue a map; no offer without the bones or an ad; with an ad provider the reel buys the skull.
+  - A run that used a continue never goes on the leaderboard, but still counts for your own best.
+  - A run survives a reload: it picks up where it left off, a boss fight from its start, and a waiting continue is offered again.

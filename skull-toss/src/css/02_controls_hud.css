@@ -70,6 +70,13 @@
 .wind{position:fixed;top:calc(env(safe-area-inset-top,0px) + 96px);left:50%;transform:translateX(-50%);z-index:6;display:flex;align-items:baseline;gap:5px;padding:2px 10px;border-radius:999px;background:rgba(23,19,15,.55);font:15px/1.2 var(--num);letter-spacing:.06em;color:var(--cream);pointer-events:none}
 .wind .arr{font:16px/1 var(--ui);font-weight:900;color:var(--mustard-l)}.wind .k{font:10px var(--ui);font-weight:800;text-transform:uppercase;color:var(--cream-dim)}
 .map-card.locked{opacity:.55;filter:grayscale(.65)}.gameover.won .go-card{color:var(--gold)}
+.continue{position:fixed;inset:0;z-index:12;display:grid;place-items:center;padding:16px;background:radial-gradient(ellipse at 50% 60%,rgba(10,8,6,.05),rgba(10,8,6,.55));pointer-events:auto}
+.cont-card{width:min(340px,100%);padding:18px 18px 16px;border-radius:var(--r-lg);background:var(--panel);box-shadow:0 0 0 3px var(--ink),0 10px 0 var(--ink);text-align:center;transform:rotate(-1.5deg);animation:gocard .45s var(--snap) both}
+.cont-card .k{margin:0;font:800 11px var(--ui);letter-spacing:.14em;text-transform:uppercase;color:var(--cream-dim)}
+.cont-card h2{margin:4px 0 6px;font:34px/1 var(--display);color:var(--cream);text-shadow:var(--outline),0 4px 0 var(--ink)}
+.cont-sub{margin:0 0 8px;font:700 13px/1.35 var(--ui);color:var(--cream-dim)}
+.cont-timer b{display:inline-grid;place-items:center;width:52px;height:52px;border-radius:50%;background:var(--red);box-shadow:0 0 0 3px var(--ink);font:30px/1 var(--num);color:var(--cream)}
+.cont-actions{display:grid;gap:10px;margin-top:12px}
 .gameover{position:fixed;inset:0;z-index:8;display:grid;place-items:center;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,rgba(10,8,6,.2),rgba(10,8,6,.62))}
 .gameover[hidden]{display:none}
 .go-card{display:flex;flex-direction:column;align-items:center;gap:.02em;font:clamp(70px,21vw,150px)/.86 var(--display);text-transform:uppercase;color:var(--cream);transform:rotate(-4deg);animation:gocard .5s var(--snap) both}

@@ -223,13 +223,19 @@
 
   function endThrow() {
     Sound.flightStop();
-    if (game.lives <= 0) { gameOver(); return; }
+    if (game.lives <= 0) { if (!offerContinue()) gameOver(); return; }   // out of skulls: one more, perhaps (07g_continue.js)
+    settleThrow();
+  }
+  // the throw is over and the run goes on: the next skull, the power-ups' clocks, the act, the directors
+  function settleThrow() {
     game.state = "ready"; resetSkull();
     powersAfterThrow();
     if (boss && boss.after) boss.after();
-    if (stageCheck()) return;
-    pickupSchedule(); directorsAfterThrow();
-    if (game.throws < 2 && !hintEl.textContent) setHint("Pull down · aim · let go");
+    if (!stageCheck()) {
+      pickupSchedule(); directorsAfterThrow();
+      if (game.throws < 2 && !hintEl.textContent) setHint("Pull down · aim · let go");
+    }
+    saveRunSnapshot();
   }
   function resetSkull() {
     Object.assign(skull, { p0: { x: 0, y: START_Y, z: 0 }, v0: { x: 0, y: 0, z: 0 }, t: 0, crossed: false, resting: true, missed: false, ghosted: 0,
@@ -256,7 +262,7 @@
     Sound.setAct("A");
     particles = []; bursts = []; waves = []; pendingFly = 0; clearFlies();
     resetSkull(); aim.active = false; Sound.pullEnd(); Sound.flightStop(true);
-    paused = false; Sound.setPaused(false); showCombo(0); gameOverCard(false);
+    paused = false; Sound.setPaused(false); showCombo(0); gameOverCard(false); contEl.hidden = true; game.cont = null;
     showScreen("play");
     setHint("Pull down · aim · let go");
     if (mode === "arcade") stageCard("Arcade", STAGES[map].name, "No bosses, no end: survive as long as you can", 2);
@@ -268,7 +274,7 @@
   const arcadeRec = (map = game.map) => profile.arcade[String(map)] || { score: 0, secs: 0, hits: 0, runs: 0 };
   // card: the GAME OVER words pop up first (out of skulls); ending the run from the pause menu goes straight to the stone
   function gameOver(card = true) {
-    Sound.flightStop(true);
+    Sound.flightStop(true); clearRunSnapshot(); contEl.hidden = true; game.cont = null;
     game.state = "over"; game.overAt = game.time; game.overHold = card ? GAME_OVER_HOLD : 0.6; game.cine = null; hideStageCard();
     if (card) gameOverCard(true, game.run.story ? ["The", "End"] : undefined);
     game.run.secs = Math.max(0, game.time - (game.run.t0 || 0));
@@ -281,7 +287,7 @@
       game.newBest = game.score > profile.bestScore;
       if (game.newBest) profile.bestScore = game.score;
       profile.bestStage = Math.max(profile.bestStage, game.stage);
-      if (game.score > (profile.boardBest ? profile.boardBest.score : 0)) profile.boardBest = { score: game.score, hits: game.hits, stage: game.stage, at: Date.now() };   // what the leaderboard posts
+      if (!game.run.continues && game.score > (profile.boardBest ? profile.boardBest.score : 0)) profile.boardBest = { score: game.score, hits: game.hits, stage: game.stage, at: Date.now() };   // what the leaderboard posts
     }
     profile.games++;
     profile.best = Math.max(profile.best, game.hits);
@@ -350,5 +356,6 @@
     if (game.state === "flying") updateFlight(dt, phase0);
     else if (game.state === "cine") { updateCine(dt); skull.spawn = Math.min(1, skull.spawn + dt / 0.3); }
     else if (game.state === "ready" || game.state === "title") skull.spawn = Math.min(1, skull.spawn + dt / 0.3);
+    if (game.state === "continue") updateContinue(dt);
     if (game.state === "over" && screen === "play" && game.time - game.overAt > (game.overHold || 0.6)) showScreen("over");
   }

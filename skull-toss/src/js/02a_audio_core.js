@@ -227,6 +227,7 @@
       else if (kind === "gust") noise(0.9, 0.05, "bandpass", 420, 1300, 0, 0.8, { att: 0.3 });
       else if (kind === "clang") [330, 495, 742].forEach((f, i) => tone(f, "triangle", 0.7 - i * 0.15, 0.08, 0, null, o));
       else if (kind === "ribbit") { tone(190, "square", 0.07, 0.05, 0, 150, { ...o, lp: 900 }); tone(210, "square", 0.08, 0.05, 0.1, 160, { ...o, lp: 900 }); }
+      else if (kind === "encore") { tone(300, "sine", 0.4, 0.06, 0, 1200, { ...o, vib: [9, 14], att: 0.03 }); [523, 659, 784, 1047].forEach((f, i) => tone(f, "triangle", 0.3, 0.05, 0.3 + i * 0.07, null, { lp: 3000 })); }
       else if (kind === "quack") { tone(520, "sawtooth", 0.12, 0.05, 0, 380, { ...o, lp: 1500, vib: [25, 40] }); }
       else if (kind === "shovel") { if (!ambOn()) return; noise(0.09, 0.07, "bandpass", 1300, 500, 0, 2, { ...o, bus: ambBus, low: true }); tone(210, "triangle", 0.05, 0.02, 0, 150, { ...o, bus: ambBus, low: true }); }
     },

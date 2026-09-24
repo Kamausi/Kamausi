@@ -44,6 +44,7 @@
     <p class="tagline">A lost cartoon from 1933</p>
     <nav class="menu-stack" aria-label="Main menu">
       <button class="btn primary" id="play" type="button"><svg class="toss"><use href="#i-skull"/></svg><svg class="icon"><use href="#i-play"/></svg>Play</button>
+      <button class="btn" id="resumeRunBtn" type="button" hidden><svg class="toss"><use href="#i-skull"/></svg><svg class="icon"><use href="#i-retry"/></svg>Resume run</button>
       <button class="btn" id="challengesBtn" data-sheet="challenges" type="button"><svg class="toss"><use href="#i-skull"/></svg><svg class="icon"><use href="#i-tomb"/></svg>Challenges<span class="pip" id="challengePip" hidden></span></button>
       <button class="btn" id="customizeBtn" data-sheet="customize" type="button"><svg class="toss"><use href="#i-skull"/></svg><svg class="icon"><use href="#i-vault"/></svg>Skull Vault<span class="pip" id="customizePip" hidden></span></button>
       <button class="btn" id="storeBtn" data-sheet="store" type="button"><svg class="toss"><use href="#i-skull"/></svg><svg class="icon"><use href="#i-cart"/></svg>Curio Cart<span class="pip" id="storePip" hidden></span></button>
@@ -238,6 +239,11 @@
   </div>
 </section>
 
+<div class="continue" id="continueBox" hidden role="dialog" aria-modal="true" aria-labelledby="contTitle">
+  <div class="cont-card"><p class="k">Out of skulls</p><h2 id="contTitle">One more skull?</h2><p class="cont-sub" id="contSub"></p>
+    <div class="cont-timer" aria-hidden="true"><b id="contTimer">8</b></div>
+    <div class="cont-actions"><button class="btn primary" id="contBones" type="button">Spend 200 bones</button><button class="btn" id="contAd" type="button" hidden>Watch a short reel</button><button class="ghost-btn" id="contNo" type="button">No thanks</button></div></div>
+</div>
 <div class="flash" id="flash"></div>
 <div id="toast" class="toast" role="status" hidden></div>
 <div class="sr-only" id="sr" aria-live="polite"></div>

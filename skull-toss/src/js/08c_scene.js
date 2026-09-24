@@ -290,7 +290,7 @@
     drawSeeds(true); drawTargets(true); drawHazards(true);
     drawImpactStars(ctx, false);   // contact stars: over the ring they hit, behind the skull that hit it
     if (pv) { drawDots(pv.front, false); drawReticle(pv); }
-    if (game.state === "ready" || game.state === "cine") {
+    if (game.state === "ready" || game.state === "cine" || game.state === "continue") {
       const rest = project(0, START_Y, 0), r = SKULL_R * rest.s * 1.12;
       const V = VENT.skull || { a: rig.a, dir: rig.dir, tilt: rig.tilt, jaw: rig.jaw, t: game.time, face: gameFace() }, SL = VENT.sling || sling, hat = VENT.hat || hatState();
       let off = { x: SL.x, y: SL.y + Math.sin(V.t * 2.4) * r * 0.05 };
@@ -312,6 +312,7 @@
       if (flying && !behind) drawFlyingSkull();
     }
 
+    drawContinueGhost();
     // the nearest planes: props on the ground at the frame's edges, then branches right by the lens
     drawNear();
     drawWeather();

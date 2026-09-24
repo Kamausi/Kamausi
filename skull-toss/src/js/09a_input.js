@@ -47,6 +47,7 @@
   window.addEventListener("keydown", e => {
     const k = e.key;
     if (sheet) { if (k === "Escape") { closeSheet(); e.preventDefault(); } return; }
+    if (game.state === "continue") { if (k === "Escape") { declineContinue("no"); e.preventDefault(); } return; }
     if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
     if (screen === "pause") { if (k === "Escape" || k === "p" || k === "P") { resumeRun(); e.preventDefault(); } return; }
     if (screen !== "play" || game.state !== "ready") {
@@ -98,6 +99,6 @@
   window.addEventListener("resize", resize);
   document.addEventListener("visibilitychange", () => {
     Sound.suspend(document.hidden);
-    if (document.hidden) { if (inRun() && !paused && !sandbox) pauseRun(); }
+    if (document.hidden) { if (inRun() && !paused && !sandbox) { pauseRun(); saveRunSnapshot(); } }
     else Cloud.pull();
   });

@@ -12,6 +12,7 @@
   // big scene changes iris out and back in, like the end of an old cartoon; pausing is instant
   function showScreen(name, fx = true) {
     const prev = screen; screen = name;
+    if (name === "title") renderResumeOffer();
     if (fx && prev !== name && name !== "pause" && prev !== "pause") irisTo(() => applyScreen(name)); else applyScreen(name);
   }
   // GAME OVER pops up over the picture when the last skull is gone; the headstone follows it

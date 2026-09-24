@@ -1246,6 +1246,54 @@
     T.toTitle();
   });
 
+  // ── v22: one more skull, and runs that survive a reload ──
+  const missOut = () => { T.calm(); T.freezeRing(0, C.RING_Y); T.throwAt(0, C.RING_Y + 3); T.step(3); };   // a wild miss
+  T.continues(true);   // (the tests before these expect the last skull to end the run)
+  test("Out of skulls: one more for bones, and the score stays", () => {
+    T.setStats({ ...ZERO, bones: 1000 }); fresh(); toHit(3); T.setLives(1); const score = T.state().score;
+    missOut();
+    assert(T.state().state === "continue" && !$("continueBox").hidden && /200/.test($("contBones").textContent), `a continue should be offered (${T.state().state})`);
+    $("contBones").click(); const s = T.state();
+    assert(s.state === "ready" && s.lives === 1 && s.score === score && s.streak === 0 && T.bones() === 800 && $("continueBox").hidden, JSON.stringify({ st: s.state, l: s.lives, sc: s.score, b: T.bones() }));
+    assert(T.runStats().continues === 1 && T.profile().continues === 1, "the run and the profile count the continue");
+    T.toTitle();
+  });
+  test("No thanks ends the run, and so does the clock", () => {
+    T.setStats({ ...ZERO, bones: 1000 }); fresh(); T.setLives(1); missOut(); assert(T.state().state === "continue", "offered");
+    $("contNo").click(); assert(T.state().state === "over" && $("continueBox").hidden, `No thanks ends it (${T.state().state})`);
+    fresh(); T.setLives(1); missOut(); T.step(8.5); assert(T.state().state === "over", `eight seconds and it's over (${T.state().state})`);
+    T.toTitle();
+  });
+  test("One continue a map; none without the bones or an ad; a short reel works where there's an ad provider", () => {
+    T.setStats({ ...ZERO, bones: 1000 }); fresh(); T.setLives(1); missOut(); $("contBones").click(); T.setLives(1); missOut();
+    assert(T.state().state === "over", `a second death on the same map ends the run (${T.state().state})`);
+    T.setStats({ ...ZERO, bones: 50 }); fresh(); T.setLives(1); missOut(); assert(T.state().state === "over", "no bones, no ad: no offer");
+    T.fakeAds(true); T.setStats({ ...ZERO, bones: 50 }); fresh(); T.setLives(1); missOut();
+    assert(T.state().state === "continue" && !$("contAd").hidden && $("contBones").disabled, "with an ad provider the reel is offered, the bones button greyed");
+    const b0 = T.bones(); $("contAd").click(); assert(T.state().state === "ready" && T.state().lives === 1 && T.bones() === b0, `the reel buys the skull (${T.state().state}, ${T.bones()} vs ${b0})`);
+    T.fakeAds(false); T.setStats(ZERO); T.toTitle();
+  });
+  test("A run that used a continue never goes on the leaderboard", () => {
+    T.setStats({ ...ZERO, bones: 1000, board: true }); fresh(); toHit(4); T.setLives(1); missOut(); $("contBones").click();
+    T.endRun(); T.step(1); assert(T.profile().boardBest === null, `the board run should stay empty (${JSON.stringify(T.profile().boardBest)})`);
+    assert(T.profile().bestScore > 0, "but it still counts for your own best");
+    T.setStats({ ...ZERO, bestScore: 0 }); T.toTitle();
+  });
+  test("A run survives a reload: it picks up where it left off, a boss fight from its start, a continue offered again", () => {
+    T.snapOn(); fresh(); toHit(3); toHit(4); T.givePower("deadeye"); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y);
+    const was = T.state(); assert(T.snapshot() && T.snapshot().score === was.score, "each settled throw is kept");
+    T.toTitle(); assert(!$("resumeRunBtn").hidden, "the title offers to resume");
+    $("resumeRunBtn").click(); const s = T.state();
+    assert(s.state === "ready" && s.score === was.score && s.hits === was.hits && s.lives === was.lives && s.stageHits === was.stageHits && T.powers().deadeye, JSON.stringify({ s, was }));
+    fresh(); toHit(25); assert(T.boss(), "the mini-boss has started"); T.step(3); T.freezeRing(T.state().ring.x, T.state().ring.y, T.state().ring.z); T.hurtBoss(1); T.endThrow();
+    T.toTitle(); $("resumeRunBtn").click(); assert(T.boss() && T.boss().hp === T.boss().max && T.state().phase === "mini", `a fight comes back from its start (${T.state().phase})`);
+    T.setStats({ ...ZERO, bones: 1000 }); fresh(); T.setLives(1); missOut(); assert(T.state().state === "continue", "offered");
+    T.toTitle(); $("resumeRunBtn").click(); assert(T.state().state === "continue", `after a reload the offer is made again (${T.state().state})`);
+    $("contNo").click(); T.toTitle(); assert($("resumeRunBtn").hidden, "a finished run leaves nothing to resume");
+    T.snapOn(false); T.setStats(ZERO); T.toTitle();
+  });
+  T.continues(false);
+
   T.sandbox(false); T.start(); T.pause(false);  // leave the game playable, player's saved data untouched
   window.__skullTossResults = results;
   const passed = results.filter(r => r.pass).length;
