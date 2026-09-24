@@ -19,8 +19,8 @@
     return li;
   }
   function renderBoard() {
-    const live = Board.tab === "live", list = $("boardList"), empty = $("boardEmpty"), tip = $("boardTip");
-    if (live && Board.db) Board.watch();
+    const week = Board.tab === "week", live = Board.tab === "live" || week, list = $("boardList"), empty = $("boardEmpty"), tip = $("boardTip");
+    if (live && Board.db) { if (week) Board.watchWeek(); else Board.watch(); }
     for (const b of $("boardTabs").querySelectorAll("button")) b.setAttribute("aria-selected", String(b.dataset.tab === Board.tab));
     const online = !!Board.db;
     $("boardOpt").hidden = !live || !online;
@@ -28,8 +28,12 @@
     $("set-board").disabled = Board.state === "readonly";
     $("boardNote").textContent = Board.state === "readonly" ? "You can see the board, but this page doesn't let you post to it" : "Shows the name on your headstone, your best score and your skull";
     list.textContent = "";
-    const rows = live && online ? Board.rows : Board.local(), meId = Board.me && Board.me.id;
+    const wk = Runs.weekOf(Date.now()), rows = live && online ? (week ? Board.weekRows : Board.rows) : week ? Board.local().filter(r => Runs.weekOf(r.at || 0) === wk) : Board.local(), meId = Board.me && Board.me.id;
     rows.slice(0, 50).forEach((r, i) => list.appendChild(boardRow(r, i + 1, live && online && r.id === meId)));
+    // your rival: the headstone just above yours
+    const mine = rows.findIndex(r => live && online && r.id === meId);
+    $("boardRival").innerHTML = mine > 0 ? t("board.rival", { name: cleanName(rows[mine - 1].name), score: fmtN(rows[mine - 1].score) }) : mine === 0 ? t("board.top") : "";
+    $("boardRival").hidden = mine < 0;
     empty.hidden = rows.length > 0 && !(live && !online);
     empty.textContent = live && !online ? "The shared board lives on the published page. Until then, here are your best runs on this device." :
       live && Board.state === "loading" ? "Digging up the scores…" : live && Board.state === "error" ? "Couldn't reach the board just now." :

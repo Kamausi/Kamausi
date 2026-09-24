@@ -9,6 +9,8 @@
     setWallet(w) { Souls.set(w); }, levelFor: xp => levelFor(xp), xpForLevel: L => xpForLevel(L),
     shape: (f, type, dur, peak, slide, o) => soundShape(f, type, dur, peak, slide, o), motifPlan: id => motifPlan(id), sting: r => playSting(r), soundSets: () => SOUNDSET_IDS.slice(), soundRoom: () => soundRoom(),
     claimMastery: (cat, id, i) => claimMastery(cat, id, i), masteryClaimable: () => masteryClaimable(), tierReached: (cat, id, i) => tierReached(cat, id, i),   // (the client's view only: for drawing tests)
+    submitBoard: () => Board.submit(), lastSubmit: () => Board.lastSubmit, serverDoc: p => (Backend.fakeDocs && Backend.fakeDocs.has(p) ? JSON.parse(JSON.stringify(Backend.fakeDocs.get(p))) : null),
+    advanceServerClock(ms) { Backend.fakeClock = (Backend.fakeClock || 0) + ms; }, weekOf: ms => Runs.weekOf(ms), checkRun: r => Runs.check(r),
     wallet: () => Souls.wallet && JSON.parse(JSON.stringify(Souls.wallet)), soulsApi: () => Souls, callServer: (name, data) => Backend.call(name, data), exportCode: () => exportCode(), economy: () => Economy,
     start() { startGame(); },
     pause(on = true) { manual = on; },

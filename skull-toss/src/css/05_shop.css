@@ -257,3 +257,5 @@
 .m-tier.bronze.got{background:#8C5A2E;color:var(--cream)}.m-tier.silver.got{background:#8E949F;color:var(--ink)}.m-tier.gold.got{background:var(--gold);color:var(--ink)}
 .m-tier.got:not(.claimed){box-shadow:0 0 0 2px var(--cream),0 3px 0 var(--ink);animation:gain .9s var(--snap) infinite alternate}
 .m-tier.claimed{opacity:.6;cursor:default}
+
+.board-rival{margin:10px 0 0;padding:8px 12px;border-radius:10px;background:var(--panel-2);border:2px solid var(--mustard);font:700 12.5px/1.35 var(--ui);color:var(--cream)}

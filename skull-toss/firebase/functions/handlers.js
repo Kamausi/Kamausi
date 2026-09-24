@@ -3,8 +3,10 @@
   // (index.js adapts Firestore to it) and inside the game's dev build (a stand-in server the spec drives). A
   // handler gets { db, uid, data, now } and returns a plain object; it throws { code, message } to refuse.
   //   db.tx(fn): run fn(t) as one transaction, where t.get(path) → object|null and t.set(path, obj)
-  // Paths: wallets/<uid> (balance and owned items), receipts/<id> (each store receipt, once), ledger/<uid>_<n>.
-  const makeHandlers = (Economy, verifyReceipt) => {
+  // Paths: wallets/<uid> (balance and owned items), receipts/<id> (each store receipt, once), ledger/<uid>_<n>,
+  // leaderboard/<uid> (the best checked run), weekly/<week>_<uid> (this week's), runs/<uid>_<time> (every run sent, for audit),
+  // meta/<uid> (when this player last sent a run).
+  const makeHandlers = (Economy, verifyReceipt, Runs) => {
     const refuse = (code, message) => { const e = new Error(message); e.code = code; throw e; };
     const signedIn = uid => { if (!uid || typeof uid !== "string") refuse("unauthenticated", "Sign in to use Souls"); };
     const walletPath = uid => `wallets/${uid}`;
@@ -46,6 +48,28 @@
           r.wallet.updatedAt = now; t.set(walletPath(uid), r.wallet); t.set(rp, { uid, product, platform, at: now });
           log(t, uid, { kind: "purchase", product, souls: r.granted, receipt: check.id }, now);
           return r.wallet;
+        });
+      },
+      // a finished Story run for the leaderboard: checked (shared/runs.js), rate-limited, kept for audit, and posted if
+      // it beats the player's best (all-time and this week)
+      async submitRun({ db, uid, data, now }) {
+        signedIn(uid);
+        if (!Runs) refuse("unimplemented", "no-run-rules");
+        const c = Runs.check(data && data.run);
+        if (!c.ok) refuse("invalid-argument", c.why);
+        const r = c.run, week = Runs.weekOf(now);
+        return db.tx(async t => {
+          const meta = (await t.get(`meta/${uid}`)) || {};
+          if (now - (meta.lastRun || 0) < 15000) refuse("resource-exhausted", "too-soon");
+          t.set(`meta/${uid}`, { ...meta, lastRun: now });
+          t.set(`runs/${uid}_${now}`, { uid, at: now, run: r, log: typeof (data && data.log) === "string" ? data.log.slice(0, 200000) : "" });
+          const entry = { name: r.name, score: r.score, hits: r.hits, stage: r.stage, title: r.title, look: r.look, at: now };
+          const best = await t.get(`leaderboard/${uid}`), wk = await t.get(`weekly/${week}_${uid}`);
+          const isBest = !best || r.score > best.score, isWeek = !wk || r.score > wk.score;
+          if (isBest) t.set(`leaderboard/${uid}`, entry);
+          else if (best.name !== r.name) t.set(`leaderboard/${uid}`, { ...best, name: r.name });   // (a new headstone name follows the entry)
+          if (isWeek) t.set(`weekly/${week}_${uid}`, { ...entry, week });
+          return { accepted: true, best: isBest, weekBest: isWeek, week };
         });
       }
     };

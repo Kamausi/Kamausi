@@ -1,1 +1,6 @@
-{ "indexes": [], "fieldOverrides": [] }
+{
+  "indexes": [
+    { "collectionGroup": "weekly", "queryScope": "COLLECTION", "fields": [ { "fieldPath": "week", "order": "ASCENDING" }, { "fieldPath": "score", "order": "DESCENDING" } ] }
+  ],
+  "fieldOverrides": []
+}

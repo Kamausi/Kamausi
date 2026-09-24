@@ -270,8 +270,9 @@
 <section class="sheet" id="sheet-board" role="dialog" aria-modal="true" aria-labelledby="h-board" hidden>
   <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back" data-t-aria="ui.back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-board" data-t="ui.leaderboard">Leaderboard</h2></div>
   <div class="sheet-body">
-    <div class="seg board-tabs" role="tablist" id="boardTabs"><button type="button" role="tab" data-tab="live" aria-selected="true">The graveyard</button><button type="button" role="tab" data-tab="local" aria-selected="false">This device</button></div>
+    <div class="seg board-tabs" role="tablist" id="boardTabs"><button type="button" role="tab" data-tab="live" aria-selected="true">The graveyard</button><button type="button" role="tab" data-tab="week" aria-selected="false" data-t="ui.this-week">This week</button><button type="button" role="tab" data-tab="local" aria-selected="false">This device</button></div>
     <div class="row" id="boardOpt"><div><div class="lbl" data-t="ui.post-my-best-score">Post my best score</div><div class="sub" id="boardNote">Shows the name on your headstone, your best score and your skull</div></div><button class="switch" role="switch" id="set-board" aria-checked="false" aria-label="Post my best score" data-t-aria="ui.post-my-best-score" type="button"></button></div>
+    <p class="board-rival" id="boardRival" hidden></p>
     <ol class="board" id="boardList"></ol>
     <p class="board-empty" id="boardEmpty" hidden></p>
     <div class="tip" id="boardTip"></div>

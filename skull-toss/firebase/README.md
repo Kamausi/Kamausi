@@ -41,7 +41,9 @@ end.
 | `ledger/{id}` | functions only | every change to a balance: buys, daily claims, purchases |
 | `receipts/{id}` | functions only | each store receipt, so none is ever credited twice |
 | `leaderboard/{uid}` | functions only (v34) | each player's best checked Story run |
+| `weekly/{week}_{uid}` | functions only (v34) | each player's best checked run this week |
 | `runs/{id}` | functions only (v34) | the runs submitted, for audit |
+| `meta/{uid}` | functions only | when the player last sent a run (the rate limit) |
 | `config/live` | you, from the console (v39) | remote config and feature flags |
 | `events/{id}` | functions only (v39) | analytics, with consent |
 
@@ -51,7 +53,7 @@ end.
 - `buyWithSouls {item}`: buys a Soul Shop item at the server's price.
 - `claimDailySouls`: the free daily Souls, once per UTC day.
 - `redeemPurchase {platform, receipt, product}`: credits a Soul pack after the store confirms the receipt.
-- `submitRun {run}` (v34): checks a finished Story run and, if it holds up, updates the leaderboard.
+- `submitRun {run, log}` (v34): checks a finished Story run, keeps it for audit, and posts it to the all-time and weekly boards if it's the player's best. One every 15 seconds.
 - `logEvents {events}` (v39): stores a batch of analytics events, only from players who agreed.
 
 Each one refuses with a code the game understands: `unauthenticated`, `not-found`, `already-exists`,

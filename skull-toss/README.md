@@ -1,8 +1,20 @@
-# SKULL TOSS v33
+# SKULL TOSS v34
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)), with a synthesised waltz standing in wherever they can't load.
+
+## New in v34: a leaderboard the server checks
+
+With a Firebase server, the leaderboard is **written only by the server**.
+
+- **Posting.** A finished Story run goes to the `submitRun` function, which checks it first (`firebase/functions/shared/runs.js`).
+- **The checks.** The score has a ceiling set by what the run says it did (every make at the richest combo, stage and power-ups; every boss, target and signature shot at its most). The other numbers must agree with each other: hits against throws, perfects against hits, bosses and pieces against the map reached. The clock has to allow the throws.
+- **What's refused.** A run that used a continue never posts. A player can't send a run more than once every 15 seconds.
+- **What's kept.** Every run sent is kept for audit. The best goes on the board, and on a new **This week** board (weeks run Monday to Sunday).
+- **What the board shows.** A rival line names the headstone just above yours ("Beat it to pass them"). The best-run record now keeps throws, time, perfects, bosses, targets, signature shots and pieces, which is what the server checks.
+
+Without a server (a claude.ai-published page) the board works as before. The Firestore rules now refuse any write to the board from the page. `firebase/functions/test/runs.test.js` covers the checks, the posting and the rate limit.
 
 ## New in v33: sound sets, motifs and stings
 
@@ -821,7 +833,7 @@ From the console, `SkullToss.debug.visualAnimation` lists the pose library (`pos
 
 ## Tests
 
-Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **178 checks**, covering:
+Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **181 checks**, covering:
 
 - **Layout, scoring and aiming.**
   - Everything is centred and every result is classified correctly.
@@ -961,3 +973,7 @@ Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to
 - **v33.**
   - Each sound set reshapes a sound as it's made (pitch, voice, length, filter, room), and Classic leaves it alone.
   - All 16 bosses and 8 reels have a motif, all different and under three seconds, and a sting has one more note per step of rarity.
+- **v34.**
+  - A finished run is checked by the server and posted all-time and this week. A forged score is refused, and a run straight after another is slowed down.
+  - Each kind of forgery is refused by name.
+  - The board has a This week tab.

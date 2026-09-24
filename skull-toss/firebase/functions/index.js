@@ -5,6 +5,7 @@ const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { setGlobalOptions } = require("firebase-functions/v2");
 const admin = require("firebase-admin");
 const Economy = require("./shared/economy.js");
+const Runs = require("./shared/runs.js");
 const makeHandlers = require("./handlers.js");
 const { verifyReceipt } = require("./receipts.js");
 
@@ -25,7 +26,7 @@ const db = {
     return out;
   })
 };
-const handlers = makeHandlers(Economy, verifyReceipt);
+const handlers = makeHandlers(Economy, verifyReceipt, Runs);
 
 // each callable: the caller's uid from Auth, the clock from the server, refusals as HttpsErrors
 const wrap = name => onCall({ enforceAppCheck: false }, async request => {

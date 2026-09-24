@@ -47,6 +47,8 @@
  "archive.storyboard.date": "June 1933",
  "archive.storyboard.how": "Beat the Crow King",
  "archive.storyboard.title": "Storyboard notes: the Crow King",
+ "board.rival": "Next up: <b>{name}</b> at {score}. Beat it to pass them.",
+ "board.top": "You're at the top. Everyone's chasing you now.",
  "boss.batbaron.hint": "He dives high and low: the screech comes first",
  "boss.batbaron.name": "The Bat Baron",
  "boss.batbaron.short": "Bat Baron",

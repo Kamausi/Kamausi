@@ -29,7 +29,15 @@
       list.sort((a, b) => b.score - a.score); this.saveLocal(list);
       this.push();
     },
+    // with a server (Firebase): the run goes to submitRun, which checks it and writes the board itself (v34)
+    submit() {
+      const R = profile.boardBest; if (!R || !profile.board || !Backend.hasFunctions()) return Promise.resolve(false);
+      const run = { mode: "story", ...R, name: cleanName(profile.name) || "Nameless soul", title: cos.title, look: this.entry().look };
+      return Backend.call("submitRun", { run, log: "" }).then(r => { this.lastSubmit = r; return !!(r && r.accepted); },
+        e => { this.lastSubmit = { accepted: false, why: e.message, code: e.code }; return false; });
+    },
     push(force = false) {
+      if (Backend.hasFunctions()) return this.submit();   // (the server writes the board; the page can't)
       if (!this.db || !this.me || !profile.board || (sandbox && !this.fake)) return Promise.resolve(false);
       const e = this.entry();
       if (!e.score || (!force && this.mine && this.mine.score >= e.score && this.mine.name === e.name)) return Promise.resolve(false);
@@ -49,5 +57,16 @@
         if (this.unsub) this.unsub = u;
       } catch (e) { this.state = "error"; this.unsub = null; }
     },
-    unwatch() { if (this.unsub) { try { this.unsub(); } catch (e) {} this.unsub = null; } }
+    unwatch() { if (this.unsub) { try { this.unsub(); } catch (e) {} this.unsub = null; } if (this.unsubWeek) { try { this.unsubWeek(); } catch (e) {} this.unsubWeek = null; } },
+    // this week's board (v34): the server keeps weekly/<week>_<uid> beside the all-time entry
+    weekRows: [], unsubWeek: null,
+    watchWeek() {
+      if (!this.db || this.unsubWeek || typeof this.db.collection !== "function") return;
+      this.unsubWeek = () => {};
+      try {
+        const u = this.db.collection("weekly").where("week", "==", Runs.weekOf(Date.now())).orderBy("score", "desc").limit(50).onSnapshot(snap => {
+          this.weekRows = snap.docs.map(d => ({ id: (d.id || "").split("_").slice(1).join("_"), ...(d.data() || {}) })); if (sheet === "board") renderBoard(); }, () => { this.unsubWeek = null; });
+        if (this.unsubWeek) this.unsubWeek = u;
+      } catch (e) { this.unsubWeek = null; }
+    }
   };

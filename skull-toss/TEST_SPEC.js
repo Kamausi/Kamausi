@@ -1755,6 +1755,34 @@
     assert(T.sting(2) === 3 && T.sting(5) === 6, "a rarity-2 shot's sting has three notes, a rarity-5 shot's six");
   });
 
+  // ── v34: the leaderboard, checked by the server ──
+  test("With a server, a finished Story run is checked and goes on the board (all time and this week); a forged one doesn't", async () => {
+    await T.fakeServer(); T.setStats({ ...ZERO, board: true }); T.setName("Ada");
+    fresh(); T.calm(); for (let i = 0; i < 6; i++) { T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); } T.endRun(); T.step(1);
+    const R = T.profile().boardBest;
+    assert(R && R.throws === 6 && R.hits === 6 && R.perfects === 6 && R.secs >= 1, `the best run keeps what the server checks (${JSON.stringify(R)})`);
+    assert(await T.submitBoard() && T.lastSubmit().accepted, `accepted (${JSON.stringify(T.lastSubmit())})`);
+    const e = T.serverDoc("leaderboard/tester"); assert(e && e.score === R.score && e.name === "Ada", JSON.stringify(e));
+    assert(T.serverDoc(`weekly/${T.weekOf(Date.now())}_tester`), "and this week's board");
+    T.advanceServerClock(20000); T.setStats({ boardBest: { ...R, score: 900000000 } });
+    assert(!(await T.submitBoard()) && T.lastSubmit().why === "score-ceiling" && T.serverDoc("leaderboard/tester").score === R.score, `a forged score is refused (${JSON.stringify(T.lastSubmit())})`);
+    T.setStats({ boardBest: R }); assert(await T.submitBoard(), "a fair run, twenty seconds on, is fine");
+    assert(!(await T.submitBoard()) && T.lastSubmit().code === "resource-exhausted", "but another straight after is slowed down");
+    T.noServer(); T.setName(""); T.setStats(ZERO); T.toTitle();
+  });
+  test("The run checks: a fair run passes, and each kind of forgery is named", () => {
+    const fair = { mode: "story", score: 48250, hits: 61, stage: 3, throws: 80, secs: 190, perfects: 20, bosses: 4, targets: 3, shots: 5, continues: 0, fragments: 2 };
+    assert(T.checkRun(fair).ok, JSON.stringify(T.checkRun(fair)));
+    for (const [r, why] of [[{ score: 5e9 }, "score-ceiling"], [{ hits: 500 }, "more-hits-than-throws"], [{ secs: 10 }, "clock"], [{ continues: 1 }, "continued"], [{ mode: "arcade" }, "story-only"]])
+      assert(T.checkRun({ ...fair, ...r }).why === why, `${JSON.stringify(r)} → ${T.checkRun({ ...fair, ...r }).why}`);
+  });
+  test("The board has a This week tab beside all time and this device", () => {
+    T.toTitle(); T.openSheet("board");
+    assert([...document.querySelectorAll("#boardTabs [data-tab]")].map(b => b.dataset.tab).join() === "live,week,local", "three tabs");
+    document.querySelector('#boardTabs [data-tab="week"]').click(); assert($("boardRival").hidden, "no rival line off the shared board");
+    T.closeSheet();
+  });
+
   (async () => {
     for (const q of queue) {
       if (q.step) { q.fn(); continue; }

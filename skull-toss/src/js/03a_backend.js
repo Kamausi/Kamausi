@@ -38,9 +38,9 @@
     useFake(uid = "tester") {
       const docs = this.fakeDocs = new Map(), copy = o => JSON.parse(JSON.stringify(o));
       const db = { tx: async fn => { const staged = []; const out = await fn({ get: async p => (docs.has(p) ? copy(docs.get(p)) : null), set: (p, o) => staged.push([p, o]) }); for (const [p, o] of staged) docs.set(p, copy(o)); return out; } };
-      const H = makeHandlers(Economy, async ({ receipt, product }) => ({ valid: /^OK:/.test(receipt), product, id: receipt.slice(3) }));
+      const H = makeHandlers(Economy, async ({ receipt, product }) => ({ valid: /^OK:/.test(receipt), product, id: receipt.slice(3) }), Runs);
       Object.assign(this, { kind: "fake", db: null, me: { id: uid, name: "" }, ready: Promise.resolve(this),
-        call: async (name, data) => { if (!H[name]) throw Object.assign(new Error("not-found"), { code: "not-found" }); return H[name]({ db, uid: this.me.id, data: copy(data || {}), now: Date.now() }); } });
+        call: async (name, data) => { if (!H[name]) throw Object.assign(new Error("not-found"), { code: "not-found" }); return H[name]({ db, uid: this.me.id, data: copy(data || {}), now: Date.now() + (this.fakeClock || 0) }); } });
       return this;
     },
     reset() { Object.assign(this, { kind: "none", db: null, me: null, call: null, ready: null, error: null, fakeDocs: null }); }

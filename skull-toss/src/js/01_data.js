@@ -273,8 +273,10 @@
   }
   const migrateKey = key => { const [k, id] = String(key).split(":"); const m = MIGRATE[k] && MIGRATE[k][id]; return m ? k + ":" + m : key; };
   // a run the leaderboard can post: { score, hits, stage, at }, or null
+  // the best Story run for the board: its score and everything the server checks it against (v34: firebase/functions/shared/runs.js)
+  const RUN_FIELDS = ["hits", "throws", "secs", "perfects", "bosses", "targets", "shots", "fragments", "continues"];
   const cleanRun = r => r && typeof r === "object" && Math.floor(Number(r.score)) > 0
-    ? { score: Math.floor(Number(r.score)), hits: Math.max(0, Math.floor(Number(r.hits) || 0)), stage: Math.max(1, Math.floor(Number(r.stage) || 1)), at: Number(r.at) || 0 } : null;
+    ? { score: Math.floor(Number(r.score)), stage: Math.max(1, Math.floor(Number(r.stage) || 1)), at: Number(r.at) || 0, ...Object.fromEntries(RUN_FIELDS.map(k => [k, Math.max(0, Math.floor(Number(r[k]) || 0))])) } : null;
   function cleanProfile(p) {
     const out = { ...DEFAULT_PROFILE, ...migrateProfile(p && typeof p === "object" ? { ...p } : {}) };
     for (const k of STAT_KEYS) out[k] = Math.max(0, Math.floor(Number(out[k]) || 0));

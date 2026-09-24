@@ -293,7 +293,8 @@
       game.newBest = game.score > profile.bestScore;
       if (game.newBest) profile.bestScore = game.score;
       profile.bestStage = Math.max(profile.bestStage, game.stage);
-      if (!game.run.continues && game.score > (profile.boardBest ? profile.boardBest.score : 0)) profile.boardBest = { score: game.score, hits: game.hits, stage: game.stage, at: Date.now() };   // what the leaderboard posts
+      if (!game.run.continues && game.score > (profile.boardBest ? profile.boardBest.score : 0)) profile.boardBest = { score: game.score, hits: game.hits, stage: game.stage, at: Date.now(),   // what the leaderboard posts
+        throws: game.throws, secs: Math.ceil(game.run.secs), perfects: game.run.perfects, bosses: game.run.bosses, targets: game.run.targets || 0, shots: (game.run.shots || []).length, fragments: (game.run.fragments || []).length, continues: 0 };
     }
     profile.games++;
     profile.best = Math.max(profile.best, game.hits);
