@@ -12,13 +12,14 @@
   }
   function closeSheet(sound = true, swap = false) {
     if (!sheet) return;
-    const was = sheet;
+    const was = sheet, SHEET_LISTS = { achievements: ["achList"], customize: ["shopGrid"], store: ["dealGrid", "exclGrid"], souls: ["soulsGrid"], profile: ["stats"] };
     $("sheet-" + was).hidden = true; sheet = null;
     if (!swap) $("sheetScrim").hidden = true;
     disarm(); $("codeBox").hidden = true;
     const n = $("prof-name"); if (document.activeElement === n) n.blur();
     if (was === "customize") { shop.sel = null; $("sheet-customize").classList.remove("trying"); $("tryClose").hidden = true; }   // (v45: what's new stays badged until you look at it, or clear the badges)
     if (was === "board") Board.unwatch();
+    for (const id of SHEET_LISTS[was] || []) $(id).textContent = "";   // (v45: long lists are drawn when their sheet opens, and let go when it shuts: the page stays small)
     if (was === "store") { cart.sel = null; Sound.musicScene("shop", false); }
     if (sound) Sound.ui("close");
     if (!swap) { const o = sheetOpener; sheetOpener = null; if (o && o.isConnected && o.focus) o.focus({ preventScroll: true }); }
@@ -157,11 +158,18 @@
     const P = profile, N = fmtN, pct = (a, b) => (b ? Math.round((a / b) * 100) + "%" : "—");
     const mins = s => s < 3600 ? `${Math.round(s / 60)}m` : `${Math.floor(s / 3600)}h ${String(Math.round((s % 3600) / 60)).padStart(2, "0")}m`;
     const groups = [
-      ["Career", "", [["Best score", N(P.bestScore)], ["Most hits in a run", P.best], ["Furthest map", P.bestStage > MAP_COUNT ? "The End" : P.bestStage || 1], ["Runs", N(P.games)], ["Points, all time", N(P.scoreTotal)], ["Time played", mins(P.playTime)]]],
+      ["Career", "", [["Best score", N(P.bestScore)], ["Most hits in a run", P.best], ["Furthest map", P.bestStage > MAP_COUNT ? "The End" : P.bestStage || 1], ["Runs", N(P.games)], ["Points, all time", N(P.scoreTotal)],
+        ["Average score", N(Math.round(P.scoreTotal / Math.max(1, P.games)))], ["Time played", mins(P.playTime)], ["Longest run", mmss(P.longestRun || 0)], ["Career level", levelFor(P.xp)], ["Achievements", `${P.achievements.length}/${ACHIEVEMENTS.length}`]]],
       ["Tossing", "", [["Throws", N(P.throws)], ["Hits", N(P.makes)], ["Accuracy", pct(P.makes, P.throws)], ["Perfects", N(P.perfects)], ["Perfect rate", pct(P.perfects, P.makes)], ["Rim-ins", N(P.rims)],
-        ["Best combo", `×${P.bestStreak}`], ["Perfects in a row", P.bestPerfStreak], ["Most skulls held", P.peakLives], ["Last-skull hits", N(P.clutch)], ["Times you grabbed Morty", N(P.grabs)]]],
-      ["Bosses", "", [["Mini-bosses beaten", P.miniKills], ["…without a miss", P.miniFlawless], ["End bosses beaten", P.bossKills], ["…without a miss", P.bossFlawless], ["Black Ring shards", `${P.fragments.length}/${MAP_COUNT}`], ["Adventure finished", N(P.storyClears)]]],
-      ["Power-ups", "", [["Grabbed", N(P.powerups)], ["Cursed skulls taken", P.cursed], ["Second chances used", P.saves]]],
+        ["Swishes", N(Math.max(0, P.makes - P.perfects - P.rims))], ["Best combo", `×${P.bestStreak}`], ["Top multiplier", `×${comboMult(P.bestStreak)}`], ["Rings set on fire", N(P.fireRings)], ["Makes through fire", N(P.fireMakes)], ["Perfects in a row", P.bestPerfStreak], ["Most skulls held", P.peakLives], ["Last-skull hits", N(P.clutch)], ["Times you grabbed Morty", N(P.grabs)]]],
+      ["Bosses", "", [["Different bosses beaten", `${BOSS_IDS.filter(id => P.bossLog[id]).length}/${BOSS_IDS.length}`], ["Continues taken", N(P.continues)], ["Mini-bosses beaten", P.miniKills], ["…without a miss", P.miniFlawless], ["End bosses beaten", P.bossKills], ["…without a miss", P.bossFlawless], ["Black Ring shards", `${P.fragments.length}/${MAP_COUNT}`], ["Adventure finished", N(P.storyClears)]]],
+      ["Power-ups", "", [["Grabbed", N(P.powerups)], ["Cursed skulls taken", P.cursed], ["Second chances used", P.saves],
+        ...["rush", "deadeye", "blast", "ghost", "magnet", "second", "cursed"].map(id => [POWERS[id].name, N((P.powerLog || {})[id] || 0)])]],
+      ["Targets & Can Alley", "", [["Bonus targets hit", N(P.targetHits)], ["Secret targets", N(P.secretTargets || 0)], ["Knocked out of the air", N(P.hazardHits)], ["Can Alley rounds", N(P.bonusRounds)],
+        ["Cans knocked down", N(P.cansDown)], ["Can Alley clears", N(P.canClears)], ["Carnival prizes", `${CAN_PRIZES.filter(([k, id]) => P.unlocked.includes(k + ":" + id)).length}/${CAN_PRIZES.length}`]]],
+      ["Modes & challenges", "", [["Arcade runs", N(P.arcadeRuns)], ["Arcade best", N(Math.max(0, ...Object.values(P.arcade || {}).map(a => a.score || 0)))], ["Arcade longest", mmss(Math.max(0, ...Object.values(P.arcade || {}).map(a => a.secs || 0)))],
+        ...["curtain", "longshot", "gallery", "rush", "practice"].map(m => [t(`mode.${m}.name`), m === "practice" ? `${N(((P.modes || {})[m] || {}).runs || 0)} runs` : N(((P.modes || {})[m] || {}).best || 0)]),
+        ["Challenges claimed", N(P.chalClaims)], ["Full sets claimed", N(P.chalSets)], ["Best days in a row", N(Math.max(P.bestDayStreak || 0, P.streakDays || 0))]]],
       ["Hall of Shame", "shame", [["Misses", N(P.misses)], ["Bonks", N(P.bonks)], ["Wide", N(P.wides)], ["Too high", N(P.overs)], ["Too low", N(P.lows)], ["Fell short", N(P.shorts)],
         ["Hit the post", N(P.posts)], ["Clanked off the rim", N(P.clanks)], ["Seeds to the face", N(P.seeds)], ["Runs without a hit", N(P.zeroRuns)], ["Out in 5 throws", N(P.quickDeaths)]]],
       ["Bones & the Vault", "", [["Bones earned", N(P.bonesTotal)], ["Bones spent", N(P.bonesSpent)], ["Curio Cart buys", N(P.shopBuys)], ["Coffins opened", N(P.coffins)], ["Vault", `${countUnlocked()}/${countAll()}`], ["Prizes for failing", `${countWon("shame")}/${countKind("shame")}`], ["Boss prizes", `${countWon("boss")}/${countKind("boss")}`]]]

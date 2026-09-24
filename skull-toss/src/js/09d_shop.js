@@ -275,7 +275,11 @@
       return `<div class="chal ${per}${it.claimed ? " claimed" : done ? " done" : ""}"><div class="chal-top"><div class="chal-title">${def.text(it.n)}</div>`
         + `<div class="chal-reward">+${fmt(it.reward)}${BONE_SVG}</div></div>`
         + `<div class="chal-prog"><div class="bar"><i style="width:${pct}%"></i></div><span>${show(have)}/${show(it.n)}</span></div>${foot}</div>`;
-    }).join("");
+    }).join("") + (() => {   // v45: the set bonus, for claiming all three
+      const n = d.items.filter(x => x.claimed).length, b = Math.round(SET_BONUS[per] * Math.max(0.5, Math.min(5, Number(Flags.get("challenges.bonus")) || 1)) / 5) * 5;
+      return `<div class="chal-set ${per}${d.setPaid ? " claimed" : ""}"><div class="chal-top"><div class="chal-title">${t("chal.setTitle", { what: P.label.toLowerCase() })}</div><div class="chal-reward">+${fmt(b)}${BONE_SVG}</div></div>`
+        + `<div class="chal-prog"><div class="bar"><i style="width:${Math.round((100 * n) / Math.max(1, d.items.length))}%"></i></div><span>${n}/${d.items.length}</span></div>${d.setPaid ? `<p class="k" style="margin:14px 0 0">${t("chal.setPaid")}</p>` : ""}</div>`;
+    })();
     tickChallenges();
   }
   function tickChallenges() {

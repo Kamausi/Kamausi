@@ -199,7 +199,8 @@
       directorMake();           // the Shrinking Ring (07k_director.js)
       encoreMake();             // the encore pays bones for every make (07i_modes.js)
       showCombo(game.streak);
-      if (game.streak === 6) { Sound.toon("ignite"); caption(t("fire.on"), x, y - U * 0.1); }   // the ring catches fire (08c_scene.js)
+      if (game.streak === 6) { Sound.toon("ignite"); caption(t("fire.on"), x, y - U * 0.1); profile.fireRings++; }   // the ring catches fire (08c_scene.js)
+      else if (game.streak > 6) profile.fireMakes++;   // (a make into a burning ring)
       if (game.streak % 5 === 0 && game.lives < MAX_LIVES) { // every 5 in a row earns a skull, stacking up to five
         game.lives++; game.slots = Math.max(game.slots, game.lives); game.peakLives = Math.max(game.peakLives, game.lives);
         profile.peakLives = Math.max(profile.peakLives, game.peakLives); challenge("lives", game.lives);
@@ -322,7 +323,7 @@
     profile.best = Math.max(profile.best, game.hits);
     if (game.hits === 0) profile.zeroRuns++;
     if (game.throws <= 5) profile.quickDeaths++;
-    profile.playTime += Math.round(game.run.secs);
+    profile.playTime += Math.round(game.run.secs); profile.longestRun = Math.max(profile.longestRun || 0, Math.round(game.run.secs));
     challenge("runs", 1); challenge("best", game.hits); challenge("score", game.score);
     careerAfterRun();   // experience, levels and the run log (04h_career.js)
     game.run.bones = inPractice() ? 0 : runBones(game.run, game.hits, game.newBest, game.score);

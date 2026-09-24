@@ -408,3 +408,6 @@ details.row.sent{display:block}details.row.sent summary{cursor:pointer;font:700 
 .coffin-acts .btn{width:auto}
 .souls-chip{display:inline-flex;align-items:center;gap:6px;margin-left:auto;padding:6px 10px 6px 8px;border-radius:8px;background:#2A2040;border:2px solid var(--ink);box-shadow:0 3px 0 var(--ink);font:22px/1 var(--num);letter-spacing:.03em;color:var(--cream);transform:rotate(-2deg)}
 .souls-chip.bump{animation:bump .4s var(--snap)}
+/* v45: the set bonus under each period's three */
+.chal-set{position:relative;margin-top:14px;padding:16px 16px 14px;border-radius:12px;color:var(--ink);border:3px dashed var(--ink);box-shadow:0 5px 0 var(--ink);background:repeating-linear-gradient(135deg,#F3E6BE 0 14px,#EAD9A0 14px 28px)}
+.chal-set.claimed{opacity:.75}

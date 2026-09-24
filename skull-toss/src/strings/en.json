@@ -1,4 +1,8 @@
 {
+ "ach.beat.name": "Down Goes {boss}",
+ "ach.beat.text": "Beat {boss}",
+ "ach.fan.name": "{power} Fan",
+ "ach.fan.text": "Grab {power} 10 times",
  "arcade.insert": "INSERT BONE",
  "arcade.longest": "LONGEST {t}",
  "arcade.noScores": "NO SCORES YET",
@@ -172,6 +176,9 @@
  "career.xpRow": "Experience",
  "cart.offline": "Mort's Souls counter opens with the game's server. Until then you can look, but not buy.",
  "cart.shut": "Souls counter shut",
+ "chal.setDone": "All three {what} challenges claimed",
+ "chal.setPaid": "Set bonus paid",
+ "chal.setTitle": "Claim all three {what} challenges for a bonus",
  "coach.balloon": "Throw around the balloons",
  "coach.bar": "Wait for the gap in the turning flat",
  "coach.barrier": "Throw when the scrim goes thin",

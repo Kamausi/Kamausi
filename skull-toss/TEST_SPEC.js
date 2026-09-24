@@ -354,6 +354,19 @@
     $("clearYes").click(); assert(bub("glasses") === 0 && bub("hat") === 0 && $("clearBadges").hidden, "then clears every bubble");
     T.closeSheet(); T.equip("hat", "none"); T.setStats(ZERO);
   });
+  test("v45: three times the achievements, in sections; twenty-one ranks, the last at 50,000 makes; a set bonus for all three of a period", () => {
+    const all = T.achievements(); assert(all.length >= 132 && new Set(all.map(a => a.id)).size === all.length, `${all.length} achievements (44 × 3 = 132)`);
+    T.toTitle(); T.openSheet("achievements"); const heads = document.querySelectorAll("#achList .ach-h").length; assert(heads >= 8, `in sections (${heads})`); T.closeSheet();
+    assert(!$("achList").children.length, "and the long list is let go when the sheet shuts");
+    const R = T.ranks(); assert(R.length >= 20 && R[R.length - 1][0] >= 50000, `ranks ${R.length}, the last at ${R[R.length - 1][0]}`);
+    T.setStats(ZERO); T.setDaily(null); const d = T.daily();
+    for (let i = 0; i < 3; i++) T.challenge(d.items[i].id, d.items[i].n * 10);
+    const b0 = T.bones(); T.claim(0); T.claim(1); const b2 = T.bones(); T.claim(2);
+    const paid = T.bones() - b2 - T.daily().items[2].reward;
+    assert(paid === 150 && T.profile().chalSets === 1 && T.daily().setPaid, `the set bonus pays once (${paid}, from ${b0})`);
+    T.openSheet("challenges"); assert(document.querySelector("#chalList .chal-set.claimed"), "the sheet shows the set bonus, paid"); T.closeSheet();
+    T.setStats(ZERO); T.setDaily(null);
+  });
   test("Daily challenges: three a day, progress counts, claiming pays once", () => {
     T.setStats(ZERO); T.setDaily(null);
     const d = T.daily(); assert(d.items.length === 3 && new Set(d.items.map(i => i.id)).size === 3, "need three different challenges");

@@ -150,10 +150,18 @@
     }
     updatePips();
   }
+  // v45: claim all three of a set and it pays a bonus on top, once a day, a week or a month
+  const SET_BONUS = { daily: 150, weekly: 600, monthly: 2500 };
   function claimChallenge(i, per = "daily") {
     const d = ensurePeriod(per), it = d.items[i];
     if (!it || it.claimed || !chalDone(it)) return false;
-    it.claimed = true; addBones(it.reward); profile.chalClaims++; persist(600); updatePips(); checkAchievements();
+    it.claimed = true; addBones(it.reward); profile.chalClaims++;
+    if (!d.setPaid && d.items.length && d.items.every(x => x.claimed)) {
+      d.setPaid = true; const b = Math.round(SET_BONUS[per] * Math.max(0.5, Math.min(5, Number(Flags.get("challenges.bonus")) || 1)) / 5) * 5;
+      addBones(b); profile.chalSets++; Telemetry.emit("chal_set", { period: per, bones: b });
+      if (!sandbox) { toast(`<b>${t("chal.setDone", { what: PERIODS[per].label.toLowerCase() })}</b> · +${b.toLocaleString("en-US")} bones`); Sound.toon("fanfare"); }
+    }
+    persist(600); updatePips(); checkAchievements();
     Telemetry.emit("chal_claim", { period: per, kind: it.id });
     return true;
   }

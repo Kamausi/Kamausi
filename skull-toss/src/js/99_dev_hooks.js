@@ -145,6 +145,7 @@
     // the Power-Up Director alone: n makes in a row from the start of the first half, noting the hits where a prop turned up
     bonus: play => takeBonus(play), bonusOffered: () => !!game.bonus && !$("bonusBox").hidden, cans: () => cans.map(c => ({ row: c.row, i: c.i, x: c.x, y: c.y, z: c.z, down: c.down, via: { ...c.via } })),
     knockCan(i) { knockCan(cans[i], null); }, canPrizes: () => CAN_PRIZES.map(p => p[0] + ":" + p[1]), findItem: (kind, id) => !!findItem(kind, id),
+    ranks: () => RANKS.map(r => [...r]),
     powerDeal(n) { const was = game.phase; game.phase = "B"; powerDirectorReset(); const out = []; for (let i = 0; i < n; i++) out.push(rollPower()); game.phase = was; return out; },
     powerMilestones() { const out = [], score = game.score, st = game.stage, ph = game.phase, res = game.result, hits = game.stageHits; powerDirectorReset(); game.result = { make: true, pts: 0 }; game.stageHits = 0;
       for (const [s2, p2] of [[1, "A"], [1, "B"], [2, "A"], [2, "B"]]) { game.stage = s2; game.phase = p2; pickupSchedule(); out.push(PD.step); }

@@ -109,6 +109,7 @@
     const id = pickup.id, P = POWERS[id];
     pickup.pop = 0.001; givePower(id); VisualSystem.emit("power", { id }); Telemetry.emit("powerup", { id, stage: game.stage });
     profile.powerups++; game.run.powerups++; challenge("powerups", 1); if (id === "cursed") profile.cursed++;
+    profile.powerLog = profile.powerLog || {}; profile.powerLog[id] = (profile.powerLog[id] || 0) + 1;   // (v45: each prop's own count, for the Profile and the achievements)
     mortySays("power." + id, { chance: MORTY.power });
     const p = at || project(ring.x, ring.y, ring.z);
     impact("POP!", p.x, p.y - ring.rc * p.s * 1.2, { fill: P.color, text: INK, scale: 0.75, delay: 0.3, bits: false, sub: P.name });

@@ -31,7 +31,7 @@
   function streakAfterRun(now = new Date()) {
     const today = dayKey(now), y = new Date(now); y.setDate(y.getDate() - 1);
     if (profile.streakLast === today) return 0;
-    profile.streakDays = profile.streakLast === dayKey(y) ? profile.streakDays + 1 : 1; profile.streakLast = today;
+    profile.streakDays = profile.streakLast === dayKey(y) ? profile.streakDays + 1 : 1; profile.streakLast = today; profile.bestDayStreak = Math.max(profile.bestDayStreak || 0, profile.streakDays);
     const pay = Math.round(20 * Math.min(7, profile.streakDays) * Math.max(1, Number(Flags.get("event.bones")) || 1));
     addBones(pay); game.run.streak = { days: profile.streakDays, bones: pay };
     if (!sandbox && profile.streakDays > 1) toast(`<b>${t("streak.toast", { n: profile.streakDays })}</b> · +${pay}`);
