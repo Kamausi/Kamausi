@@ -5,6 +5,9 @@
     constants: { G, SKULL_R, START_Y, RING_Z, RING_Y, RING_TUBE, RC_START, RC_MIN, POST_HALF, FLIGHT_T, START_LIVES, MAX_LIVES },
     level, catalog: () => JSON.parse(JSON.stringify(CATALOG)), bandStyle: () => ({ id: cos.band, ...(BANDS[cos.band] || {}) }), wearOutfit: i => wearOutfit(i), saveOutfit: i => saveOutfit(i), surprise: () => surpriseLook(),
     reqText: (k, n) => REQ_TEXT[k](n), cleanProfile: p => cleanProfile(p),
+    async fakeServer(uid) { Backend.reset(); Backend.useFake(uid); await Souls.connect(); return Backend.kind; }, noServer() { Backend.reset(); Souls.connect(); },
+    setWallet(w) { Souls.set(w); },   // (the client's view only: for drawing tests)
+    wallet: () => Souls.wallet && JSON.parse(JSON.stringify(Souls.wallet)), soulsApi: () => Souls, callServer: (name, data) => Backend.call(name, data), exportCode: () => exportCode(), economy: () => Economy,
     start() { startGame(); },
     pause(on = true) { manual = on; },
     simStep: SIM_STEP, simAdvance: dt => advance(dt), simReset() { simAcc = 0; },   // the live loop's fixed step

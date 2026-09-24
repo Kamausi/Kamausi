@@ -10,10 +10,11 @@
   if (!T) { console.error("SkullToss debug API not found — load this after index.html's script."); return; }
   const C = T.constants;
   const results = [];
-  const test = (name, fn) => {
-    try { fn(); results.push({ name, pass: true }); }
-    catch (e) { results.push({ name, pass: false, error: e.message }); }
-  };
+  // tests queue up and run in order once they're all registered; a test may be async (the stand-in server's calls
+  // are, v30). step() queues a setting change between tests so it happens in order with them.
+  const queue = [];
+  const test = (name, fn) => queue.push({ name, fn });
+  const step = fn => queue.push({ fn, step: true });
   const assert = (cond, msg) => { if (!cond) throw new Error(msg); };
   const near = (a, b, eps, msg) => assert(Math.abs(a - b) <= eps, `${msg}: expected ≈${b}, got ${a}`);
 
@@ -225,12 +226,13 @@
   const dressDefault = () => { for (const [k, v] of Object.entries(DEF)) T.equip(k, v); };
   test("Skull Vault: thirteen shelves (hats, auras and poles are new), over 350 things, titles earned not bought", () => {
     const c = T.catalog(), want = { skull: 40, eyes: 24, teeth: 18, paint: 32, trail: 34, impact: 20, ring: 24, aim: 16, reel: 10, title: 42, hat: 52, aura: 31, pole: 21 };
-    for (const [k, n] of Object.entries(want)) assert(c[k] && c[k].length === n, `${k}: ${c[k] ? c[k].length : 0} items, wanted ${n}`);
+    for (const [k, n] of Object.entries(want)) { const L = (c[k] || []).filter(i => !i.souls); assert(L.length === n, `${k}: ${L.length} items, wanted ${n} (besides the Soul Shop's, v30)`); }
     const all = Object.values(c).flat(); assert(all.length >= 351, `only ${all.length} cosmetics (117 × 3 = 351)`);
     for (const k of Object.keys(c)) for (const it of c[k]) {
       assert(!it.s || (it.s >= 1 && it.s <= 4), `${k} ${it.id} has ${it.s} stars`);
       if (k === "title") assert(!it.price, `title ${it.id} is for sale`);
       else if (it.shame || it.boss) assert(!it.price && it.req, `${k} ${it.id}: prizes are won, not sold`);
+      else if (it.souls) assert(!it.price && !it.req && it.souls > 0, `${k} ${it.id}: a Soul item is sold for Souls alone`);
       else if (it.s) assert(it.price > 0, `${k} ${it.id} has no price`);
       if (it.shop) assert(it.price > 0 && !it.req, `${k} ${it.id}: a shop exclusive is bought at the shop, not earned`);
     }
@@ -261,6 +263,7 @@
   test("Every Vault item renders in play and on its shelf", () => {
     const cat = T.catalog(), all = Object.keys(cat).flatMap(k => cat[k].map(it => k + ":" + it.id));
     T.setStats({ makes: 9999, best: 99, perfects: 999, rims: 999, bestStreak: 99, bestPerfStreak: 99, peakLives: 5, games: 999, points: 99999, unlocked: all });
+    T.setWallet({ souls: 0, owned: Object.keys(T.economy().ITEMS) });   // (the Soul Shop's items: the wallet owns them, v30)
     for (const kind of Object.keys(cat)) for (const it of cat[kind]) {
       assert(T.equip(kind, it.id), `could not equip ${kind} ${it.id}`);
       fresh(); T.throwAt(0.2, C.RING_Y); T.step(0.4); T.step(1.6);
@@ -268,7 +271,7 @@
     T.equip("aim", "rainbow"); T.freezeRing(0, C.RING_Y); T.previewInfo(0, C.RING_Y);
     T.toTitle(); T.openSheet("customize");
     for (const k of Object.keys(cat)) { $("catTabs").querySelector(`[data-cat="${k}"]`).click(); assert($("shopGrid").children.length === cat[k].length, `${k} grid shows ${$("shopGrid").children.length}`); }
-    T.closeSheet();
+    T.closeSheet(); T.noServer();
     dressDefault(); T.setStats(ZERO);
     assert(Object.entries(DEF).every(([k, v]) => T.cosmetics()[k] === v), "couldn't dress back to the defaults");
   });
@@ -1249,7 +1252,7 @@
 
   // ── v22: one more skull, and runs that survive a reload ──
   const missOut = () => { T.calm(); T.freezeRing(0, C.RING_Y); T.throwAt(0, C.RING_Y + 3); T.step(3); };   // a wild miss
-  T.continues(true);   // (the tests before these expect the last skull to end the run)
+  step(() => T.continues(true));   // (the tests before these expect the last skull to end the run)
   test("Out of skulls: one more for bones, and the score stays", () => {
     T.setStats({ ...ZERO, bones: 1000 }); fresh(); toHit(3); T.setLives(1); const score = T.state().score;
     missOut();
@@ -1293,12 +1296,12 @@
     $("contNo").click(); T.toTitle(); assert($("resumeRunBtn").hidden, "a finished run leaves nothing to resume");
     T.snapOn(false); T.setStats(ZERO); T.toTitle();
   });
-  T.continues(false);
+  step(() => T.continues(false));
 
   // ── v23: the reel's own cards ──
   const skipCards = () => { for (let i = 0; i < 6 && T.reel().card; i++) { T.skipReel(); T.step(0.02); } };
   const beatBoth = stage => { fresh(); skipCards(); T.setStage(stage); toHit(25); T.step(2.6); T.hurtBoss(99); T.endThrow(); T.step(3.2); toHit(50); T.step(2.9); T.hurtBoss(99); T.endThrow(); };
-  T.cards(true);
+  step(() => T.cards(true));
   test("A Story run opens on the countdown leader, then Reel One's title card; the throw waits, and a tap skips", () => {
     T.setStats(ZERO); T.start(); T.freezeRing(0, C.RING_Y);
     let R = T.reel(); assert(R.card === "leader" && !R.hidden && T.state().state === "cine", `the leader first (${JSON.stringify(R)})`);
@@ -1335,7 +1338,7 @@
     R = T.reel(); assert(R.card === "title" && R.n === 3 && /no bosses/.test(R.reel), `Arcade opens on its map's card, no leader (${JSON.stringify(R)})`);
     skipCards(); T.setStats(ZERO); T.toTitle();
   });
-  T.cards(false);
+  step(() => T.cards(false));
 
   // ── v24: every word has an ID, and Morty has a personality ──
   const POOLS = ["grab", "last", "cursed", "missing", "hot", "perfect", "nearmiss", "bonk", "bossdown", "continue", "encore", "resume", "idle", "end"];
@@ -1399,7 +1402,7 @@
 
   // ── v25: signature shots and the cartoon camera ──
   const shotAt = (x, y, z = C.RING_Z) => { T.calm(); T.freezeRing(x, y, z); assert(T.throwThrough(x, y, z), "throw refused"); T.step(2.5); return T.lastShots(); };
-  T.shots(true);
+  step(() => T.shots(true));
   test("Signature shots by where the ring was: dead centre, a Long Bomb, Point Blank, the Top Corner; each pays and is counted", () => {
     T.setStats(ZERO); fresh(); const s0 = T.state().score;
     let s = shotAt(0, C.RING_Y); assert(s.includes("deadcentre") && T.profile().shots.deadcentre === 1, `a perfect through the middle is Dead Centre (${s})`);
@@ -1455,7 +1458,7 @@
     assert(rows.every(r => r.querySelector("small").textContent.length > 10), "each says what it takes");
     T.closeSheet(); T.setStats(ZERO); T.toTitle();
   });
-  T.shots(false);
+  step(() => T.shots(false));
 
   // ── v26: more ways to play ──
   const OPENED = { ...ZERO, bossKills: 1, bestStage: 3, bossLog: { crow: 1, undertaker: 1 } };
@@ -1606,14 +1609,14 @@
     assert(rows.length === 9 && rows.filter(r => !r.classList.contains("unseen")).length === T.secrets().length && /secrets found/.test($("codexCount").textContent), `the Secrets tab (${rows.length}, ${T.secrets().length})`);
     T.closeSheet(); T.setStats(ZERO); T.toTitle();
   });
-  T.mischiefOn(false);
+  step(() => T.mischiefOn(false));
 
   // ── v29: cosmetics and customization ──
   test("Bands: eight slingshot bands in the Vault, the rubber one yours from the start, each strung on the launcher its own way", () => {
-    T.setStats(ZERO); T.toTitle(); const B = T.catalog().band;
+    T.setStats(ZERO); T.toTitle(); const B = T.catalog().band.filter(i => !i.souls);   // (and two Soul bands, v30)
     assert(B.length === 8 && T.cosmetics().band === "classic" && T.bandStyle().id === "classic", `${B.length} bands, the rubber one on`);
     T.openSheet("customize"); document.querySelector('#catTabs [data-cat="band"]').click();
-    assert(document.querySelectorAll('#shopGrid .item').length === 8 && document.querySelectorAll('#shopGrid .item.locked').length === 7, "the Bands shelf, all but one locked");
+    assert(document.querySelectorAll('#shopGrid .item').length === 10 && document.querySelectorAll('#shopGrid .item.locked').length === 9, "the Bands shelf (with the Soul Shop's two), all but one locked");
     T.closeSheet(); T.setStats({ ...ZERO, unlocked: ["band:candy"] }); assert(T.equip("band", "candy") && T.bandStyle().stripe, "Candy Cane: a striped band");
     T.setStats({ ...ZERO, misses: 300 }); assert(T.equip("band", "barbed") && T.bandStyle().barbs, "Barbed Wire comes free after 300 misses (Hall of Shame)");
     T.setStats({ ...ZERO, storyClears: 1 }); assert(T.equip("band", "ghostly") && T.bandStyle().glow, "Ectoplasm is the story's prize");
@@ -1637,13 +1640,53 @@
     assert(T.reqText("miniKills", 3) === "Beat 3 mini-bosses" && T.reqText("bossKills", 1) === "Beat an end boss" && T.reqText("bestStage", 5) === "Reach map 5", `${T.reqText("miniKills", 3)} / ${T.reqText("bossKills", 1)}`);
   });
 
-  T.sandbox(false); T.start(); T.pause(false);  // leave the game playable, player's saved data untouched
-  window.__skullTossResults = results;
-  const passed = results.filter(r => r.pass).length;
-  console.table(results);
-  const panel = document.createElement("pre");
-  panel.style.cssText = "position:fixed;left:12px;right:12px;bottom:12px;z-index:9;max-height:55vh;overflow:auto;margin:0;padding:12px 14px;background:rgba(7,8,11,.92);color:#EDE6D6;font:12px/1.5 ui-monospace,Menlo,monospace;border:1px solid rgba(237,230,214,.2);border-radius:6px;white-space:pre-wrap";
-  panel.textContent = `SKULL TOSS SPEC — ${passed}/${results.length} passed\n\n` +
-    results.map(r => `${r.pass ? "✓" : "✗"} ${r.name}${r.pass ? "" : "\n    " + r.error}`).join("\n");
-  document.body.appendChild(panel);
+  // ── v30: Souls, and the Soul Shop (the server's own handlers, stood up in the page) ──
+  test("No server, no Souls: the Soul Shop says so, Soul looks stay locked, and nothing else minds", () => {
+    T.noServer(); T.setStats(ZERO); T.toTitle();
+    const soulItems = Object.values(T.catalog()).flat().filter(i => i.souls);
+    assert(soulItems.length === 8 && !T.equip("skull", "soul"), `8 Soul items, none wearable without a wallet (${soulItems.length})`);
+    T.openSheet("souls"); assert(!$("soulsStatus").hidden && /server/.test($("soulsStatus").textContent) && $("soulsDaily").disabled, "the shop explains, and its buttons wait");
+    T.closeSheet(); T.toTitle();
+  });
+  test("Souls: a daily handful once a day, a pack credited once per receipt, a look bought at the server's price", async () => {
+    assert(await T.fakeServer() === "fake" && T.wallet().souls === 0, "a new wallet is empty");
+    const S = T.soulsApi();
+    await S.claimDaily(); assert(T.wallet().souls === 10, `the daily ten (${T.wallet().souls})`);
+    await S.claimDaily(); assert(T.wallet().souls === 10, "and only once a day");
+    await S.redeem({ platform: "test", receipt: "OK:r1", product: "souls.550" }); assert(T.wallet().souls === 560, `a pack of 550 (${T.wallet().souls})`);
+    await S.redeem({ platform: "test", receipt: "OK:r1", product: "souls.550" }); assert(T.wallet().souls === 560, "the same receipt never pays twice");
+    await S.redeem({ platform: "test", receipt: "forged", product: "souls.1200" }); assert(T.wallet().souls === 560, "a receipt the store won't confirm pays nothing");
+    const w = await T.callServer("buyWithSouls", { item: "skull:soul", souls: 1 });
+    assert(w.souls === 160 && T.wallet() !== null, `the server charges its own price, whatever the caller says (${w.souls})`);
+    await T.fakeServer(); await S.redeem({ platform: "test", receipt: "OK:r2", product: "souls.550" }); await S.buy("skull:soul");
+    assert(T.wallet().souls === 150 && T.wallet().owned.includes("skull:soul") && T.cosmetics().skull === "soul", `bought and worn (${JSON.stringify(T.wallet())}, ${T.cosmetics().skull})`);
+    await S.buy("skull:aurora"); assert(T.wallet().souls === 150 && !T.wallet().owned.includes("skull:aurora"), "not enough Souls: nothing changes");
+    T.toTitle(); T.openSheet("souls");
+    assert($("soulsStatus").hidden && document.querySelectorAll("#soulsGrid .item").length === 8 && document.querySelector('#soulsGrid [data-key="skull:soul"]').classList.contains("equipped"), "the shop shows the wallet");
+    T.closeSheet();
+  });
+  test("Souls never travel in a save code or the save, and a Soul look waits for the wallet before it's judged", async () => {
+    await T.fakeServer(); const S = T.soulsApi(); await S.redeem({ platform: "test", receipt: "OK:r3", product: "souls.550" }); await S.buy("band:soul");
+    assert(!/"souls"\s*:/.test(JSON.stringify(T.profile())) && T.wallet().souls > 0, "the wallet has Souls; the profile (and so a save code) has none");
+    assert(!("souls" in T.profile()) && !("wallet" in T.profile()), "the profile carries no balance");
+    await T.fakeServer("someone-else"); assert(T.cosmetics().band === "classic", `a wallet that doesn't own it takes the look off (${T.cosmetics().band})`);
+    T.noServer(); T.toTitle();
+  });
+
+  (async () => {
+    for (const q of queue) {
+      if (q.step) { q.fn(); continue; }
+      try { await q.fn(); results.push({ name: q.name, pass: true }); }
+      catch (e) { results.push({ name: q.name, pass: false, error: e.message }); }
+    }
+    T.sandbox(false); T.start(); T.pause(false);  // leave the game playable, player's saved data untouched
+    window.__skullTossResults = results;
+    const passed = results.filter(r => r.pass).length;
+    console.table(results);
+    const panel = document.createElement("pre");
+    panel.style.cssText = "position:fixed;left:12px;right:12px;bottom:12px;z-index:9;max-height:55vh;overflow:auto;margin:0;padding:12px 14px;background:rgba(7,8,11,.92);color:#EDE6D6;font:12px/1.5 ui-monospace,Menlo,monospace;border:1px solid rgba(237,230,214,.2);border-radius:6px;white-space:pre-wrap";
+    panel.textContent = `SKULL TOSS SPEC — ${passed}/${results.length} passed\n\n` +
+      results.map(r => `${r.pass ? "✓" : "✗"} ${r.name}${r.pass ? "" : "\n    " + r.error}`).join("\n");
+    document.body.appendChild(panel);
+  })();
 })();

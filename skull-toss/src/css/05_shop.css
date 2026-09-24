@@ -233,3 +233,12 @@
 .outfits .slot.filled{border:2px solid var(--ink);background:var(--mustard);color:var(--ink);box-shadow:0 2px 0 var(--ink)}
 .outfits .slot.on{outline:2px solid var(--cream);outline-offset:2px}
 .outfits .ghost-btn{padding:7px 10px;font-size:12px}
+
+/* the Soul Shop (v30): Souls in violet, the premium colour */
+.souls-chip{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:999px;background:#3A2A5A;border:2px solid var(--ink);font:18px/1 var(--num);color:#E4D6FF}
+.souls-status{margin:10px 0 0;padding:10px 12px;border-radius:10px;background:var(--panel-2);font:700 12.5px/1.4 var(--ui);color:var(--cream-dim)}
+.item.soul{background:linear-gradient(180deg,#4A3A70,#2E2248);color:var(--cream)}
+.price.soul,.item .price.soul{color:#D8C4FF}
+.ribbon.soul{background:#7E5CC8;color:var(--cream)}
+.souls-packs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.soul-door{width:100%;margin-top:12px;background:linear-gradient(180deg,#5A447E,#3A2A5A)}

@@ -1,8 +1,28 @@
-# SKULL TOSS v29
+# SKULL TOSS v30
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)), with a synthesised waltz standing in wherever they can't load.
+
+## New in v30: Souls, the Soul Shop, and a Firebase server
+
+**Souls** are the premium currency, and they belong to the server:
+
+- **Where they live.** The balance and what it has bought live in Firestore (`wallets/<uid>`) and only Cloud Functions can change them. They're never on the profile, in a save code or in the cloud save.
+- **Getting them.** A free daily handful (10, once per UTC day by the server's clock), and Soul packs (100, 550, 1,200) bought in a store. A pack is credited only after the store confirms the receipt, and never twice.
+- **Spending them.** The **Soul Shop** (a door in the Curio Cart, or from a Soul item in the Vault) sells two four-piece sets, the Soul set and the Aurora set, each a skull, a ring, a trail and a band. The server charges its own prices, from `firebase/functions/shared/economy.js`, whatever the caller asks.
+- **Without a server.** The Soul Shop says so, Soul items stay locked, and nothing else in the game minds. Bones still buy everything else.
+
+**The Firebase server** (`firebase/`, see [firebase/README.md](firebase/README.md)). Put your web app's config in `src/firebase.config.json` and rebuild. The game then loads the Firebase SDK, signs the player in anonymously, keeps the cloud save in Firestore, and calls Cloud Functions for Souls:
+
+- `wallet`, `buyWithSouls`, `claimDailySouls` and `redeemPurchase`;
+- Firestore rules under which the client writes only its own save;
+- a ledger of every change to a balance;
+- a receipt check per store, left for your own store credentials.
+
+The handlers are plain JavaScript shared with the game's build. The dev build stands them up in the page, so the spec drives the real server logic. `cd firebase/functions && npm test` runs them against an in-memory database, and CI runs that too. Without a config the game behaves as before, and a claude.ai-published page still uses its host for saves and the board.
+
+**The spec runner** now queues its tests and runs them in order, and a test may be async (the server's calls are). [docs/ECONOMY.md](docs/ECONOMY.md) reviews both currencies: sources, sinks, and what a save code can and can't do.
 
 ## New in v29: bands, outfits and Surprise me
 
@@ -760,7 +780,7 @@ From the console, `SkullToss.debug.visualAnimation` lists the pose library (`pos
 
 ## Tests
 
-Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **167 checks**, covering:
+Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **170 checks**, covering:
 
 - **Layout, scoring and aiming.**
   - Everything is centred and every result is classified correctly.
@@ -883,3 +903,9 @@ Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to
   - Eight bands in the Vault, the rubber one yours, and each strung on the launcher its own way. Barbed Wire comes from 300 misses and Ectoplasm from the story.
   - An outfit saves a look and wears it back, never with things you no longer own. Surprise me uses only your things.
   - Renamed items stay yours, and item goals name the right bosses.
+- **v30.**
+  - With no server the Soul Shop says so and Soul looks stay locked.
+  - The daily Souls come once a day, a pack is credited once per receipt, a forged receipt pays nothing, and the server charges its own price whatever the caller says.
+  - A Soul look is bought and worn; with too few Souls nothing changes; and the shop shows the wallet.
+  - Souls are never on the profile or in a save code, and a wallet that doesn't own a look takes it off.
+  - Plus five server tests in `firebase/functions/test`.

@@ -60,7 +60,9 @@
     spectral: { style: "tube",   color: "#7FC8B8", rgb: "127,200,184", shade: "rgba(6,70,52,.6)",   hi: "rgba(225,255,246,.85)", flicker: true },
     gold:     { style: "tube",   color: "#E3B64B", rgb: "227,182,75",  shade: "rgba(90,55,5,.6)",   hi: "rgba(255,246,214,.9)" },
     inferno:  { style: "fire",   color: "#E8893A", rgb: "232,137,58",  shade: "rgba(90,20,0,.6)",   hi: "rgba(255,230,170,.9)" },
-    void:     { style: "portal", color: "#8E74A8", rgb: "142,116,168", shade: "rgba(20,5,40,.7)",   hi: "rgba(220,200,255,.8)" }
+    void:     { style: "portal", color: "#8E74A8", rgb: "142,116,168", shade: "rgba(20,5,40,.7)",   hi: "rgba(220,200,255,.8)" },
+    soul:     { style: "portal", color: "#B48CFF", rgb: "180,140,255", shade: "rgba(30,10,70,.7)",  hi: "rgba(240,230,255,.9)", flicker: true },   // (the Soul Shop's, v30)
+    aurora:   { style: "tube",   color: "#78F0BE", rgb: "120,240,190", shade: "rgba(0,50,40,.6)",   hi: "rgba(230,255,246,.9)", flicker: true }
   };
   const AIMS = {
     bone: { color: CREAM }, toxic: { color: TOXIC }, blood: { color: "#D0604A" }, frost: { color: "#A9D6E0" },
@@ -340,7 +342,7 @@
     for (const kind of KINDS) {
       const m = MIGRATE[kind] && MIGRATE[kind][out[kind]]; if (m) out[kind] = m;
       const it = CATALOG[kind].find(i => i.id === out[kind]);
-      if (!it || (profile && !canUse(kind, it))) out[kind] = DEFAULT_COS[kind];
+      if (!it || (profile && !canUse(kind, it) && !(it.souls && !Souls.known()))) out[kind] = DEFAULT_COS[kind];   // (a Soul item waits for the wallet before it's judged)
     }
     // three saved looks (the Vault's Outfits, v29): only the slots' ids are kept here; wearing one checks each is still yours
     out.outfits = [0, 1, 2].map(i => { const o = Array.isArray(out.outfits) ? out.outfits[i] : null; if (!o || typeof o !== "object") return null;

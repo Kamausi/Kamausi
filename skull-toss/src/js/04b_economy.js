@@ -12,7 +12,8 @@
     }
   }
   const findItem = (kind, id) => CATALOG[kind] && CATALOG[kind].find(i => i.id === id);
-  function canUse(kind, it) {
+  function canUse(kind, it) {   // (buy() below never sells a Soul item for bones: it has no bones price)
+    if (it.souls) return Souls.owns(kind + ":" + it.id);           // a Soul Shop item: the server's wallet says (09m_souls.js)
     if (!it.price && !it.req) return true;                       // stock: yours from the start
     if (profile.unlocked.includes(kind + ":" + it.id)) return true; // bought, or earned earlier
     return !!it.req && statNow(it.req[0]) >= it.req[1];
@@ -35,7 +36,7 @@
   function nextUnlock() {
     let best = null;
     for (const kind of KINDS) for (const it of CATALOG[kind]) {
-      if (canUse(kind, it) || kind === "title") continue;
+      if (canUse(kind, it) || kind === "title" || it.souls) continue;   // (Soul items are the Soul Shop's, not a goal)
       const have = it.req ? statNow(it.req[0]) : 0, kGoal = it.req ? have / it.req[1] : 0, kBones = it.price ? profile.bones / it.price : 0, k = Math.max(kGoal, kBones);
       if (!best || k > best.k) best = { kind, it, have, k, kGoal, kBones };
     }

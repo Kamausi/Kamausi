@@ -137,13 +137,13 @@
       b.type = "button"; b.dataset.kind = kind; b.dataset.id = it.id;
       b.className = "item " + (on ? "equipped" : usable ? "owned" : "locked") + (selected ? " selected" : "");
       b.setAttribute("aria-pressed", String(on));
-      b.setAttribute("aria-label", `${it.name} ${KIND_LABEL[kind]}, ${starsOf(it)} star ${STAR_NAME[starsOf(it)]}${on ? ", equipped" : usable ? ", owned" : it.price ? `, ${fmt(it.price)} bones` : `, locked: ${REQ_TEXT[it.req[0]](it.req[1])}`}`);
-      const state = on ? "Equipped" : usable ? (kind === "title" ? "Earned" : "Owned") : it.shop ? "Curio Cart" : it.price ? `<span class="price">${BONE_SVG}${fmt(it.price)}</span>` : `${fmt(Math.min(statNow(it.req[0]), it.req[1]))}/${fmt(it.req[1])}`;
+      b.setAttribute("aria-label", `${it.name} ${KIND_LABEL[kind]}, ${starsOf(it)} star ${STAR_NAME[starsOf(it)]}${on ? ", equipped" : usable ? ", owned" : it.souls ? `, ${fmt(it.souls)} Souls at the Soul Shop` : it.price ? `, ${fmt(it.price)} bones` : `, locked: ${REQ_TEXT[it.req[0]](it.req[1])}`}`);
+      const state = on ? "Equipped" : usable ? (kind === "title" ? "Earned" : "Owned") : it.souls ? `<span class="price soul">◆ ${fmt(it.souls)}</span>` : it.shop ? "Curio Cart" : it.price ? `<span class="price">${BONE_SVG}${fmt(it.price)}</span>` : `${fmt(Math.min(statNow(it.req[0]), it.req[1]))}/${fmt(it.req[1])}`;
       b.innerHTML = `<span class="stars r-${rar}" aria-hidden="true">${starsText(it)}</span>`;
       if (kind === "title") b.innerHTML += `<span class="t-name">${it.name}</span><span class="sub">${it.req ? REQ_TEXT[it.req[0]](it.req[1]) : "Where everyone starts"}</span><span class="state">${state}</span>`;
       else { const cv = document.createElement("canvas"); b.appendChild(cv); b.insertAdjacentHTML("beforeend", `<span>${it.name}</span><span class="state">${state}</span>`); drawItemIcon(cv, kind, it.id); }
       if (!usable) b.insertAdjacentHTML("beforeend", '<svg class="lock" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-lock"/></svg>');
-      if (it.shame || it.boss || it.shop) b.insertAdjacentHTML("beforeend", `<span class="ribbon ${it.shame ? "shame" : it.boss ? "boss" : "shop"}">${it.shame ? "Shame" : it.boss ? "Boss" : "Cart"}</span>`);
+      if (it.shame || it.boss || it.shop || it.souls) b.insertAdjacentHTML("beforeend", `<span class="ribbon ${it.shame ? "shame" : it.boss ? "boss" : it.souls ? "soul" : "shop"}">${it.shame ? "Shame" : it.boss ? "Boss" : it.souls ? "Souls" : "Cart"}</span>`);
       if (fresh.includes(kind + ":" + it.id)) b.insertAdjacentHTML("beforeend", '<span class="new" aria-hidden="true"></span>');
       grid.appendChild(b);
     }
@@ -180,6 +180,7 @@
     $("buyName").textContent = s.kind === "title" ? it.name : `${it.name} ${KIND_LABEL[s.kind]}`;
     $("buyRar").textContent = `${starsText(it)} ${STAR_NAME[starsOf(it)]}`; $("buyRar").className = "rar-name t-" + rarityOf(it);
     $("buySub").textContent = it.shop ? "Only sold at Mort's Curio Cart" : it.req ? `${it.price ? "Or free: " : it.shame ? "Hall of Shame: " : it.boss ? "Boss prize: " : "Earn it: "}${REQ_TEXT[it.req[0]](it.req[1]).toLowerCase()} · ${fmt(Math.min(statNow(it.req[0]), it.req[1]))}/${fmt(it.req[1])}` : "Bones only · trying it on above";
+    if (it.souls) { $("buySub").textContent = t("souls.vaultSub"); btn.disabled = false; btn.textContent = t("souls.visit"); return; }
     if (it.shop) { btn.disabled = false; btn.textContent = "Visit the Curio Cart"; return; }
     if (!it.price) { btn.disabled = true; btn.textContent = "Earned, not sold"; return; }
     btn.disabled = need > 0;
@@ -212,6 +213,7 @@
     const s = shop.sel; if (!s) return;
     const it = findItem(s.kind, s.id);
     if (it.shop) { cart.sel = { kind: s.kind, id: s.id }; openSheet("store"); return; }
+    if (it.souls) { openSheet("souls"); return; }   // (Soul items are the Soul Shop's: 09m_souls.js)
     if (buy(s.kind, s.id)) {
       equip(s.kind, s.id); shop.sel = null; Sound.sample("purchase", () => Sound.ui("buy")); buzz([8, 30, 8]); celebrate();
       toast(`<b>Bought</b> · ${it.name} ${KIND_LABEL[s.kind]}`); renderShop();

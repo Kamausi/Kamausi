@@ -2,7 +2,7 @@
 """Assemble index.html from src/page.html + src/css/*.css + src/markup.html + src/js/*.js (filename order).
 
 --dev adds the test hooks (js/99_dev_hooks.js) and writes index-dev.html; --with-music embeds the six loops."""
-import pathlib, re, sys
+import pathlib, re, sys, json
 root = pathlib.Path(__file__).resolve().parent
 page = (root / "page.html").read_text()
 css = "\n".join(p.read_text() for p in sorted((root / "css").glob("*.css")))
@@ -18,6 +18,17 @@ markup = (root / "markup.html").read_text()
 dev = "--dev" in sys.argv
 parts = [p for p in sorted((root / "js").glob("*.js")) if dev or p.name != "99_dev_hooks.js"]
 js = "\n".join(p.read_text() for p in parts)
+# the server's shared rules and handlers (firebase/functions): the game embeds the same files the server runs, so the
+# Soul Shop and the server always agree, and the dev build can stand a copy of the server up in the page for the spec
+SERVER = root.parent / "firebase" / "functions"
+server_js = [SERVER / "shared" / "economy.js", SERVER / "shared" / "runs.js", SERVER / "handlers.js"]
+js = "\n".join(f.read_text() for f in server_js if f.exists()) + "\n" + js
+# the Firebase project (src/firebase.config.json): a web app's config from the Firebase console. Left empty, the game
+# runs without a server (a published claude.ai page still uses its own host); see firebase/README.md
+fb = root / "firebase.config.json"
+FB = json.loads(fb.read_text()) if fb.exists() else {}
+FB = FB if isinstance(FB, dict) and FB.get("apiKey") and FB.get("projectId") else None
+js = "  const FIREBASE_CONFIG = " + json.dumps(FB) + ";\n" + js
 # ── vector assets: src/art/<asset>/asset.json + SVG, read by svgart.py (named layers, versions, anchors) ──
 import json, xml.etree.ElementTree as ET
 sys.path.insert(0, str(root))

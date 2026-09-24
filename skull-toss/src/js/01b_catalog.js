@@ -190,6 +190,9 @@
     { id: "gilded", name: "Gilded Cord", s: 3, price: 3200 },        { id: "ghostly", name: "Ectoplasm", s: 3, req: ["storyClears", 1], boss: true },
     { id: "barbed", name: "Barbed Wire", s: 2, req: ["misses", 300], shame: true }
   ];
+  // v30: the Soul Shop's items, priced in Souls by the shared economy (firebase/functions/shared/economy.js); owning one is
+  // the server's word (Souls.owns), never the profile's
+  for (const [key, it] of Object.entries(Economy.ITEMS)) { const [kind, id] = key.split(":"); CATALOG[kind].push({ id, name: it.name, s: it.s, souls: it.souls }); }
   KINDS.push("hat", "aura", "pole", "band");
   Object.assign(KIND_LABEL, { hat: "hat", aura: "aura", pole: "ring pole", band: "band" });
   Object.assign(DEFAULT_COS, { hat: "none", aura: "none", pole: "wood", band: "classic" });

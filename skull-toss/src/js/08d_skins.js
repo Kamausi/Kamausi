@@ -15,6 +15,9 @@
     }
   }
   const SKINS = {
+    // the Soul Shop's two skulls (v30): a glow behind them, drawn in skull units
+    soul: P("#C8B4F4", "#8E72D4", "#F2ECFF", "#1A0F2E", "#140A24", "#BFF4FF", null, { behind(c, t) { const g = c.createRadialGradient(0, 0, 0.6, 0, 0, 1.55); g.addColorStop(0, `rgba(180,140,255,${0.45 + 0.15 * Math.sin(t * 3)})`); g.addColorStop(1, "rgba(180,140,255,0)"); c.fillStyle = g; c.beginPath(); c.arc(0, 0, 1.55, 0, TAU); c.fill(); } }),
+    aurora: P("#A8E8D4", "#5FB8A4", "#E6FFF6", "#0E2A26", "#0A1E1C", "#F4D2FF", null, { behind(c, t) { for (let i = 0; i < 3; i++) { c.strokeStyle = [`rgba(120,240,190,.5)`, `rgba(170,140,255,.45)`, `rgba(120,200,255,.4)`][i]; c.lineWidth = 0.12; c.beginPath(); c.arc(0, 0, 1.25 + i * 0.13 + 0.04 * Math.sin(t * 2 + i), Math.PI * 1.05 + 0.2 * Math.sin(t + i), Math.PI * 1.95 + 0.2 * Math.sin(t * 1.3 + i)); c.stroke(); } } }),
     hex: P("#B08AD0", "#7E5CA0", "#E4D2F4", "#221028", "#1A0C20", "#C6F07A", null),
     bone: P("#F7F1DF", "#D9C9A5", "#FFFDF6", "#111111", "#111111", "#F7F1DF", null, { flat: true }),
     wood: P("#C08A56", "#93623A", "#E4B98A", "#2A1A0E", "#1E130A", "#F2E7C9", null, {

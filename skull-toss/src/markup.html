@@ -193,6 +193,19 @@
   </div>
 </section>
 
+<section class="sheet" id="sheet-souls" role="dialog" aria-modal="true" aria-labelledby="h-souls" hidden>
+  <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back" data-t-aria="ui.back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-souls" data-t="ui.soul-shop">Soul Shop</h2><span class="souls-chip">◆ <b class="souls-n">—</b></span></div>
+  <div class="sheet-body">
+    <p class="souls-status" id="soulsStatus"></p>
+    <div class="row"><div><div class="lbl" data-t="ui.daily-souls">Daily Souls</div><div class="sub" data-t="ui.a-free-handful-once-a">A free handful, once a day</div></div><button class="btn primary sm" id="soulsDaily" type="button">Claim</button></div>
+    <div class="section-k"><span class="k" data-t="ui.soul-bound-looks">Soul-bound looks</span></div>
+    <div class="grid" id="soulsGrid"></div>
+    <div class="section-k"><span class="k" data-t="ui.soul-packs">Soul packs</span><b id="soulsPacksNote"></b></div>
+    <div class="souls-packs" id="soulsPacks"></div>
+    <div class="tip" data-t="ui.souls-live-on-the-server">Souls live on the server. They're never in a save code, and only the server can change them. <b>Bones</b> still buy everything else.</div>
+  </div>
+</section>
+
 <section class="sheet" id="sheet-settings" role="dialog" aria-modal="true" aria-labelledby="h-settings" hidden>
   <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back" data-t-aria="ui.back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-settings" data-t="ui.settings">Settings</h2></div>
   <div class="sheet-body">
@@ -227,6 +240,7 @@
   <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back" data-t-aria="ui.back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-store" data-t="ui.curio-cart">Curio Cart</h2><span class="bones" id="bonesStore"><svg><use href="#i-bone"/></svg><span>0</span></span></div>
   <div class="sheet-body">
     <div class="preview cart"><canvas id="cartCv" aria-label="Mort the ghoul behind his cart, showing off an item" data-t-aria="ui.mort-the-ghoul-behind-his"></canvas><span class="tag" id="cartQuip">No refunds. No returns. No pulse.</span></div>
+    <button class="btn sm soul-door" data-sheet="souls" type="button"><span data-t="ui.soul-shop">Soul Shop</span> · ◆ <b class="souls-n">—</b></button>
     <div class="section-k"><span class="k" data-t="ui.today-s-deals">Today's deals</span><b id="dealTimer"></b></div>
     <div class="grid" id="dealGrid"></div>
     <div class="coffin"><div><div class="lbl" data-t="ui.the-mystery-coffin">The Mystery Coffin</div><div class="sub" id="coffinNote">Something you don't own yet</div></div><button class="btn primary sm" id="coffinBtn" type="button">Open</button></div>

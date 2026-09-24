@@ -25,6 +25,8 @@ jobs:
           python3 src/build.py --dev
           python3 src/build.py --with-music
           ! grep -q "setBones" index.html
+      - name: The server's rules (firebase/functions, no install needed)
+        run: node --test firebase/functions/test/*.test.js
       - name: Install Playwright
         working-directory: skull-toss/tools
         run: |

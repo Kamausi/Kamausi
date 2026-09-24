@@ -1,6 +1,7 @@
   // ───────────────────────── trails ─────────────────────────
   // line: how the path behind the skull is drawn · emit: particles it sheds · rate: particles per frame at 60 fps
   const TRAILS = {
+    soul: { line: "ribbon", color: "#B48CFF", emit: "star", rate: 0.8 }, aurora: { line: "ribbon", color: "#78F0BE", emit: "spark", rate: 0.9 },   // (the Soul Shop's, v30)
     dust: { line: "dots", color: CREAM },            smoke: { line: "dots", color: "#8E8A7E", emit: "puff", rate: 0.5 },
     lines: { line: "speed" },                        sparks: { line: "dots", color: MUSTARD, emit: "spark", rate: 1.4 },
     bubbles: { line: "none", emit: "bubble", rate: 0.55 }, fire: { line: "dots", color: EMBER, emit: "ember", rate: 2 },

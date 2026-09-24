@@ -5,16 +5,16 @@
   const Cloud = {
     state: "off",      // off | connecting | ok | busy | error
     ref: null, me: null, writing: false, dirty: false, timer: 0, lastSync: 0,
-    async init() {
+    async init() {   // the backend decides where the save lives: Firebase, the claude.ai host, or nowhere (03a_backend.js)
       const host = window.claude;
-      if (!host || typeof host.use !== "function") { this.state = "off"; renderSave(); return; }
+      if (!FIREBASE_CONFIG && (!host || typeof host.use !== "function")) { this.state = "off"; renderSave(); return; }
       this.state = "connecting"; renderSave();
       try {
-        const [user, db] = await Promise.all([host.use("user"), host.use("db")]);
-        const me = user ? await user.me() : null;
-        if (!db || !me || !me.id) { this.state = "off"; renderSave(); return; }
-        this.me = me; this.ref = db.doc("data/users/" + me.id + "/save");
-        Board.init(db, me);
+        const B = await Backend.init();
+        Souls.connect();   // (Souls need the server's functions: 09m_souls.js)
+        if (!B.db || !B.me) { this.state = "off"; renderSave(); return; }
+        this.me = B.me; this.ref = B.db.doc("data/users/" + B.me.id + "/save");
+        Board.init(B.db, B.me);
         await this.pull();
       } catch (e) { this.state = "error"; renderSave(); }
     },
