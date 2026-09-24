@@ -170,6 +170,8 @@
  "career.recent": "Recent runs",
  "career.title": "{title}",
  "career.xpRow": "Experience",
+ "cart.offline": "Mort's Souls counter opens with the game's server. Until then you can look, but not buy.",
+ "cart.shut": "Souls counter shut",
  "coach.balloon": "Throw around the balloons",
  "coach.bar": "Wait for the gap in the turning flat",
  "coach.barrier": "Throw when the scrim goes thin",
@@ -819,5 +821,12 @@
  "streak.val": "day {n} · +{bones} bones",
  "target.secret.found": "A SECRET!",
  "title.best": "Best <b>{score}</b> · {rank}",
- "title.bestHits": "Best <b>{hits}</b> hits · {rank}"
+ "title.bestHits": "Best <b>{hits}</b> hits · {rank}",
+ "vault.clearAsk": "Clear all {n} new badges? The items stay yours; only the bubbles go.",
+ "vault.equip": "Wear it",
+ "vault.equipped": "Wearing it",
+ "vault.how.bones": "Bones",
+ "vault.how.earn": "Earn",
+ "vault.wearing": "Wearing it now",
+ "vault.yours": "Yours: try it on, then wear it"
 }

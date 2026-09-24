@@ -16,7 +16,7 @@
   }
   const findItem = (kind, id) => CATALOG[kind] && CATALOG[kind].find(i => i.id === id);
   function canUse(kind, it) {   // (buy() below never sells a Soul item for bones: it has no bones price)
-    if (it.souls) return Souls.owns(kind + ":" + it.id);           // a Soul Shop item: the server's wallet says (09m_souls.js)
+    if (it.souls) return Souls.owns(kind + ":" + it.id) || (!!it.shop && profile.unlocked.includes(kind + ":" + it.id));   // a Soul item: the server's wallet says (09m_souls.js); a Cart exclusive bought with bones before v45 stays yours
     if (it.season) return profile.unlocked.includes(kind + ":" + it.id);   // a season look: earned on its Ticket, or not at all (07l_season.js)
     if (!it.price && !it.req) return true;                       // stock: yours from the start
     if (profile.unlocked.includes(kind + ":" + it.id)) return true; // bought, or earned earlier

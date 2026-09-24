@@ -56,6 +56,7 @@
   function drawBodyFront(c, look, t, jawDrop) {
     c.save(); c.lineWidth = 0.05; c.strokeStyle = INK; c.lineJoin = "round"; c.lineCap = "round";
     if (HAIR[look.hair]) HAIR[look.hair](c, t);
+    if (GLASSES[look.glasses]) { c.save(); GLASSES[look.glasses](c, t, SOCK[0].x < SOCK[1].x ? SOCK : [SOCK[1], SOCK[0]]); c.restore(); }   // (v45: over the sockets)
     c.translate(0, jawDrop);
     if (look.wizard === "mort" || look.wizard === "apprentice") {   // the wizard's beard: long and white, the apprentice's still short
       const L = look.wizard === "mort" ? 1.6 : 0.95; c.beginPath(); c.moveTo(-0.55, 0.3); c.quadraticCurveTo(-0.5, L * 0.8, 0.05 + Math.sin(t * 2) * 0.05, L); c.quadraticCurveTo(0.5, L * 0.8, 0.55, 0.3); c.quadraticCurveTo(0, 0.62, -0.55, 0.3); inkB(c, "#F4F0E8");
@@ -88,3 +89,51 @@
     ctx.fillStyle = L.hi; for (const a of [aL, aR]) { ctx.beginPath(); ctx.arc(a.x, a.y, Math.max(2.5, r * 0.11), 0, TAU); ctx.fill(); ctx.stroke(); }
     ctx.restore();
   }
+
+  // ── v45: glasses, over the sockets (their centres and sizes are the skull art's own, 08a_skull.js: SOCK), left then right
+  const lensR = s => Math.max(s.rx, s.ry) * 1.12;
+  const lensCircle = (c, x, y, r) => { c.beginPath(); c.arc(x, y, r, 0, TAU); };
+  const lensBox = (c, x, y, r) => { c.beginPath(); rr(c, x - r * 1.1, y - r * 0.82, r * 2.2, r * 1.64, r * 0.42); };
+  const lensDrop = (c, x, y, r) => { c.beginPath(); c.moveTo(x - r * 1.05, y - r * 0.7); c.lineTo(x + r * 1.05, y - r * 0.7); c.quadraticCurveTo(x + r * 1.15, y + r * 0.5, x + r * 0.2, y + r * 1.0); c.quadraticCurveTo(x - r * 1.1, y + r * 0.9, x - r * 1.05, y - r * 0.7); c.closePath(); };
+  const lensHeart = (c, x, y, r) => { c.beginPath(); c.moveTo(x, y + r * 1.0); c.bezierCurveTo(x - r * 1.6, y - r * 0.1, x - r * 0.8, y - r * 1.3, x, y - r * 0.45); c.bezierCurveTo(x + r * 0.8, y - r * 1.3, x + r * 1.6, y - r * 0.1, x, y + r * 1.0); c.closePath(); };
+  const lensStar = (c, x, y, r) => { star(c, x, y, r * 1.35, 5, 0.52, -Math.PI / 2); };
+  function glassFrames(c, S, shape, fill, frame, w = 0.06, o = {}) {
+    const [L, R] = S, rl = lensR(L), rr2 = lensR(R);
+    c.lineJoin = "round"; c.lineCap = "round";
+    if (o.arms !== false) { c.strokeStyle = INK; c.lineWidth = w + 0.05; c.beginPath(); c.moveTo(L.x - rl * 1.05, L.y - rl * 0.2); c.lineTo(L.x - rl * 1.7, L.y - rl * 0.45); c.moveTo(R.x + rr2 * 1.05, R.y - rr2 * 0.2); c.lineTo(R.x + rr2 * 1.7, R.y - rr2 * 0.45); c.stroke(); c.strokeStyle = frame; c.lineWidth = w; c.stroke(); }
+    c.strokeStyle = INK; c.lineWidth = w + 0.05; c.beginPath(); c.moveTo(L.x + rl * 0.9, L.y - rl * 0.25); c.quadraticCurveTo((L.x + R.x) / 2, L.y - rl * 0.6, R.x - rr2 * 0.9, R.y - rr2 * 0.25); c.stroke(); c.strokeStyle = frame; c.lineWidth = w; c.stroke();
+    [L, R].forEach((s, i) => { const r = lensR(s); shape(c, s.x, s.y, r); c.fillStyle = typeof fill === "function" ? fill(i, s, r) : fill; c.fill(); c.lineWidth = w + 0.05; c.strokeStyle = INK; c.stroke(); c.lineWidth = w; c.strokeStyle = frame; c.stroke(); });
+    if (o.glare !== false) { c.strokeStyle = "rgba(255,255,255,.6)"; c.lineWidth = 0.05; for (const s of [L, R]) { const r = lensR(s); c.beginPath(); c.moveTo(s.x - r * 0.55, s.y - r * 0.05); c.lineTo(s.x - r * 0.15, s.y - r * 0.5); c.stroke(); } }
+  }
+  const GLASSES = {
+    round(c, t, S) { glassFrames(c, S, lensCircle, "rgba(200,230,255,.16)", "#C49A42", 0.05); },
+    shades(c, t, S) { glassFrames(c, S, lensBox, "#15131A", "#15131A", 0.08); },
+    nerd(c, t, S) { glassFrames(c, S, lensBox, "rgba(200,230,255,.14)", "#1E1C22", 0.13); const m = (S[0].x + S[1].x) / 2, y = S[0].y - lensR(S[0]) * 0.35; c.fillStyle = "#F4F0E6"; c.strokeStyle = INK; c.lineWidth = 0.035; c.beginPath(); c.rect(m - 0.09, y - 0.1, 0.18, 0.2); c.fill(); c.stroke(); },
+    threed(c, t, S) { glassFrames(c, S, lensBox, i => (i ? "rgba(70,200,230,.7)" : "rgba(220,50,60,.7)"), "#F4F0E6", 0.1); },
+    heart(c, t, S) { glassFrames(c, S, lensHeart, "rgba(245,120,170,.75)", "#E8505B", 0.06); },
+    aviator(c, t, S) { glassFrames(c, S, lensDrop, (i, s, r) => { const g = c.createLinearGradient(0, s.y - r, 0, s.y + r); g.addColorStop(0, "rgba(90,50,20,.9)"); g.addColorStop(1, "rgba(200,140,60,.6)"); return g; }, "#D8B45A", 0.045); },
+    star(c, t, S) { glassFrames(c, S, lensStar, "rgba(255,220,80,.8)", "#E8505B", 0.06, { glare: false }); },
+    monocle(c, t, S) {   // one lens, on the right, and its chain
+      const R = S[1], r = lensR(R); c.lineJoin = "round"; lensCircle(c, R.x, R.y, r); c.fillStyle = "rgba(200,230,255,.18)"; c.fill(); c.lineWidth = 0.1; c.strokeStyle = INK; c.stroke(); c.lineWidth = 0.055; c.strokeStyle = "#D8B45A"; c.stroke();
+      c.strokeStyle = "#D8B45A"; c.lineWidth = 0.03; c.setLineDash([0.06, 0.04]); c.beginPath(); c.moveTo(R.x + r * 0.7, R.y + r * 0.7); c.quadraticCurveTo(R.x + r * 1.4, R.y + r * 2.4, R.x + r * 0.4, R.y + r * 3.2); c.stroke(); c.setLineDash([]);
+      c.strokeStyle = "rgba(255,255,255,.6)"; c.lineWidth = 0.05; c.beginPath(); c.moveTo(R.x - r * 0.55, R.y - r * 0.05); c.lineTo(R.x - r * 0.15, R.y - r * 0.5); c.stroke();
+    },
+    goggles(c, t, S) {   // brass flying goggles, strap round the back
+      c.strokeStyle = "#5A3A22"; c.lineWidth = 0.16; c.beginPath(); c.moveTo(S[0].x - lensR(S[0]) * 1.2, S[0].y); c.lineTo(-1.05, S[0].y - 0.08); c.moveTo(S[1].x + lensR(S[1]) * 1.2, S[1].y); c.lineTo(1.05, S[1].y - 0.08); c.stroke();
+      glassFrames(c, S, lensCircle, (i, s, r) => { const g = c.createRadialGradient(s.x - r * 0.3, s.y - r * 0.3, 0, s.x, s.y, r); g.addColorStop(0, "rgba(180,240,200,.8)"); g.addColorStop(1, "rgba(40,110,80,.85)"); return g; }, "#C49A42", 0.12, { arms: false });
+    },
+    bandit(c, t, S) {   // a bandit's mask: a black band with the sockets showing through
+      const [L, R] = S, rl = lensR(L), y = (L.y + R.y) / 2;
+      c.beginPath(); c.moveTo(L.x - rl * 1.8, y - rl * 0.6); c.quadraticCurveTo(0, y - rl * 1.5, R.x + rl * 1.8, y - rl * 0.6); c.quadraticCurveTo(R.x + rl * 1.6, y + rl * 0.9, R.x + rl * 0.3, y + rl * 1.1); c.quadraticCurveTo(0, y + rl * 0.5, L.x - rl * 0.3, y + rl * 1.1); c.quadraticCurveTo(L.x - rl * 1.6, y + rl * 0.9, L.x - rl * 1.8, y - rl * 0.6); c.closePath();
+      for (const s of S) { c.moveTo(s.x + s.rx * 0.95, s.y); c.ellipse(s.x, s.y, s.rx * 0.95, s.ry * 0.95, 0, 0, TAU, true); }
+      c.fillStyle = "#15131A"; c.fill("evenodd"); c.strokeStyle = INK; c.lineWidth = 0.05; c.stroke();
+      c.strokeStyle = "#15131A"; c.lineWidth = 0.07; for (const sd of [-1, 1]) { c.beginPath(); c.moveTo(sd * (Math.abs(R.x) + rl * 1.7), y - rl * 0.5); c.quadraticCurveTo(sd * (Math.abs(R.x) + rl * 2.4), y + rl * 0.2, sd * (Math.abs(R.x) + rl * 2.1), y + rl * 1.2); c.stroke(); }
+    },
+    visor(c, t, S) {   // a neon visor across both sockets
+      const [L, R] = S, rl = lensR(L), y = (L.y + R.y) / 2, k = 0.75 + 0.25 * Math.sin(t * 4);
+      c.beginPath(); rr(c, L.x - rl * 1.4, y - rl * 0.6, R.x - L.x + rl * 2.8, rl * 1.2, rl * 0.6);
+      c.fillStyle = `rgba(80,240,255,${0.35 + 0.25 * k})`; c.fill(); c.strokeStyle = INK; c.lineWidth = 0.1; c.stroke(); c.strokeStyle = "#50F0FF"; c.lineWidth = 0.05; c.stroke();
+      c.globalCompositeOperation = "lighter"; c.strokeStyle = `rgba(80,240,255,${0.25 * k})`; c.lineWidth = 0.22; c.stroke(); c.globalCompositeOperation = "source-over";
+      c.strokeStyle = "rgba(255,255,255,.8)"; c.lineWidth = 0.035; c.beginPath(); c.moveTo(L.x - rl * 0.9, y - rl * 0.25); c.lineTo(R.x + rl * 0.9, y - rl * 0.25); c.stroke();
+    }
+  };

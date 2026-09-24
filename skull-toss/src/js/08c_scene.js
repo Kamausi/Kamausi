@@ -13,20 +13,23 @@
       ctx.save(); ctx.globalAlpha = 0.38; ctx.translate(p.x, p.y + r * 0.18); ctx.scale(1 + wob, -0.26); drawRingShape(ctx, 0, 0, r, RING_TUBE * 2 * p.s, cos.ring, game.time, 0); ctx.restore();
     } else { ctx.fillStyle = `rgba(0,0,0,${BLUEPRINT.shadow.ring.opacity})`; ctx.beginPath(); ctx.ellipse(p.x, p.y, ring.rc * p.s * 0.95, 0.07 * p.s, 0, 0, TAU); ctx.fill(); }
   }
-  // cartoon wings: the ring has shaken loose and flies the triangle on its own
-  function drawRingWings(x, y, r, lw) {
-    const flap = Math.sin(Math.floor(game.time * 12) / 12 * 14) * 0.5, grow = 1 - (ring.morph || 0);
+  // cartoon wings: the ring has shaken loose and flies the triangle on its own (after the mini-boss). v45: which wings is a
+  // Vault shelf of its own (Ring wings): the classic bat membrane, or any of Morty's own wing styles (08i_body.js)
+  function drawRingWings(x, y, r, lw, id = cos.ringwings, c = ctx, t = game.time, grow = 1 - (ring.morph || 0), ringId = cos.ring) {
+    const flap = Math.sin(Math.floor(t * 12) / 12 * 14) * 0.5, W1 = id !== "classic" && WINGS[id], E = ringOuter(r, lw, ringId);   // (they root at the ring's drawn edge: a painted ring is far wider than its tube)
     if (grow <= 0.02) return;
-    ctx.save(); ctx.translate(x, y); ctx.lineJoin = "round"; ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1.5, lw * 0.35);
+    c.save(); c.translate(x, y); c.lineJoin = "round"; c.strokeStyle = INK; c.lineWidth = Math.max(1.5, lw * 0.35);
     for (const sd of [-1, 1]) {
-      ctx.save(); ctx.scale(sd * grow, grow); ctx.rotate(-0.15 - flap * 0.5); ctx.translate(r * 0.92, 0);
-      ctx.fillStyle = "#3A3240"; ctx.beginPath(); ctx.moveTo(0, -r * 0.1);
-      ctx.bezierCurveTo(r * 0.3, -r * 0.8, r * 0.95, -r * 0.75, r * 1.05, -r * 0.35);
-      ctx.quadraticCurveTo(r * 0.85, -r * 0.28, r * 0.88, -r * 0.05); ctx.quadraticCurveTo(r * 0.6, -r * 0.12, r * 0.6, r * 0.12); ctx.quadraticCurveTo(r * 0.35, -r * 0.02, 0, r * 0.1); ctx.closePath(); ctx.fill(); ctx.stroke();
-      ctx.strokeStyle = "rgba(242,231,201,.25)"; ctx.beginPath(); ctx.moveTo(r * 0.1, -r * 0.05); ctx.lineTo(r * 0.9, -r * 0.5); ctx.stroke(); ctx.strokeStyle = INK;
-      ctx.restore();
+      c.save(); c.scale(sd * grow, grow); c.rotate(-0.15 - flap * 0.5); c.translate(E * 0.88, 0);
+      if (W1) { const k = E * 0.42; c.scale(k, k); c.translate(-0.5, 0.25); c.lineWidth = Math.max(1.5, lw * 0.35) / k; W1(c, t, sd); c.restore(); continue; }
+      r = E * 0.85;   // (the classic membrane, sized to the ring as drawn)
+      c.fillStyle = "#3A3240"; c.beginPath(); c.moveTo(0, -r * 0.1);
+      c.bezierCurveTo(r * 0.3, -r * 0.8, r * 0.95, -r * 0.75, r * 1.05, -r * 0.35);
+      c.quadraticCurveTo(r * 0.85, -r * 0.28, r * 0.88, -r * 0.05); c.quadraticCurveTo(r * 0.6, -r * 0.12, r * 0.6, r * 0.12); c.quadraticCurveTo(r * 0.35, -r * 0.02, 0, r * 0.1); c.closePath(); c.fill(); c.stroke();
+      c.strokeStyle = "rgba(242,231,201,.25)"; c.beginPath(); c.moveTo(r * 0.1, -r * 0.05); c.lineTo(r * 0.9, -r * 0.5); c.stroke(); c.strokeStyle = INK;
+      c.restore();
     }
-    ctx.restore();
+    c.restore();
   }
   // v45: a hot streak sets the ring alight. It catches at ×3.5 (six in a row), burns hotter with every make, and roars
   // at the ×6 cap; a miss puts it out. The flames flare from behind the band, outward and up, and never cover the hole.

@@ -43,3 +43,19 @@ test("a wallet can't be forged into shape: junk is cleaned, and the cap holds", 
   const w = Economy.cleanWallet({ souls: 5e9, owned: ["skull:soul", "hat:free", 3], daily: 7 });
   assert.strictEqual(w.souls, Economy.MAX_SOULS); assert.deepStrictEqual(w.owned, ["skull:soul"]); assert.strictEqual(w.daily, "");
 });
+
+test("v45: the Curio Cart sells for Souls: its exclusives at the server's price, a quarter off the day's deal, and the Mystery Coffin", async () => {
+  const db = memoryDb(), h = makeHandlers(Economy, accept), now = Date.UTC(2026, 8, 24, 12), day = Economy.dayOf(now);
+  assert.ok(Economy.CART.length >= 20 && Economy.CART.every(k => Economy.ITEMS[k].souls > 0));
+  const deal = Economy.dealOf(day), other = Economy.CART.find(k => k !== deal.key);
+  assert.ok(Economy.CART.includes(deal.key) && deal.souls < Economy.ITEMS[deal.key].souls, "the day's deal is a Cart exclusive, marked down");
+  assert.deepStrictEqual(Economy.dealOf(day), deal, "the same deal all day");
+  await call(h, "redeemPurchase", db, "u1", { platform: "test", receipt: "OK:c1", product: "souls.1200" }, now);
+  let w = await call(h, "buyWithSouls", db, "u1", { item: deal.key }, now);
+  assert.strictEqual(w.souls, 1200 - deal.souls, "the deal's price, on the deal's day");
+  w = await call(h, "buyWithSouls", db, "u1", { item: other }, now);
+  assert.strictEqual(w.souls, 1200 - deal.souls - Economy.ITEMS[other].souls, "the full price otherwise");
+  const before = w.souls; w = await call(h, "openCoffinSouls", db, "u1", {}, now);
+  assert.strictEqual(w.souls, before - Economy.COFFIN); assert.ok(!w.owned.some(k => k.startsWith("coffin")), "the coffin leaves nothing on the wallet");
+  const db2 = memoryDb(); await refusal(call(h, "openCoffinSouls", db2, "u2", {}, now), "failed-precondition");
+});

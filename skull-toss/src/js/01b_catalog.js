@@ -196,7 +196,11 @@
   ];
   // v30: the Soul Shop's items, priced in Souls by the shared economy (firebase/functions/shared/economy.js); owning one is
   // the server's word (Souls.owns), never the profile's
-  for (const [key, it] of Object.entries(Economy.ITEMS)) { const [kind, id] = key.split(":"); if (CATALOG[kind]) CATALOG[kind].push({ id, name: it.name, s: it.s, souls: it.souls }); }   // (a season's Premium Ticket isn't a look)
+  // v45: the Curio Cart's exclusives are in the shared economy too, now it takes Souls: they keep their place on the
+  // shelf, lose their bones price, and carry the server's Souls price
+  for (const [key, it] of Object.entries(Economy.ITEMS)) { const [kind, id] = key.split(":"); if (!CATALOG[kind]) continue;
+    const had = CATALOG[kind].find(x => x.id === id);
+    if (had) { delete had.price; had.souls = it.souls; } else CATALOG[kind].push({ id, name: it.name, s: it.s, souls: it.souls }); }   // (a season's Premium Ticket isn't a look)
   // v42: the season looks, earned on a season's Ticket and only that season (07l_season.js)
   CATALOG.skull.push({ id: "harvestmoon", name: "Harvest Moon", s: 4, season: "s1" });
   CATALOG.ring.push({ id: "candycorn", name: "Candy Corn", s: 3, season: "s1" });
@@ -263,6 +267,29 @@
   Object.assign(KIND_LABEL, { hair: "hair", beard: "facial hair", wings: "wings", launcher: "launcher", wizard: "Wizard Mort" });
   Object.assign(DEFAULT_COS, { hair: "none", beard: "none", wings: "none", launcher: "classic", wizard: "none" });
   REQ_TEXT.shards = n => `Win ${n} shards of the Black Ring`;
+  // v45: two new shelves. Glasses sit over Morty's sockets; ring wings are the wings the ring sprouts after the mini-boss
+  // (the classic bat membrane, or any of Morty's own wing styles), and the mini-bosses give some of them back.
+  CATALOG.glasses = [
+    { id: "none", name: "No Glasses" },
+    { id: "round", name: "Round Specs", s: 1, price: 400 },          { id: "shades", name: "Shades", s: 1, price: 500 },
+    { id: "nerd", name: "Taped-Up Frames", s: 1, price: 450 },       { id: "threed", name: "3-D Glasses", s: 2, price: 900 },
+    { id: "heart", name: "Heart Specs", s: 2, price: 1000 },          { id: "aviator", name: "Aviators", s: 2, price: 1100 },
+    { id: "monocle", name: "Monocle", s: 2, price: 1200 },            { id: "star", name: "Rock-Star Specs", s: 3, price: 2600 },
+    { id: "goggles", name: "Flying Goggles", s: 3, price: 2900 },     { id: "visor", name: "Neon Visor", s: 4, price: 7000 },
+    { id: "bandit", name: "Bandit's Mask", s: 2, req: ["posts", 15], shame: true }
+  ];
+  CATALOG.ringwings = [
+    { id: "classic", name: "Bat Membrane" },
+    { id: "butterfly", name: "Monarch", s: 2, price: 1200 },          { id: "bat", name: "Vampire Bat", s: 2, price: 1300 },
+    { id: "angel", name: "Cherub", s: 3, price: 2800 },               { id: "dragon", name: "Dragon", s: 4, price: 7500 },
+    { id: "crow", name: "Crow's Pinions", s: 3, req: ["miniKills", 1], boss: true },
+    { id: "vulture", name: "Vulture's Pinions", s: 3, req: ["miniKills", 4], boss: true },
+    { id: "clockwork", name: "Clockwork Flaps", s: 4, req: ["miniKills", 8], boss: true },
+    { id: "shadow", name: "Shadow Flaps", s: 4, req: ["miniFlawless", 3], boss: true }
+  ];
+  KINDS.push("glasses", "ringwings");
+  Object.assign(KIND_LABEL, { glasses: "glasses", ringwings: "ring wings" });
+  Object.assign(DEFAULT_COS, { glasses: "none", ringwings: "classic" });
   // v45: Can Alley's prizes (07o_bonus.js). The first time you clear the cans after a map's end boss, that map's prize
   // is yours; they're never sold. (The last map has no Can Alley: the Adventure ends there.)
   const CAN_PRIZES = [["aim", "tickets", "Prize Tickets", 2], ["trail", "midway", "Midway Confetti", 3], ["impact", "ringer", "RINGER!", 3], ["aura", "bulbs", "Marquee Bulbs", 3],

@@ -125,13 +125,14 @@
 
 <section class="sheet" id="sheet-customize" role="dialog" aria-modal="true" aria-labelledby="h-customize" hidden>
   <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back" data-t-aria="ui.back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-customize" data-t="ui.skull-vault">Skull Vault</h2><span class="bones" id="bonesShop"><svg><use href="#i-bone"/></svg><span>0</span></span></div>
-  <div class="sheet-body">
-    <div class="preview"><canvas id="previewCv" aria-label="Morty on the pedestal, in your looks. Drag to spin him." data-t-aria="ui.morty-on-the-pedestal-in"></canvas><span class="tag" data-t="ui.on-the-pedestal">On the pedestal</span></div>
+  <div class="sheet-body vault-body">
+    <div class="preview"><canvas id="previewCv" aria-label="Morty on the pedestal, in your looks. Drag to spin him." data-t-aria="ui.morty-on-the-pedestal-in"></canvas><span class="tag" id="previewTag" data-t="ui.on-the-pedestal">On the pedestal</span><button class="icon-btn try-close" id="tryClose" type="button" aria-label="Back to the shelves" data-t-aria="ui.back-to-the-shelves" hidden><svg class="icon"><use href="#i-back"/></svg></button></div>
     <div class="outfits" id="outfits"><span class="k" data-t="ui.outfits">Outfits</span><span class="slots" id="outfitSlots"></span><button class="ghost-btn" id="outfitSave" type="button" data-t="ui.save-look">Save look</button><button class="ghost-btn" id="surpriseBtn" type="button" data-t="ui.surprise-me">Surprise me</button></div>
     <div class="cat-tabs" id="catTabs" role="tablist">
       <button type="button" role="tab" data-cat="hat" data-group="Head" aria-selected="false" data-t="ui.hats">Hats</button>
       <button type="button" role="tab" data-cat="eyes" data-group="Face" aria-selected="false" data-t="ui.eyes">Eyes</button>
       <button type="button" role="tab" data-cat="teeth" aria-selected="false" data-t="ui.teeth">Teeth</button>
+      <button type="button" role="tab" data-cat="glasses" aria-selected="false" data-t="ui.glasses">Glasses</button>
       <button type="button" role="tab" data-cat="hair" data-group="Hair" aria-selected="false" data-t="ui.hair">Hair</button>
       <button type="button" role="tab" data-cat="beard" data-group="Facial hair" aria-selected="false" data-t="ui.beard">Facial hair</button>
       <button type="button" role="tab" data-cat="wings" data-group="Wings" aria-selected="false" data-t="ui.wings">Wings</button>
@@ -141,6 +142,7 @@
       <button type="button" role="tab" data-cat="skull" data-group="Skull" aria-selected="true" data-t="ui.skulls">Skulls</button>
       <button type="button" role="tab" data-cat="paint" aria-selected="false" data-t="ui.paint">Paint</button>
       <button type="button" role="tab" data-cat="ring" data-group="Ring" aria-selected="false" data-t="ui.rings">Rings</button>
+      <button type="button" role="tab" data-cat="ringwings" aria-selected="false" data-t="ui.ring-wings">Ring wings</button>
       <button type="button" role="tab" data-cat="pole" aria-selected="false" data-t="ui.poles">Poles</button>
       <button type="button" role="tab" data-cat="launcher" data-group="Launcher" aria-selected="false" data-t="ui.launchers">Launchers</button>
       <button type="button" role="tab" data-cat="band" aria-selected="false" data-t="ui.bands">Bands</button>
@@ -149,13 +151,16 @@
       <button type="button" role="tab" data-cat="title" aria-selected="false" data-t="ui.titles">Titles</button>
       <button type="button" role="tab" data-cat="wizard" data-group="Wizard Mort" aria-selected="false" data-t="ui.wizard">Wizard Mort</button>
     </div>
-    <div class="section-k"><span class="k" id="catLabel">Skulls</span><b id="catCount"></b></div>
-    <div class="grid" id="shopGrid"></div>
-    <div class="tip" data-t="ui.nothing-in-the-vault-changes">Nothing in the Vault changes how Morty flies. <b>Look what you're throwing</b>: that's the whole flex.</div>
+    <div class="section-k"><span class="k" id="catLabel">Skulls</span><b id="catCount"></b><button class="ghost-btn sm clear-badges" id="clearBadges" type="button" hidden>Clear badges</button></div>
+    <div class="clear-ask" id="clearAsk" hidden><span id="clearAskText"></span><button class="btn primary sm" id="clearYes" type="button" data-t="ui.clear-them">Clear them</button><button class="ghost-btn sm" id="clearNo" type="button" data-t="ui.keep">Keep</button></div>
+    <div class="vault-scroll" id="vaultScroll">
+      <div class="grid" id="shopGrid"></div>
+      <div class="tip" data-t="ui.nothing-in-the-vault-changes">Nothing in the Vault changes how Morty flies. <b>Look what you're throwing</b>: that's the whole flex.</div>
+    </div>
   </div>
   <div class="sheet-foot buybar" id="buybar" hidden>
     <div class="info"><div class="lbl"><span id="buyName"></span><span class="rar-name" id="buyRar"></span></div><div class="sub" id="buySub"></div></div>
-    <button class="btn primary sm" id="buyBtn" type="button"></button>
+    <button class="ghost-btn sm" id="tryBack" type="button" data-t="ui.back">Back</button><button class="btn primary sm" id="buyBtn" type="button"></button>
   </div>
 </section>
 
@@ -280,17 +285,19 @@
 </section>
 
 <section class="sheet" id="sheet-store" role="dialog" aria-modal="true" aria-labelledby="h-store" hidden>
-  <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back" data-t-aria="ui.back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-store" data-t="ui.curio-cart">Curio Cart</h2><span class="bones" id="bonesStore"><svg><use href="#i-bone"/></svg><span>0</span></span></div>
+  <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back" data-t-aria="ui.back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-store" data-t="ui.curio-cart">Curio Cart</h2><span class="souls-chip" aria-label="Souls" data-t-aria="ui.souls"><b>◆</b><span class="souls-n">—</span></span></div>
   <div class="sheet-body">
     <div class="preview cart"><canvas id="cartCv" aria-label="Mort the ghoul behind his cart, showing off an item" data-t-aria="ui.mort-the-ghoul-behind-his"></canvas><span class="tag" id="cartQuip">No refunds. No returns. No pulse.</span></div>
-    <button class="btn sm soul-door" data-sheet="souls" type="button"><span data-t="ui.soul-shop">Soul Shop</span> · ◆ <b class="souls-n">—</b></button>
-    <div class="section-k"><span class="k" data-t="ui.today-s-deals">Today's deals</span><b id="dealTimer"></b></div>
+    <p class="cart-status" id="cartStatus" hidden></p>
+    <button class="btn sm soul-door" data-sheet="souls" type="button"><span data-t="ui.get-souls-at-the-soul-shop">Get Souls at the Soul Shop</span> · ◆ <b class="souls-n">—</b></button>
+    <div class="section-k"><span class="k" data-t="ui.deal-of-the-day">Deal of the day</span><b id="dealTimer"></b></div>
     <div class="grid" id="dealGrid"></div>
     <div class="coffin"><div><div class="lbl" data-t="ui.the-mystery-coffin">The Mystery Coffin</div><div class="sub" id="coffinNote">Something you don't own yet</div></div><button class="btn primary sm" id="coffinBtn" type="button">Open</button></div>
     <div class="section-k"><span class="k" data-t="ui.cart-exclusives">Cart exclusives</span><b id="exclCount"></b></div>
-    <div class="grid" id="exclGrid"></div>
-    <div class="tip" data-t="ui.exclusives-are-only-sold-here">Exclusives are <b>only sold here</b>, never in the Vault. Deals change at midnight. It's all looks: nothing Mort sells changes how Morty flies.</div>
+    <div id="exclGrid"></div>
+    <div class="tip" data-t="ui.mort-takes-souls-only">Mort takes <b>Souls only</b>: bones are for the Vault. Exclusives are sold nowhere else, and the deal changes at midnight. It's all looks: nothing Mort sells changes how Morty flies.</div>
   </div>
+  <div class="coffin-show" id="coffinShow" hidden role="dialog" aria-modal="true" aria-label="The Mystery Coffin" data-t-aria="ui.the-mystery-coffin"><div class="coffin-card"><canvas id="coffinCv" aria-hidden="true"></canvas><p class="coffin-won" id="coffinWon" aria-live="polite"></p><div class="coffin-acts"><button class="ghost-btn sm" id="coffinKeep" type="button" hidden data-t="ui.keep-it">Keep it</button><button class="btn primary sm" id="coffinWear" type="button" hidden data-t="ui.wear-it">Wear it</button></div></div></div>
   <div class="sheet-foot buybar" id="cartBar" hidden>
     <div class="info"><div class="lbl" id="cartName"></div><div class="sub" id="cartSub"></div></div>
     <button class="btn primary sm" id="cartBuy" type="button"></button>

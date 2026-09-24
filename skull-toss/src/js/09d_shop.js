@@ -1,7 +1,7 @@
   // ───────────────────────── the Skull Vault ─────────────────────────
   // An old cartoon prop room: pick a shelf, tap an item, and the skull hops onto the pedestal wearing it.
   const shop = { cat: "skull", sel: null, slot: 0 };
-  const CAT_LABEL = { skull: "Skulls", eyes: "Eyes", teeth: "Teeth", paint: "Paint jobs", hat: "Hats", aura: "Auras", trail: "Trails", impact: "Impacts", ring: "Rings", pole: "Ring poles", band: "Bands", aim: "Aim lines", reel: "Film reels", title: "Titles", hair: "Hair", beard: "Facial hair", wings: "Wings", launcher: "Launchers", wizard: "Wizard Mort" };
+  const CAT_LABEL = { skull: "Skulls", eyes: "Eyes", teeth: "Teeth", paint: "Paint jobs", hat: "Hats", aura: "Auras", trail: "Trails", impact: "Impacts", ring: "Rings", pole: "Ring poles", band: "Bands", aim: "Aim lines", reel: "Film reels", title: "Titles", hair: "Hair", beard: "Facial hair", wings: "Wings", launcher: "Launchers", wizard: "Wizard Mort" , glasses: "Glasses", ringwings: "Ring wings" };
   const fmt = n => n.toLocaleString("en-US");
   const starsText = it => "★".repeat(starsOf(it)) + "☆".repeat(4 - starsOf(it));
   const vault = { R: makeRig(), y: -140, vy: 0, ang: 0, spin: 0, parts: [], bursts: [], trail: [], loop: 0, nextHop: 0, nextReact: 0, react: null, reactUntil: 0, dragX: null };
@@ -42,6 +42,8 @@
     if (kind === "eyes") { drawSkull(c, 26, 30, 20, { t, look: { ...look, skull: "bone", paint: "none" }, face: faceFor("idle", t, { lx: 0.3, ly: -0.2 }) }); return; }
     if (kind === "teeth") { drawSkull(c, 26, 25, 16, { t, look: { ...look, skull: "bone", paint: "none" }, face: faceFor("excited", t), jaw: 0.5 }); return; }
     if (kind === "ring") { drawRingShape(c, 26, 26, 15, 5, id, t); return; }
+    if (kind === "ringwings") { drawRingWings(26, 30, 8, 3, id, c, t, 1); drawRingShape(c, 26, 30, 8, 3, cos.ring, t); return; }
+    if (kind === "glasses") { drawSkull(c, 26, 32, 21, { t, look: { ...cos, skull: cos.skull, glasses: id, hat: "none", hair: "none" }, face: faceFor("idle", t, { ly: -0.2 }) }); return; }
     if (kind === "band") {   // a little slingshot, strung with the band
       c.strokeStyle = "#6B4526"; c.lineWidth = 5; c.lineCap = "round"; c.beginPath(); c.moveTo(26, 49); c.lineTo(26, 31); c.lineTo(12, 11); c.moveTo(26, 31); c.lineTo(40, 11); c.stroke(); c.lineCap = "butt";
       drawBands(c, [[{ x: 12, y: 12 }, { x: 24, y: 36 }], [{ x: 40, y: 12 }, { x: 28, y: 36 }]], 5, 3, { color: "#A94332", outline: INK }, id, t);
@@ -75,8 +77,9 @@
     const cv = $("previewCv"), [c, r] = fitCanvas(cv); if (!r.width) return;
     const w = r.width, h = r.height, S = h * 1.6, look = previewLook(), kind = shop.cat, V = vault, R = V.R;
     cv.parentElement.dataset.reel = look.reel;
-    const onStand = kind === "ring" || kind === "aim" || kind === "pole", flying = kind === "trail";
-    const sr = h * (onStand ? 0.16 : 0.23), px = onStand ? w * 0.26 : w / 2, floor = h - h * 0.2 - sr * (SKULL_BOTTOM + 0.04);
+    const onStand = kind === "ring" || kind === "aim" || kind === "pole" || kind === "ringwings", flying = kind === "trail";
+    const hs = Math.min(h, w * 0.95);   // (sizes follow the smaller side, so the tall try-on stage never crops the stand)
+    const sr = hs * (onStand ? 0.16 : 0.23), px = onStand ? w * 0.26 : w / 2, floor = h - h * 0.2 - sr * (SKULL_BOTTOM + 0.04);
     // pedestal
     if (!flying) {
       const pw = sr * 1.7, ph = h * 0.2, py = h - ph;
@@ -108,7 +111,7 @@
       drawAura(c, px, sy, sr, T, false, look.aura);
       drawSkull(c, px, sy, sr, { ang: sa, a: R.a, dir: R.dir, t: T, look, face: f, jaw: R.jaw });
       drawAura(c, px, sy, sr, T, true, look.aura); drawHat(c, px, sy, sr, sa, T, { lift: Math.max(0, -V.vy) * 0.0006, tilt: 0, spin: T * 6 }, 1, hatOf(look), R.a, R.dir);
-      if (onStand) { const rx = w * 0.72, ry = h * 0.36, rr3 = h * 0.2; if (kind === "pole") drawPole(rx, ry + rr3 + h * 0.03, h * 0.92, h * 0.035, h * 0.4, look.pole, c, T, ry - rr3 - h * 0.02); drawRingShape(c, rx, ry, rr3, h * 0.06, look.ring, T); drawAimArc(c, px + sr * 0.9, floor - sr * 0.9, rx, ry, h / 90, look.aim, T); }
+      if (onStand) { const rx = w * (kind === "ringwings" ? 0.64 : 0.72), ry = h * 0.36, rr3 = hs * (kind === "ringwings" ? 0.13 : 0.2); if (kind === "pole") drawPole(rx, ry + rr3 + hs * 0.03, h * 0.92, hs * 0.035, hs * 0.4, look.pole, c, T, ry - rr3 - hs * 0.02); if (kind === "ringwings") drawRingWings(rx, ry, rr3, hs * 0.05, look.ringwings, c, T, 1, look.ring); drawRingShape(c, rx, ry, rr3, hs * 0.06, look.ring, T); drawAimArc(c, px + sr * 0.9, floor - sr * 0.9, rx, ry, hs / 90, look.aim, T); }
       if (kind === "title") {
         const txt = `${(profile.name || "Nameless soul").toUpperCase()} · ${(findItem("title", look.title) || {}).name || ""}`;
         let fs = Math.round(h * 0.085); c.font = `${fs}px ${DISPLAY}`; const raw = c.measureText(txt).width;
@@ -127,32 +130,65 @@
     drawBurstList(c, V.bursts, S);
   }
 
-  // ── shelves
+  // ── shelves. v45: the shelf tabs are a grid, each with a bubble counting what's new on it (a bubble goes as you look
+  // at what's new; Clear badges clears the lot); the shelf runs Stock → Lost under rarity headings; a locked item says
+  // how it's had (bones, a milestone, or either); tapping any item puts it on the pedestal, large, before you equip it.
+  const RAR_ORDER = ["stock", "featured", "special", "lost"];
+  function renderTabs() {
+    const fresh = unseen();
+    for (const b of $("catTabs").querySelectorAll("button")) {
+      b.setAttribute("aria-selected", String(b.dataset.cat === shop.cat));
+      const n = fresh.filter(k => k.startsWith(b.dataset.cat + ":")).length;
+      let bub = b.querySelector(".bubble");
+      if (n && !bub) { bub = document.createElement("span"); bub.className = "bubble"; bub.setAttribute("aria-hidden", "true"); b.appendChild(bub); }
+      if (bub) { if (n) bub.textContent = n > 9 ? "9+" : String(n); else bub.remove(); }
+      b.setAttribute("aria-label", `${CAT_LABEL[b.dataset.cat]}${n ? `, ${n} new` : ""}`);
+    }
+    $("clearBadges").hidden = !fresh.length; if (!fresh.length) $("clearAsk").hidden = true;
+  }
+  const howTo = it => (it.price && !it.shop ? `<i class="b" title="Buy it with bones"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-bone"/></svg>${t("vault.how.bones")}</i>` : "")
+    + (it.req ? `<i class="m" title="${REQ_TEXT[it.req[0]](it.req[1])}"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-crown"/></svg>${t("vault.how.earn")}</i>` : "");
   function renderShop() {
-    const kind = shop.cat, fresh = unseen(), grid = $("shopGrid"), list = CATALOG[kind].filter(it => seasonLookVisible(kind, it));   // (a past season's look shows only if it's yours: 07l_season.js)
-    for (const b of $("catTabs").querySelectorAll("button")) b.setAttribute("aria-selected", String(b.dataset.cat === kind));
+    const kind = shop.cat, fresh = unseen(), grid = $("shopGrid"), list0 = CATALOG[kind].filter(it => seasonLookVisible(kind, it));   // (a past season's look shows only if it's yours: 07l_season.js)
+    const list = list0.map((it, i) => ({ it, i })).sort((p, q) => (p.it.s ? RAR_ORDER.indexOf(rarityOf(p.it)) + 1 : 0) - (q.it.s ? RAR_ORDER.indexOf(rarityOf(q.it)) + 1 : 0) || p.i - q.i).map(p => p.it);
+    renderTabs();
     $("catLabel").textContent = CAT_LABEL[kind];
     $("catCount").textContent = `${list.filter(it => canUse(kind, it)).length}/${list.length} ${kind === "title" ? "earned" : "owned"}`;
     grid.className = "grid" + (kind === "title" ? " rows" : "");
     grid.innerHTML = "";
+    let head = null;
     for (const it of list) {
       const usable = canUse(kind, it), on = cos[kind] === it.id, selected = shop.sel && shop.sel.kind === kind && shop.sel.id === it.id, rar = rarityOf(it);
+      if (rar !== head) { head = rar; grid.insertAdjacentHTML("beforeend", `<h4 class="rar-head t-${rar}" aria-hidden="true">${"★".repeat(starsOf(it))} ${STAR_NAME[starsOf(it)]}</h4>`); }
       const b = document.createElement("button");
       b.type = "button"; b.dataset.kind = kind; b.dataset.id = it.id;
       b.className = "item rar-" + rar + " " + (on ? "equipped" : usable ? "owned" : "locked") + (selected ? " selected" : "");
       b.setAttribute("aria-pressed", String(on));
-      b.setAttribute("aria-label", `${it.name} ${KIND_LABEL[kind]}, ${starsOf(it)} star ${STAR_NAME[starsOf(it)]}${on ? ", equipped" : usable ? ", owned" : it.souls ? `, ${fmt(it.souls)} Souls at the Soul Shop` : it.season ? `, ${t("season.vaultState", { n: SEASONS[it.season].n })}` : it.price ? `, ${fmt(it.price)} bones` : `, locked: ${REQ_TEXT[it.req[0]](it.req[1])}`}`);
-      const state = on ? "Equipped" : usable ? (kind === "title" ? "Earned" : "Owned") : it.souls ? `<span class="price soul">◆ ${fmt(it.souls)}</span>` : it.season ? t("season.vaultState", { n: SEASONS[it.season].n }) : it.shop ? "Curio Cart" : it.price ? `<span class="price">${BONE_SVG}${fmt(it.price)}</span>` : `${fmt(Math.min(statNow(it.req[0]), it.req[1]))}/${fmt(it.req[1])}`;
+      b.setAttribute("aria-label", `${it.name} ${KIND_LABEL[kind]}, ${starsOf(it)} star ${STAR_NAME[starsOf(it)]}${on ? ", equipped" : usable ? ", owned" : it.souls ? `, ${fmt(it.souls)} Souls at the Soul Shop` : it.season ? `, ${t("season.vaultState", { n: SEASONS[it.season].n })}` : it.price ? `, ${fmt(it.price)} bones` : `, locked: ${it.req ? REQ_TEXT[it.req[0]](it.req[1]) : ""}`}`);
+      const state = on ? "Equipped" : usable ? (kind === "title" ? "Earned" : "Owned") : it.souls ? `<span class="price soul">◆ ${fmt(it.souls)}</span>` : it.season ? t("season.vaultState", { n: SEASONS[it.season].n }) : it.price ? `<span class="price">${BONE_SVG}${fmt(it.price)}</span>` : `${fmt(Math.min(statNow(it.req[0]), it.req[1]))}/${fmt(it.req[1])}`;
       b.innerHTML = `<span class="stars r-${rar}" aria-hidden="true">${starsText(it)}</span>`;
       if (kind === "title") b.innerHTML += `<span class="t-name">${it.name}</span><span class="sub">${it.req ? REQ_TEXT[it.req[0]](it.req[1]) : it.season ? t("season.vaultState", { n: SEASONS[it.season].n }) : "Where everyone starts"}</span><span class="state">${state}</span>`;
       else { const cv = document.createElement("canvas"); b.appendChild(cv); b.insertAdjacentHTML("beforeend", `<span>${it.name}</span><span class="state">${state}</span>`); drawItemIcon(cv, kind, it.id); }
+      if (!usable && !it.souls && !it.season) b.insertAdjacentHTML("beforeend", `<span class="how">${howTo(it)}</span>`);
       if (!usable) b.insertAdjacentHTML("beforeend", '<svg class="lock" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-lock"/></svg>');
-      if (it.shame || it.boss || it.prize || it.shop || it.souls || it.season) b.insertAdjacentHTML("beforeend", `<span class="ribbon ${it.shame ? "shame" : it.boss ? "boss" : it.prize ? "prize" : it.souls ? "soul" : it.season ? "season" : "shop"}">${it.shame ? "Shame" : it.boss ? "Boss" : it.prize ? "Prize" : it.souls ? "Souls" : it.season ? t("season.ribbon") : "Cart"}</span>`);
+      if (it.shame || it.boss || it.prize || it.shop || it.souls || it.season) b.insertAdjacentHTML("beforeend", `<span class="ribbon ${it.shame ? "shame" : it.boss ? "boss" : it.prize ? "prize" : it.shop ? "shop" : it.souls ? "soul" : it.season ? "season" : "shop"}">${it.shame ? "Shame" : it.boss ? "Boss" : it.prize ? "Prize" : it.shop ? "Cart" : it.souls ? "Souls" : it.season ? t("season.ribbon") : "Cart"}</span>`);
       if (fresh.includes(kind + ":" + it.id)) b.insertAdjacentHTML("beforeend", '<span class="new" aria-hidden="true"></span>');
       grid.appendChild(b);
     }
     renderBuybar(); renderOutfits();
   }
+  // try-on: the item large on the pedestal, and the foot says what to do with it
+  function tryOn(kind, id) {
+    shop.sel = { kind, id }; seeItem(kind + ":" + id);
+    $("sheet-customize").classList.add("trying"); $("tryClose").hidden = false;
+    vault.y = -140; vault.vy = 0;   // BOING: it hops onto the pedestal wearing the item
+    renderShop();
+  }
+  function tryOff() {
+    shop.sel = null; $("sheet-customize").classList.remove("trying"); $("tryClose").hidden = true; $("previewTag").textContent = t("ui.on-the-pedestal");
+    renderShop();
+  }
+  function seeItem(key) { if (profile.unlocked.includes(key) && !profile.seen.includes(key)) { profile.seen.push(key); persist(); updatePips(); } }
   // ── outfits: three saved looks (tap a slot to wear it, or to fill it when it's empty; Save look fills the chosen one)
   function renderOutfits() {
     const box = $("outfitSlots"); box.textContent = "";
@@ -178,14 +214,15 @@
   $("surpriseBtn").addEventListener("click", () => surpriseLook());
   function renderBuybar() {
     const bar = $("buybar"), s = shop.sel, it = s && findItem(s.kind, s.id);
-    if (!it || canUse(s.kind, it)) { bar.hidden = true; shop.sel = null; return; }
+    if (!it) { bar.hidden = true; shop.sel = null; $("sheet-customize").classList.remove("trying"); $("tryClose").hidden = true; return; }
     bar.hidden = false;
-    const need = (it.price || 0) - profile.bones, btn = $("buyBtn");
-    $("buyName").textContent = s.kind === "title" ? it.name : `${it.name} ${KIND_LABEL[s.kind]}`;
+    const need = (it.price || 0) - profile.bones, btn = $("buyBtn"), owned = canUse(s.kind, it), on = cos[s.kind] === it.id;
+    $("buyName").textContent = s.kind === "title" ? it.name : `${it.name} ${KIND_LABEL[s.kind]}`; $("previewTag").textContent = it.name;
     $("buyRar").textContent = `${starsText(it)} ${STAR_NAME[starsOf(it)]}`; $("buyRar").className = "rar-name t-" + rarityOf(it);
+    if (owned) { $("buySub").textContent = on ? t("vault.wearing") : t("vault.yours"); btn.disabled = on; btn.textContent = on ? t("vault.equipped") : t("vault.equip"); return; }
     $("buySub").textContent = it.shop ? "Only sold at Mort's Curio Cart" : it.req ? `${it.price ? "Or free: " : it.shame ? "Hall of Shame: " : it.boss ? "Boss prize: " : it.prize ? "Can Alley prize: " : "Earn it: "}${REQ_TEXT[it.req[0]](it.req[1]).toLowerCase()} · ${fmt(Math.min(statNow(it.req[0]), it.req[1]))}/${fmt(it.req[1])}` : "Bones only · trying it on above";
+    if (it.shop) { $("buySub").textContent = `Only sold at Mort's Curio Cart · ◆ ${fmt(it.souls)} Souls`; btn.disabled = false; btn.textContent = "Visit the Curio Cart"; return; }
     if (it.souls) { $("buySub").textContent = t("souls.vaultSub"); btn.disabled = false; btn.textContent = t("souls.visit"); return; }
-    if (it.shop) { btn.disabled = false; btn.textContent = "Visit the Curio Cart"; return; }
     if (!it.price) { btn.disabled = true; btn.textContent = "Earned, not sold"; return; }
     btn.disabled = need > 0;
     btn.innerHTML = need > 0 ? `Need ${fmt(need)} more` : `Buy · ${fmt(it.price)}<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-bone"/></svg>`;
@@ -199,31 +236,29 @@
   $("catTabs").addEventListener("click", e => {
     const b = e.target.closest("button"); if (!b || b.dataset.cat === shop.cat) return;
     shop.cat = b.dataset.cat; shop.sel = null; vault.y = -140; vault.vy = 0; vault.bursts = []; vault.parts = [];
-    renderShop(); Sound.ui("tick"); b.scrollIntoView({ block: "nearest", inline: "nearest" });
+    $("vaultScroll").scrollTop = 0; renderShop(); Sound.ui("tick");
   });
   $("shopGrid").addEventListener("click", e => {
     const b = e.target.closest(".item"); if (!b) return;
-    const { kind, id } = b.dataset, it = findItem(kind, id);
-    if (canUse(kind, it)) {
-      shop.sel = null;
-      if (cos[kind] !== id) { equip(kind, id); Sound.ui("equip"); celebrate(); }
-      renderShop(); return;
-    }
-    shop.sel = shop.sel && shop.sel.id === id && shop.sel.kind === kind ? null : { kind, id };
-    vault.y = -140; vault.vy = 0;   // BOING: it hops onto the pedestal wearing the item
-    Sound.ui("tick"); renderShop();
+    Sound.ui("tick"); tryOn(b.dataset.kind, b.dataset.id);
   });
+  for (const id of ["tryBack", "tryClose"]) $(id).addEventListener("click", () => { Sound.ui("flick"); tryOff(); });
   $("buyBtn").addEventListener("click", () => {
     const s = shop.sel; if (!s) return;
     const it = findItem(s.kind, s.id);
+    if (canUse(s.kind, it)) { if (cos[s.kind] !== s.id) { equip(s.kind, s.id); Sound.ui("equip"); celebrate(); } tryOff(); return; }
     if (it.shop) { cart.sel = { kind: s.kind, id: s.id }; openSheet("store"); return; }
     if (it.souls) { openSheet("souls"); return; }   // (Soul items are the Soul Shop's: 09m_souls.js)
     if (buy(s.kind, s.id)) {
-      equip(s.kind, s.id); shop.sel = null; Sound.sample("purchase", () => Sound.ui("buy")); buzz([8, 30, 8]); celebrate();
-      toast(`<b>Bought</b> · ${it.name} ${KIND_LABEL[s.kind]}`); renderShop();
+      equip(s.kind, s.id); Sound.sample("purchase", () => Sound.ui("buy")); buzz([8, 30, 8]); celebrate();
+      toast(`<b>Bought</b> · ${it.name} ${KIND_LABEL[s.kind]}`); tryOff();
       for (const el of document.querySelectorAll(".bones")) bump(el);
     } else { Sound.ui("deny"); const btn = $("buyBtn"); btn.classList.remove("deny"); void btn.offsetWidth; btn.classList.add("deny"); }
   });
+  // Clear badges: asks first, then marks everything new as seen
+  $("clearBadges").addEventListener("click", () => { $("clearAskText").textContent = t("vault.clearAsk", { n: unseen().length }); $("clearAsk").hidden = false; Sound.ui("tick"); });
+  $("clearNo").addEventListener("click", () => { $("clearAsk").hidden = true; });
+  $("clearYes").addEventListener("click", () => { markSeen(); $("clearAsk").hidden = true; renderShop(); Sound.ui("flick"); });
 
   // ───────────────────────── challenges: daily, weekly, monthly ─────────────────────────
   let chalTab = "daily";

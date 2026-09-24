@@ -226,7 +226,7 @@
   const dressDefault = () => { for (const [k, v] of Object.entries(DEF)) T.equip(k, v); };
   test("Skull Vault: thirteen shelves (hats, auras and poles are new), over 350 things, titles earned not bought", () => {
     const c = T.catalog(), want = { skull: 40, eyes: 24, teeth: 18, paint: 32, trail: 35, impact: 21, ring: 25, aim: 17, reel: 10, title: 50, hat: 53, aura: 32, pole: 21 };   // (titles: six career-level ones, v31, and the Shot Doctor, v32; v45: one Can Alley prize on seven shelves)
-    for (const [k, n] of Object.entries(want)) { const L = (c[k] || []).filter(i => !i.souls && !i.season); assert(L.length === n, `${k}: ${L.length} items, wanted ${n} (besides the Soul Shop's, v30, and the seasons', v42)`); }
+    for (const [k, n] of Object.entries(want)) { const L = (c[k] || []).filter(i => (!i.souls || i.shop) && !i.season); assert(L.length === n, `${k}: ${L.length} items, wanted ${n} (besides the Soul Shop's, v30, and the seasons', v42)`); }
     const all = Object.values(c).flat(); assert(all.length >= 351, `only ${all.length} cosmetics (117 × 3 = 351)`);
     for (const k of Object.keys(c)) for (const it of c[k]) {
       assert(!it.s || (it.s >= 1 && it.s <= 4), `${k} ${it.id} has ${it.s} stars`);
@@ -235,7 +235,7 @@
       else if (it.souls) assert(!it.price && !it.req && it.souls > 0, `${k} ${it.id}: a Soul item is sold for Souls alone`);
       else if (it.season) assert(!it.price && !it.req, `${k} ${it.id}: a season look is earned on its Ticket, never sold`);
       else if (it.s) assert(it.price > 0, `${k} ${it.id} has no price`);
-      if (it.shop) assert(it.price > 0 && !it.req, `${k} ${it.id}: a shop exclusive is bought at the shop, not earned`);
+      if (it.shop) assert(it.souls > 0 && !it.price && !it.req, `${k} ${it.id}: a Cart exclusive is bought at the Cart, for Souls alone (v45)`);
     }
     assert(all.filter(i => i.shame).length >= 20, "not enough prizes for failing"); assert(all.filter(i => i.boss).length >= 15, "not enough boss prizes"); assert(all.filter(i => i.shop).length >= 15, "not enough shop exclusives");
   });
@@ -271,7 +271,7 @@
     }
     T.equip("aim", "rainbow"); T.freezeRing(0, C.RING_Y); T.previewInfo(0, C.RING_Y);
     T.toTitle(); T.openSheet("customize");
-    for (const k of Object.keys(cat)) { $("catTabs").querySelector(`[data-cat="${k}"]`).click(); assert($("shopGrid").children.length === cat[k].length, `${k} grid shows ${$("shopGrid").children.length}`); }
+    for (const k of Object.keys(cat)) { $("catTabs").querySelector(`[data-cat="${k}"]`).click(); const n = $("shopGrid").querySelectorAll(".item").length; assert(n === cat[k].length, `${k} grid shows ${n}`); }
     T.closeSheet(); T.noServer();
     dressDefault(); T.setStats(ZERO);
     assert(Object.entries(DEF).every(([k, v]) => T.cosmetics()[k] === v), "couldn't dress back to the defaults");
@@ -336,6 +336,23 @@
     $("shopGrid").querySelector('[data-id="frost"]').click();
     assert($("buyBtn").disabled && /Need 400/.test($("buyBtn").textContent), `short of bones should say so (${$("buyBtn").textContent})`);
     T.closeSheet(); T.equip("aim", "toxic"); T.setStats(ZERO);
+  });
+  test("v45 Vault: shelf tabs in a grid with new-item bubbles; only the shelves scroll; rarity headings; try-on before wearing; Clear badges asks first", () => {
+    T.setStats({ ...ZERO, unlocked: ["hat:bowler", "hat:fez", "glasses:round"], seen: [] }); T.toTitle(); T.openSheet("customize"); T.shopCat("hat");
+    const tabs = $("catTabs"), bub = k => { const b = tabs.querySelector(`[data-cat="${k}"] .bubble`); return b ? +b.textContent : 0; };
+    assert(getComputedStyle(tabs).display === "grid" && tabs.querySelector('[data-cat="glasses"]') && tabs.querySelector('[data-cat="ringwings"]'), "the shelves are a grid, glasses and ring wings among them");
+    assert(bub("hat") === 2 && bub("glasses") === 1 && bub("skull") === 0, `bubbles count what's new (${bub("hat")}, ${bub("glasses")})`);
+    assert(getComputedStyle(document.querySelector("#sheet-customize .sheet-body")).overflowY === "hidden" && getComputedStyle($("vaultScroll")).overflowY === "auto", "only the shelves scroll: the pedestal stays in view");
+    const heads = [...$("shopGrid").querySelectorAll(".rar-head")].map(h => h.className.split("t-")[1]); assert(heads.join() === "stock,featured,special,lost", `Stock to Lost (${heads})`);
+    $("shopGrid").querySelector('[data-id="bowler"]').click();
+    assert($("sheet-customize").classList.contains("trying") && !$("buybar").hidden && T.cosmetics().hat !== "bowler", "an owned hat goes on the pedestal, large, before it goes on");
+    assert(bub("hat") === 1, "looking at a new item takes it off its shelf's bubble");
+    $("buyBtn").click(); assert(T.cosmetics().hat === "bowler" && !$("sheet-customize").classList.contains("trying"), "Wear it puts it on");
+    const how = $("shopGrid").querySelector(".item.locked .how"); assert(how && /Bones/i.test(how.textContent), "a locked item says how it's had");
+    T.shopCat("glasses"); const g = $("shopGrid").querySelector('[data-id="bandit"] .how'); assert(g && /Earn/i.test(g.textContent), "and an earned one says so");
+    $("clearBadges").click(); assert(!$("clearAsk").hidden && bub("glasses") === 1, "Clear badges asks first");
+    $("clearYes").click(); assert(bub("glasses") === 0 && bub("hat") === 0 && $("clearBadges").hidden, "then clears every bubble");
+    T.closeSheet(); T.equip("hat", "none"); T.setStats(ZERO);
   });
   test("Daily challenges: three a day, progress counts, claiming pays once", () => {
     T.setStats(ZERO); T.setDaily(null);
@@ -574,14 +591,29 @@
   });
 
   // ── v11: the Vault, the Curio Cart, the board, the profile ──
-  test("Curio Cart: exclusives are only sold there, deals are marked down, the coffin gives something new", () => {
-    T.setStats(ZERO); T.setBones(20000); const ex = T.catalog().hat.find(i => i.shop);
+  test("Curio Cart (v45): Souls only, never bones; its exclusives shelf by shelf, a deal of the day, and the Mystery Coffin", async () => {
+    T.noServer(); T.setStats(ZERO); T.setBones(20000); const ex = T.catalog().hat.find(i => i.shop);
+    assert(ex.souls > 0 && !ex.price, "a Cart exclusive has a Souls price and no bones price");
     assert(!T.buy("hat", ex.id), "an exclusive was sold in the Vault");
-    assert(T.cartBuy("hat", ex.id) && T.equip("hat", ex.id), "couldn't buy an exclusive at the cart");
-    const deals = T.deals(); assert(deals.length === 4 && deals.every(d => d.price < d.full) && deals.some(d => d.shop), JSON.stringify(deals));
-    const n = T.profile().unlocked.length, got = T.coffin(); assert(got && !got.shop && T.profile().unlocked.length === n + 1, "the coffin should unlock one new thing");
-    const p = T.profile(); assert(p.shopBuys === 1 && p.coffins === 1 && p.bonesSpent >= 750 + ex.price, `shop stats ${p.shopBuys}/${p.coffins}/${p.bonesSpent}`);
-    T.equip("hat", "none"); T.setStats(ZERO);
+    assert(!(await T.cartBuy("hat", ex.id)) && T.bones() === 20000, "no server, no Souls: nothing sells, and no bones are taken");
+    T.openSheet("store"); assert(!$("cartStatus").hidden && document.querySelectorAll("#exclGrid .cart-shelf").length >= 8, "the Cart shows its shelves and says the Souls counter is shut"); T.closeSheet();
+    await T.fakeServer(); const S = T.soulsApi(); await S.redeem({ platform: "test", receipt: "OK:cart1", product: "souls.1200" });
+    const deal = T.deals()[0]; assert(T.deals().length === 1 && deal.shop && deal.price < deal.full, JSON.stringify(T.deals()));
+    assert(await T.cartBuy(deal.kind, deal.id), "bought the deal of the day");
+    assert(T.wallet().souls === 1200 - deal.price && T.bones() === 20000 && T.wallet().owned.includes(`${deal.kind}:${deal.id}`), `Souls spent, bones untouched (${T.wallet().souls})`);
+    const n = T.profile().unlocked.length, got = await T.coffin();
+    assert(got && !got.shop && T.profile().unlocked.length === n + 1 && T.wallet().souls === 1200 - deal.price - T.economy().COFFIN, "the coffin takes Souls and gives one new Vault look");
+    const p = T.profile(); assert(p.shopBuys === 1 && p.coffins === 1 && p.bonesSpent === 0, `shop stats ${p.shopBuys}/${p.coffins}/${p.bonesSpent}`);
+    T.equip(deal.kind, T.catalog()[deal.kind][0].id); T.noServer(); T.setStats(ZERO);
+  });
+  test("Curio Cart (v45): an exclusive bought with bones before stays yours; the coffin opens on a row of coffins", async () => {
+    T.noServer(); const ex = T.catalog().hat.find(i => i.shop); T.setStats({ ...ZERO, unlocked: [`hat:${ex.id}`] });
+    assert(T.canUse("hat", ex.id), "a bones-era Cart buy is kept");
+    await T.fakeServer(); await T.soulsApi().redeem({ platform: "test", receipt: "OK:cart2", product: "souls.550" });
+    T.openSheet("store"); $("coffinBtn").click(); await new Promise(r => setTimeout(r, 30));
+    assert(T.coffinShow(), "opening the coffin opens its viewport");
+    T.endCoffinShow(false); assert(!T.coffinShow(), "and Keep it closes it");
+    T.closeSheet(); T.noServer(); T.setStats(ZERO);
   });
   test("Failing in style and beating bosses earn their own prizes", () => {
     T.setStats({ ...ZERO, misses: 300, zeroRuns: 8, posts: 40 }); const a = T.checkUnlocks();
@@ -1696,8 +1728,8 @@
   // ── v30: Souls, and the Soul Shop (the server's own handlers, stood up in the page) ──
   test("No server, no Souls: the Soul Shop says so, Soul looks stay locked, and nothing else minds", () => {
     T.noServer(); T.setStats(ZERO); T.toTitle();
-    const soulItems = Object.values(T.catalog()).flat().filter(i => i.souls);
-    assert(soulItems.length === 8 && !T.equip("skull", "soul"), `8 Soul items, none wearable without a wallet (${soulItems.length})`);
+    const soulItems = Object.values(T.catalog()).flat().filter(i => i.souls && !i.shop);
+    assert(soulItems.length === 8 && !T.equip("skull", "soul"), `8 Soul Shop items, none wearable without a wallet (${soulItems.length})`);
     T.openSheet("souls"); assert(!$("soulsStatus").hidden && /server/.test($("soulsStatus").textContent) && $("soulsDaily").disabled, "the shop explains, and its buttons wait");
     T.closeSheet(); T.toTitle();
   });
@@ -2039,7 +2071,7 @@
   test("The economy audit: no duplicate ids, prices that climb with rarity, the Soul catalog the server's, and sane pacing", () => {
     T.setStats(ZERO); const A = T.economyAudit();
     assert(A.problems.length === 0, A.problems.join("; "));
-    assert(A.items > 50 && A.tiers.length === 4 && A.runsForAll > 0 && A.soulDays === 15, JSON.stringify({ ...A, problems: undefined }));
+    assert(A.items > 50 && A.tiers.length === 4 && A.runsForAll > 0 && A.soulDays === 13, JSON.stringify({ ...A, problems: undefined }));
   });
   test("Restore points: one a day, the last three kept, and recovering one only adds", () => {
     T.setStats({ ...ZERO, games: 3, bestStage: 4, bones: 50 });

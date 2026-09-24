@@ -310,7 +310,7 @@
     if (screen === "title" && !titleEl.hidden) drawMascot(T, dt);
     else if (screen === "over" && !overEl.hidden) drawSleeper(T);
     if (sheet === "customize") drawShopPreview(T, dt);
-    if (sheet === "store") drawCart(T, dt);
+    if (sheet === "store") { drawCart(T, dt); drawCoffinShow(T); }
     if (sheet === "challenges") { const s = Math.floor(T); if (s !== ui.tick) { ui.tick = s; tickChallenges(); } }
     drawReelCard(); updateCamFx();
     filmFrame(now);

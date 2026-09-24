@@ -1,55 +1,59 @@
   // ───────────────────────── the Curio Cart: Mort's shop ─────────────────────────
-  // A travelling cart run by Mort, a ghoul in a bowler. Three things for sale: today's deals (anything from
-  // the Vault, marked down, a new set every day), the Cart exclusives (things you can't get anywhere else),
-  // and the Mystery Coffin (a random thing you don't own yet). Bones only; nothing here changes the physics.
-  const cart = { sel: null, R: makeRig(), bounce: 0, quip: 0, coffinT: -9, won: null };
-  const COFFIN_PRICE = 750;
-  const MORT_QUIPS = ["Fresh from the grave. Barely worn!", "No refunds. No returns. No pulse.", "Bones, please. Exact change if you've got it.",
+  // A travelling cart run by Mort, a ghoul in a bowler. v45: Mort takes Souls, never bones (the Vault is where bones
+  // go). He sells his exclusives (things you can't get anywhere else), shelf by shelf; one of them each day at a
+  // quarter off; and the Mystery Coffin (a Vault look you don't own yet, drawn as it lands). Souls are the server's
+  // (09m_souls.js), so the prices are the shared economy's (Economy: CART, dealOf, COFFIN) and the server charges
+  // them. Without a server the Cart shows its wares and says the Souls counter is shut. Nothing here changes the physics.
+  const cart = { sel: null, R: makeRig(), bounce: 0, quip: 0, won: null, show: null };
+  const MORT_QUIPS = ["Fresh from the grave. Barely worn!", "No refunds. No returns. No pulse.", "Souls, please. I don't take bones: I've got plenty.",
     "That hat? Belonged to a duke. Or a duck.", "Everything's haunted. No extra charge.", "Mind the coffin, it bites.", "Buy two, the second one's still full price!",
     "Lovely skull you've got there. Shame about the rest.", "I'd throw in a warranty, but you'd only throw it."];
+  const today = () => Economy.dayOf(Date.now());
+  // the day's deal: one exclusive, a quarter off (the server works it out the same way)
   function dailyDeals() {
-    const day = dayKey(), rnd = mulberry32(hashStr("curio:" + day)), pool = [], excl = [];
-    for (const kind of KINDS) for (const it of CATALOG[kind]) if (it.price) (it.shop ? excl : pool).push({ kind, it });
-    const out = [];
-    while (out.length < 3 && pool.length) { const i = Math.floor(rnd() * pool.length); out.push({ ...pool.splice(i, 1)[0], off: 0.3 }); }
-    if (excl.length) out.push({ ...excl[Math.floor(rnd() * excl.length)], off: 0.2 });
-    return out.map(d => ({ ...d, price: Math.round((d.it.price * (1 - d.off)) / 50) * 50 }));
+    const D = Economy.dealOf(today()), [kind, id] = D.key.split(":"), it = findItem(kind, id);
+    return it ? [{ kind, it, price: D.souls, off: Economy.DEAL_OFF }] : [];
   }
-  const exclusives = () => KINDS.flatMap(kind => CATALOG[kind].filter(it => it.shop).map(it => ({ kind, it, price: it.price })));
-  function cartPrice(kind, id) { const d = dailyDeals().find(d => d.kind === kind && d.it.id === id); const it = findItem(kind, id); return d ? d.price : it && it.price; }
+  const exclusives = () => KINDS.flatMap(kind => CATALOG[kind].filter(it => it.shop).map(it => ({ kind, it, price: Economy.priceOf(`${kind}:${it.id}`, today()) })));
+  function cartPrice(kind, id) { return Economy.priceOf(`${kind}:${id}`, today()); }
+  const soulsOpen = () => Souls.state === "ok" && Souls.available();
+  // a Cart exclusive, for Souls: the server takes them and the wallet owns it
   function cartBuy(kind, id) {
-    const it = findItem(kind, id), price = cartPrice(kind, id);
-    if (!it || !price || canUse(kind, it) || profile.bones < price) return false;
-    const key = kind + ":" + id;
-    profile.bones -= price; profile.bonesSpent += price; profile.shopBuys++;
-    profile.unlocked.push(key); profile.seen.push(key);
-    checkUnlocks(); persist(800); renderBones(); updatePips(); Telemetry.emit("shop_buy", { kind, id, price, cur: "cart" });
-    return true;
+    const it = findItem(kind, id), key = `${kind}:${id}`;
+    if (!it || !it.shop || canUse(kind, it) || !soulsOpen()) return Promise.resolve(false);
+    return Souls.ask("buyWithSouls", { item: key }, () => {
+      profile.shopBuys++; equip(kind, id); cart.bounce = 1.4; cart.quip = (cart.quip + 1) % MORT_QUIPS.length;
+      toast(`<b>Sold!</b> · ${it.name} ${KIND_LABEL[kind]}`); Sound.sample("purchase", () => Sound.ui("buy")); buzz([8, 30, 8]);
+      checkUnlocks(); persist(800); Telemetry.emit("shop_buy", { kind, id, price: cartPrice(kind, id), cur: "souls" });
+    }).then(ok => { if (sheet === "store") renderStore(); return ok; });
   }
   // the Mystery Coffin: something you don't own, mostly cheaper things, now and then a Special
   function coffinPool() { return KINDS.flatMap(kind => CATALOG[kind].filter(it => it.price && !it.shop && starsOf(it) <= 3 && !canUse(kind, it)).map(it => ({ kind, it }))); }
-  function openCoffin(rnd = Math.random) {
-    const pool = coffinPool();
-    if (!pool.length || profile.bones < COFFIN_PRICE) return null;
-    const w = e => [0, 6, 3.5, 1.2][starsOf(e.it)], total = pool.reduce((s, e) => s + w(e), 0);
+  function drawCoffinPick(rnd = Math.random) {
+    const pool = coffinPool(); if (!pool.length) return null;
+    const w = e => [0, 6, 3.5, 1.2][starsOf(e.it)], total = pool.reduce((s2, e) => s2 + w(e), 0);
     let r = rnd() * total, pick = pool[0];
     for (const e of pool) { r -= w(e); if (r <= 0) { pick = e; break; } }
-    profile.bones -= COFFIN_PRICE; profile.bonesSpent += COFFIN_PRICE; profile.coffins++;
-    const key = pick.kind + ":" + pick.it.id; profile.unlocked.push(key);
-    checkUnlocks(); persist(800); renderBones(); updatePips(); Telemetry.emit("shop_buy", { kind: pick.kind, id: pick.it.id, price: COFFIN_PRICE, cur: "coffin" });
+    profile.coffins++; const key = pick.kind + ":" + pick.it.id; profile.unlocked.push(key);
+    checkUnlocks(); persist(800); updatePips(); Telemetry.emit("shop_buy", { kind: pick.kind, id: pick.it.id, price: Economy.COFFIN, cur: "coffin" });
     return pick;
   }
+  function openCoffin(rnd = Math.random) {
+    if (!coffinPool().length || !soulsOpen()) return Promise.resolve(null);
+    let got = null;
+    return Souls.ask("openCoffinSouls", {}, () => { got = drawCoffinPick(rnd); }).then(() => got);
+  }
 
-  // ── the sheet
+  // ── the sheet: the day's deal, the coffin, then the exclusives shelf by shelf
   function cartTile(d, grid) {
     const { kind, it } = d, owned = canUse(kind, it), on = cos[kind] === it.id, sel = cart.sel && cart.sel.kind === kind && cart.sel.id === it.id;
-    const b = document.createElement("button"); b.type = "button"; b.className = "item" + (on ? " equipped" : owned ? " owned" : "") + (sel ? " selected" : "");
+    const b = document.createElement("button"); b.type = "button"; b.className = "item rar-" + rarityOf(it) + (on ? " equipped" : owned ? " owned" : "") + (sel ? " selected" : "");
     b.dataset.kind = kind; b.dataset.id = it.id;
-    b.setAttribute("aria-label", `${it.name} ${KIND_LABEL[kind]}, ${owned ? "owned" : `${fmtN(d.price)} bones`}`);
+    b.setAttribute("aria-label", `${it.name} ${KIND_LABEL[kind]}, ${owned ? "owned" : `${fmtN(d.price)} Souls`}`);
     b.innerHTML = `<span class="stars r-${rarityOf(it)}" aria-hidden="true">${starsText(it)}</span>`;
     const cv = document.createElement("canvas"); b.appendChild(cv);
     b.insertAdjacentHTML("beforeend", `<span>${it.name}</span><span class="kindtag">${KIND_LABEL[kind]}</span>` +
-      (owned ? `<span class="state">${on ? "Wearing" : "Owned"}</span>` : `<span class="state"><span class="price">${BONE_SVG}${fmtN(d.price)}</span>${d.off ? ` <s>${fmtN(it.price)}</s>` : ""}</span>`));
+      (owned ? `<span class="state">${on ? "Wearing" : "Owned"}</span>` : `<span class="state"><span class="price soul">◆ ${fmtN(d.price)}</span>${d.off ? ` <s>${fmtN(it.souls)}</s>` : ""}</span>`));
     if (d.off && !owned) b.insertAdjacentHTML("beforeend", `<span class="sale">−${Math.round(d.off * 100)}%</span>`);
     drawItemIcon(cv, kind, it.id);
     grid.appendChild(b);
@@ -57,26 +61,33 @@
   function renderStore() {
     const deals = dailyDeals(), ex = exclusives();
     const dg = $("dealGrid"), eg = $("exclGrid"); dg.innerHTML = ""; eg.innerHTML = "";
-    deals.forEach(d => cartTile(d, dg)); ex.forEach(d => cartTile(d, eg));
+    deals.forEach(d => cartTile(d, dg));
+    for (const kind of KINDS) {   // (shelf by shelf, as the Vault orders them)
+      const L = ex.filter(d => d.kind === kind); if (!L.length) continue;
+      eg.insertAdjacentHTML("beforeend", `<h4 class="cart-shelf">${CAT_LABEL[kind] || KIND_LABEL[kind]}</h4>`);
+      const g = document.createElement("div"); g.className = "grid"; eg.appendChild(g); L.forEach(d => cartTile(d, g));
+    }
     $("exclCount").textContent = `${ex.filter(d => canUse(d.kind, d.it)).length}/${ex.length} owned`;
     $("dealTimer").textContent = `new in ${fmtCountdown(msToReset())}`;
-    const left = coffinPool().length, cb = $("coffinBtn");
-    cb.disabled = !left || profile.bones < COFFIN_PRICE;
-    cb.innerHTML = !left ? "The coffin's empty" : `Open · ${fmtN(COFFIN_PRICE)}${BONE_SVG}`;
-    $("coffinNote").textContent = left ? `${left} things you don't own yet could be inside` : "You own everything it could hold. Show-off.";
+    const left = coffinPool().length, cb = $("coffinBtn"), open = soulsOpen();
+    cb.disabled = !left || !open || Souls.busy || (Souls.wallet && Souls.wallet.souls < Economy.COFFIN);
+    cb.innerHTML = !left ? "The coffin's empty" : `Open · ◆ ${fmtN(Economy.COFFIN)}`;
+    $("coffinNote").textContent = left ? `${left} Vault looks you don't own yet could be inside` : "You own everything it could hold. Show-off.";
+    $("cartStatus").hidden = open; $("cartStatus").textContent = !Souls.available() ? t("cart.offline") : Souls.state === "loading" ? t("souls.loading") : t("souls.error");
     if (profile.dealSeen !== dayKey()) { profile.dealSeen = dayKey(); persist(2000); updatePips(); }
     renderCartBar();
   }
   function renderCartBar() {
     const bar = $("cartBar"), s = cart.sel, it = s && findItem(s.kind, s.id);
     if (!it) { bar.hidden = true; return; }
-    const owned = canUse(s.kind, it), price = cartPrice(s.kind, s.id), need = (price || 0) - profile.bones, btn = $("cartBuy");
+    const owned = canUse(s.kind, it), price = cartPrice(s.kind, s.id), have = Souls.wallet ? Souls.wallet.souls : 0, need = (price || 0) - have, btn = $("cartBuy");
     bar.hidden = false;
     $("cartName").textContent = `${it.name} ${KIND_LABEL[s.kind]}`;
-    $("cartSub").textContent = owned ? (cos[s.kind] === s.id ? "You're wearing it" : "Yours already") : it.shop ? "Curio Cart exclusive · sold nowhere else" : "On sale today only";
+    $("cartSub").textContent = owned ? (cos[s.kind] === s.id ? "You're wearing it" : "Yours already") : it.shop ? `Curio Cart exclusive · Souls only · you have ◆ ${fmtN(have)}` : "";
     if (owned) { btn.disabled = cos[s.kind] === s.id; btn.textContent = cos[s.kind] === s.id ? "Wearing it" : "Wear it"; return; }
-    btn.disabled = need > 0;
-    btn.innerHTML = need > 0 ? `Need ${fmtN(need)} more` : `Buy · ${fmtN(price)}<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-bone"/></svg>`;
+    if (!soulsOpen()) { btn.disabled = true; btn.textContent = t("cart.shut"); return; }
+    btn.disabled = need > 0 || Souls.busy;
+    btn.textContent = need > 0 ? `Need ◆ ${fmtN(need)} more` : `Buy · ◆ ${fmtN(price)}`;
   }
   function cartSelect(kind, id) { cart.sel = { kind, id }; cart.bounce = 1; kick(cart.R, 1.2, 0, Math.PI / 2, 300, 10); renderStore(); }
   for (const g of ["dealGrid", "exclGrid"]) $(g).addEventListener("click", e => {
@@ -87,17 +98,13 @@
     const s = cart.sel; if (!s) return;
     const it = findItem(s.kind, s.id);
     if (canUse(s.kind, it)) { equip(s.kind, s.id); Sound.ui("equip"); renderStore(); return; }
-    if (cartBuy(s.kind, s.id)) {
-      equip(s.kind, s.id); Sound.sample("purchase", () => Sound.ui("buy")); buzz([8, 30, 8]); cart.bounce = 1.4; cart.quip = (cart.quip + 1) % MORT_QUIPS.length;
-      toast(`<b>Sold!</b> · ${it.name} ${KIND_LABEL[s.kind]}`); renderStore();
-      for (const el of document.querySelectorAll(".bones")) bump(el);
-    } else { Sound.ui("deny"); const btn = $("cartBuy"); btn.classList.remove("deny"); void btn.offsetWidth; btn.classList.add("deny"); }
+    cartBuy(s.kind, s.id).then(ok => { if (!ok) { Sound.ui("deny"); const btn = $("cartBuy"); btn.classList.remove("deny"); void btn.offsetWidth; btn.classList.add("deny"); } else for (const el of document.querySelectorAll(".souls-chip")) bump(el); });
   });
   $("coffinBtn").addEventListener("click", () => {
-    const got = openCoffin(); if (!got) { Sound.ui("deny"); return; }
-    cart.coffinT = uiNow(); cart.won = got; cart.sel = { kind: got.kind, id: got.it.id };
-    Sound.toon("kaboom"); setTimeout(() => { Sound.unlock(); toast(`<b>Out of the coffin:</b> ${got.it.name} ${KIND_LABEL[got.kind]}`); }, 450);
-    renderStore();
+    openCoffin().then(got => {
+      if (!got) { Sound.ui("deny"); return; }
+      cart.won = got; cart.sel = { kind: got.kind, id: got.it.id }; startCoffinShow(got); renderStore();
+    });
   });
 
   // ── Mort's shop, drawn live at the top of the sheet: a crowded back wall, a heavy counter, and Mort
@@ -272,17 +279,65 @@
     const tx = cx + sz * 0.62, ty = cy - sz * 0.01;
     c.fillStyle = "#6E6256"; c.beginPath(); rr(c, tx - sz * 0.22, ty - sz * 0.24, sz * 0.44, sz * 0.24, 3); c.fill(); c.stroke();
     c.fillStyle = CREAM; c.font = `700 ${Math.max(7, sz * 0.1)}px ${UIFONT}`; c.textAlign = "center"; c.textBaseline = "middle";
-    c.fillText("BONES", tx, ty - sz * 0.115);
-    const since = uiNow() - cart.coffinT;
-    if (since < 1.2) {   // the coffin: it rattles, the lid flies off, POP
-      const k = clamp(since / 0.45, 0, 1); c.save(); c.translate(cx + (k < 1 ? Math.sin(since * 60) * 3 : 0), cy - sz * 0.35);
-      c.fillStyle = "#4A2F19"; c.strokeStyle = INK; c.lineWidth = 2.5;
-      c.beginPath(); c.moveTo(-sz * 0.22, -sz * 0.42); c.lineTo(sz * 0.22, -sz * 0.42); c.lineTo(sz * 0.32, -sz * 0.16); c.lineTo(sz * 0.22, sz * 0.36); c.lineTo(-sz * 0.22, sz * 0.36); c.lineTo(-sz * 0.32, -sz * 0.16); c.closePath(); c.fill(); c.stroke();
-      if (k >= 1) { c.globalAlpha = clamp(1 - (since - 0.45) / 0.75, 0, 1); c.fillStyle = MUSTARD; for (let i = 0; i < 10; i++) { const a = (i / 10) * TAU; star(c, Math.cos(a) * sz * 0.5 * (since - 0.45) * 3, Math.sin(a) * sz * 0.5 * (since - 0.45) * 3, sz * 0.09, 5, 0.45, a); c.fill(); } }
-      c.restore();
-      if (since < 0.45) return;
-    }
+    c.fillText("SOULS", tx, ty - sz * 0.115);
     c.save(); const pop = cart.bounce > 0 ? 1 + Math.sin(cart.bounce * Math.PI) * 0.12 : 1, bob = Math.sin(T * 2.2) * sz * 0.03;
     c.translate(cx - sz * 0.5 * pop, cy - sz * 1.05 + bob); c.scale((sz / 52) * pop, (sz / 52) * pop); drawItemArt(c, d0.kind, d0.id, T); c.restore();
     $("cartQuip").textContent = MORT_QUIPS[(Math.floor(T / 6) + cart.quip) % MORT_QUIPS.length];
+  }
+
+  // ── v45: the Mystery Coffin, opened: a viewport opens on a row of coffins sliding right to left, slowing, until one
+  // stops under the lamp; its lid flies off and the look inside rises out of it
+  const COFFIN_SHOW = { n: 26, land: 21, spin: 3.1, open: 0.55 };
+  const coffinEl = $("coffinShow");
+  function startCoffinShow(got) {
+    cart.show = { t0: uiNow(), got, done: false };
+    $("coffinWon").textContent = ""; $("coffinKeep").hidden = true; $("coffinWear").hidden = true;
+    coffinEl.hidden = false; Sound.toon("whistleDown");
+  }
+  function endCoffinShow(wear) {
+    const S = cart.show; if (!S) return;
+    if (wear) { equip(S.got.kind, S.got.it.id); Sound.ui("equip"); }
+    cart.show = null; coffinEl.hidden = true; renderStore();
+  }
+  $("coffinKeep").addEventListener("click", () => endCoffinShow(false));
+  $("coffinWear").addEventListener("click", () => endCoffinShow(true));
+  function drawCoffinShape(c, x, y, s, lid) {   // a six-sided coffin, lid on (lid 0) or flown off (lid 1)
+    c.save(); c.translate(x, y); c.lineJoin = "round"; c.strokeStyle = INK; c.lineWidth = Math.max(2, s * 0.05);
+    const P = [[-0.3, -0.62], [0.3, -0.62], [0.44, -0.24], [0.3, 0.62], [-0.3, 0.62], [-0.44, -0.24]];
+    const path = k => { c.beginPath(); P.forEach(([px, py], i) => (i ? c.lineTo : c.moveTo).call(c, px * s * k, py * s * k)); c.closePath(); };
+    path(1); c.fillStyle = "#2A1A0E"; c.fill(); c.stroke();                       // the box
+    if (lid < 1) { c.save(); c.translate(lid * s * 0.9, -lid * s * 1.2); c.rotate(lid * 1.4); path(0.92); c.fillStyle = "#6B4526"; c.fill(); c.stroke();
+      c.strokeStyle = "#E3B64B"; c.lineWidth = Math.max(2, s * 0.05); c.beginPath(); c.moveTo(0, -s * 0.34); c.lineTo(0, s * 0.3); c.moveTo(-s * 0.15, -s * 0.14); c.lineTo(s * 0.15, -s * 0.14); c.stroke(); c.restore(); }
+    c.restore();
+  }
+  function drawCoffinShow(T) {
+    const S = cart.show; if (!S) return;
+    const cv = $("coffinCv"), [c, r] = fitCanvas(cv); if (!r.width) return;
+    const w = r.width, h = r.height, e = uiNow() - S.t0, C = COFFIN_SHOW, gap = Math.min(w * 0.3, h * 0.42), s = gap * 0.8, cy = h * 0.52;
+    c.fillStyle = "#140F18"; c.fillRect(0, 0, w, h);
+    const lamp = c.createRadialGradient(w / 2, cy - s * 0.2, 0, w / 2, cy, h * 0.6); lamp.addColorStop(0, "rgba(255,210,130,.35)"); lamp.addColorStop(1, "rgba(255,210,130,0)");
+    c.fillStyle = lamp; c.fillRect(0, 0, w, h);
+    c.fillStyle = "#3A2513"; c.fillRect(0, cy + s * 0.62, w, h);   // the conveyor
+    c.fillStyle = "rgba(0,0,0,.35)"; for (let i = -1; i < w / 24 + 1; i++) c.fillRect(i * 24 + ((-e * 300) % 24 + 24) % 24, cy + s * 0.62, 3, h);
+    // where the row is: ease out from a fast slide to a stop with coffin C.land under the lamp
+    const q = clamp(e / C.spin, 0, 1), ease = 1 - Math.pow(1 - q, 3), pos = ease * C.land;   // coffins passed
+    for (let i = 0; i < C.n; i++) {
+      const x = w / 2 + (i - pos) * gap; if (x < -gap || x > w + gap) continue;
+      const lands = i === C.land, lid = lands ? clamp((e - C.spin - 0.15) / C.open, 0, 1) : 0;
+      drawCoffinShape(c, x, cy + (lands && q >= 1 ? Math.sin(Math.min(1, (e - C.spin) / 0.15) * Math.PI) * -s * 0.06 : 0), s, easeOutBack(lid) * (lid > 0 ? 1 : 0));
+      if (!lands || lid < 0.3) { c.fillStyle = "rgba(227,182,75,.5)"; c.font = `${Math.round(s * 0.28)}px ${DISPLAY}`; c.textAlign = "center"; c.textBaseline = "middle"; if (!lands || lid === 0) c.fillText("?", x, cy + s * 0.18); }
+      if (lands && lid > 0) {   // the look rises out of it, under a burst
+        const up = clamp((e - C.spin - 0.3) / 0.5, 0, 1), sz = s * 0.9 * easeOutBack(up);
+        if (up > 0) {
+          c.save(); c.globalAlpha = up; c.fillStyle = MUSTARD; for (let k = 0; k < 10; k++) { const a = (k / 10) * TAU + e; star(c, x + Math.cos(a) * s * 0.75, cy - s * 0.35 + Math.sin(a) * s * 0.55, s * 0.06, 5, 0.45, a); c.fill(); } c.restore();
+          c.save(); c.translate(x - sz / 2, cy - s * 0.35 - sz / 2 - up * s * 0.12); c.scale(sz / 52, sz / 52); drawItemArt(c, S.got.kind, S.got.it.id, T); c.restore();
+        }
+      }
+    }
+    if (q >= 1 && !S.done && e > C.spin + 0.8) {
+      S.done = true; Sound.unlock(); Sound.toon("kaboom");
+      $("coffinWon").textContent = `${S.got.it.name} ${KIND_LABEL[S.got.kind]} · ${STAR_NAME[starsOf(S.got.it)]}`; $("coffinKeep").hidden = false; $("coffinWear").hidden = false;
+      if (ui.kbd) $("coffinWear").focus({ preventScroll: true });
+    }
+    if (!S.done && q < 1 && Math.floor(pos) !== S.tick) { S.tick = Math.floor(pos); Sound.ui("tick"); }
   }

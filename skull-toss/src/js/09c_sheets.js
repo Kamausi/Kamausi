@@ -17,7 +17,7 @@
     if (!swap) $("sheetScrim").hidden = true;
     disarm(); $("codeBox").hidden = true;
     const n = $("prof-name"); if (document.activeElement === n) n.blur();
-    if (was === "customize") { markSeen(); shop.sel = null; }
+    if (was === "customize") { shop.sel = null; $("sheet-customize").classList.remove("trying"); $("tryClose").hidden = true; }   // (v45: what's new stays badged until you look at it, or clear the badges)
     if (was === "board") Board.unwatch();
     if (was === "store") { cart.sel = null; Sound.musicScene("shop", false); }
     if (sound) Sound.ui("close");

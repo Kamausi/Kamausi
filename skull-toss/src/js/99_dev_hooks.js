@@ -211,8 +211,8 @@
         bats: world.bats.length, witch: !!world.witch, bolt: !!world.bolt, spawned: { ...world.next } };
     },
     catNow() { spawnCat(); },
-    cartBuy: (kind, id) => cartBuy(kind, id), deals: () => dailyDeals().map(d => ({ kind: d.kind, id: d.it.id, price: d.price, full: d.it.price, shop: !!d.it.shop })),
-    coffin() { const g = openCoffin(mulberry32(7)); return g && { kind: g.kind, id: g.it.id, shop: !!g.it.shop }; },
+    cartBuy: (kind, id) => cartBuy(kind, id), deals: () => dailyDeals().map(d => ({ kind: d.kind, id: d.it.id, price: d.price, full: d.it.souls, shop: !!d.it.shop })),
+    async coffin() { const g = await openCoffin(mulberry32(7)); return g && { kind: g.kind, id: g.it.id, shop: !!g.it.shop }; }, coffinShow: () => !!cart.show && !$("coffinShow").hidden, endCoffinShow: wear => endCoffinShow(wear),
     plantSeed(x, y, z) { seeds.length = 0; seeds.push({ live: true, fixed: true, x, y, z, ox: x, oy: y, oz: z, vx: 0, vy: 0, vz: 0, rot: 0, at: 0 }); },
     skullPathAt(AX, AY, t) { const v = aimVelocity(AX, AY); return { x: v.x * t + 0.5 * windNow() * t * t, y: START_Y + v.y * t - 0.5 * G * t * t, z: v.z * t }; }, say(pool = "grab") { voice.test = true; const s = sayLine(pool); voice.test = false; return s; },
     voiceLines: () => { const o = {}; for (const id of lineIds("morty.")) { const pool = id.split(".").slice(1, -1).join("."); (o[pool] = o[pool] || []).push(t(id)); } return o; },

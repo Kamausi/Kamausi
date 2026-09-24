@@ -32,9 +32,21 @@
         signedIn(uid); const key = data && String(data.item || "");
         return db.tx(async t => {
           const L = await live(t); if (L["kill.souls"]) refuse("unavailable", "shop-closed"); current(L, data);
-          const r = Economy.buy(await t.get(walletPath(uid)), key);
+          const r = Economy.buy(await t.get(walletPath(uid)), key, Economy.dayOf(now));   // (the Cart's deal is the server's day's)
           if (!r.ok) refuse(r.why === "short" || r.why === "owed" ? "failed-precondition" : r.why === "owned" ? "already-exists" : "not-found", r.why);
           r.wallet.updatedAt = now; t.set(walletPath(uid), r.wallet); log(t, uid, { kind: "buy", item: key, souls: -r.spent }, now);
+          return r.wallet;
+        });
+      },
+      // v45: the Cart's Mystery Coffin, for Souls. The server takes the Souls; the game draws the look inside (a Vault
+      // look, kept on the player's profile like any other)
+      async openCoffinSouls({ db, uid, data, now }) {
+        signedIn(uid);
+        return db.tx(async t => {
+          const L = await live(t); if (L["kill.souls"]) refuse("unavailable", "shop-closed"); current(L, data);
+          const r = Economy.coffin(await t.get(walletPath(uid)));
+          if (!r.ok) refuse("failed-precondition", r.why);
+          r.wallet.updatedAt = now; t.set(walletPath(uid), r.wallet); log(t, uid, { kind: "coffin", souls: -r.spent }, now);
           return r.wallet;
         });
       },

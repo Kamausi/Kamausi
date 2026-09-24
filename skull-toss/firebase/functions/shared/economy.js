@@ -15,11 +15,46 @@
       "trail:aurora":  { name: "Aurora Trail",      souls: 300, s: 4 },
       "band:aurora":   { name: "Aurora Band",       souls: 150, s: 4 },
       // a season's Premium Ticket (v42): owning it lets the game pay the Ticket's second reward on each stub
-      "pass:s1":       { name: "Season One Premium Ticket", souls: 600, s: 4 }
+      "pass:s1":       { name: "Season One Premium Ticket", souls: 600, s: 4 },
+      // v45: Mort's Curio Cart sells for Souls alone (they were bones before): its exclusives, by shelf
+      "skull:disco":       { name: "Disco Ball", souls: 300, s: 4, cart: true },
+      "skull:bubblegum":   { name: "Bubblegum", souls: 140, s: 3, cart: true },
+      "skull:stained":     { name: "Stained Glass", souls: 320, s: 4, cart: true },
+      "eyes:diamond":      { name: "Diamonds", souls: 270, s: 4, cart: true },
+      "teeth:diamond":     { name: "Diamond Grill", souls: 300, s: 4, cart: true },
+      "paint:eightball":   { name: "Eight Ball", souls: 150, s: 3, cart: true },
+      "trail:coins":       { name: "Gold Coins", souls: 230, s: 4, cart: true },
+      "trail:cards":       { name: "Playing Cards", souls: 130, s: 3, cart: true },
+      "impact:kapow":      { name: "KA-POW!", souls: 230, s: 4, cart: true },
+      "ring:lifebuoy":     { name: "Lifebuoy", souls: 150, s: 3, cart: true },
+      "ring:saturn":       { name: "Saturn", souls: 300, s: 4, cart: true },
+      "aim:starry":        { name: "Starry", souls: 200, s: 4, cart: true },
+      "reel:bootleg":      { name: "Bootleg Copy", souls: 200, s: 4, cart: true },
+      "hat:cake":          { name: "Birthday Cake", souls: 150, s: 3, cart: true },
+      "hat:chicken":       { name: "Rubber Chicken", souls: 130, s: 3, cart: true },
+      "hat:icecream":      { name: "Dropped Ice Cream", souls: 140, s: 3, cart: true },
+      "hat:windup":        { name: "Wind-Up Key", souls: 160, s: 3, cart: true },
+      "hat:lighthouse":    { name: "Lighthouse", souls: 320, s: 4, cart: true },
+      "hat:chandelier":    { name: "Chandelier", souls: 400, s: 4, cart: true },
+      "aura:coins":        { name: "Money Bags", souls: 270, s: 4, cart: true },
+      "aura:cards":        { name: "House of Cards", souls: 150, s: 3, cart: true },
+      "aura:void":         { name: "Black Hole", souls: 330, s: 4, cart: true },
+      "pole:gold":         { name: "Solid Gold Post", souls: 280, s: 4, cart: true },
+      "pole:rocket":       { name: "Rocket", souls: 370, s: 4, cart: true }
     };
     // what a real-money purchase credits, by store product id (the stores' own prices are set in their consoles)
     const PACKS = { "souls.100": 100, "souls.550": 550, "souls.1200": 1200 };
     const DAILY = 10;                 // the free Souls you can claim once a (UTC) day
+    const COFFIN = 60;                // v45: the Cart's Mystery Coffin, opened for Souls (what's inside is a Vault look: the game draws it)
+    const DEAL_OFF = 0.25;            // v45: the Cart's deal of the day, a quarter off one exclusive
+    const CART = Object.keys(ITEMS).filter(k => ITEMS[k].cart);
+    // the day's deal: the same exclusive for everyone on a (UTC) day, picked by the day itself
+    function dealOf(day) {
+      let h = 2166136261; for (const ch of String(day)) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; }
+      const key = CART[h % CART.length];
+      return { key, souls: Math.round(ITEMS[key].souls * (1 - DEAL_OFF) / 10) * 10 };
+    }
+    const priceOf = (key, day) => { const d = day ? dealOf(day) : null; return d && d.key === key ? d.souls : ITEMS[key] ? ITEMS[key].souls : 0; };
     const MAX_SOULS = 1000000;        // a sanity cap: no wallet can hold more
     const emptyWallet = () => ({ souls: 0, owned: [], daily: "", receipts: 0, owed: 0, updatedAt: 0 });   // owed: Souls a refund took back that weren't there to take
     const cleanWallet = w => {
@@ -32,13 +67,20 @@
     };
     const dayOf = ms => new Date(ms).toISOString().slice(0, 10);
     // each rule returns { ok, wallet } or { ok: false, why } without touching anything
-    function buy(wallet, key) {
-      const w = cleanWallet(wallet), it = ITEMS[key];
+    function buy(wallet, key, day) {   // (day: the server's UTC day, for the Cart's deal)
+      const w = cleanWallet(wallet), it = ITEMS[key], price = priceOf(key, day);
       if (!it) return { ok: false, why: "no-such-item" };
       if (w.owned.includes(key)) return { ok: false, why: "owned" };
       if (w.owed > 0) return { ok: false, why: "owed" };
-      if (w.souls < it.souls) return { ok: false, why: "short" };
-      return { ok: true, wallet: { ...w, souls: w.souls - it.souls, owned: w.owned.concat(key) }, spent: it.souls };
+      if (w.souls < price) return { ok: false, why: "short" };
+      return { ok: true, wallet: { ...w, souls: w.souls - price, owned: w.owned.concat(key) }, spent: price };
+    }
+    // the Mystery Coffin: Souls out, nothing on the wallet (the look inside goes on the player's own profile)
+    function coffin(wallet) {
+      const w = cleanWallet(wallet);
+      if (w.owed > 0) return { ok: false, why: "owed" };
+      if (w.souls < COFFIN) return { ok: false, why: "short" };
+      return { ok: true, wallet: { ...w, souls: w.souls - COFFIN }, spent: COFFIN };
     }
     // Souls coming in pay off anything owed first
     const add = (w, n) => { const pay = Math.min(w.owed, n); return { ...w, owed: w.owed - pay, souls: Math.min(MAX_SOULS, w.souls + n - pay) }; };
@@ -69,6 +111,6 @@
       if (!it || !w.owned.includes(key)) return { ok: false, why: "not-owned" };
       return { ok: true, wallet: { ...add(w, it.souls), owned: w.owned.filter(k => k !== key) } };
     }
-    return { ITEMS, PACKS, DAILY, MAX_SOULS, emptyWallet, cleanWallet, dayOf, buy, claimDaily, credit, revoke, adjust, unbuy };
+    return { ITEMS, PACKS, DAILY, COFFIN, DEAL_OFF, CART, MAX_SOULS, emptyWallet, cleanWallet, dayOf, dealOf, priceOf, buy, coffin, claimDaily, credit, revoke, adjust, unbuy };
   })();
   if (typeof module !== "undefined" && module.exports) module.exports = Economy;

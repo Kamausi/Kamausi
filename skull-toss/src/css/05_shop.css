@@ -350,3 +350,61 @@ details.row.sent{display:block}details.row.sent summary{cursor:pointer;font:700 
 .item.rar-special{box-shadow:0 4px 0 var(--ink),inset 0 0 0 2px var(--r-special)}
 .item.rar-lost{box-shadow:0 4px 0 var(--ink),inset 0 0 0 2px var(--r-lost),inset 0 0 18px rgba(255,180,58,.25)}
 .rar-name.t-stock{color:var(--r-stock)}.rar-name.t-featured{color:var(--r-featured)}.rar-name.t-special{color:var(--r-special)}.rar-name.t-lost{color:var(--r-lost)}
+/* v45: the Vault holds still and only the shelves scroll. The pedestal, the outfits and the shelf grid stay put; the
+   items scroll under them. Tapping an item opens it large on the pedestal (try-on) before you equip or buy it. */
+#sheet-customize .vault-body{display:flex;flex-direction:column;overflow:hidden;padding-bottom:0}
+#sheet-customize .preview{flex:none;height:clamp(150px,24vh,210px);margin:8px 0 2px;transition:height .25s var(--snap)}
+#sheet-customize .outfits{flex:none;margin-top:8px}
+.vault-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;margin:0 -16px;padding:0 16px 20px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;border-top:2px dashed var(--line)}
+#sheet-customize .section-k{flex:none;display:flex;align-items:center;gap:8px;margin:8px 0 6px}
+#sheet-customize .section-k .clear-badges{margin-left:auto;padding:4px 10px;font-size:11px}
+.cat-tabs.vault-cats,#sheet-customize .cat-tabs{position:static;flex:none;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin:8px 0 0;padding:0;overflow:visible;border:0;background:none}
+@media (min-width:520px){#sheet-customize .cat-tabs{grid-template-columns:repeat(7,minmax(0,1fr))}}
+#sheet-customize .cat-tabs button{position:relative;min-width:0;padding:7px 2px 5px;font:12.5px/1.05 var(--display);letter-spacing:.02em;border-width:2px;border-radius:7px;box-shadow:0 2px 0 var(--ink);overflow-wrap:anywhere}
+#sheet-customize .cat-tabs button[aria-selected="true"]{transform:translateY(-1px) rotate(-1.5deg)}
+.cat-tabs .bubble{position:absolute;right:-6px;top:-7px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--red);border:2px solid var(--ink);color:var(--cream);font:11px/14px var(--num);letter-spacing:.02em;text-align:center;box-shadow:0 1px 0 var(--ink);pointer-events:none}
+.clear-ask{flex:none;display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 8px;padding:8px 10px;border-radius:10px;background:var(--panel-2);border:2px solid var(--ink);font:800 12px/1.3 var(--ui);color:var(--cream)}
+.clear-ask span{flex:1 1 100%}
+/* rarity: the shelf runs Stock, Featured, Special, Lost, each under its own heading */
+.grid .rar-head{grid-column:1/-1;display:flex;align-items:center;gap:8px;margin:6px 0 -2px;font:15px/1 var(--display);letter-spacing:.06em;text-transform:uppercase}
+.grid .rar-head::after{content:"";flex:1;height:2px;background:currentColor;opacity:.35}
+.grid .rar-head.t-stock{color:var(--r-stock)}.grid .rar-head.t-featured{color:var(--r-featured)}.grid .rar-head.t-special{color:var(--r-special)}.grid .rar-head.t-lost{color:var(--r-lost)}
+/* how a locked item is had: bones, a milestone, or either */
+.item .how{display:flex;gap:4px;justify-content:center;min-height:14px}
+.item .how i{display:inline-flex;align-items:center;gap:2px;padding:1px 5px;border-radius:6px;font:800 9px/12px var(--ui);font-style:normal;letter-spacing:.06em;text-transform:uppercase;border:1.5px solid var(--ink)}
+.item .how i svg{width:10px;height:10px}
+.item .how .b{background:var(--cream);color:var(--ink)}.item .how .m{background:var(--mustard);color:var(--ink)}
+.grid.rows .item .how{order:4;justify-content:flex-start}
+/* try-on: the pedestal fills the sheet, the shelves step aside, and the foot says what it costs */
+#sheet-customize.trying .preview{flex:1 1 auto;height:auto;min-height:0}
+#sheet-customize.trying .outfits,#sheet-customize.trying .cat-tabs,#sheet-customize.trying .section-k,#sheet-customize.trying .clear-ask,#sheet-customize.trying .vault-scroll{display:none}
+#sheet-customize.trying .sheet-body{padding-bottom:10px}
+.preview .try-close{position:absolute;z-index:3;right:8px;top:8px}
+#sheet-customize.trying .preview .tag{max-width:calc(100% - 70px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.buybar #tryBack{flex:none;width:auto}
+#sheet-customize.trying .buybar{flex-wrap:wrap;gap:8px 10px}
+#sheet-customize.trying .buybar .info{flex:1 1 100%}
+#sheet-customize.trying .buybar .info .sub{white-space:normal}
+#sheet-customize.trying .buybar #buyBtn{flex:1 1 auto}
+#sheet-customize .cat-tabs button{width:100%;margin:0;font-size:11px;letter-spacing:0;overflow-wrap:normal;word-break:normal;hyphens:none;display:flex;align-items:center;justify-content:center;text-align:center;min-height:30px}
+#sheet-customize .preview{height:clamp(130px,20vh,200px)}
+#sheet-customize .outfits{flex-wrap:nowrap;gap:6px}
+#sheet-customize .outfits .ghost-btn{padding:6px 8px;font-size:11px;white-space:nowrap}
+#sheet-customize .outfits .slot{width:30px;height:30px;font-size:16px}
+
+/* v45: the Curio Cart takes Souls: its shelves, its status line, and the Mystery Coffin's reel */
+.souls-chip b{color:#C8A8FF;font:18px/1 var(--num);margin-right:4px}
+.cart-status{margin:8px 0 0;padding:8px 10px;border-radius:10px;background:rgba(90,68,126,.35);border:2px solid var(--ink);font:800 12px/1.35 var(--ui);color:var(--cream)}
+.cart-shelf{margin:14px 0 6px;font:15px/1 var(--display);letter-spacing:.06em;text-transform:uppercase;color:var(--cream-dim);display:flex;align-items:center;gap:8px}
+.cart-shelf::after{content:"";flex:1;height:2px;background:currentColor;opacity:.3}
+#exclGrid .grid{margin-top:0}
+.price.soul{color:#C8A8FF}
+.coffin-show{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:16px;background:rgba(8,6,10,.72)}
+.coffin-card{width:min(420px,100%);border-radius:var(--r-lg);background:var(--panel);box-shadow:0 0 0 3px var(--ink),0 10px 0 var(--ink);overflow:hidden;animation:coffinIn .35s var(--snap) both}
+@keyframes coffinIn{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:none}}
+.coffin-card canvas{display:block;width:100%;height:min(46vh,300px)}
+.coffin-won{margin:10px 14px 0;min-height:20px;text-align:center;font:20px/1.1 var(--display);letter-spacing:.03em;text-transform:uppercase;color:var(--mustard-l);text-shadow:0 2px 0 var(--ink)}
+.coffin-acts{display:flex;gap:10px;justify-content:center;padding:10px 14px 14px}
+.coffin-acts .btn{width:auto}
+.souls-chip{display:inline-flex;align-items:center;gap:6px;margin-left:auto;padding:6px 10px 6px 8px;border-radius:8px;background:#2A2040;border:2px solid var(--ink);box-shadow:0 3px 0 var(--ink);font:22px/1 var(--num);letter-spacing:.03em;color:var(--cream);transform:rotate(-2deg)}
+.souls-chip.bump{animation:bump .4s var(--snap)}
