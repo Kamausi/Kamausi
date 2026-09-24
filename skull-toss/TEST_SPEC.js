@@ -544,8 +544,8 @@
   test("Stages are data: each one names its speed, triangle and patterns", () => { const st = T.stages(); assert(st.length === 8 && st[0] === "Moonshine Cemetery" && st[7] === "The Final Reel", st.join()); });
 
   // ── v11: power-ups ────────────────────────────────────────
-  test("Power-ups float in the middle of the ring on a fixed schedule; only a toss through the middle grabs one", () => {
-    fresh(); toHit(6); assert(T.pickup(), "no power-up at 6 hits");
+  test("Power-ups float in the middle of the ring; only a toss through the middle grabs one", () => {
+    fresh(); toHit(6); T.spawnPickup("deadeye"); assert(T.pickup(), "the power-up should float in the ring");
     T.freezeRing(0, C.RING_Y); const rc = T.state().ring.rc; throwAndSettle(holeClear(rc) * 0.92, C.RING_Y);
     assert(T.state().lastResult.make && T.pickup() && !Object.keys(T.powers()).length, "an edge-of-the-hole make shouldn't grab it");
     T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); assert(Object.keys(T.powers()).length === 1, "a dead-centre toss should grab it");
@@ -885,7 +885,7 @@
     assert(T.sfx().join() === "achievement,powerup,purchase", `the three recorded sounds ride inside the page (${T.sfx()})`);
   });
   test("A toss that clips the drawn power-up grabs it; one that misses the drawing doesn't", () => {
-    fresh(); toHit(6); assert(T.pickup(), "no power-up at 6 hits");
+    fresh(); toHit(6); T.spawnPickup("deadeye"); assert(T.pickup(), "the power-up should float in the ring");
     const rc = T.state().ring.rc, icon = rc * 0.42;
     const clip = icon + C.SKULL_R * 0.45, wide = icon + C.SKULL_R * 0.8;
     assert(!T.pickupHit({ x: wide, y: C.RING_Y, ringX: 0, ringY: C.RING_Y }), "a toss that only grazes the glow shouldn't grab it");
@@ -1217,6 +1217,32 @@
     assert(T.state().lastResult.kind === "seed" && T.state().lives === lives - 1, `a clod to the face (${T.state().lastResult.kind})`);
     const max = T.boss().max; T.hurtBoss(max - Math.ceil(max * 2 / 3)); T.endThrow();
     assert(T.pickup() && T.pickup().id === "ghost", "a Ghost Toss at two-thirds health");
+    T.toTitle();
+  });
+
+  // ── v21: the Power-Up Director ──
+  test("Power-ups are random but fair: none before the fourth hit, pity makes one certain, three a half at most, no repeats", () => {
+    fresh(); let spawns = [];
+    for (let seed = 1; seed <= 40; seed++) {
+      T.seedRun(seed); const r = T.powerRolls(25);
+      assert(r.length <= 3, `seed ${seed}: ${r.length} in one half`);
+      assert(r.every(x => x.hit >= 4), `seed ${seed}: one came before the fourth hit (${JSON.stringify(r)})`);
+      assert(r.length >= 1 && r[0].hit <= 4 + 11, `seed ${seed}: pity should make one certain by hit 15 (${JSON.stringify(r)})`);
+      for (let i = 1; i < r.length; i++) assert(r[i].id !== r[i - 1].id, `seed ${seed}: the same prop twice running`);
+      assert(r.every(x => x.id !== "cursed"), "no Cursed Skull in a first half");
+      spawns = spawns.concat(r);
+    }
+    const kinds = new Set(spawns.map(x => x.id)); assert(kinds.size >= 5, `a good spread of props (${[...kinds]})`);
+    T.seedRun(9); const b = T.powerRolls(25, "B"); assert(b.length >= 1 && b.every(x => x.hit >= 25 + 4), `the second half deals its own (${JSON.stringify(b)})`);
+    T.seedRun(5); const one = JSON.stringify(T.powerRolls(25)); T.seedRun(5); assert(JSON.stringify(T.powerRolls(25)) === one, "the same seed rolls the same props");
+    T.toTitle();
+  });
+  test("In play, a make can bring a power-up; a miss never does", () => {
+    fresh(); T.seedRun(3); let got = null;
+    for (let i = 0; i < 16 && !got; i++) { T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); if (T.pickup()) got = T.state().stageHits; }
+    assert(got && got >= 4, `a prop should float in within a run of makes (at hit ${got})`);
+    fresh(); T.seedRun(3); for (let i = 0; i < 12; i++) { T.givePower("second"); T.freezeRing(0, C.RING_Y); throwAndSettle(2.5, C.RING_Y); }   // (Second Chance keeps the run going)
+    assert(!T.pickup(), "misses never bring one");
     T.toTitle();
   });
 

@@ -1,7 +1,7 @@
   // ───────────────────────── power-ups: little cartoon props that float in the middle of the ring ─────────────────────────
   // They never replace good tossing: you only get one by threading the skull through the MIDDLE of the ring
-  // (a harder shot than an ordinary make), each lasts a few throws, and they appear on a fixed, learnable
-  // schedule rather than by chance. None during the Crow King; only Ghost Toss during the Pumpkin King.
+  // (a harder shot than an ordinary make), and each lasts a few throws. They turn up at random, dealt fairly by the
+  // Power-Up Director below. None during a mini-boss; during an end boss only the Ghost Toss it leaves at its thirds.
   const POWERS = {
     rush:    { name: "Skull Rush",    throws: 4, color: "#E8893A", tip: "Quicker flights: less to lead" },
     deadeye: { name: "Deadeye",       throws: 5, color: "#E3B64B", tip: "The perfect window doubles" },
@@ -12,11 +12,25 @@
     cursed:  { name: "Cursed Skull",  throws: 5, color: "#9A6BC0", tip: "Ring ×1.5 speed · score ×3" }
   };
   const POWER_IDS = Object.keys(POWERS);
-  const DECK = ["deadeye", "rush", "blast", "magnet", "second", "ghost"];
-  const SLOTS = { A: [6, 14, 21], B: [30, 38, 45] };   // stage hits where a prop appears
+  // ── the Power-Up Director. After every make there's a chance a prop floats into the ring; the tier sets how likely
+  // (tiers.json: powerRate). Every make without one raises the odds (pity) until one is certain; there are never more
+  // than three in half a map (Arcade's endless second half excepted), none before the fourth hit of a half, never one
+  // of the last two props again, and the Cursed Skull only in a second half. A prop you're already carrying is less
+  // likely. The dice are the run's seeded stream (07e_directors.js), so a replay rolls the same.
+  //   Stacking: the same prop again refreshes its throws (it never doubles). Different props stack; Cursed Skull and
+  //   BONK Blast multiply (×9). Nothing cancels anything.
+  const POWER_POOL = { deadeye: 1.0, rush: 1.0, blast: 0.8, magnet: 0.9, second: 0.8, ghost: 0.7, cursed: 0.5 };
+  const POWER_RULES = { base: 0.14, pity: 0.045, certain: 11, perHalf: 3, fromHit: 4 };
+  const PD = { pity: 0, last: [], half: 0, halfKey: "" };
+  function powerDirectorReset() { PD.pity = 0; PD.last = []; PD.half = 0; PD.halfKey = ""; }
+  function rollPower() {
+    const pool = Object.entries(POWER_POOL).filter(([id]) => (id !== "cursed" || game.phase === "B") && !PD.last.includes(id)).map(([id, w]) => [id, w * (powers[id] ? 0.3 : 1)]);
+    let r = runRand() * pool.reduce((a, [, w]) => a + w, 0);
+    for (const [id, w] of pool) if ((r -= w) <= 0) { PD.last = [id, ...PD.last].slice(0, 2); return id; }
+    const id = pool[pool.length - 1][0]; PD.last = [id, ...PD.last].slice(0, 2); return id;
+  }
   const powers = {};          // id → { left: throws left, uses }
   let pickup = null;          // the prop floating in the ring: { id, t, left, pop }
-  let pickSlot = -1;
 
   const powerOn = id => !!powers[id];
   function givePower(id) {
@@ -29,7 +43,7 @@
     renderPowers();
   }
   function clearPowers() { for (const k of Object.keys(powers)) delete powers[k]; renderPowers(); }
-  function clearPickups() { pickup = null; pickSlot = -1; }
+  function clearPickups() { pickup = null; }
   // every throw spends a charge (bonk blast, ghost and second chance also run out if you never use them)
   function powersAfterThrow() {
     for (const [id, p] of Object.entries(powers)) { p.left--; if (p.left <= 0) delete powers[id]; }
@@ -37,14 +51,15 @@
     renderPowers();
   }
   function updatePowers(dt) { for (const p of Object.values(powers)) p.t += dt; }
-  function pickupSchedule() {
-    if (boss || pickup || game.state !== "ready") return;
-    const h = game.stageHits, list = SLOTS[game.phase] || [];
-    const more = game.mode === "arcade" && game.phase === "B" && h > 45 && (h - 45) % 12 === 0;   // Arcade never ends, so neither do the power-ups
-    if ((!list.includes(h) && !more) || pickSlot === h) return;
-    pickSlot = h;
-    const i = more ? 2 + (h - 45) / 12 : list.indexOf(h), deckAt = (game.stage * 3 + (game.phase === "B" ? 3 : 0) + i) % DECK.length;
-    spawnPickup(game.phase === "B" && i === 1 ? "cursed" : DECK[deckAt]);
+  function pickupSchedule() {   // called as each throw settles: one roll per make
+    if (boss || pickup || game.state !== "ready" || !game.result || !game.result.make) return;
+    const key = game.stage + game.phase; if (key !== PD.halfKey) { PD.halfKey = key; PD.half = 0; }
+    const into = game.stageHits - (game.phase === "A" ? 0 : STAGE_MINI), endless = game.mode === "arcade" && game.stageHits > STAGE_BOSS;
+    if (into < POWER_RULES.fromHit || (!endless && PD.half >= POWER_RULES.perHalf)) return;
+    PD.pity++;
+    const chance = POWER_RULES.base * tierNow().powerRate + POWER_RULES.pity * (PD.pity - 1);
+    if (PD.pity < POWER_RULES.certain && runRand() >= chance) return;
+    PD.half++; PD.pity = 0; spawnPickup(rollPower());
   }
   function spawnPickup(id) {
     pickup = { id, t: 0, left: 4, pop: 0 };

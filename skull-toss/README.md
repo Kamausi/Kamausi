@@ -1,8 +1,23 @@
-# SKULL TOSS v20
+# SKULL TOSS v21
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)), with a synthesised waltz standing in wherever they can't load.
+
+## New in v21: power-ups turn up at random, fairly
+
+Power-ups no longer come at fixed hits. The **Power-Up Director** rolls after every make:
+
+- The chance is 14% × the tier's power rate.
+- Every make without one raises the odds by 4.5%, and one is certain by the eleventh.
+- Never more than three in half a map (except in Arcade's endless second half).
+- None before the fourth hit of a half.
+- Never one of the last two props again.
+- A prop you're already carrying is less likely.
+- The Cursed Skull only turns up in a second half.
+- The same prop again refreshes its throws rather than doubling. Different props stack: Cursed Skull and BONK Blast multiply to ×9.
+
+The dice are the run's seeded stream, so a replay rolls the same props. End bosses still leave their Ghost Toss at two-thirds and one-third health.
 
 ## New in v20: sixteen bosses
 
@@ -81,7 +96,6 @@ This is the first code pass on the V14 gate from the [roadmap audit](../docs/sku
 
 Still open, waiting on decisions in the audit:
 - The Story card and two achievements still say "four stages". That's still true of this build.
-- Whether power-ups stay on a schedule or become random.
 - Where a server would check scores.
 
 A hand-edited save code can still raise your own bones, stats and unlocks. That stays a soft-currency problem until Souls exist and balances live on a server.
@@ -615,7 +629,7 @@ From the console, `SkullToss.debug.visualAnimation` lists the pose library (`pos
 
 ## Tests
 
-Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **130 checks**, covering:
+Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **132 checks**, covering:
 
 - **Layout, scoring and aiming.**
   - Everything is centred and every result is classified correctly.
@@ -629,7 +643,7 @@ Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to
   - Beating him turns the ring into a repeating triangle through depth.
   - 50 hits bring the Pumpkin King, whose seeds knock the skull down. Ghost Toss slips through them.
   - Beating him clears the stage.
-- **Power-ups.** They appear on schedule, and a toss that clips the drawn prop grabs one while one that misses the drawing doesn't. Skull Rush, Deadeye, Second Chance, Cursed Skull and BONK Blast all do what they say.
+- **Power-ups.** They float in the ring, and a toss that clips the drawn prop grabs one while one that misses the drawing doesn't. Skull Rush, Deadeye, Second Chance, Cursed Skull and BONK Blast all do what they say.
 - **The skull.**
   - It is drawn from all seven SVG layers.
   - It squashes and stretches, and every result gets the right mood.
@@ -691,3 +705,7 @@ Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to
   - Every map's mini-boss takes the ring, keeps it moving in play, gives its tell and falls, and the second half follows.
   - Every map's end boss throws its volleys after a tell, keeps the ring in play and falls holding its piece. All eight pieces finish the story.
   - A new end boss's volley knocks the skull down, and a Ghost Toss appears at two-thirds health.
+- **v21.**
+  - Across 40 seeds, the Power-Up Director never deals a prop before the fourth hit or more than three a half, pity makes one certain by the fifteenth hit, and no prop comes twice running.
+  - A first half never deals the Cursed Skull, the second half deals its own, and the same seed rolls the same props.
+  - In play, a run of makes brings a prop, and misses never do.
