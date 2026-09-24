@@ -196,7 +196,14 @@
   ];
   // v30: the Soul Shop's items, priced in Souls by the shared economy (firebase/functions/shared/economy.js); owning one is
   // the server's word (Souls.owns), never the profile's
-  for (const [key, it] of Object.entries(Economy.ITEMS)) { const [kind, id] = key.split(":"); CATALOG[kind].push({ id, name: it.name, s: it.s, souls: it.souls }); }
+  for (const [key, it] of Object.entries(Economy.ITEMS)) { const [kind, id] = key.split(":"); if (CATALOG[kind]) CATALOG[kind].push({ id, name: it.name, s: it.s, souls: it.souls }); }   // (a season's Premium Ticket isn't a look)
+  // v42: the season looks, earned on a season's Ticket and only that season (07l_season.js)
+  CATALOG.skull.push({ id: "harvestmoon", name: "Harvest Moon", s: 4, season: "s1" });
+  CATALOG.ring.push({ id: "candycorn", name: "Candy Corn", s: 3, season: "s1" });
+  CATALOG.trail.push({ id: "harvest", name: "Harvest Ribbon", s: 4, season: "s1" });
+  CATALOG.band.push({ id: "matinee", name: "Matinee Stripe", s: 3, season: "s1" });
+  CATALOG.aim.push({ id: "lantern", name: "Lantern Glow", s: 2, season: "s1" });
+  CATALOG.title.push({ id: "midnight", name: "Midnight Matinee Regular", s: 3, season: "s1" }, { id: "marquee", name: "Name in Lights", s: 4, season: "s1" });
   KINDS.push("hat", "aura", "pole", "band");
   Object.assign(KIND_LABEL, { hat: "hat", aura: "aura", pole: "ring pole", band: "band" });
   Object.assign(DEFAULT_COS, { hat: "none", aura: "none", pole: "wood", band: "classic" });

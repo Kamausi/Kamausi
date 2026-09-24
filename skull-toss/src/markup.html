@@ -68,6 +68,7 @@
       <button class="chip-btn" data-sheet="achievements" type="button"><svg class="icon"><use href="#i-star"/></svg><span data-t="ui.achievements">Achievements</span><span class="badge" id="achPip" hidden></span></button>
       <button class="chip-btn" data-sheet="codex" type="button"><svg class="icon"><use href="#i-book"/></svg><span data-t="ui.codex">Codex</span></button>
       <button class="chip-btn" data-sheet="mastery" type="button"><svg class="icon"><use href="#i-star"/></svg><span data-t="ui.mastery">Mastery</span><span class="badge" id="masteryPip" hidden></span></button>
+      <button class="chip-btn season-chip" id="seasonChip" data-sheet="season" type="button" hidden><svg class="icon"><use href="#i-star"/></svg><span data-t="ui.season">Season</span><span class="badge" id="seasonPip" hidden></span></button>
       <button class="chip-btn" id="quitBtnTitle" type="button" hidden><svg class="icon"><use href="#i-back"/></svg><span data-t="ui.quit">Quit</span></button>
     </div>
     <p class="meta" id="titleBest"></p>
@@ -228,6 +229,11 @@
     <div class="m-list" id="masteryList"></div>
     <div class="tip" data-t="ui.every-tier-pays-its-bones">Every tier pays its <b>bones</b> once. Tap it when it lights up.</div>
   </div>
+</section>
+
+<section class="sheet" id="sheet-season" role="dialog" aria-modal="true" aria-labelledby="h-season" hidden>
+  <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back" data-t-aria="ui.back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-season" data-t="ui.season">Season</h2><span class="bones" id="bonesSeason"><svg><use href="#i-bone"/></svg><span>0</span></span></div>
+  <div class="sheet-body" id="seasonBody"></div>
 </section>
 
 <section class="sheet" id="sheet-settings" role="dialog" aria-modal="true" aria-labelledby="h-settings" hidden>

@@ -43,9 +43,11 @@
     snapRing();   // (the twist's ring from the first frame)
     stageCard(t("director.k"), t(`director.twist.${D.twist}.name`), t(`director.twist.${D.twist}.line`), 2.6, "gold");
   }
-  const directorSpeed = () => (game.mode === "director" && game.director ? TWISTS[game.director.twist].speed || 1 : 1);
-  const directorTargets = () => (game.mode === "director" && game.director ? TWISTS[game.director.twist].targets || 1 : 1);
-  function directorMake() { if (game.mode === "director" && game.director && TWISTS[game.director.twist].perMake) TWISTS[game.director.twist].perMake(); }
+  // the twists in play: the Director's one, or the season Feature's (07l_season.js)
+  const twistsNow = () => (game.mode === "director" && game.director ? [game.director.twist] : game.mode === "feature" && game.feature ? game.feature.twists : []);
+  const directorSpeed = () => twistsNow().reduce((k, id) => k * (TWISTS[id].speed || 1), 1);
+  const directorTargets = () => twistsNow().reduce((k, id) => k * (TWISTS[id].targets || 1), 1);
+  function directorMake() { for (const id of twistsNow()) if (TWISTS[id].perMake) TWISTS[id].perMake(); }
   // the run is over: which notes it met (stars pay the first time this week), and the week's best
   function directorAfterRun() {
     if (game.mode !== "director" || !game.director) return null;

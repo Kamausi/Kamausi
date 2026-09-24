@@ -12,7 +12,7 @@
     begin(opts) {
       if (this.play) return;
       this.rec = { v: 1, mode: game.mode, map: game.map, seed: game.seed, rm: reduceMotion ? 1 : 0, set: { cards: cardsMode(), mischief: mischiefOn() ? 1 : 0 },
-        practice: game.mode === "practice" ? { ...practice } : null, leader: reelSt.introLeader ? 1 : 0, rush: game.mode === "rush" ? modeSt.rush.map(b => b.id) : null, dir: game.mode === "director" && game.director ? JSON.parse(JSON.stringify(game.director)) : null, ev: [], at: Date.now() };
+        practice: game.mode === "practice" ? { ...practice } : null, leader: reelSt.introLeader ? 1 : 0, rush: game.mode === "rush" ? modeSt.rush.map(b => b.id) : null, dir: game.mode === "director" && game.director ? JSON.parse(JSON.stringify(game.director)) : null, feat: game.mode === "feature" && game.feature ? JSON.parse(JSON.stringify(game.feature)) : null, ev: [], at: Date.now() };
     },
     step: () => Math.round((game.time - (game.run.t0 || 0)) / SIM_STEP),
     note(kind, a, b) { if (this.rec && !this.play) this.rec.ev.push(a == null ? [this.step(), kind] : [this.step(), kind, +a.toFixed(5), +b.toFixed(5)]); },

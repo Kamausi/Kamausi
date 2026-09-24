@@ -125,7 +125,7 @@
 
   // ── shelves
   function renderShop() {
-    const kind = shop.cat, fresh = unseen(), grid = $("shopGrid"), list = CATALOG[kind];
+    const kind = shop.cat, fresh = unseen(), grid = $("shopGrid"), list = CATALOG[kind].filter(it => seasonLookVisible(kind, it));   // (a past season's look shows only if it's yours: 07l_season.js)
     for (const b of $("catTabs").querySelectorAll("button")) b.setAttribute("aria-selected", String(b.dataset.cat === kind));
     $("catLabel").textContent = CAT_LABEL[kind];
     $("catCount").textContent = `${list.filter(it => canUse(kind, it)).length}/${list.length} ${kind === "title" ? "earned" : "owned"}`;
@@ -137,13 +137,13 @@
       b.type = "button"; b.dataset.kind = kind; b.dataset.id = it.id;
       b.className = "item " + (on ? "equipped" : usable ? "owned" : "locked") + (selected ? " selected" : "");
       b.setAttribute("aria-pressed", String(on));
-      b.setAttribute("aria-label", `${it.name} ${KIND_LABEL[kind]}, ${starsOf(it)} star ${STAR_NAME[starsOf(it)]}${on ? ", equipped" : usable ? ", owned" : it.souls ? `, ${fmt(it.souls)} Souls at the Soul Shop` : it.price ? `, ${fmt(it.price)} bones` : `, locked: ${REQ_TEXT[it.req[0]](it.req[1])}`}`);
-      const state = on ? "Equipped" : usable ? (kind === "title" ? "Earned" : "Owned") : it.souls ? `<span class="price soul">◆ ${fmt(it.souls)}</span>` : it.shop ? "Curio Cart" : it.price ? `<span class="price">${BONE_SVG}${fmt(it.price)}</span>` : `${fmt(Math.min(statNow(it.req[0]), it.req[1]))}/${fmt(it.req[1])}`;
+      b.setAttribute("aria-label", `${it.name} ${KIND_LABEL[kind]}, ${starsOf(it)} star ${STAR_NAME[starsOf(it)]}${on ? ", equipped" : usable ? ", owned" : it.souls ? `, ${fmt(it.souls)} Souls at the Soul Shop` : it.season ? `, ${t("season.vaultState", { n: SEASONS[it.season].n })}` : it.price ? `, ${fmt(it.price)} bones` : `, locked: ${REQ_TEXT[it.req[0]](it.req[1])}`}`);
+      const state = on ? "Equipped" : usable ? (kind === "title" ? "Earned" : "Owned") : it.souls ? `<span class="price soul">◆ ${fmt(it.souls)}</span>` : it.season ? t("season.vaultState", { n: SEASONS[it.season].n }) : it.shop ? "Curio Cart" : it.price ? `<span class="price">${BONE_SVG}${fmt(it.price)}</span>` : `${fmt(Math.min(statNow(it.req[0]), it.req[1]))}/${fmt(it.req[1])}`;
       b.innerHTML = `<span class="stars r-${rar}" aria-hidden="true">${starsText(it)}</span>`;
-      if (kind === "title") b.innerHTML += `<span class="t-name">${it.name}</span><span class="sub">${it.req ? REQ_TEXT[it.req[0]](it.req[1]) : "Where everyone starts"}</span><span class="state">${state}</span>`;
+      if (kind === "title") b.innerHTML += `<span class="t-name">${it.name}</span><span class="sub">${it.req ? REQ_TEXT[it.req[0]](it.req[1]) : it.season ? t("season.vaultState", { n: SEASONS[it.season].n }) : "Where everyone starts"}</span><span class="state">${state}</span>`;
       else { const cv = document.createElement("canvas"); b.appendChild(cv); b.insertAdjacentHTML("beforeend", `<span>${it.name}</span><span class="state">${state}</span>`); drawItemIcon(cv, kind, it.id); }
       if (!usable) b.insertAdjacentHTML("beforeend", '<svg class="lock" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-lock"/></svg>');
-      if (it.shame || it.boss || it.shop || it.souls) b.insertAdjacentHTML("beforeend", `<span class="ribbon ${it.shame ? "shame" : it.boss ? "boss" : it.souls ? "soul" : "shop"}">${it.shame ? "Shame" : it.boss ? "Boss" : it.souls ? "Souls" : "Cart"}</span>`);
+      if (it.shame || it.boss || it.shop || it.souls || it.season) b.insertAdjacentHTML("beforeend", `<span class="ribbon ${it.shame ? "shame" : it.boss ? "boss" : it.souls ? "soul" : it.season ? "season" : "shop"}">${it.shame ? "Shame" : it.boss ? "Boss" : it.souls ? "Souls" : it.season ? t("season.ribbon") : "Cart"}</span>`);
       if (fresh.includes(kind + ":" + it.id)) b.insertAdjacentHTML("beforeend", '<span class="new" aria-hidden="true"></span>');
       grid.appendChild(b);
     }

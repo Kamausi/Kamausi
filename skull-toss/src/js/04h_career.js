@@ -22,7 +22,7 @@
       Telemetry.emit("level_up", { from, to });
       if (!sandbox) toast(`<b>${t("career.levelUp", { n: to })}</b> · +${fmtN(bones)} ${t("career.bones")}`);
     }
-    streakAfterRun();
+    streakAfterRun(); seasonAfterRun(xp);   // (the season's Ticket climbs with the same experience: 07l_season.js)
     profile.history = [{ mode: game.mode, map: game.map, stage: game.stage, score: game.score, hits: game.hits, won: !!r.story, xp, at: Date.now() }].concat(profile.history || []).slice(0, 10);
     return r.levelUp;
   }

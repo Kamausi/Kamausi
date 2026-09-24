@@ -12,7 +12,7 @@
   // big scene changes iris out and back in, like the end of an old cartoon; pausing is instant
   function showScreen(name, fx = true) {
     const prev = screen; screen = name;
-    if (name === "title") { renderResumeOffer(); renderSharedOffer(); renderEventBanner(); renderConsent(); }
+    if (name === "title") { renderResumeOffer(); renderSharedOffer(); renderEventBanner(); renderConsent(); renderSeasonChip(); }
     if (fx && prev !== name && name !== "pause" && prev !== "pause") irisTo(() => applyScreen(name)); else applyScreen(name);
   }
   // GAME OVER pops up over the picture when the last skull is gone; the headstone follows it
@@ -84,7 +84,7 @@
   // the other ways to play: a tile each, with its record, or what opens it
   function renderMoreModes() {
     const box = $("moreModes"); box.textContent = "";
-    for (const m of ["practice", "rush", ...MINI_IDS].filter(m => !Flags.modeOff(m))) {
+    for (const m of ["practice", "rush", ...MINI_IDS, ...(seasonNow() ? ["feature"] : [])].filter(m => !Flags.modeOff(m))) {
       const M = MODES[m], open = !M.open || M.open(), R = modeRec(m);
       const rec = !open ? t("mode.locked") : m === "practice" ? (R.runs ? t("mode.practiced", { n: R.runs }) : t("mode.none")) : R.runs ? t("mode.best", { v: modeValueText(m, R.best) }) : t("mode.none");
       box.append(h("button", { class: `mode-tile m-${m}${open ? "" : " locked"}${M.mini ? " m-mini" : ""}`, type: "button", data: { mode: m }, "aria-disabled": open ? null : "true" },
@@ -176,6 +176,7 @@
     else if (mode === "director" && r.director) rows.splice(0, rows.length, ["Score", `<b id="final">${fmtN(game.score)}</b>`], [t("res.director"), t("director.starsRow", { n: r.director.stars.filter(Boolean).length, bones: fmtN(r.director.pay) })],
       ...game.director.notes.map((N, i) => [noteText(N), r.director.met[i] ? "★" : "☆"]));
     else if (M.mini) rows.splice(0, rows.length, [t(`res.${mode}`), `<b id="final">${modeValueText(mode, r.modeValue || 0)}</b>`], ["Score", fmtN(game.score)], ["Perfect", `${r.perfects}/${game.throws}`], ["Best combo", `×${r.bestCombo}`]);
+    if (r.season && r.season.xp) rows.push([t("season.row"), r.season.to > r.season.from ? t("season.rowStub", { xp: fmtN(r.season.xp), n: r.season.to }) : t("season.rowXp", { xp: fmtN(r.season.xp) })]);   // (07l_season.js)
     $("resStats").innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
     $("resGrade").textContent = g.grade;
     $("resGrade").parentElement.classList.toggle("top", g.v >= 0.69);

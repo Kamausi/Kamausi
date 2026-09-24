@@ -202,6 +202,14 @@
       progLbl.textContent = `${STAGES[game.map].name} · ${fresh ? "new best!" : best ? `best ${clock(best)}` : "no best yet"}`;
       return;
     }
+    if ((game.mode === "director" || game.mode === "feature") && game.state !== "title") {   // no bosses to count down to: the run's clock, and the hits to the ring's third dimension
+      const secs = game.state === "over" ? game.run.secs || 0 : arcadeSecs(), h = Math.min(game.stageHits || 0, STAGE_MINI);
+      progEl.classList.remove("fight", "half", "beat"); delete progEl.dataset.boss; progEl.classList.toggle("arcade", true);
+      progArc.textContent = `${Math.floor(secs / 60)}:${String(Math.floor(secs) % 60).padStart(2, "0")}`;
+      progFill.style.width = (100 * h / STAGE_MINI).toFixed(1) + "%";
+      progLbl.textContent = `${STAGES[game.map].name} · ${game.mode === "director" ? t("director.k") : t(`season.${(game.feature && game.feature.season) || "s1"}.feature`)}`;
+      return;
+    }
     const fighting = !!boss && (game.phase === "mini" || game.phase === "boss");
     progEl.classList.toggle("fight", fighting);
     progEl.classList.toggle("half", game.phase !== "A" && !fighting);

@@ -114,8 +114,22 @@
       for (const A of ARCHIVE) for (const f of ["date", "title", "body", "how"]) str(`archive.${A.id}.${f}`);
       for (const id of TWIST_IDS) { str(`director.twist.${id}.name`); str(`director.twist.${id}.line`); }
       for (const N of NOTE_POOL) str(`director.note.${N.id}`);
+      for (const [id, S] of Object.entries(SEASONS)) {   // seasons (v42)
+        for (const f of ["name", "line", "feature", "featureLine"]) str(`season.${id}.${f}`);
+        for (const N of S.notes) str(`season.note.${N.id}`);
+        for (const tw of S.feature.twists) if (!TWISTS[tw]) P.push(`season ${id}: the Feature's twist "${tw}" doesn't exist`);
+        if (!(S.feature.map >= 0 && S.feature.map < MAP_COUNT)) P.push(`season ${id}: the Feature's map ${S.feature.map} doesn't exist`);
+        if (!(Date.parse(S.from) < Date.parse(S.until))) P.push(`season ${id}: its dates run backwards`);
+        if (S.track.some(([f]) => !f)) P.push(`season ${id}: a stub with no free reward`);
+      }
       return P;
     },
+    // seasons (07l_season.js): move the season's calendar, set or read the Ticket, claim a stub
+    seasonAt(when) { seasonClock = when == null ? 0 : (typeof when === "number" ? when : Date.parse(when)) - Date.now(); renderSeasonChip(); },
+    season: () => { const S = seasonNow(); return S && { id: S.id, n: S.n }; }, seasonClaimable: () => { const S = seasonClaimable(); return S && { id: S.id, over: !!S.over }; },
+    seasonRec: () => realProfile().season && JSON.parse(JSON.stringify(realProfile().season)), setSeasonRec(r) { realProfile().season = r ? JSON.parse(JSON.stringify(r)) : null; },
+    claimSeason: (i, prem = false) => claimSeasonTier(i, prem), seasonPips: () => seasonClaimableCount(), twists: () => twistsNow().slice(), feature: () => game.feature && { ...game.feature },
+    shopCat(k) { shop.cat = k; if (sheet === "customize") renderShop(); }, canUse: (kind, id) => { const it = findItem(kind, id); return !!it && canUse(kind, it); },
     economyAudit: () => economyAudit(), analyticsOn(on = true) { if (sandbox) sandbox.analyticsOn = on; }, playData: () => ({ q: PlayData.q.map(e => ({ ...e })), sent: PlayData.sent, consent: PlayData.consent(), allowed: PlayData.allowed() }),
     flushPlayData: () => PlayData.flush(), setConsent: v => PlayData.set(v), resetConsent() { settings.analytics = "ask"; PlayData.q = []; PlayData.sent = 0; PlayData.errorsSent = 0; }, firsts: () => realProfile().firsts.slice(),
     reportError: (m, s) => PlayData.error(m, s), errors: () => Telemetry.errors.map(e => ({ ...e })), renderConsent() { renderConsent(); return !$("consentCard").hidden; },

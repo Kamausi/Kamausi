@@ -69,7 +69,7 @@
     dailyBtn.disabled = !on || Souls.busy || (W && W.daily === today);
     dailyBtn.textContent = W && W.daily === today ? t("souls.claimed") : t("souls.claim", { n: Economy.DAILY });
     const grid = $("soulsGrid"); grid.textContent = "";
-    for (const [key, it] of Object.entries(Economy.ITEMS)) {
+    for (const [key, it] of Object.entries(Economy.ITEMS).filter(([k]) => KINDS.includes(k.split(":")[0]))) {   // (looks only: a Premium Ticket is on the Season sheet)
       const [kind, id] = key.split(":"), owned = Souls.owns(key), worn = owned && cos[kind] === id;
       const cv = h("canvas"), b = h("button", { type: "button", class: `item soul${worn ? " equipped" : owned ? " owned" : ""}`, data: { key }, disabled: !on || Souls.busy ? true : null },
         cv, h("span", {}, it.name), h("span", { class: "state" }, worn ? t("souls.worn") : owned ? t("souls.equip") : t("souls.price", { n: fmtN(it.souls) })));

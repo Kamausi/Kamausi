@@ -13,7 +13,9 @@
       "skull:aurora":  { name: "Aurora Skull",      souls: 400, s: 4 },
       "ring:aurora":   { name: "Aurora Ring",       souls: 250, s: 4 },
       "trail:aurora":  { name: "Aurora Trail",      souls: 300, s: 4 },
-      "band:aurora":   { name: "Aurora Band",       souls: 150, s: 4 }
+      "band:aurora":   { name: "Aurora Band",       souls: 150, s: 4 },
+      // a season's Premium Ticket (v42): owning it lets the game pay the Ticket's second reward on each stub
+      "pass:s1":       { name: "Season One Premium Ticket", souls: 600, s: 4 }
     };
     // what a real-money purchase credits, by store product id (the stores' own prices are set in their consoles)
     const PACKS = { "souls.100": 100, "souls.550": 550, "souls.1200": 1200 };

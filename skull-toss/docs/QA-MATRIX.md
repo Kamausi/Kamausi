@@ -1,6 +1,6 @@
 # The device matrix
 
-Written by `node tools/matrix.mjs` (v41). Each size opens the title, all eleven sheets and a run in play, and checks for sideways scrolling, clipped text, controls that run off the screen, touch targets under 40 px, unnamed controls, and a HUD or play field that doesn't fit. Screenshots of each size are in `qa/` after a run.
+Written by `node tools/matrix.mjs` (v41). Each size opens the title, all twelve sheets and a run in play, and checks for sideways scrolling, clipped text, controls that run off the screen, touch targets under 40 px, unnamed controls, and a HUD or play field that doesn't fit. Screenshots of each size are in `qa/` after a run.
 
 | Size | Viewport | Touch | Result |
 |---|---|---|---|

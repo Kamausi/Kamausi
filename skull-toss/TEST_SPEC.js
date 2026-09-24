@@ -226,13 +226,14 @@
   const dressDefault = () => { for (const [k, v] of Object.entries(DEF)) T.equip(k, v); };
   test("Skull Vault: thirteen shelves (hats, auras and poles are new), over 350 things, titles earned not bought", () => {
     const c = T.catalog(), want = { skull: 40, eyes: 24, teeth: 18, paint: 32, trail: 34, impact: 20, ring: 24, aim: 16, reel: 10, title: 49, hat: 52, aura: 31, pole: 21 };   // (titles: six career-level ones, v31, and the Shot Doctor, v32)
-    for (const [k, n] of Object.entries(want)) { const L = (c[k] || []).filter(i => !i.souls); assert(L.length === n, `${k}: ${L.length} items, wanted ${n} (besides the Soul Shop's, v30)`); }
+    for (const [k, n] of Object.entries(want)) { const L = (c[k] || []).filter(i => !i.souls && !i.season); assert(L.length === n, `${k}: ${L.length} items, wanted ${n} (besides the Soul Shop's, v30, and the seasons', v42)`); }
     const all = Object.values(c).flat(); assert(all.length >= 351, `only ${all.length} cosmetics (117 × 3 = 351)`);
     for (const k of Object.keys(c)) for (const it of c[k]) {
       assert(!it.s || (it.s >= 1 && it.s <= 4), `${k} ${it.id} has ${it.s} stars`);
       if (k === "title") assert(!it.price, `title ${it.id} is for sale`);
       else if (it.shame || it.boss) assert(!it.price && it.req, `${k} ${it.id}: prizes are won, not sold`);
       else if (it.souls) assert(!it.price && !it.req && it.souls > 0, `${k} ${it.id}: a Soul item is sold for Souls alone`);
+      else if (it.season) assert(!it.price && !it.req, `${k} ${it.id}: a season look is earned on its Ticket, never sold`);
       else if (it.s) assert(it.price > 0, `${k} ${it.id} has no price`);
       if (it.shop) assert(it.price > 0 && !it.req, `${k} ${it.id}: a shop exclusive is bought at the shop, not earned`);
     }
@@ -1613,7 +1614,7 @@
 
   // ── v29: cosmetics and customization ──
   test("Bands: eight slingshot bands in the Vault, the rubber one yours from the start, each strung on the launcher its own way", () => {
-    T.setStats(ZERO); T.toTitle(); const B = T.catalog().band.filter(i => !i.souls);   // (and two Soul bands, v30)
+    T.setStats(ZERO); T.toTitle(); const B = T.catalog().band.filter(i => !i.souls && !i.season);   // (and two Soul bands, v30, and a season's, v42)
     assert(B.length === 8 && T.cosmetics().band === "classic" && T.bandStyle().id === "classic", `${B.length} bands, the rubber one on`);
     T.openSheet("customize"); document.querySelector('#catTabs [data-cat="band"]').click();
     assert(document.querySelectorAll('#shopGrid .item').length === 10 && document.querySelectorAll('#shopGrid .item.locked').length === 9, "the Bands shelf (with the Soul Shop's two), all but one locked");
@@ -1895,6 +1896,7 @@
     T.setStats(ZERO);
     T.directorWith({ twist: "wind", map: 0 }); assert(T.hz().kind === "wind", "wind on Moonshine Cemetery");
     T.directorWith({ twist: "fog", map: 0 }); assert(T.hz().kind === "fog", "fog on Moonshine Cemetery");
+    assert(/Director/.test($("progLabel").textContent) && !/ to the /.test($("progLabel").textContent), `no boss to count down to (${$("progLabel").textContent})`);
     T.directorWith({ twist: "cursed", map: 0 }); assert(T.powers().cursed, "the Cursed Skull all run");
     T.directorWith({ twist: "rush", map: 0 }); T.step(0.2); const fast = T.state().ring.omega;
     T.directorWith({ twist: "fog", map: 0 }); T.step(0.2); assert(fast > T.state().ring.omega * 1.2, `a quicker ring (${fast} vs ${T.state().ring.omega})`);
@@ -2062,6 +2064,75 @@
     T.endRun(); T.step(7.25);   // (the clock moves on before it's watched)
     T.watchReplay(); T.step(4); assert(at() === was, `the same balloons (${at()} vs ${was})`);
     T.stopReplay(); T.setPractice({ hazards: true }); T.setStats(ZERO); T.toTitle();
+  });
+
+  // ── v42: seasons ──
+  const IN_SEASON = "2026-10-15T12:00:00Z", AFTER = ms => new Date(Date.parse("2026-12-01T00:00:00Z") + ms).toISOString();
+  test("A season runs on its dates, or whenever the live config names it; 'off' means none", () => {
+    T.setFlags({}); T.seasonAt("2026-09-20T12:00:00Z"); assert(T.season() === null, "not before its dates");
+    T.seasonAt(IN_SEASON); assert(T.season() && T.season().id === "s1", "Season One in October");
+    T.setFlags({ "season.id": "s1" }); T.seasonAt("2026-09-20T12:00:00Z"); assert(T.season() && T.season().id === "s1", "on early, when the live config says so");
+    T.setFlags({ "season.id": "off" }); T.seasonAt(IN_SEASON); assert(T.season() === null && T.seasonClaimable() === null, "and off when it says off");
+    T.setFlags({}); T.seasonAt(IN_SEASON); T.toTitle(); assert(!$("seasonChip").hidden, "the title shows the Season chip");
+    T.seasonAt(null); T.toTitle();
+  });
+  test("Runs tear stubs off the Season Ticket; the Feature counts double; a note pays its experience once", () => {
+    T.setFlags({}); T.seasonAt(IN_SEASON); T.setStats({ ...ZERO, bestStage: 3 }); T.setSeasonRec(null);
+    T.start(); T.calm(); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); T.endRun(); T.step(1);
+    const r1 = T.runStats(); assert(r1.season && r1.season.xp === r1.xp && T.seasonRec().xp === r1.xp && r1.xp > 0, `a run's experience (${JSON.stringify(r1.season)}, ${r1.xp})`);
+    T.startMode("feature"); T.calm(); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); T.endRun(); T.step(1);
+    const r2 = T.runStats(); assert(r2.season.xp === 2 * r2.xp, `double on the Feature (${r2.season.xp} vs ${r2.xp})`);
+    const rec = T.seasonRec(); rec.notes.perfects = 39; T.setSeasonRec(rec);
+    T.start(); T.calm(); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); T.endRun(); T.step(1);
+    const r3 = T.runStats(); assert(T.seasonRec().done.includes("perfects") && r3.season.xp === r3.xp + 150, `forty perfects: +150 (${JSON.stringify(r3.season)})`);
+    T.start(); T.calm(); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); T.endRun(); T.step(1);
+    assert(T.runStats().season.xp === T.runStats().xp, "and only once");
+    T.setPractice({ ring: "full" }); T.startMode("practice", 0); const before = T.seasonRec().xp; T.calm(); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); T.endRun(); T.step(1); T.toTitle();
+    assert(T.seasonRec().xp === before, "Practice earns none");
+    T.setSeasonRec(null); T.setStats(ZERO); T.seasonAt(null); T.toTitle();
+  });
+  test("Claiming stubs: once each, reached ones only; the premium reward needs the Premium Ticket; season looks are the Ticket's alone", async () => {
+    T.setFlags({}); T.seasonAt(IN_SEASON); T.setStats({ ...ZERO, bones: 0 }); T.setSeasonRec({ id: "s1", xp: 600, free: [], prem: [], notes: {}, done: [] });
+    assert(!T.canUse("aim", "lantern"), "a season look isn't anyone's to begin with");
+    assert(T.seasonPips() === 2, `two stubs waiting (${T.seasonPips()})`);
+    assert(T.claimSeason(0) && T.profile().bones === 100, "stub 1: 100 bones"); assert(!T.claimSeason(0), "once");
+    assert(!T.claimSeason(2), "stub 3 isn't reached"); assert(T.claimSeason(1) && T.canUse("aim", "lantern"), "stub 2: the Lantern Glow aim line");
+    assert(!T.claimSeason(0, true), "the premium reward needs the Premium Ticket");
+    await T.fakeServer(); await T.serverAdmin("grant", { uid: "tester", souls: 1000, reason: "test" }); const S = T.soulsApi(); await S.connect();
+    await S.ask("buyWithSouls", { item: "pass:s1" }); assert(T.wallet().owned.includes("pass:s1") && T.wallet().souls === 400, `the Premium Ticket, at the server's price (${JSON.stringify(T.wallet())})`);
+    assert(T.claimSeason(0, true) && T.profile().bones === 250, "and now stub 1 pays twice");
+    T.toTitle(); T.openSheet("season");
+    assert(document.querySelectorAll("#seasonBody .season-track li").length === 20 && document.querySelectorAll("#seasonBody .reward.claimed").length === 3, "the Ticket on the Season sheet");
+    assert(!document.querySelector("#soulsGrid [data-key='pass:s1']"), "the Premium Ticket isn't a look in the Soul Shop");
+    T.closeSheet(); T.noServer(); T.setSeasonRec(null); T.setStats(ZERO); T.seasonAt(null); T.toTitle();
+  });
+  test("After the season: a week to claim what's earned, then it expires; season looks nobody earned leave the Vault", () => {
+    T.setFlags({}); T.setStats({ ...ZERO, bones: 0 }); T.setSeasonRec({ id: "s1", xp: 1000, free: [], prem: [], notes: {}, done: [] });
+    T.seasonAt(AFTER(3 * 864e5)); assert(T.season() === null && T.seasonClaimable() && T.seasonClaimable().over, "over, but claimable");
+    assert(T.claimSeason(0) && T.profile().bones === 100, "claimed in the grace week");
+    T.start(); T.calm(); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); T.endRun(); T.step(1); assert(T.seasonRec().xp === 1000 && !T.runStats().season, "no more experience once it's over");
+    T.seasonAt(AFTER(8 * 864e5)); assert(!T.seasonClaimable() && !T.claimSeason(2), "a week later, the rest has expired");
+    T.toTitle(); T.openSheet("customize"); T.shopCat("skull");
+    assert(!document.querySelector('#shopGrid [data-id="harvestmoon"]'), "the Harvest Moon skull, never earned, is gone from the Vault");
+    T.setStats({ ...ZERO, unlocked: ["skull:harvestmoon"] }); T.shopCat("skull"); assert(document.querySelector('#shopGrid [data-id="harvestmoon"]'), "but stays for whoever earned it");
+    T.seasonAt(IN_SEASON); T.setStats(ZERO); T.shopCat("ring"); assert(document.querySelector('#shopGrid [data-id="candycorn"]'), "and while the season's on, it's there to earn");
+    T.shopCat("skull"); T.closeSheet(); T.setSeasonRec(null); T.setStats(ZERO); T.seasonAt(null); T.toTitle();
+  });
+  test("The Feature: the season's map after dark with twice the targets, and its replay keeps the season's rules after it ends", () => {
+    T.setFlags({}); T.seasonAt(IN_SEASON); T.setStats({ ...ZERO, bestStage: 1 });
+    T.startMode("feature"); const F = T.feature();
+    assert(T.modeState().mode === "feature" && T.state().stage === 3 && T.hz().kind === "fog" && T.twists().join() === "fog,bonanza", `Pumpkin Patch Hollow after dark (${JSON.stringify(F)}, stage ${T.state().stage})`);
+    assert(/Pumpkin Patch Hollow · The Midnight Matinee/.test($("progLabel").textContent), `the bar names the Feature (${$("progLabel").textContent})`);
+    T.calm(); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); T.endRun(); T.step(1);
+    const R = T.lastReplay(); assert(R.feat && R.feat.twists.join() === "fog,bonanza", "the replay carries the Feature");
+    T.seasonAt(AFTER(30 * 864e5)); assert(T.watchReplay() && T.state().stage === 3 && T.twists().join() === "fog,bonanza", "and plays it after the season's gone");
+    T.stopReplay(); T.startMode("feature"); assert(T.modeState().mode === "story", "the Feature itself has gone with the season");
+    T.setStats(ZERO); T.seasonAt(null); T.toTitle();
+  });
+  test("Two devices' Season Tickets merge: the best of each; a newer season's record wins", () => {
+    const P = T.profile(), a = { id: "s1", xp: 900, free: [0, 1], prem: [], notes: { hits: 40 }, done: [] }, b = { id: "s1", xp: 700, free: [2], prem: [0], notes: { hits: 90, targets: 3 }, done: ["shots"] };
+    const m = T.merge({ ...P, season: a }, { ...P, season: b }).season;
+    assert(m.xp === 900 && m.free.sort().join() === "0,1,2" && m.prem.join() === "0" && m.notes.hits === 90 && m.notes.targets === 3 && m.done.join() === "shots", JSON.stringify(m));
   });
 
   (async () => {

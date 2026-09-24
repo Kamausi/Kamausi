@@ -19,7 +19,7 @@ const SIZES = [
   ["phone, landscape", 852, 393, true], ["foldable, open", 673, 841, true], ["iPad mini", 744, 1133, true], ["iPad Pro 13-inch", 1032, 1376, true],
   ["Steam Deck", 1280, 800, false], ["laptop", 1440, 900, false], ["ultrawide", 2560, 1080, false]
 ];
-const SHEETS = ["play", "customize", "challenges", "store", "settings", "profile", "achievements", "codex", "mastery", "board", "souls"];
+const SHEETS = ["play", "customize", "challenges", "store", "settings", "profile", "achievements", "codex", "mastery", "board", "souls", "season"];
 
 const browser = await chromium.launch();
 const results = [];
@@ -30,7 +30,7 @@ for (const [name, width, height, touch] of SIZES) {
   page.on("pageerror", e => errors.push(e.message));
   await page.goto(PAGE); await page.waitForFunction(() => window.SkullToss && window.SkullToss.debug && window.SkullToss.debug.sandbox);
   await page.evaluate(() => document.fonts.ready);
-  await page.evaluate(() => { const T = window.SkullToss.debug; T.sandbox(true); T.pause(true); T.setStats({ bones: 12345, bestStage: 8, bossKills: 6, games: 30 }); T.toTitle(); });
+  await page.evaluate(() => { const T = window.SkullToss.debug; T.sandbox(true); T.pause(true); T.setStats({ bones: 12345, bestStage: 8, bossKills: 6, games: 30 }); T.seasonAt("2026-10-15T12:00:00Z"); T.setSeasonRec({ id: "s1", xp: 1830, free: [0, 1], prem: [], notes: { hits: 120 }, done: [] }); T.toTitle(); });
   await page.waitForTimeout(700);
   const problems = [];
   const inspect = async where => page.evaluate(([where, touch]) => {
@@ -81,7 +81,7 @@ for (const [name, width, height, touch] of SIZES) {
   await ctx.close();
 }
 await browser.close();
-const md = ["# The device matrix", "", "Written by `node tools/matrix.mjs` (v41). Each size opens the title, all eleven sheets and a run in play, and checks for sideways scrolling, clipped text, controls that run off the screen, touch targets under 40 px, unnamed controls, and a HUD or play field that doesn't fit. Screenshots of each size are in `qa/` after a run.", "",
+const md = ["# The device matrix", "", "Written by `node tools/matrix.mjs` (v41). Each size opens the title, all twelve sheets and a run in play, and checks for sideways scrolling, clipped text, controls that run off the screen, touch targets under 40 px, unnamed controls, and a HUD or play field that doesn't fit. Screenshots of each size are in `qa/` after a run.", "",
   "| Size | Viewport | Touch | Result |", "|---|---|---|---|",
   ...results.map(r => `| ${r.name} | ${r.width} × ${r.height} | ${r.touch ? "yes" : "no"} | ${r.problems.length ? `**${r.problems.length} problem${r.problems.length > 1 ? "s" : ""}**` : "pass"} |`), "",
   ...results.filter(r => r.problems.length).flatMap(r => [`## ${r.name} (${r.width} × ${r.height})`, "", ...r.problems.map(p => `- ${p}`), ""])];

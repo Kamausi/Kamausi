@@ -17,9 +17,10 @@
     curtain:  { free: true, mini: true, clock: 20, map: 7, open: () => profile.bossKills > 0 },
     longshot: { lives: true, mini: true, map: 3, open: () => profile.bossKills > 0 },
     gallery:  { lives: true, mini: true, throws: 10, map: 5, open: () => profile.bossKills > 0 },
-    director: { lives: true, open: () => true }   // the Director's Challenge (07k_director.js): the week's map, whatever you've reached
+    director: { lives: true, open: () => true },  // the Director's Challenge (07k_director.js): the week's map, whatever you've reached
+    feature:  { lives: true, open: () => !!seasonNow() }   // the season's Feature (07l_season.js): only while a season's on
   };
-  const arcadeLike = () => game.mode === "arcade" || game.mode === "director";   // (no bosses; the ring goes 3D at 25 hits and keeps winding up)
+  const arcadeLike = () => game.mode === "arcade" || game.mode === "director" || game.mode === "feature";   // (no bosses; the ring goes 3D at 25 hits and keeps winding up)
   const MODE_IDS = Object.keys(MODES), MINI_IDS = MODE_IDS.filter(m => MODES[m].mini);
   const modeOf = () => MODES[game.mode] || MODES.story;
   const freeMiss = () => !!modeOf().free || game.phase === "encore";   // a miss that costs no skull
@@ -59,6 +60,7 @@
     else if (m === "gallery") { ring.frozen = { x: 0, y: RING_Y, z: RING_Z }; galleryTargets(); }
     if (MODES[m].mini) stageCard(t(`mode.${m}.name`), t(`mode.${m}.rule`), "", 2.2, "gold");
     if (m === "director") directorBegin();
+    if (m === "feature") featureBegin();
   }
   // ── the ring, mode by mode (ringTargets asks first)
   function modeRing() {
@@ -148,7 +150,7 @@
   // ── the HUD's progress bar, mode by mode: a clock for Curtain Call and the encore, a reach for Longshot, the throws
   // left in the Gallery, how far into the list in Boss Rush (its fights use the boss's own bar)
   function modeProgress() {
-    const m = game.mode; if (game.state === "title" || (m === "story" && game.phase !== "encore") || m === "arcade") return false;
+    const m = game.mode; if (game.state === "title" || (m === "story" && game.phase !== "encore") || m === "arcade" || m === "director" || m === "feature") return false;   // (the Director's and the Feature's are renderProgress's own: 07b_stage.js)
     const fighting = !!boss && (game.phase === "mini" || game.phase === "boss");
     if (m === "rush" && fighting) { progSt.textContent = modeSt.rushI + 1; return false; }   // (the boss's health bar, as in Story)
     progEl.classList.remove("fight", "half", "beat"); delete progEl.dataset.boss;
@@ -170,11 +172,11 @@
     const m = game.mode;
     if (m === "director") { directorAfterRun(); game.run.modeValue = game.score; return; }   // (its record is the week's: 07k_director.js)
     const R = profile.modes[m] || (profile.modes[m] = { best: 0, runs: 0 });
-    const value = m === "rush" ? game.run.bosses : m === "curtain" ? game.hits : m === "longshot" ? Math.round(modeSt.far * 10) : m === "gallery" ? (game.run.targets || 0) : 0;
+    const value = m === "rush" ? game.run.bosses : m === "curtain" ? game.hits : m === "longshot" ? Math.round(modeSt.far * 10) : m === "gallery" ? (game.run.targets || 0) : m === "feature" ? game.score : 0;
     game.newBest = value > R.best; R.best = Math.max(R.best, value); R.runs++;
     if (m === "rush" || MODES[m].mini) challenge("modeRuns", 1);
     if (m === "rush") R.score = Math.max(R.score || 0, game.score);
     game.run.modeValue = value;
     Telemetry.emit("mode_end", { mode: m, value, best: R.best });
   }
-  const modeValueText = (m, v) => m === "longshot" ? t("mode.longshot.m", { m: (v / 10).toFixed(1) }) : m === "rush" ? t("mode.rush.bosses", { n: v }) : m === "gallery" ? t("mode.gallery.targets", { n: v }) : t("mode.curtain.makes", { n: v });
+  const modeValueText = (m, v) => m === "feature" ? t("mode.feature.v", { n: fmtN(v) }) : m === "longshot" ? t("mode.longshot.m", { m: (v / 10).toFixed(1) }) : m === "rush" ? t("mode.rush.bosses", { n: v }) : m === "gallery" ? t("mode.gallery.targets", { n: v }) : t("mode.curtain.makes", { n: v });

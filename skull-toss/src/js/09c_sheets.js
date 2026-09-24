@@ -35,6 +35,7 @@
     else if (name === "codex") renderCodex();
     else if (name === "souls") renderSoulsUI();
     else if (name === "mastery") renderMastery();
+    else if (name === "season") renderSeason();
   }
   document.addEventListener("click", e => {
     const open = e.target.closest("[data-sheet]"); if (open) { sheetOpener = open; openSheet(open.dataset.sheet); return; }

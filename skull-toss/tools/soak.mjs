@@ -22,7 +22,8 @@ const report = await page.evaluate(([RUNS, SEED]) => {
   const finite = (o, path = "") => { for (const [k, v] of Object.entries(o || {})) { if (typeof v === "number" && !Number.isFinite(v)) bad(`not a number at ${path}${k}`, v); else if (v && typeof v === "object" && !Array.isArray(v)) finite(v, `${path}${k}.`); } };
   T.sandbox(true); T.pause(true); T.continues(true); T.cards(true); T.mischiefOn(true); T.encore(true);
   T.setStats({ bestStage: 9, bossKills: 8, bones: 5000 });   // (every mode open, every map reachable)
-  const MODES = ["story", "arcade", "practice", "rush", "curtain", "longshot", "gallery", "director"];
+  T.seasonAt("2026-10-15T12:00:00Z");   // (a season on, so the Feature plays too)
+  const MODES = ["story", "arcade", "practice", "rush", "curtain", "longshot", "gallery", "director", "feature"];
   for (const mode of MODES) {
     stats.modes[mode] = 0;
     for (let r = 0; r < RUNS; r++) {

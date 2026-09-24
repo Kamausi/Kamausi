@@ -255,7 +255,7 @@
     if (Replay.play && !opts.replay) Replay.stop(false);   // (a real run ends any replay: 07j_replay.js)
     const mode = !MODES[opts.mode] ? "story" : opts.replay || (!Flags.modeOff(opts.mode) && (!MODES[opts.mode].open || MODES[opts.mode].open())) ? opts.mode : "story";   // (the live config can take a mode off: 03d_flags.js)
     modeStart(mode);   // (Practice swaps in a copy of the profile here: 07i_modes.js)
-    const pick = clamp(opts.map | 0, 0, STAGES.length - 1), map = opts.replay ? pick : mode === "director" ? directorNow().map : MODES[mode].maps ? (mapUnlocked(pick) ? pick : 0) : MODES[mode].mini ? miniMap(mode) : 0;
+    const pick = clamp(opts.map | 0, 0, STAGES.length - 1), map = opts.replay ? pick : mode === "director" ? directorNow().map : mode === "feature" ? featureMap() : MODES[mode].maps ? (mapUnlocked(pick) ? pick : 0) : MODES[mode].mini ? miniMap(mode) : 0;
     if (mode === "director" && opts.seed == null) opts = { ...opts, seed: directorNow().seed };   // (everyone plays the same run this week)
     Object.assign(game, { state: "ready", score: 0, hits: 0, lives: START_LIVES, slots: START_LIVES, streak: 0, perfStreak: 0, peakLives: START_LIVES, throws: 0,
       result: null, lastCross: null, newBest: false, shake: 0, slowmo: 0, run: freshRun(), mode, map });
@@ -356,7 +356,7 @@
   function updateGame(dt) {
     if (Replay.play) Replay.tick();   // what the recording did at this step (07j_replay.js)
     game.time += dt;
-    if (game.mode === "arcade" && inRun()) { const s = Math.floor(arcadeSecs()); if (s !== ui.arcSec) { ui.arcSec = s; renderProgress(); } }   // the Arcade clock, on game time
+    if (arcadeLike() && inRun()) { const s = Math.floor(arcadeSecs()); if (s !== ui.arcSec) { ui.arcSec = s; renderProgress(); } }   // the Arcade clock, on game time
     const L = ringTargets(), k = Math.min(1, dt * 2.2);
     ring.amp += (L.amp - ring.amp) * k; ring.omega += (L.omega - ring.omega) * k;
     ring.rc += (L.rc - ring.rc) * k; ring.bob += (L.bob - ring.bob) * k;

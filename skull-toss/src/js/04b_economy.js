@@ -16,6 +16,7 @@
   const findItem = (kind, id) => CATALOG[kind] && CATALOG[kind].find(i => i.id === id);
   function canUse(kind, it) {   // (buy() below never sells a Soul item for bones: it has no bones price)
     if (it.souls) return Souls.owns(kind + ":" + it.id);           // a Soul Shop item: the server's wallet says (09m_souls.js)
+    if (it.season) return profile.unlocked.includes(kind + ":" + it.id);   // a season look: earned on its Ticket, or not at all (07l_season.js)
     if (!it.price && !it.req) return true;                       // stock: yours from the start
     if (profile.unlocked.includes(kind + ":" + it.id)) return true; // bought, or earned earlier
     return !!it.req && statNow(it.req[0]) >= it.req[1];
@@ -38,7 +39,7 @@
   function nextUnlock() {
     let best = null;
     for (const kind of KINDS) for (const it of CATALOG[kind]) {
-      if (canUse(kind, it) || kind === "title" || it.souls) continue;   // (Soul items are the Soul Shop's, not a goal)
+      if (canUse(kind, it) || kind === "title" || it.souls || it.season) continue;   // (Soul items are the Soul Shop's, season looks the Ticket's: not goals)
       const have = it.req ? statNow(it.req[0]) : 0, kGoal = it.req ? have / it.req[1] : 0, kBones = it.price ? profile.bones / it.price : 0, k = Math.max(kGoal, kBones);
       if (!best || k > best.k) best = { kind, it, have, k, kGoal, kBones };
     }
@@ -85,7 +86,9 @@
         if (it.price) { vault += it.price; count++; (byStars[it.s] = byStars[it.s] || []).push(it.price); if (!(it.s >= 1 && it.s <= 4)) problems.push(`${key}: a rarity of ${it.s}`); }
       }
     }
-    for (const key of Object.keys(Economy.ITEMS)) if (!soulKeys.has(key)) problems.push(`${key}: the server sells it but the Vault doesn't have it`);
+    for (const key of Object.keys(Economy.ITEMS)) if (KINDS.includes(key.split(":")[0]) && !soulKeys.has(key)) problems.push(`${key}: the server sells it but the Vault doesn't have it`);
+    for (const kind of KINDS) for (const it of CATALOG[kind]) if (it.season && (!SEASONS[it.season] || seasonLookOf(`${kind}:${it.id}`) !== it.season)) problems.push(`${kind}:${it.id}: a season look no season's Ticket gives`);
+    for (const [id, S] of Object.entries(SEASONS)) { for (const [f, p] of S.track) for (const w of [f, p]) if (w && w.look && !findItem(...w.look.split(":"))) problems.push(`season ${id}: its Ticket gives ${w.look}, which doesn't exist`); if (!Economy.ITEMS[S.pass]) problems.push(`season ${id}: no Premium Ticket on the server`); }
     const median = a => a.slice().sort((x, y) => x - y)[a.length >> 1];
     const tiers = Object.keys(byStars).sort().map(s => ({ stars: +s, items: byStars[s].length, median: median(byStars[s]) }));
     for (let i = 1; i < tiers.length; i++) if (tiers[i].median <= tiers[i - 1].median) problems.push(`${tiers[i].stars}-star looks are no dearer than ${tiers[i - 1].stars}-star ones`);
@@ -166,5 +169,6 @@
     const cosm = unseen().length > 0, deals = profile.dealSeen !== dayKey();
     $("challengePip").hidden = !chal; $("customizePip").hidden = !cosm; $("storePip").hidden = !deals; $("menuBadge").hidden = !(chal || cosm);
     $("achPip").hidden = !(profile.achievements.length > (profile.achSeen || 0));
+    renderSeasonChip();   // (07l_season.js)
     $("masteryPip").hidden = !masteryClaimable();
   }

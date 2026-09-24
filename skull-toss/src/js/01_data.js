@@ -62,11 +62,12 @@
     inferno:  { style: "fire",   color: "#E8893A", rgb: "232,137,58",  shade: "rgba(90,20,0,.6)",   hi: "rgba(255,230,170,.9)" },
     void:     { style: "portal", color: "#8E74A8", rgb: "142,116,168", shade: "rgba(20,5,40,.7)",   hi: "rgba(220,200,255,.8)" },
     soul:     { style: "portal", color: "#B48CFF", rgb: "180,140,255", shade: "rgba(30,10,70,.7)",  hi: "rgba(240,230,255,.9)", flicker: true },   // (the Soul Shop's, v30)
-    aurora:   { style: "tube",   color: "#78F0BE", rgb: "120,240,190", shade: "rgba(0,50,40,.6)",   hi: "rgba(230,255,246,.9)", flicker: true }
+    aurora:   { style: "tube",   color: "#78F0BE", rgb: "120,240,190", shade: "rgba(0,50,40,.6)",   hi: "rgba(230,255,246,.9)", flicker: true },
+    candycorn: { style: "hoop",  color: "#E8893A", rgb: "232,137,58",  shade: "rgba(90,30,0,.6)",   hi: "rgba(255,240,200,.85)" }   // (Season One, v42)
   };
   const AIMS = {
     bone: { color: CREAM }, toxic: { color: TOXIC }, blood: { color: "#D0604A" }, frost: { color: "#A9D6E0" },
-    violet: { color: "#A58CC0" }, ember: { color: EMBER }, gold: { color: GOLD }, rainbow: { color: "#FFFFFF", rainbow: true }
+    violet: { color: "#A58CC0" }, ember: { color: EMBER }, gold: { color: GOLD }, rainbow: { color: "#FFFFFF", rainbow: true }, lantern: { color: "#F2A34A" }
   };
   const CATALOG = {
     skull: [
@@ -256,7 +257,7 @@
     "powerups", "cursed", "saves", "bonesSpent", "shopBuys", "coffins", "playTime", "grabs", "arcadeRuns", "chalClaims", "achSeen", "storyClears", "targetHits", "hazardHits", "continues", "xp"];   // xp: career experience (04h_career.js)
   // arcade: the best on each map, keyed by map number ({ score, secs, hits, runs }); achievements: the ones unlocked
   const DEFAULT_PROFILE = { name: "", bones: 0, daily: null, weekly: null, monthly: null, unlocked: [], seen: [], achievements: [], arcade: {}, updatedAt: 0, board: false, bestStage: 1, boardBest: null,
-    fragments: [], bossLog: {}, shots: {}, modes: {}, met: [], secrets: [], history: [], mastery: [], flawless: {}, mapMakes: {}, arcadeTables: {}, lastIni: "", streakDays: 0, streakLast: "", director: null, firsts: [] };   // firsts: the funnel, the first time of each thing (04g_telemetry.js)   // director: this week's Director's Challenge stars and best (07k_director.js)   // streak: days played in a row (v37)   // arcadeTables: each cabinet's top five (09o_arcade.js)   // mastery: claimed tiers; flawless: end bosses beaten without a miss; mapMakes: makes per map (09n_mastery.js)   // history: the last ten runs (04h_career.js)   // met: what the Codex has noted ("boss:crow", "power:rush"…); secrets: the ones found (09l_mischief.js)   // modes: Boss Rush's and each mini-game's record (07i_modes.js)   // shots: each signature shot, how many times (07h_shots.js)   // fragments: Morty's pieces recovered (ids); bossLog: each boss beaten, how many times
+    fragments: [], bossLog: {}, shots: {}, modes: {}, met: [], secrets: [], history: [], mastery: [], flawless: {}, mapMakes: {}, arcadeTables: {}, lastIni: "", streakDays: 0, streakLast: "", director: null, firsts: [], season: null };   // season: this season's Ticket (07l_season.js)   // firsts: the funnel, the first time of each thing (04g_telemetry.js)   // director: this week's Director's Challenge stars and best (07k_director.js)   // streak: days played in a row (v37)   // arcadeTables: each cabinet's top five (09o_arcade.js)   // mastery: claimed tiers; flawless: end bosses beaten without a miss; mapMakes: makes per map (09n_mastery.js)   // history: the last ten runs (04h_career.js)   // met: what the Codex has noted ("boss:crow", "power:rush"…); secrets: the ones found (09l_mischief.js)   // modes: Boss Rush's and each mini-game's record (07i_modes.js)   // shots: each signature shot, how many times (07h_shots.js)   // fragments: Morty's pieces recovered (ids); bossLog: each boss beaten, how many times
   for (const k of STAT_KEYS) if (!(k in DEFAULT_PROFILE)) DEFAULT_PROFILE[k] = 0;
   const DEFAULT_COS = { skull: "bone", eyes: "pie", teeth: "grin", paint: "none", trail: "dust", impact: "classic", ring: "hoop", aim: "bone", reel: "standard", title: "rookie", updatedAt: 0 };
   let sandbox = null;   // while the spec runs, nothing is written to the player's storage or cloud
@@ -316,6 +317,10 @@
       score: Math.max(0, Math.floor(Number(h.score) || 0)), hits: Math.max(0, Math.floor(Number(h.hits) || 0)), won: !!h.won, xp: Math.max(0, Math.floor(Number(h.xp) || 0)), at: Number(h.at) || 0 })) : [];
     out.secrets = Array.isArray(out.secrets) ? [...new Set(out.secrets.filter(k => typeof k === "string" && /^[a-z]{2,16}$/.test(k)))].slice(0, 40) : [];
     out.met = Array.isArray(out.met) ? [...new Set(out.met.filter(k => typeof k === "string" && /^[a-z]{2,8}:[a-z0-9]{1,16}$/.test(k)))].slice(0, 400) : [];
+    const S = out.season, ints = a => (Array.isArray(a) ? [...new Set(a.filter(n => Number.isInteger(n) && n >= 0 && n < 100))] : []);
+    out.season = S && typeof S === "object" && /^[a-z0-9]{1,12}$/.test(S.id || "") ? { id: S.id, xp: Math.max(0, Math.floor(Number(S.xp) || 0)), free: ints(S.free), prem: ints(S.prem),
+      notes: Object.fromEntries(Object.entries(S.notes && typeof S.notes === "object" ? S.notes : {}).filter(([k]) => /^[a-z0-9]{1,16}$/.test(k)).map(([k, v]) => [k, Math.max(0, Math.floor(Number(v) || 0))])),
+      done: Array.isArray(S.done) ? [...new Set(S.done.filter(k => typeof k === "string" && /^[a-z0-9]{1,16}$/.test(k)))] : [] } : null;
     out.firsts = Array.isArray(out.firsts) ? [...new Set(out.firsts.filter(k => typeof k === "string" && /^[a-z0-9]{2,12}$/.test(k)))].slice(0, 40) : [];
     return out;
   }
@@ -328,6 +333,13 @@
     return out;
   }
   // Two saves of the same player (two devices, or a save code): counters never go backwards.
+  // two devices' season records: the same season's are added together (the best of each), a newer season's wins
+  function mergeSeason(a, b) {
+    if (!a || !b) return a || b || null;
+    if (a.id !== b.id) return (SEASONS[a.id] ? SEASONS[a.id].n : 0) >= (SEASONS[b.id] ? SEASONS[b.id].n : 0) ? a : b;
+    const notes = { ...a.notes }; for (const [k, v] of Object.entries(b.notes)) notes[k] = Math.max(notes[k] || 0, v);
+    return { id: a.id, xp: Math.max(a.xp, b.xp), free: [...new Set([...a.free, ...b.free])], prem: [...new Set([...a.prem, ...b.prem])], notes, done: [...new Set([...a.done, ...b.done])] };
+  }
   function mergeProfiles(a, b) {
     a = cleanProfile(a); b = cleanProfile(b);
     const out = { ...a };
@@ -340,6 +352,7 @@
       out.arcadeTables[k] = all.sort((x, y) => y.score - x.score).slice(0, 5); }
     for (const f of ["flawless", "mapMakes"]) { out[f] = { ...a[f] }; for (const [k, v] of Object.entries(b[f])) out[f][k] = Math.max(out[f][k] || 0, v); }
     out.met = [...new Set([...a.met, ...b.met])]; out.secrets = [...new Set([...a.secrets, ...b.secrets])]; out.firsts = [...new Set([...a.firsts, ...b.firsts])];
+    out.season = mergeSeason(a.season, b.season);
     const newer = b.updatedAt > a.updatedAt ? b : a, older = newer === a ? b : a;
     out.name = newer.name || older.name;
     out.bones = newer.bones;   // a spendable balance: the most recent save wins (max() would refund purchases)

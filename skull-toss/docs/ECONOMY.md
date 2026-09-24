@@ -33,7 +33,7 @@ Souls are the server's alone.
 - **Getting them.** A free daily handful (10, once per UTC day, by the server's clock), and Soul packs bought in a store. A pack is credited only after the store confirms the receipt, and a receipt is recorded, so it can never be credited twice.
 - **The ledger.** Every change to a balance is written to `ledger/`.
 - **Offline.** The game shows the Soul Shop as unavailable. A Soul item is judged only once the wallet has arrived, and never on the device's word.
-- **What Souls buy.** Looks only (two four-piece sets), like bones.
+- **What Souls buy.** Looks only (two four-piece sets), like bones, and each season's Premium Ticket (v42), which pays extra looks and bones on the Season Ticket.
 
 - **Refunds (v39).** A refunded pack's Souls come back off the wallet. What's already spent stays spent, and the shortfall is **owed**: new Souls pay it off first, and nothing can be bought until they have. The Soul Shop shows what's owed. See firebase/README.md, "Refunds".
 - **Support and rollback (v39).** `firebase/functions/tools/admin.js` can grant Souls (with a reason), refund a receipt by hand, and reverse any single ledger entry (a purchase, a daily claim or a grant). Every action is itself a ledger entry.

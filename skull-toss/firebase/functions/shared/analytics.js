@@ -32,6 +32,7 @@
       shop_buy:      ["kind", "id", "price", "cur"],
       equip:         ["kind", "id"],
       chal_claim:    ["period", "kind"],
+      season_claim:  ["season", "tier", "prem"],
       sheet:         ["id"],
       error:         ["msg", "src", "build"]
     };

@@ -150,7 +150,8 @@
   // the band's look (the Vault's Bands, v29): colours, a stripe, a shine, a glow, or barbs along it
   const BANDS = { classic: {}, licorice: { core: "#3A1C1C", outline: "#0E0707" }, bone: { core: "#EDE3C8" }, candy: { core: "#F4ECDA", stripe: "#C0392B" },
     jester: { core: "#6B3FA0", stripe: "#E3B64B" }, gilded: { core: "#E3B64B", shine: "#FFF3C4" }, ghostly: { core: "#CFF3E8", glow: "rgba(170,240,220,.9)" }, barbed: { core: "#8A8A8A", barbs: true },
-    soul: { core: "#B48CFF", glow: "rgba(180,140,255,.95)", shine: "#F2ECFF" }, aurora: { core: "#78F0BE", stripe: "#B48CFF", glow: "rgba(120,240,190,.8)" } };   // (the Soul Shop's, v30)
+    soul: { core: "#B48CFF", glow: "rgba(180,140,255,.95)", shine: "#F2ECFF" }, aurora: { core: "#78F0BE", stripe: "#B48CFF", glow: "rgba(120,240,190,.8)" },
+    matinee: { core: "#E8893A", stripe: "#3A1C1C" } };   // (Season One, v42)   // (the Soul Shop's, v30)
   function drawBands(c, segs, w, cw, B, id, t) {
     const S = BANDS[id] || BANDS.classic, core = S.core || B.color, line = (col, lw, dash) => {
       c.strokeStyle = col; c.lineWidth = lw; c.setLineDash(dash || []); c.beginPath(); for (const [a, b] of segs) { c.moveTo(a.x, a.y); c.lineTo(b.x, b.y); } c.stroke(); };
@@ -286,6 +287,11 @@
     drawGroundWorld();
     const tint = game.state !== "title" && stageDef().tint;   // each map's colour grade, washed over the graveyard (not the ring or the skull)
     if (tint) { ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalCompositeOperation = "soft-light"; ctx.globalAlpha = 0.55; ctx.fillStyle = tint; ctx.fillRect(-20, -20, W + 40, H + 40); ctx.restore(); }
+    if (game.mode === "feature" && game.state !== "title") {   // the season's Feature plays after dark: a night grade over the scenery, a lantern glow in the middle (07l_season.js)
+      ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalCompositeOperation = "multiply"; ctx.fillStyle = "#555A92"; ctx.fillRect(-20, -20, W + 40, H + 40);
+      ctx.globalCompositeOperation = "source-over"; const g = ctx.createRadialGradient(W * 0.5, H * 0.58, U * 0.15, W * 0.5, H * 0.58, Math.max(W, H) * 0.75);
+      g.addColorStop(0, "rgba(232,137,58,.12)"); g.addColorStop(1, "rgba(8,6,20,.38)"); ctx.fillStyle = g; ctx.fillRect(-20, -20, W + 40, H + 40); ctx.restore();
+    }
     if (boss) boss.draw(false);
     drawSeeds(false); drawTargets(false); drawHazards(false);
     const onStage = game.state !== "title";

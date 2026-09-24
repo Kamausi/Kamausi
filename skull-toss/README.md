@@ -1,8 +1,21 @@
-# SKULL TOSS v41
+# SKULL TOSS v42
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)), with a synthesised waltz standing in wherever they can't load.
+
+## New in v42: seasons, starting with the Midnight Matinee
+
+Story ends at map 8. Seasons are what comes after, a few weeks at a time. **Season One, the Midnight Matinee**, runs from 1 October to 1 December 2026: the studio's Halloween programme, shown at midnight to a house full of ghosts. A **Season** chip on the title opens it:
+
+- **The Season Ticket.** Twenty stubs, one every 250 season experience. Season experience is what a run earns in the career (double on the Feature). Each stub pays bones or a look, claimed by hand.
+- **The Premium Ticket.** Bought once with Souls, it pays a second reward on half the stubs, including the Harvest Moon skull. Looks and bones only: nothing that helps a throw.
+- **Six season notes.** Perfects, bonus targets, bosses, signature shots, the Feature and hits, each paying season experience once.
+- **Season looks.** The Harvest Moon skull, the Candy Corn ring, the Harvest Ribbon trail, the Matinee Stripe band, the Lantern Glow aim line, and two titles. They're earned on the Ticket, this season only. Afterwards the Vault shows them only to whoever earned them.
+- **The Feature: the Midnight Matinee.** Pumpkin Patch Hollow after dark, with the Night Shoot's fog and twice the bonus targets, on Arcade's rules. It's there only while the season's on. Its replays keep its rules afterwards.
+- **After the season,** the Ticket stays open a week to claim what's been earned. Then what's unclaimed expires.
+- **The live config** can open a season early or extend it (`season.id: "s1"`), stop it (`"off"`), or take the Feature away (`modes.off`). Writing the next season is set out in [docs/SEASONS.md](docs/SEASONS.md).
+- **Fixed:** the Director's Challenge's progress bar counted down to a Story boss that never comes. It shows the run's clock and the map now, as the Feature's does.
 
 ## New in v41: the full QA pass, and a launch candidate
 
@@ -930,7 +943,7 @@ From the console, `SkullToss.debug.visualAnimation` lists the pose library (`pos
 
 ## Tests
 
-Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **208 checks**, covering:
+Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **214 checks**, covering:
 
 - **Layout, scoring and aiming.**
   - Everything is centred and every result is classified correctly.
@@ -1110,3 +1123,10 @@ Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to
 - **v41.**
   - The content audit finds nothing.
   - A replay on the balloon map sees the same balloons, however much later it's watched.
+- **v42.**
+  - A season runs on its dates, or when the live config names it, and "off" means none.
+  - Runs climb the Ticket, the Feature counts double, a note pays once, and Practice earns nothing.
+  - Stubs are claimed once and only when reached. The premium reward needs the Premium Ticket (bought at the server's price), and season looks are the Ticket's alone.
+  - After the season there's a week to claim, then it all expires, and unearned season looks leave the Vault.
+  - The Feature plays its map after dark with its twists, its bar names it, and its replay keeps its rules.
+  - Two devices' Tickets merge.

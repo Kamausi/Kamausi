@@ -74,7 +74,7 @@ they're cached in the browser for offline play. Anything left out keeps its defa
 | `modes.off` | `[]` | modes taken off the Play sheet, e.g. `["director"]` if something's wrong with this week's challenge. Story can't be. |
 | `build.min` | `0` | the oldest build allowed to write. Anything older is asked to reload, and the server refuses its Soul and leaderboard writes. The build number is in `src/version.json`. |
 | `kill.analytics` | `false` | stops analytics, on the device and the server |
-| `season.id` | `""` | which season is running (v42) |
+| `season.id` | `""` | the season (v42): `""` runs seasons on their own dates, a season's id (`"s1"`) turns it on now, `"off"` stops seasons and claiming. See docs/SEASONS.md. |
 | `analytics.sample` | `1` | the share of consenting players whose events are sent, 0 to 1 (v39). The same install is always in or always out. |
 
 The server enforces `kill.souls` (no buying, no daily Souls: a store purchase still goes through, since it's been

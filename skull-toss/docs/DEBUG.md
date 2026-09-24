@@ -31,6 +31,7 @@ In the dev build, `T` below is `SkullToss.debug`. Call `T.sandbox(true); T.pause
 | Collision and hitboxes | the overlay (press **`**): the ring's tube, clean and perfect windows, the skull's collision circle, the post |
 | Trajectory | the aim guide (Settings → Aim guide), `T.previewInfo(x, y)`, `T.predictCrossing(x, y)` |
 | Camera bounds | the overlay's camera readout; `T.camera()`, `T.parallax()`, `T.setCamera(…)` |
+| Seasons | `T.seasonAt("2026-10-15T12:00:00Z")` moves the season's calendar (`T.seasonAt(null)` puts it back), `T.setSeasonRec({…})`, `T.claimSeason(i, prem)`, `T.startMode("feature")` |
 | FPS and performance | the overlay's panel (frame rate and cost); `SkullToss.debug.visualAnimation.quality()`; `T.perf()` |
 
 ## The console, in every build
