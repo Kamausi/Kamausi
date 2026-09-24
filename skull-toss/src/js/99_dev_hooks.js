@@ -1,6 +1,7 @@
   // ───────────────────────── test hooks (dev build only: python3 src/build.py --dev) ─────────────────────────
   // These can change the game (bones, stats, the leaderboard), so the release and published builds leave this part out.
   // TEST_SPEC.js drives the game through them with the clock paused.
+  const WEB_PAYMENTS = Payments, WEB_ADS = Ads;   // (the web build's own, for going back after a faked shell)
   Object.assign(window.SkullToss.debug, {
     constants: { G, SKULL_R, START_Y, RING_Z, RING_Y, RING_TUBE, RC_START, RC_MIN, POST_HALF, FLIGHT_T, START_LIVES, MAX_LIVES },
     level, catalog: () => JSON.parse(JSON.stringify(CATALOG)), bandStyle: () => ({ id: cos.band, ...(BANDS[cos.band] || {}) }), wearOutfit: i => wearOutfit(i), saveOutfit: i => saveOutfit(i), surprise: () => surpriseLook(),
@@ -41,6 +42,44 @@
     camfx: () => (updateCamFx(), { kind: camfx.kind, log: camfx.log.slice(), css: cvs.style.transform, spot: !!film.spot }), clearCamLog() { camfx.log = []; }, setStreak(n) { game.streak = n; }, bossInfo: () => Object.fromEntries(BOSS_IDS.map(id => [id, { ...BOSS_INFO[id] }])),
     tr: (id, vars) => t(id, vars), lineIds: prefix => lineIds(prefix).slice(),
     reel: () => ({ card: reelSt.card ? reelSt.card.kind : null, n: reelSt.card ? reelSt.card.n || 0 : 0, shown: reelSt.shown.slice(), cues: reelSt.cues.length, title: $("rcTitle").textContent, reel: $("rcReel").textContent, hidden: reelEl.hidden, cine: game.cine ? game.cine.kind : null, dur: game.cine ? game.cine.dur : 0 }),
+    // the shells (03e_platform.js), faked: { capacitor: "ios"|"android", plugins, cdv } or { desktop: {…} }; platformReset() goes back to the web
+    platformWith(o = {}) {
+      if (o.capacitor) window.Capacitor = { isNativePlatform: () => true, getPlatform: () => o.capacitor, Plugins: o.plugins || {} };
+      if (o.cdv) window.CdvPurchase = o.cdv;
+      if (o.desktop) window.skullTossDesktop = o.desktop;
+      Platform.ready = false; Payments = WEB_PAYMENTS; Ads = WEB_ADS; Platform.init(); $("quitBtnTitle").hidden = !Platform.caps.quit;
+      return { id: Platform.id, shell: Platform.shell, caps: { ...Platform.caps } };
+    },
+    // store art (tools/store-assets.mjs): the app icon and Steam's capsules, drawn with the game's own skull, scene and lettering
+    startBoss(which = "end") { if (which === "mini") startMiniBoss(); else startMainBoss(); },
+    renderIcon(size = 1024, o = {}) {
+      const cv = document.createElement("canvas"); cv.width = cv.height = size; const c = cv.getContext("2d"), k = size / 1024;
+      if (!o.transparent) { const g = c.createRadialGradient(size / 2, size * 0.42, size * 0.05, size / 2, size / 2, size * 0.78); g.addColorStop(0, "#3A4E68"); g.addColorStop(0.7, MIDNIGHT); g.addColorStop(1, INK); c.fillStyle = g; c.fillRect(0, 0, size, size); }
+      const s = o.maskable ? 0.78 : 1;   // (a maskable icon keeps to the middle 80%)
+      c.save(); c.translate(size / 2, size * 0.53); c.scale(s, s); c.translate(-size / 2, -size * 0.53);
+      c.lineWidth = 34 * k; c.strokeStyle = INK; c.beginPath(); c.ellipse(size / 2, size * 0.53, 380 * k, 380 * k, 0, 0, TAU); c.stroke();
+      c.lineWidth = 22 * k; c.strokeStyle = MUSTARD; c.stroke();
+      drawSkull(c, size / 2, size * 0.53, 300 * k, { t: 0.6, look: { ...DEFAULT_COS }, face: faceFor("happy", 0.6, { lx: 0, ly: 0.05, seed: 1.7 }) });
+      c.restore(); return cv.toDataURL("image/png");
+    },
+    renderCapsule(w, h, o = {}) {
+      const cv = document.createElement("canvas"); cv.width = w; cv.height = h; const c = cv.getContext("2d"), st = $("stage");
+      if (!o.transparent) { const sc = Math.max(w / st.width, h / st.height); c.drawImage(st, (w - st.width * sc) / 2, (h - st.height * sc) / 2, st.width * sc, st.height * sc);
+        const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, "rgba(23,19,15,.15)"); g.addColorStop(1, "rgba(23,19,15,.55)"); c.fillStyle = g; c.fillRect(0, 0, w, h); }
+      const out = () => cv.toDataURL(o.jpeg ? "image/jpeg" : "image/png", 0.88);
+      if (o.art === false) return out();
+      const u = Math.min(w / 16, h / 6.2), skullX = o.logoOnly ? w * 0.5 : w * 0.73, textX = o.logoOnly ? w * 0.5 : w * 0.36, midY = h * (o.logoOnly ? 0.5 : 0.5);
+      if (!o.logoOnly) drawSkull(c, skullX, midY + u * 0.2, u * 1.85, { t: 0.6, look: { ...DEFAULT_COS }, face: faceFor("happy", 0.6, { lx: -0.4, ly: 0.05, seed: 1.7 }) });
+      c.textAlign = "center"; c.textBaseline = "middle"; c.lineJoin = "round";
+      const word = (txt, y, size, fill) => { c.font = `${size}px ${DISPLAY}`; c.lineWidth = size * 0.16; c.strokeStyle = INK; c.strokeText(txt, textX, y); c.fillStyle = fill; c.fillText(txt, textX, y); };
+      word("SKULL", midY - u * 0.95, u * 1.9, CREAM); word("TOSS", midY + u * 0.95, u * 1.9, GOLD);
+      if (o.tagline) { c.font = `800 ${Math.round(u * 0.34)}px ${UIFONT}`; c.fillStyle = CREAM; c.fillText("A LOST CARTOON FROM 1933", textX, midY + u * 2.25); }
+      return out();
+    },
+    backgroundOn(on = true) { if (sandbox) sandbox.bgOn = on; },
+    platformReset() { delete window.Capacitor; delete window.CdvPurchase; delete window.skullTossDesktop; Platform.ready = false; Payments = WEB_PAYMENTS; Ads = WEB_ADS; Platform.init(); $("quitBtnTitle").hidden = true; bgHidden = false; },
+    platform: () => ({ id: Platform.id, shell: Platform.shell, caps: { ...Platform.caps } }), haptic: ms => Platform.haptic(ms), backButton: () => backButton(), swRegistered: () => registerServiceWorker(),
+    payments: () => Payments, ads: () => Ads, steamAchievement: id => Platform.achievement(id),
     economyAudit: () => economyAudit(), analyticsOn(on = true) { if (sandbox) sandbox.analyticsOn = on; }, playData: () => ({ q: PlayData.q.map(e => ({ ...e })), sent: PlayData.sent, consent: PlayData.consent(), allowed: PlayData.allowed() }),
     flushPlayData: () => PlayData.flush(), setConsent: v => PlayData.set(v), resetConsent() { settings.analytics = "ask"; PlayData.q = []; PlayData.sent = 0; PlayData.errorsSent = 0; }, firsts: () => realProfile().firsts.slice(),
     reportError: (m, s) => PlayData.error(m, s), errors: () => Telemetry.errors.map(e => ({ ...e })), renderConsent() { renderConsent(); return !$("consentCard").hidden; },

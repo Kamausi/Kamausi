@@ -68,6 +68,7 @@
       <button class="chip-btn" data-sheet="achievements" type="button"><svg class="icon"><use href="#i-star"/></svg><span data-t="ui.achievements">Achievements</span><span class="badge" id="achPip" hidden></span></button>
       <button class="chip-btn" data-sheet="codex" type="button"><svg class="icon"><use href="#i-book"/></svg><span data-t="ui.codex">Codex</span></button>
       <button class="chip-btn" data-sheet="mastery" type="button"><svg class="icon"><use href="#i-star"/></svg><span data-t="ui.mastery">Mastery</span><span class="badge" id="masteryPip" hidden></span></button>
+      <button class="chip-btn" id="quitBtnTitle" type="button" hidden><svg class="icon"><use href="#i-back"/></svg><span data-t="ui.quit">Quit</span></button>
     </div>
     <p class="meta" id="titleBest"></p>
   </div>
@@ -254,6 +255,7 @@
       <div class="seg" role="radiogroup" aria-label="Aim guide" data-t-aria="ui.aim-guide" id="set-guide"><button type="button" role="radio" data-v="full" aria-checked="true" data-t="ui.full">Full</button><button type="button" role="radio" data-v="short" aria-checked="false" data-t="ui.short">Short</button><button type="button" role="radio" data-v="off" aria-checked="false" data-t="ui.off">Off</button></div></div>
     <div class="row stack"><div><div class="lbl" data-t="ui.flashes">Flashes</div><div class="sub" id="flashNote">Camera flashes, lightning and the film's flicker</div></div>
       <div class="seg" role="radiogroup" aria-label="Flashes" data-t-aria="ui.flashes" id="set-flashes"><button type="button" role="radio" data-v="full" aria-checked="true" data-t="ui.full">Full</button><button type="button" role="radio" data-v="reduced" aria-checked="false" data-t="ui.reduced">Reduced</button><button type="button" role="radio" data-v="off" aria-checked="false" data-t="ui.off">Off</button></div></div>
+    <div class="row" id="row-fullscreen" hidden><div><div class="lbl" data-t="ui.full-screen">Full screen</div><div class="sub" data-t="ui.fullscreen-sub">The picture fills the screen, with no browser around it</div></div><button class="switch" role="switch" id="set-fullscreen" aria-checked="false" aria-label="Full screen" data-t-aria="ui.full-screen" type="button"></button></div>
     <div class="row"><div><div class="lbl" data-t="ui.high-contrast">High contrast</div><div class="sub" data-t="ui.a-bright-halo-round-the">A bright halo round the ring and Morty, bolder text</div></div><button class="switch" role="switch" id="set-contrast" aria-checked="false" aria-label="High contrast" data-t-aria="ui.high-contrast" type="button"></button></div>
     <div class="row stack"><div><div class="lbl" data-t="ui.text-size">Text size</div><div class="sub" data-t="ui.menus-sheets-and-the-hud">Menus, sheets and the HUD</div></div>
       <div class="seg" role="radiogroup" aria-label="Text size" data-t-aria="ui.text-size" id="set-text"><button type="button" role="radio" data-v="normal" aria-checked="true" data-t="ui.normal">Normal</button><button type="button" role="radio" data-v="large" aria-checked="false" data-t="ui.large">Large</button></div></div>

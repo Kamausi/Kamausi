@@ -28,8 +28,10 @@ page, so the spec drives the real server logic.
 7. **Let analytics expire (v39):** turn on Firestore's time-to-live for the `events` collection, so each batch is
    deleted 30 days after it arrives:
    `gcloud firestore fields ttls update expireAt --collection-group=events --enable-ttl --project=<your-project>`.
-8. **Rebuild and host the game:** `python3 ../src/build.py`, then copy `../index.html` into `public/` and run
-   `firebase deploy --only hosting`. Or host `index.html` anywhere; the config inside it points at your project.
+8. **Package and host the game (v40):** `python3 ../tools/package.py web`, then `firebase deploy --only hosting`.
+   That hosts `dist/web`: the page, its music, the app icons, a manifest, and a service worker so the installed web
+   app plays offline. Hosting serves it over HTTPS on Google's CDN, with the page and service worker never cached
+   and the music cached for a week. Or host `index.html` anywhere; the config inside it points at your project.
 
 To try everything locally: `firebase emulators:start`, then open the hosted page from the emulator. In the
 emulator, a purchase receipt of the form `TEST:<anything>` is accepted, so the Soul-pack flow can be tried end to

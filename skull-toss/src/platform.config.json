@@ -1,0 +1,7 @@
+{
+  "products": { "souls.100": "souls.100", "souls.550": "souls.550", "souls.1200": "souls.1200" },
+  "admob": {
+    "test": true,
+    "rewarded": { "ios": "ca-app-pub-3940256099942544/1712485313", "android": "ca-app-pub-3940256099942544/5224354917" }
+  }
+}

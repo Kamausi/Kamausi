@@ -29,6 +29,12 @@ fb = root / "firebase.config.json"
 FB = json.loads(fb.read_text()) if fb.exists() else {}
 FB = FB if isinstance(FB, dict) and FB.get("apiKey") and FB.get("projectId") else None
 js = "  const FIREBASE_CONFIG = " + json.dumps(FB) + ";\n" + js
+# the platforms' store and ad ids (src/platform.config.json, see platforms/README.md); --pwa marks the build that
+# ships with a service worker beside it (tools/package.py)
+PC = root / "platform.config.json"
+PLAT = json.loads(PC.read_text()) if PC.exists() else {}
+PLAT["serviceWorker"] = "--pwa" in sys.argv
+js = "  const PLATFORM_CONFIG = " + json.dumps(PLAT) + ";\n" + js
 # the build's number (src/version.json): the live config can ask anything older to update (build.min)
 VERSION = json.loads((root / "version.json").read_text())
 js = f"  const GAME_BUILD = {int(VERSION['build'])}, GAME_VERSION = {json.dumps(VERSION['name'])};\n" + js

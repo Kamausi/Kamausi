@@ -4,3 +4,7 @@
 /skull-toss-with-music.html
 /skull-toss-with-music-dev.html
 __pycache__/
+# packages (python3 tools/package.py) and regenerable store art (node tools/store-assets.mjs)
+/dist/
+/store/screenshots/
+/store/steam/

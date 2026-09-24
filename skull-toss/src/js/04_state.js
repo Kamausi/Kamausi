@@ -31,7 +31,7 @@
     r.classList.toggle("hc", !!settings.contrast); r.dataset.text = settings.text; r.dataset.flashes = settings.flashes;
   }
   let userActed = false; // browsers allow audio + vibration only after a real tap
-  const buzz = ms => { if (!userActed || sandbox || !settings.vibe) return; try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
+  const buzz = ms => { if (!userActed || sandbox || !settings.vibe) return; try { Platform.haptic(ms); } catch (e) {} };
 
   // ───────────────────────── state ─────────────────────────
   const freshRun = () => ({ perfects: 0, swishes: 0, rims: 0, misses: 0, bestCombo: 0, bones: 0, powerups: 0, bosses: 0, t0: 0, secs: 0, continues: 0, contMaps: [] });

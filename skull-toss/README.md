@@ -1,8 +1,26 @@
-# SKULL TOSS v39
+# SKULL TOSS v40
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)), with a synthesised waltz standing in wherever they can't load.
+
+## New in v40: ready for the web, the app stores and Steam
+
+- **One build, every platform.** The game works out where it's running (a browser, the iOS or Android app, or the desktop app), and handles each platform's differences itself (`src/js/03e_platform.js`):
+  - **Haptics:** the phone's own haptic engine in the apps (iPhones have no browser vibration).
+  - **The background:** leaving the app mid-run pauses and keeps the run.
+  - **Android's back button:** closes a sheet, pauses, resumes, steps back to the title, and only then leaves.
+  - **Full screen:** a switch in Settings where the browser allows it, and F11 on the desktop.
+  - **Quit:** a Quit button on the desktop's title.
+  - **Steam achievements:** reached as the game's own are.
+  - **Quality:** a first guess at the quality tier on low-end or software-rendered devices.
+- **Soul packs through the app stores.** In the apps, packs are bought with the App Store's and Google Play's own purchases, priced in the player's currency. The server credits each one before it's finished. One the app never saw through (a crash, a lost connection) is credited at the next launch, and never twice.
+- **Rewarded reels in the apps.** AdMob, only when the player chooses one for another skull, non-personalised, with Google's consent form where the law asks. `kill.ads` in the live config turns them off.
+- **An installable web app.** `python3 tools/package.py web` makes `dist/web`: the page with a manifest, icons and a service worker, so it installs to a home screen and plays offline. Firebase Hosting serves it (`firebase deploy --only hosting`).
+- **The shells.** `platforms/capacitor` (iOS and Android) and `platforms/electron` (Windows, macOS, Linux, Steam Deck, with Steam through steamworks.js), each a `npm install` away. Everything is set out step by step in [platforms/README.md](platforms/README.md).
+- **Store art, drawn by the game.** `node tools/store-assets.mjs` makes the app icons, splash screens, App Store / Google Play / Steam screenshots and Steam's capsules.
+- **Store paperwork.** The listing copy ([store/listing.md](store/listing.md)), a draft privacy policy ([store/privacy-policy.md](store/privacy-policy.md)) and a release checklist for each store ([store/CHECKLIST.md](store/CHECKLIST.md)).
+- **Fixed:** the Director's Challenge card's last line (stars, and the countdown) picked up the title's ink outline, which turned it into black blots.
 
 ## New in v39: play analytics with consent, a checked economy, and live-ops safety
 
@@ -839,7 +857,7 @@ Colours in any of these SVGs can be the game's palette names (`fill="ink"`, `str
   6. Boot, and the console handle every build carries (the overlay's switches, the animation inspectors, `telemetry()`)
   7. `99_dev_hooks.js`: the test hooks the spec drives. Only `--dev` builds include them.
 
-The play log and the consented play analytics are `04g_telemetry.js`, and the gamepad lives with the rest of the input in `09a_input.js`.
+The play log and the consented play analytics are `04g_telemetry.js`, and the gamepad lives with the rest of the input in `09a_input.js`. Where the game is running (web, the app stores' shells, the desktop) is `03e_platform.js`.
 
 Run `python3 src/build.py` to rebuild the release `index.html`, or `python3 src/build.py --dev` for `index-dev.html` with the test hooks (add `--with-music` to either). The build refuses to run if two script parts define the same top-level name, and it won't put the test hooks in the published build.
 
@@ -894,7 +912,7 @@ From the console, `SkullToss.debug.visualAnimation` lists the pose library (`pos
 
 ## Tests
 
-Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **201 checks**, covering:
+Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **206 checks**, covering:
 
 - **Layout, scoring and aiming.**
   - Everything is centred and every result is classified correctly.
@@ -1065,3 +1083,9 @@ Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to
   - The economy audit finds nothing.
   - Restore points: one a day, the last three, and recovering only adds.
   - Plus five server tests (analytics, rate limit, refunds, support's tools, server-side switches).
+- **v40.**
+  - The web build is the web: no store, no reels, no Quit, and no service worker under test.
+  - The phone shells: the native haptic engine, the back button in every state, and backgrounding mid-run.
+  - Soul packs through a store: credited and then finished, a left-over one credited at the next launch and never twice, and the store's price on the pack.
+  - Rewarded reels: offered once loaded, watched, loaded again, and switched off by the live config.
+  - The desktop shell: full screen, Quit, and Steam achievements by API name.

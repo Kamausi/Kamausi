@@ -1997,6 +1997,60 @@
     T.setStats(ZERO); T.toTitle();
   });
 
+  // ── v40: the platforms ──
+  const tick = () => new Promise(r => setTimeout(r, 0));
+  test("The web build is the web: no store, no reels, no Quit, and no service worker under test", () => {
+    T.platformReset(); const P = T.platform();
+    assert(P.id === "web" && P.shell === null && !P.caps.quit, JSON.stringify(P));
+    assert(!T.payments().available() && !T.ads().available() && $("quitBtnTitle").hidden, "nothing native");
+    assert(!T.swRegistered(), "no service worker from a file, a frame or a test browser");
+  });
+  test("The phone shells: native haptics, Android's back button, and the app going to the background", () => {
+    const hits = [], on = {};
+    const P = T.platformWith({ capacitor: "android", plugins: { Haptics: { impact: o => { hits.push(o.style); return Promise.resolve(); } }, App: { addListener: (ev, fn) => { on[ev] = fn; }, exitApp: () => { on.exited = true; } } } });
+    assert(P.id === "android" && P.shell === "capacitor" && P.caps.haptics && !P.caps.fullscreen, JSON.stringify(P));
+    T.haptic(10); T.haptic([10, 30, 16]); T.haptic(30); assert(hits.join() === "LIGHT,LIGHT,HEAVY", `the shell's haptic engine (${hits.join()})`);
+    T.openSheet("settings"); assert($("row-fullscreen").hidden, "no full-screen switch in an app"); on.backButton(); assert(!T.state().sheet, "back closes a sheet");
+    T.backgroundOn(); T.snapOn(); T.start(); T.calm(); on.backButton(); assert(T.state().paused, "back pauses a run"); on.backButton(); assert(!T.state().paused, "and back again resumes it");
+    on.appStateChange({ isActive: false }); assert(T.state().paused && T.snapshot(), "going to the background pauses the run and keeps it");
+    on.appStateChange({ isActive: true }); T.backgroundOn(false); T.snapOn(false); T.toTitle(); on.backButton(); assert(on.exited, "back on the title leaves the app");
+    T.platformReset();
+  });
+  test("Soul packs through the app store: the server credits them, then they're finished; one left over is credited at the next launch, never twice", async () => {
+    const S = { n: 0, finished: [], products: [], approved: null,
+      register(list) { S.products = list.map(p => ({ id: p.id, canPurchase: true, pricing: { price: "$4.99" }, getOffer: () => ({ order: () => { setTimeout(() => S.approved(S.tx(p.id)), 0); return Promise.resolve(); } }) })); },
+      when: () => ({ approved(fn) { S.approved = fn; return this; } }), initialize: () => Promise.resolve(), get: id => S.products.find(p => p.id === id),
+      tx: id => { const n = ++S.n; return { products: [{ id }], transactionId: "OK:t" + n, nativePurchase: { purchaseToken: "OK:t" + n }, finish() { S.finished.push(this.transactionId); } }; } };
+    await T.fakeServer(); T.platformWith({ capacitor: "android", cdv: { store: S, ProductType: { CONSUMABLE: "consumable" }, Platform: { APPLE_APPSTORE: "ios", GOOGLE_PLAY: "android" } } });
+    const Souls = T.soulsApi(); assert(T.payments().available(), "the store is open");
+    assert(await Souls.buyPack("souls.550") && T.wallet().souls === 550 && S.finished.join() === "OK:t1", `credited, then finished (${T.wallet().souls}, ${S.finished})`);
+    const left = S.tx("souls.100"); S.approved(left); for (let i = 0; i < 5; i++) await tick();
+    assert(T.wallet().souls === 650 && S.finished.includes(left.transactionId), `one the app never finished is credited when it turns up (${T.wallet().souls})`);
+    S.approved(left); for (let i = 0; i < 5; i++) await tick();
+    assert(T.wallet().souls === 650 && S.finished.filter(x => x === left.transactionId).length === 2, "delivered again, it's finished but never credited twice");
+    T.openSheet("souls"); assert(/\$4\.99/.test($("soulsPacks").textContent), "the store's own price on the pack"); T.closeSheet();
+    T.platformReset(); T.noServer(); T.toTitle();
+  });
+  test("Rewarded reels: offered once one has loaded, watched for a continue, and switched off by the live config", async () => {
+    let shown = 0; const AdMob = { initialize: () => Promise.resolve(), requestConsentInfo: () => Promise.resolve({ status: "NOT_REQUIRED" }),
+      prepareRewardVideoAd: () => Promise.resolve(), showRewardVideoAd: () => { shown++; return Promise.resolve({ type: "reel", amount: 1 }); } };
+    T.platformWith({ capacitor: "ios", plugins: { AdMob } }); const Ads = T.ads();
+    assert(!Ads.available(), "nothing to offer until a reel has loaded"); Ads.start(); for (let i = 0; i < 6; i++) await tick();
+    assert(Ads.available(), "loaded"); assert(await Ads.show() && shown === 1, "watched");
+    for (let i = 0; i < 4; i++) await tick(); assert(Ads.available(), "and the next one loads");
+    T.setFlags({ "kill.ads": true }); assert(!Ads.available(), "a kill switch takes them away"); T.setFlags({});
+    T.platformReset();
+  });
+  test("The desktop shell: full screen, Quit on the title, and Steam achievements", () => {
+    let fs = false, quit = 0; const got = [];
+    const P = T.platformWith({ desktop: { steam: { ok: true, activate: id => got.push(id) }, setFullscreen: on => { fs = on; }, isFullscreen: () => fs, quit: () => { quit++; } } });
+    assert(P.id === "steam" && P.caps.fullscreen && P.caps.quit && !$("quitBtnTitle").hidden, JSON.stringify(P));
+    T.openSheet("settings"); assert(!$("row-fullscreen").hidden, "a full-screen switch"); $("set-fullscreen").click(); assert(fs, "full screen"); T.closeSheet();
+    $("quitBtnTitle").click(); assert(quit === 1, "Quit");
+    T.steamAchievement("first-toss"); assert(got.join() === "FIRST_TOSS", `Steam hears of an achievement, by its API name (${got})`);
+    T.platformReset(); assert($("quitBtnTitle").hidden, "and back on the web, no Quit");
+  });
+
   (async () => {
     for (const q of queue) {
       if (q.step) { q.fn(); continue; }

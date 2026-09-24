@@ -1,0 +1,26 @@
+{
+  "appId": "com.yourstudio.skulltoss",
+  "appName": "Skull Toss",
+  "webDir": "www",
+  "backgroundColor": "#17130F",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#17130F"
+  },
+  "android": {
+    "backgroundColor": "#17130F",
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 700,
+      "launchAutoHide": true,
+      "backgroundColor": "#17130F",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "overlaysWebView": true,
+      "style": "DARK"
+    }
+  }
+}

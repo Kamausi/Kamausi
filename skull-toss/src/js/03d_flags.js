@@ -10,7 +10,7 @@
   // (the server refuses its Soul and board writes too).
   const FLAG_DEFAULTS = {
     "challenges.off": [], "challenges.bonus": 1, "mischief.chance": 0.07, "event.banner": "", "event.bones": 1, "event.from": "", "event.until": "",
-    "kill.souls": false, "kill.board": false, "kill.replays": false, "kill.analytics": false, "modes.off": [], "maintenance": "", "build.min": 0,
+    "kill.souls": false, "kill.board": false, "kill.replays": false, "kill.analytics": false, "kill.ads": false, "modes.off": [], "maintenance": "", "build.min": 0,
     "season.id": "", "analytics.sample": 1
   };
   const EVENT_FLAGS = ["event.banner", "event.bones", "challenges.bonus"];   // (these follow the event's window)

@@ -1,0 +1,45 @@
+api_name,display_name,description
+FIRST_TOSS,First Toss,Make your first toss
+BULLSEYE,Bullseye,Land a perfect
+RATTLED_IN,Rattled In,Rattle a toss in off the rim
+CENTURY,Century,Make 100 tosses
+THOUSAND,A Thousand Tosses,"Toss 1,000 skulls"
+SHARPSHOOTER,Sharpshooter,Land 50 perfects
+HAT_TRICK,Hat Trick,Land 3 perfects in a row
+PERFECT_STORM,Perfect Storm,Land 6 perfects in a row
+ON_FIRE,On Fire,Hit a ×10 combo
+BONKERS,Bonkers,Hit a ×20 combo
+CLUTCH,Clutch,Make a toss on your last skull
+FULL_HOUSE,Full House,Hold five skulls at once
+FIVE_FIGURES,Five Figures,"Score 10,000 in one Story run"
+BIG_TOP,Big Top,"Score 50,000 in one Story run"
+SIX_FIGURES,Six Figures,"Score 100,000 in one Story run"
+CROW_CATCHER,Crow Catcher,Beat the Crow King
+PUMPKIN_SMASHER,Pumpkin Smasher,Beat the Pumpkin King
+NOT_A_FEATHER,Not a Feather Out of Place,Beat a mini-boss without a miss
+CLEAN_HARVEST,Clean Harvest,Beat an end boss without a miss
+MOVING_ON,Moving On,Reach map 2
+GRAND_TOUR,Grand Tour,Reach map 4
+HALF_REEL,Half the Reel,Clear four maps
+WHOLE_REEL,The Whole Reel,Finish the story: all eight maps
+FIRST_PIECE,A Piece of Morty,Win back one of Morty's missing pieces
+PIECE_BY_PIECE,Piece by Piece,Win back four of Morty's pieces
+BOSS_HUNTER,Boss Hunter,Beat all eight mini-bosses
+BOSS_SLAYER,Boss Slayer,Beat all eight end bosses
+ARCADE_DEBUT,Arcade Debut,Play an Arcade run
+SURVIVOR,Survivor,Survive 2 minutes in one Arcade run
+IRON_SKULL,Iron Skull,Survive 5 minutes in one Arcade run
+MAP_HOPPER,Map Hopper,Play every Arcade map
+ARCADE_ACE,Arcade Ace,"Score 25,000 in one Arcade run"
+POWER_HUNGRY,Power Hungry,Grab 10 power-ups
+CURSED,Cursed!,Grab a Cursed Skull
+SECOND_WIND,Second Wind,Get saved by Second Chance
+BONK,BONK!,Bonk Morty off something
+CONCUSSED,Concussed,Bonk Morty 50 times
+EARLY_GRAVE,Early Grave,End a run without a single hit
+SHOPAHOLIC,Shopaholic,Buy 5 things from the Curio Cart
+COLLECTOR,Collector,Own 50 things from the Skull Vault
+BONE_BARON,Bone Baron,"Earn 10,000 bones in all"
+CHALLENGER,Challenger,Claim 10 challenges
+REGULAR,Regular,Play 50 runs
+NIGHT_OWL,Night Owl,Play for an hour in all

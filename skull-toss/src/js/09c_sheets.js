@@ -47,7 +47,7 @@
   function renderSettings() {
     const set = (id, v) => $(id).setAttribute("aria-checked", String(!!v));
     set("set-sound", settings.sound); set("set-shake", settings.shake); set("set-mischief", settings.mischief);
-    const canVibe = typeof navigator.vibrate === "function";
+    const canVibe = Platform.caps.haptics != null ? Platform.caps.haptics : typeof navigator.vibrate === "function";   // (a shell's haptics count: 03e_platform.js)
     $("set-vibe").disabled = !canVibe; set("set-vibe", canVibe && settings.vibe);
     $("vibeNote").textContent = canVibe ? t("settings.vibe.on") : t("settings.vibe.none");
     for (const k of SLIDERS) {
@@ -70,6 +70,7 @@
     segValue($("set-lang"), LANG); $("langNote").textContent = t("lang.name");
     segValue($("set-soundset"), settings.soundSet); $("soundSetNote").textContent = t(`settings.soundset.${settings.soundSet}`);
     segValue($("set-cards"), settings.cards); $("cardsNote").textContent = t(`settings.cards.${settings.cards}`);
+    $("row-fullscreen").hidden = !Platform.caps.fullscreen; set("set-fullscreen", Platform.isFullscreen());   // (03e_platform.js)
     const c = PlayData.consent(), srv = Backend.hasFunctions();   // play data (04g_telemetry.js)
     set("set-analytics", c === "yes"); $("set-analytics").disabled = !srv && c !== "yes";
     $("analyticsNote").textContent = !srv && c !== "yes" ? t("settings.analytics.none") : settings.analytics === "ask" && PlayData.privacySignal() ? t("settings.analytics.gpc") : t(`settings.analytics.${c}`);
@@ -77,6 +78,8 @@
     if (!pts.length) list.append(h("span", { class: "sub" }, t("restore.none")));
     for (const r of pts.slice().reverse()) list.append(h("button", { class: "ghost-btn", type: "button", data: { day: r.day } }, t("restore.btn", { day: r.day, stage: Math.min(MAP_COUNT, (r.p && r.p.bestStage) || 1) })));
   }
+  $("set-fullscreen").addEventListener("click", () => { Platform.setFullscreen(!Platform.isFullscreen()); Sound.ui("toggle"); setTimeout(renderSettings, 300); });
+  document.addEventListener("fullscreenchange", () => { if (sheet === "settings") renderSettings(); });
   $("set-analytics").addEventListener("click", () => { PlayData.set(PlayData.consent() === "yes" ? "no" : "yes"); Sound.ui("toggle"); });
   $("restoreList").addEventListener("click", e => { const b = e.target.closest("[data-day]"); if (b && restoreFrom(b.dataset.day)) { toast(t("restore.done", { day: b.dataset.day })); Sound.ui("claim"); renderSettings(); } });
   $("set-voice").addEventListener("click", e => {

@@ -1,0 +1,30 @@
+{
+  "name": "skull-toss-desktop",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Skull Toss for the desktop (Windows, macOS, Linux, Steam Deck): the game's page in an Electron window, with Steam.",
+  "main": "main.js",
+  "scripts": {
+    "web": "python3 ../../tools/package.py electron",
+    "start": "npm run web && electron .",
+    "dist": "npm run web && electron-builder --dir",
+    "dist:all": "npm run web && electron-builder -mwl"
+  },
+  "dependencies": {
+    "steamworks.js": "^0.4.0"
+  },
+  "devDependencies": {
+    "electron": "^31.3.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.yourstudio.skulltoss",
+    "productName": "Skull Toss",
+    "files": ["main.js", "preload.js", "app/**"],
+    "asarUnpack": ["node_modules/steamworks.js/**"],
+    "directories": { "output": "release" },
+    "mac": { "category": "public.app-category.arcade-games", "target": ["dmg", "dir"] },
+    "win": { "target": ["nsis", "dir"] },
+    "linux": { "target": ["AppImage", "dir"], "category": "Game" }
+  }
+}

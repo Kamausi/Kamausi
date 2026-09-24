@@ -64,7 +64,7 @@
     for (let pass = 0; pass < 2; pass++) {
       const now = ACHIEVEMENTS.filter(A => !achHas(A.id) && achValue(A) >= A.n);
       if (!now.length) break;
-      for (const A of now) { profile.achievements.push(A.id); fresh.push(A); }
+      for (const A of now) { profile.achievements.push(A.id); fresh.push(A); Platform.achievement(A.id); }   // (and the storefront's: 03e_platform.js)
       addBones(now.reduce((s, A) => s + A.bones, 0));
     }
     if (!fresh.length) return [];
