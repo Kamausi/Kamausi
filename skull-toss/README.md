@@ -1,8 +1,28 @@
-# SKULL TOSS v44
+# SKULL TOSS v45
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)), with a synthesised waltz standing in wherever they can't load.
+
+## New in v45: fire, cans, a quieter Vault and Souls at the Cart
+
+**Launch and title.** A logo card (`src/art/logo/logo.png`, `.webp` or `.svg` if present; otherwise a "Kamausi presents" card), then the red curtains open on the title. The buttons sit inside the curtains; the tagline is in capitals; bones aren't shown on the title. Menu buttons lose the wood grain; the score uses the title's lettering, bolder, as do the combo and impact words. Rarity colours: Stock cream, Featured blue, Special purple, Lost gold.
+
+**Play.**
+- **The ring catches fire** at six in a row (×3.5), burns hotter up to the ×6 cap, and a miss puts it out. The flames flare from behind the band, never over the hole.
+- **Power-ups, to the drop rules as written:** 2% a hit; score milestones 2,000 apart on a map's first stage, the gap ×1.35 each stage after; at most four drops a stage (stage 1 › mini-boss › stage 2 › boss: four in each stage); and a **shuffled cycle**, every prop once before any comes again, in a fresh order each time round. The grab takes in the whole drawn prop, up to nine-tenths of the hole. What a prop does now shows in the middle of the screen.
+- **Can Alley:** after each end boss but the last, an optional bonus round. Ten cans stacked 4-3-2-1 just behind a still ring, 25 seconds, misses free; the skull knocks one can a throw and everything resting on it falls too. 5 bones a can, 100 + 25 × map for the lot, and the first clear after each map wins that map's carnival prize (Prize Tickets, Midway Confetti, RINGER!, Marquee Bulbs, Can Alley Champ, Big Top, the Tin-Can Topper).
+- Lightning cracks with the flash and rumbles after it, with no click at the end. No dashed line under the aim's crossing point.
+
+**Results.** The headstone fits its text, the name and Morty are bigger, and the progress bar shows your real balance against the next thing you're saving for.
+
+**The Vault.** The shelves are a grid of tabs, each with a bubble counting what's new on it (looking at an item clears it; *Clear badges* asks, then clears them all). The pedestal stays in view: only the items scroll. Shelves run Stock → Lost under rarity headings; a locked item says whether it's bought with **bones**, **earned**, or either. Tapping any item puts it on the pedestal, large, before you wear or buy it. Two new shelves: **Glasses** (twelve) and **Ring wings** (the wings the ring sprouts after the mini-boss: the bat membrane, or any of Morty's own wing styles; four come from the mini-bosses).
+
+**The Curio Cart takes Souls only.** Its 24 exclusives, shelf by shelf; a deal of the day at a quarter off; and the Mystery Coffin for 60 Souls, which opens on a row of coffins sliding right to left until one stops and flies open. Bones stay the Vault's currency. Souls come from packs and the free daily handful, and need the Cloud Functions (see firebase/README.md): until they're deployed the Cart can be browsed but not bought from.
+
+**Achievements, ranks, stats, challenges.** 140 achievements (from 44), in sections. Twenty-one ranks, the last at 50,000 makes (it was 1,200). More Profile stats: swishes, top multiplier, rings set on fire, each power-up's count, Can Alley, modes and challenge sets. Claiming all three of a period's challenges pays a set bonus (150 / 600 / 2,500 bones).
+
+**The leaderboard.** A board for each scored way to play (Adventure, Arcade, Boss Rush, Curtain Call, Longshot, Target Gallery), checked by the server like the Adventure's; a players-online count; and tapping a headstone opens that player's card (picture, bio, rank, level, achievements), read-only.
 
 ## New in v44: the corrected roadmap, rebuilt around the throw
 
@@ -269,7 +289,7 @@ An entry is **???** until you meet the thing in play, with a word on how to find
 
 Boss Rush and the mini-games open once you've put an end boss down. Each keeps its own record, shown on its tile and on its headstone. The leaderboard, continues and resuming a run stay Story's and Arcade's. The mini-games have no hazards: no wind, bats or bones.
 
-**Story's encore.** After every end boss but the last, Story plays ten seconds of Curtain Call before the next reel. Misses are free and every make pays 5 bones.
+**Can Alley (v45; it replaced the encore).** After every end boss but the last, the Adventure offers a bonus round before the next reel: ten cans behind a still ring, 25 seconds, misses free, 5 bones a can and a prize for clearing them all. You can skip it.
 
 ## New in v25: signature shots and the cartoon camera
 
@@ -1080,7 +1100,7 @@ Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to
   - Curtain Call: misses are free and the twenty-second clock ends the run.
   - Longshot: the ring backs off 0.4 m after each make, misses cost skulls, and the record is the farthest make.
   - Target Gallery: five targets hang behind a still ring, a throw through the hole reaches them, and ten throws end the run.
-  - Story's encore after an end boss: misses are free, makes pay 5 bones, then the next reel.
+  - Can Alley after an end boss (v45): offered, skippable; misses are free, cans pay 5 bones, then the next reel.
   - The Play sheet lists five more modes, locked until an end boss falls. Practice picks a map and its options.
 - **v27.**
   - The Codex notes a boss when you meet it, a power-up when you grab it, and each map's hazard and target. What you see in Practice counts too.

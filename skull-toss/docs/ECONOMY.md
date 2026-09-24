@@ -9,12 +9,17 @@ Bones are earned by playing and live on the profile, in this browser and in the 
 - **The end of a run:** `runBones`, scaled by hits and score, plus a bonus for a new best.
 - **Bosses and pieces:** an end boss down pays 150 + 50 × map; Boss Rush pays points, not bones.
 - **Challenges:** daily, weekly and monthly (claimed by hand), and achievements (paid when reached).
-- **In play:** bonus targets (3 each), the Bone Magnet power-up (+20 a make), Story's encore (5 a make) and secrets (150 each, once).
+- **In play:** bonus targets (3 each), the Bone Magnet power-up (+20 a make), Can Alley after an end boss (5 a can, 100 + 25 × map for the lot) and secrets (150 each, once).
+- **Challenge sets (v45):** claim all three of a period's challenges for a bonus: 150 a day, 600 a week, 2,500 a month.
 
 **Sinks**
 
-- the Skull Vault's prices (300 to about 11,000);
-- the Curio Cart's deals, exclusives and the Mystery Coffin.
+- the Skull Vault's prices (300 to about 11,000).
+
+**v45: the Curio Cart takes Souls, not bones.** Its 24 exclusives are in the shared economy (`Economy.CART`) at
+130 to 400 Souls, one of them a quarter off each UTC day (`Economy.dealOf`), and the Mystery Coffin costs 60 Souls
+(`Economy.COFFIN`; the server takes the Souls, the game draws the Vault look inside). An exclusive bought with bones
+before v45 stays yours.
 
 **Practice pays nothing.** A Practice run plays on a copy of the profile, so no bone, stat, challenge or medal
 moves.
@@ -33,7 +38,7 @@ Souls are the server's alone.
 - **Getting them.** A free daily handful (10, once per UTC day, by the server's clock), and Soul packs bought in a store. A pack is credited only after the store confirms the receipt, and a receipt is recorded, so it can never be credited twice.
 - **The ledger.** Every change to a balance is written to `ledger/`.
 - **Offline.** The game shows the Soul Shop as unavailable. A Soul item is judged only once the wallet has arrived, and never on the device's word.
-- **What Souls buy.** Looks only (two four-piece sets), like bones, and each season's Premium Ticket (v42), which pays extra looks and bones on the Season Ticket.
+- **What Souls buy.** Looks only (two four-piece sets at the Soul Shop and, from v45, the Curio Cart's exclusives and its Mystery Coffin), like bones, and each season's Premium Ticket (v42), which pays extra looks and bones on the Season Ticket.
 
 - **Refunds (v39).** A refunded pack's Souls come back off the wallet. What's already spent stays spent, and the shortfall is **owed**: new Souls pay it off first, and nothing can be bought until they have. The Soul Shop shows what's owed. See firebase/README.md, "Refunds".
 - **Support and rollback (v39).** `firebase/functions/tools/admin.js` can grant Souls (with a reason), refund a receipt by hand, and reverse any single ledger entry (a purchase, a daily claim or a grant). Every action is itself a ledger entry.
