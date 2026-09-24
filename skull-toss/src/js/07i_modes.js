@@ -16,8 +16,10 @@
     rush:     { lives: true, open: () => profile.bossKills > 0 },
     curtain:  { free: true, mini: true, clock: 20, map: 7, open: () => profile.bossKills > 0 },
     longshot: { lives: true, mini: true, map: 3, open: () => profile.bossKills > 0 },
-    gallery:  { lives: true, mini: true, throws: 10, map: 5, open: () => profile.bossKills > 0 }
+    gallery:  { lives: true, mini: true, throws: 10, map: 5, open: () => profile.bossKills > 0 },
+    director: { lives: true, open: () => true }   // the Director's Challenge (07k_director.js): the week's map, whatever you've reached
   };
+  const arcadeLike = () => game.mode === "arcade" || game.mode === "director";   // (no bosses; the ring goes 3D at 25 hits and keeps winding up)
   const MODE_IDS = Object.keys(MODES), MINI_IDS = MODE_IDS.filter(m => MODES[m].mini);
   const modeOf = () => MODES[game.mode] || MODES.story;
   const freeMiss = () => !!modeOf().free || game.phase === "encore";   // a miss that costs no skull
@@ -56,6 +58,7 @@
     } else if (m === "longshot") { ring.frozen = { x: 0, y: RING_Y, z: LONGSHOT.z0 }; }
     else if (m === "gallery") { ring.frozen = { x: 0, y: RING_Y, z: RING_Z }; galleryTargets(); }
     if (MODES[m].mini) stageCard(t(`mode.${m}.name`), t(`mode.${m}.rule`), "", 2.2, "gold");
+    if (m === "director") directorBegin();
   }
   // ── the ring, mode by mode (ringTargets asks first)
   function modeRing() {
@@ -164,7 +167,9 @@
 
   // ── records, when a run in one of these modes ends
   function modeRecords() {
-    const m = game.mode, R = profile.modes[m] || (profile.modes[m] = { best: 0, runs: 0 });
+    const m = game.mode;
+    if (m === "director") { directorAfterRun(); game.run.modeValue = game.score; return; }   // (its record is the week's: 07k_director.js)
+    const R = profile.modes[m] || (profile.modes[m] = { best: 0, runs: 0 });
     const value = m === "rush" ? game.run.bosses : m === "curtain" ? game.hits : m === "longshot" ? Math.round(modeSt.far * 10) : m === "gallery" ? (game.run.targets || 0) : 0;
     game.newBest = value > R.best; R.best = Math.max(R.best, value); R.runs++;
     if (m === "rush" || MODES[m].mini) challenge("modeRuns", 1);

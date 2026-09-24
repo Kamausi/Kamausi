@@ -1881,6 +1881,43 @@
     T.setFlags({}); T.noServer(); T.toTitle(); assert($("eventBanner").hidden, "and gone when it's off");
   });
 
+  // ── v38: the Director's Challenge ──
+  test("The week's Director's Challenge is the same for everyone, changes each week, and anyone can play it", () => {
+    const a = T.directorOf("2026-W39"), b = T.directorOf("2026-W39"), c = T.directorOf("2026-W40");
+    assert(JSON.stringify(a) === JSON.stringify(b) && a.notes.length === 3 && a.map >= 0 && a.map < 8, JSON.stringify(a));
+    assert(JSON.stringify(a) !== JSON.stringify(c), "a new week, a new note");
+    T.setStats({ ...ZERO, bestStage: 1 }); T.startMode("director"); const D = T.director();
+    assert(T.modeState().mode === "director" && T.state().stage === D.map + 1, `on the week's map, reached or not (${T.state().stage})`);
+    T.toTitle(); $("play").click(); assert(/Director/.test($("directorCard").textContent) && $("directorCard").querySelectorAll(".notes li").length === 3, "the note on the Play sheet");
+    T.closeSheet(); T.setStats(ZERO); T.toTitle();
+  });
+  test("The six twists: Double Wind, the Cursed Reel, the Shrinking Ring, Night Shoot, Rush Hour, Bonus Bonanza", () => {
+    T.setStats(ZERO);
+    T.directorWith({ twist: "wind", map: 0 }); assert(T.hz().kind === "wind", "wind on Moonshine Cemetery");
+    T.directorWith({ twist: "fog", map: 0 }); assert(T.hz().kind === "fog", "fog on Moonshine Cemetery");
+    T.directorWith({ twist: "cursed", map: 0 }); assert(T.powers().cursed, "the Cursed Skull all run");
+    T.directorWith({ twist: "rush", map: 0 }); T.step(0.2); const fast = T.state().ring.omega;
+    T.directorWith({ twist: "fog", map: 0 }); T.step(0.2); assert(fast > T.state().ring.omega * 1.2, `a quicker ring (${fast} vs ${T.state().ring.omega})`);
+    T.directorWith({ twist: "shrink", map: 0 }); T.step(0.5); const rc0 = T.state().ring.rc; for (let i = 0; i < 6; i++) { T.calm(); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); }
+    T.step(3); assert(T.state().ring.rc < rc0 - 0.015, `a smaller ring after six makes (${rc0} → ${T.state().ring.rc})`);
+    T.toTitle();
+  });
+  test("A note met is a star for the week, paying its bones the first time; the week's best is kept", () => {
+    const notes = [{ id: "hits", n: 1 }, { id: "perfects", n: 1 }, { id: "score", n: 999999 }];
+    T.setStats({ ...ZERO, bones: 0, streakLast: "x" }); T.directorWith({ twist: "fog", map: 0, notes });
+    T.calm(); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); T.endRun(); T.step(1);
+    const P = T.profile(); assert(P.director && P.director.stars.join() === "true,true,false" && P.director.best === T.state().score, JSON.stringify(P.director));
+    assert(T.runStats().director.pay === 300, `100 + 200 for the first two (${T.runStats().director.pay})`);
+    T.directorWith({ twist: "fog", map: 0, notes }); T.calm(); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); T.endRun(); T.step(1);
+    assert(T.runStats().director.pay === 0 && T.profile().director.runs === 2, "and not again this week");
+    const R = T.lastReplay(); assert(R && R.dir && R.dir.twist === "fog" && R.dir.notes[2].n === 999999, "the replay carries its note");
+    T.directorWith(null); assert(T.watchReplay() && T.director().twist === "fog" && T.director().notes[0].id === "hits", "and watching it plays that note, whatever this week's is");
+    for (let i = 0; i < 600 && T.state().state !== "over"; i++) T.step(0.05); T.stopReplay && T.stopReplay();
+    T.setStats({ director: { week: "1999-W01", best: 5, stars: [true, true, true], runs: 9 } }); T.toTitle(); $("play").click();
+    assert(!/★/.test($("directorCard").querySelector(".notes").textContent), "last week's stars don't count this week");
+    T.closeSheet(); T.setStats(ZERO); T.toTitle();
+  });
+
   (async () => {
     for (const q of queue) {
       if (q.step) { q.fn(); continue; }

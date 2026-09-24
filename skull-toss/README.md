@@ -1,8 +1,24 @@
-# SKULL TOSS v37
+# SKULL TOSS v38
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)), with a synthesised waltz standing in wherever they can't load.
+
+## New in v38: the Director's Challenge
+
+Every week H.K., head of production, sends down a note on studio paper. It's pinned to the top of the Play sheet.
+
+- **One map, one twist, one seed.** They're the same for everyone that week, chosen from the week itself, so every player gets the same run to beat. Anyone can take it, whatever they've reached in Story: he lends you the reel.
+- **How it plays.** It plays like Arcade: no bosses, three skulls, no continues, and the ring goes 3D at 25 hits. The twist goes on top:
+  - **Double Wind:** wind on any map, twice as strong.
+  - **The Cursed Reel:** the Cursed Skull all run, so score is ×3 and the ring is quicker.
+  - **The Shrinking Ring:** the ring gets a little smaller with every make.
+  - **Night Shoot:** the bayou's fog, on any map.
+  - **Rush Hour:** the ring runs 30% quicker.
+  - **Bonus Bonanza:** twice the bonus targets.
+- **Three notes.** Each is something he'd like to see on film: a score, perfects, a combo, bonus targets, hits, or signature shots. Each note you meet is a star for the week. The first time, the stars pay 100, 200 and 400 bones. The headstone shows which notes you met, and the card keeps your stars and the week's best score.
+- **A new note on Monday** (UTC, as the weekly board). The card counts down to it.
+- **Replays** of a Director's run carry its note, so a replay watched next week still plays last week's twist.
 
 ## New in v37: challenges on a live rotation, and a daily streak
 
@@ -858,7 +874,7 @@ From the console, `SkullToss.debug.visualAnimation` lists the pose library (`pos
 
 ## Tests
 
-Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **191 checks**, covering:
+Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **194 checks**, covering:
 
 - **Layout, scoring and aiming.**
   - Everything is centred and every result is classified correctly.
@@ -1015,3 +1031,8 @@ Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to
   - An event doubles the pay on the same goals.
   - The daily streak pays 20 a day up to a week, once a day, and a missed day starts it again.
   - Kill switches close the Soul Shop, and the event banner shows and goes.
+- **v38.**
+  - The week's challenge is the same for everyone, changes each week, and plays on its map whatever you've reached.
+  - Each of the six twists does its thing.
+  - A note met is a star paying its bones once a week, the week's best is kept, and last week's stars don't count.
+  - A replay carries its note.

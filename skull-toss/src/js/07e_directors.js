@@ -14,7 +14,7 @@
   function tierNow() {
     const M = mapData(game.stage || 1);
     let i = TIER_DATA.indexOf(tierData(M.tiers[game.phase === "A" ? 0 : 1]));
-    if (game.mode === "arcade" && (game.stageHits || 0) >= 75) i += Math.floor(((game.stageHits || 0) - 50) / 25);
+    if (arcadeLike() && (game.stageHits || 0) >= 75) i += Math.floor(((game.stageHits || 0) - 50) / 25);
     return TIER_DATA[clamp(i, 0, TIER_DATA.length - 1)];
   }
 
@@ -57,7 +57,7 @@
     targets.push({ kind, x: rrIn(-1.6, 1.6), y: low ? 0.22 : rrIn(1.4, 3.1), z: RING_Z + rrIn(1.4, 3.0), t: 0, left: 6, pop: 0, ph: rrIn(0, TAU) });
   }
   function refillTargets() {
-    const want = boss || game.state === "title" ? 0 : tierNow().targets;
+    const want = boss || game.state === "title" ? 0 : tierNow().targets * directorTargets();
     for (let i = targets.length - 1; i >= 0; i--) if (targets[i].pop || --targets[i].left <= 0) targets.splice(i, 1);
     while (targets.length < want) spawnTarget();
   }
@@ -80,7 +80,7 @@
   const hazardsAllowed = () => !MODES[game.mode].mini && game.phase !== "encore" && !(game.mode === "practice" && !practice.hazards);
   const hazardsLive = () => !boss && game.state !== "title" && game.state !== "cine" && hazardsAllowed();
   function hazardsReset() {
-    HZ.kind = mapData(game.stage || 1).mechanic.kind; HZ.wind = 0; HZ.fog = 0; HZ.fogT = 0; HZ.list = []; HZ.since = 0; HZ.pendT = 0; HZ.lastTick = 0;
+    HZ.kind = mapData(game.stage || 1).mechanic.kind; HZ.wind = 0; HZ.windMul = 1; HZ.fog = 0; HZ.fogT = 0; HZ.list = []; HZ.since = 0; HZ.pendT = 0; HZ.lastTick = 0;
     if (HZ.kind === "balloons") for (let i = 0; i < 2; i++) HZ.list.push(newBalloon(rrIn(0.3, 3.8)));
     renderWind();
   }
@@ -94,7 +94,7 @@
   function hazardsAfterThrow() {
     const T = tierNow(), M = mapData(game.stage || 1).mechanic;
     if (HZ.kind !== "none" && hazardsLive()) sawIt("hazard", HZ.kind);   // the Codex notes the map's hazard (09k_codex.js)
-    if (HZ.kind === "wind" && hazardsAllowed()) { HZ.wind = Math.round(rrIn(-1, 1) * (M.max || 1.5) * (0.4 + 0.6 * T.hazard) * 10) / 10; renderWind(); if (Math.abs(HZ.wind) > 0.6) Sound.toon("gust"); }
+    if (HZ.kind === "wind" && hazardsAllowed()) { HZ.wind = Math.round(rrIn(-1, 1) * (M.max || 1.5) * (HZ.windMul || 1) * (0.4 + 0.6 * T.hazard) * 10) / 10; renderWind(); if (Math.abs(HZ.wind) > 0.6) Sound.toon("gust"); }
     if (!hazardsLive() || !T.hazardEvery) return;
     if (++HZ.since < T.hazardEvery) return;
     HZ.since = 0;

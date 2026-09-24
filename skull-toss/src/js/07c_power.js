@@ -54,7 +54,7 @@
   function pickupSchedule() {   // called as each throw settles: one roll per make
     if (boss || pickup || game.state !== "ready" || !game.result || !game.result.make) return;
     const key = game.stage + game.phase; if (key !== PD.halfKey) { PD.halfKey = key; PD.half = 0; }
-    const into = game.stageHits - (game.phase === "A" ? 0 : STAGE_MINI), endless = game.mode === "arcade" && game.stageHits > STAGE_BOSS;
+    const into = game.stageHits - (game.phase === "A" ? 0 : STAGE_MINI), endless = arcadeLike() && game.stageHits > STAGE_BOSS;
     if (into < POWER_RULES.fromHit || (!endless && PD.half >= POWER_RULES.perHalf)) return;
     PD.pity++;
     const chance = POWER_RULES.base * tierNow().powerRate + POWER_RULES.pity * (PD.pity - 1);

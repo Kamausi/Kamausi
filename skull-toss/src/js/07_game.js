@@ -181,6 +181,7 @@
       if (pickup && d != null && pickupHit(game.lastCross)) collectPickup(at);
       if (boss && !boss.dead) boss.hit(kind, at);
       judgeShots(kind, x, y);   // a signature shot? (07h_shots.js)
+      directorMake();           // the Shrinking Ring (07k_director.js)
       encoreMake();             // the encore pays bones for every make (07i_modes.js)
       showCombo(game.streak);
       if (game.streak % 5 === 0 && game.lives < MAX_LIVES) { // every 5 in a row earns a skull, stacking up to five
@@ -254,7 +255,8 @@
     if (Replay.play && !opts.replay) Replay.stop(false);   // (a real run ends any replay: 07j_replay.js)
     const mode = !MODES[opts.mode] ? "story" : opts.replay || !MODES[opts.mode].open || MODES[opts.mode].open() ? opts.mode : "story";
     modeStart(mode);   // (Practice swaps in a copy of the profile here: 07i_modes.js)
-    const pick = clamp(opts.map | 0, 0, STAGES.length - 1), map = opts.replay ? pick : MODES[mode].maps ? (mapUnlocked(pick) ? pick : 0) : MODES[mode].mini ? miniMap(mode) : 0;
+    const pick = clamp(opts.map | 0, 0, STAGES.length - 1), map = opts.replay ? pick : mode === "director" ? directorNow().map : MODES[mode].maps ? (mapUnlocked(pick) ? pick : 0) : MODES[mode].mini ? miniMap(mode) : 0;
+    if (mode === "director" && opts.seed == null) opts = { ...opts, seed: directorNow().seed };   // (everyone plays the same run this week)
     Object.assign(game, { state: "ready", score: 0, hits: 0, lives: START_LIVES, slots: START_LIVES, streak: 0, perfStreak: 0, peakLives: START_LIVES, throws: 0,
       result: null, lastCross: null, newBest: false, shake: 0, slowmo: 0, run: freshRun(), mode, map });
     game.run.t0 = game.time; Object.assign(voice, { said: 0, text: "", quiet: game.time, idleSaid: false });

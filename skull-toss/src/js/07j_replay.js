@@ -4,7 +4,7 @@
   // with the sim step it happened on (counted in game time, so a freeze frame never shifts it). Playing that back
   // through the same simulation gives the same run, throw for throw. The few settings that change the simulation
   // travel with it (title cards, mischief, the hang a miss takes under reduced motion, Practice's options, Boss
-  // Rush's list). A replay plays on a copy of the profile, so watching one changes nothing of yours, never posts to
+  // Rush's list, the Director's note). A replay plays on a copy of the profile, so watching one changes nothing of yours, never posts to
   // the board and never touches a run you could resume. Share one as a link (#replay=…) and whoever opens it
   // watches the same run.
   const Replay = {
@@ -12,7 +12,7 @@
     begin(opts) {
       if (this.play) return;
       this.rec = { v: 1, mode: game.mode, map: game.map, seed: game.seed, rm: reduceMotion ? 1 : 0, set: { cards: cardsMode(), mischief: mischiefOn() ? 1 : 0 },
-        practice: game.mode === "practice" ? { ...practice } : null, leader: reelSt.introLeader ? 1 : 0, rush: game.mode === "rush" ? modeSt.rush.map(b => b.id) : null, ev: [], at: Date.now() };
+        practice: game.mode === "practice" ? { ...practice } : null, leader: reelSt.introLeader ? 1 : 0, rush: game.mode === "rush" ? modeSt.rush.map(b => b.id) : null, dir: game.mode === "director" && game.director ? JSON.parse(JSON.stringify(game.director)) : null, ev: [], at: Date.now() };
     },
     step: () => Math.round((game.time - (game.run.t0 || 0)) / SIM_STEP),
     note(kind, a, b) { if (this.rec && !this.play) this.rec.ev.push(a == null ? [this.step(), kind] : [this.step(), kind, +a.toFixed(5), +b.toFixed(5)]); },

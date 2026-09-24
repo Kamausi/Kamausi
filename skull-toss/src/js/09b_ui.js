@@ -55,7 +55,7 @@
     $("mapPickK").textContent = pickFor === "practice" ? t("play.pickPractice") : t("play.pickArcade");
     $("practiceOpts").hidden = pickFor !== "practice";
     segValue($("prac-ring"), practice.ring); segValue($("prac-half"), practice.half); segValue($("prac-hz"), practice.hazards ? "on" : "off");
-    renderMoreModes();
+    renderMoreModes(); renderDirectorCard();
     const reached = Math.min(profile.bestStage, MAP_COUNT), done = profile.storyClears > 0;
     $("storyBest").textContent = profile.bestScore > 0 ? `Best ${fmtN(profile.bestScore)} · ${done ? `finished ${profile.storyClears > 1 ? profile.storyClears + " times" : ""}` : `reached map ${reached}`} · ${profile.fragments.length}/8 pieces` : "";
     const played = STAGES.map((S, i) => arcadeRec(i)).filter(a => a.runs), longest = played.length ? Math.max(...played.map(a => a.secs)) : 0;
@@ -172,6 +172,8 @@
     const mode = game.mode, M = MODES[mode] || {};
     if (mode === "practice") rows.splice(0, rows.length, [t("res.throws"), game.throws], [t("res.hits"), game.hits], [t("res.perfect"), `${r.perfects}/${game.throws}`], [t("res.accuracy"), game.throws ? Math.round((100 * game.hits) / game.throws) + "%" : "—"]);
     else if (mode === "rush") rows.splice(0, rows.length, ["Score", `<b id="final">${fmtN(game.score)}</b>`], [t("res.bosses"), `${r.bosses}/${modeSt.rush.length}`], ["Time", mmss(r.secs || 0)], ["Perfect", `${r.perfects}/${game.throws}`]);
+    else if (mode === "director" && r.director) rows.splice(0, rows.length, ["Score", `<b id="final">${fmtN(game.score)}</b>`], [t("res.director"), t("director.starsRow", { n: r.director.stars.filter(Boolean).length, bones: fmtN(r.director.pay) })],
+      ...game.director.notes.map((N, i) => [noteText(N), r.director.met[i] ? "★" : "☆"]));
     else if (M.mini) rows.splice(0, rows.length, [t(`res.${mode}`), `<b id="final">${modeValueText(mode, r.modeValue || 0)}</b>`], ["Score", fmtN(game.score)], ["Perfect", `${r.perfects}/${game.throws}`], ["Best combo", `×${r.bestCombo}`]);
     $("resStats").innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
     $("resGrade").textContent = g.grade;

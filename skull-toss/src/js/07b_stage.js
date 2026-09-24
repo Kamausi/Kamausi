@@ -53,14 +53,14 @@
     if (game.state === "title") { const L = level(0); return { mode: "line", ...L }; }
     if (ringFlies()) {   // the second half: the map's path, legs per second (the carousel's circle runs in radians: three legs a lap)
       const L = level(16 + (h - STAGE_MINI) * 0.25 + (st - 1) * 4), lap = RING_PATHS[ring.mode].lap || 1;
-      return { rc: L.rc - (hasMod("shrink") ? 0.05 : 0) + T.rc, omega: lap * cursed * S.speed * T.speed * arcadeRamp() / Math.max(0.72, 1.9 - (h - STAGE_MINI) * 0.042), amp: 0, bob: 0 };
+      return { rc: L.rc - (hasMod("shrink") ? 0.05 : 0) + T.rc - (ring.rcShrink || 0), omega: lap * cursed * S.speed * T.speed * directorSpeed() * arcadeRamp() / Math.max(0.72, 1.9 - (h - STAGE_MINI) * 0.042), amp: 0, bob: 0 };
     }
     if (ring.mode === "boss") return { rc: boss ? boss.rc : ring.rc, omega: 1, amp: 0, bob: 0 };
     const L = level(Math.min(h, STAGE_MINI) * 0.65 + (st - 1) * 3);
-    return { amp: L.amp, omega: L.omega * cursed * S.speed * T.speed, rc: L.rc - (hasMod("shrink") ? 0.05 : 0) + T.rc, bob: Math.max(L.bob, hasMod("bob") ? 0.16 : 0) };
+    return { amp: L.amp, omega: L.omega * cursed * S.speed * T.speed * directorSpeed(), rc: L.rc - (hasMod("shrink") ? 0.05 : 0) + T.rc - (ring.rcShrink || 0), bob: Math.max(L.bob, hasMod("bob") ? 0.16 : 0) };
   }
   // Arcade never ends, so past the story's top speed its ring keeps winding up: 6% quicker every 10 hits, to 1.6×
-  const arcadeRamp = () => (game.mode === "arcade" ? Math.min(1.6, 1 + 0.06 * Math.floor(Math.max(0, (game.stageHits || 0) - STAGE_BOSS) / 10)) : 1);
+  const arcadeRamp = () => (arcadeLike() ? Math.min(1.6, 1 + 0.06 * Math.floor(Math.max(0, (game.stageHits || 0) - STAGE_BOSS) / 10)) : 1);
   function snapRing() { const T = ringTargets(); ring.amp = T.amp; ring.omega = T.omega; ring.rc = T.rc; ring.bob = T.bob; }
   function setRingMode(mode, keepPos = true) {
     const here = { x: ring.x, y: ring.y, z: ring.z };
@@ -102,8 +102,8 @@
   // called once a throw has settled: has the player just earned the next act?
   function stageCheck() {
     if (game.lives <= 0) return false;
-    if (game.mode !== "story" && game.mode !== "arcade") return false;   // (the other modes move on in modeCheck: 07i_modes.js)
-    if (game.mode === "arcade") {   // no bosses: at 25 hits the ring simply shakes loose and goes 3D, for good
+    if (game.mode !== "story" && !arcadeLike()) return false;   // (the other modes move on in modeCheck: 07i_modes.js)
+    if (arcadeLike()) {   // no bosses: at 25 hits the ring simply shakes loose and goes 3D, for good
       if (game.phase === "A" && game.stageHits >= STAGE_MINI) { arcadeGo3D(); return true; }
       return false;
     }
