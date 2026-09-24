@@ -263,3 +263,9 @@
   Object.assign(KIND_LABEL, { hair: "hair", beard: "facial hair", wings: "wings", launcher: "launcher", wizard: "Wizard Mort" });
   Object.assign(DEFAULT_COS, { hair: "none", beard: "none", wings: "none", launcher: "classic", wizard: "none" });
   REQ_TEXT.shards = n => `Win ${n} shards of the Black Ring`;
+  // v45: Can Alley's prizes (07o_bonus.js). The first time you clear the cans after a map's end boss, that map's prize
+  // is yours; they're never sold. (The last map has no Can Alley: the Adventure ends there.)
+  const CAN_PRIZES = [["aim", "tickets", "Prize Tickets", 2], ["trail", "midway", "Midway Confetti", 3], ["impact", "ringer", "RINGER!", 3], ["aura", "bulbs", "Marquee Bulbs", 3],
+    ["title", "canchamp", "Can Alley Champ", 3], ["ring", "bigtop", "Big Top", 4], ["hat", "tincan", "Tin-Can Topper", 4]];
+  CAN_PRIZES.forEach(([kind, id, name, s], i) => CATALOG[kind].push({ id, name, s, req: ["cans:" + (i + 1), 1], prize: true }));
+  for (let n = 1; n <= CAN_PRIZES.length; n++) REQ_TEXT["cans:" + n] = () => `Clear Can Alley after map ${n}'s end boss`;

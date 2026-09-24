@@ -77,6 +77,7 @@
 .item .ribbon{position:absolute;left:50%;bottom:-8px;transform:translateX(-50%) rotate(-2deg);padding:2px 6px 1px;border-radius:4px;border:2px solid var(--ink);font:10px/1 var(--display);letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
 .item .ribbon.shame{background:#8E8A7E;color:var(--ink)}
 .item .ribbon.boss{background:var(--red);color:var(--cream)}
+.item .ribbon.prize{background:repeating-linear-gradient(90deg,#C8503A 0 6px,#F2E7C9 6px 12px);color:var(--ink);text-shadow:0 0 2px #F2E7C9}
 .item .ribbon.shop{background:var(--mustard);color:var(--ink)}
 .grid.rows .item .ribbon{left:auto;right:36px;bottom:auto;top:8px;transform:rotate(2deg)}
 /* the Curio Cart */

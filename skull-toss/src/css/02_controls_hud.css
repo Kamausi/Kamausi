@@ -198,3 +198,15 @@ html.hc .rc-text{text-shadow:0 0 2px var(--ink),0 0 4px var(--ink)}
 .power-card.show{animation:powerCard 2.3s ease both}
 @keyframes powerCard{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}10%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}16%{transform:translate(-50%,-50%) scale(1)}82%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-56%) scale(.96)}}
 @media (prefers-reduced-motion:reduce){.power-card.show{animation:powerCardFade 2.3s linear both}@keyframes powerCardFade{0%,85%{opacity:1}100%{opacity:0}}}
+
+/* v45: Can Alley's offer after an end boss (07o_bonus.js) */
+.bonus .cont-card{background:linear-gradient(180deg,rgba(200,80,58,.22),rgba(0,0,0,0) 40%),var(--panel)}
+.bonus-cans{display:grid;grid-template-columns:repeat(8,14px);grid-template-rows:repeat(4,18px);justify-content:center;gap:2px 0;margin:4px 0 8px}
+.bonus-cans i{width:26px;height:18px;border-radius:3px;background:linear-gradient(180deg,#D8DCE2 0 18%,#C8503A 18% 70%,#9A9EA6 70%);box-shadow:0 0 0 2px var(--ink)}
+.bonus-cans i:nth-child(10){grid-row:1;grid-column:4/span 2;justify-self:center}
+.bonus-cans i:nth-child(8){grid-row:2;grid-column:3/span 2;justify-self:center}.bonus-cans i:nth-child(9){grid-row:2;grid-column:5/span 2;justify-self:center}
+.bonus-cans i:nth-child(5){grid-row:3;grid-column:2/span 2;justify-self:center}.bonus-cans i:nth-child(6){grid-row:3;grid-column:4/span 2;justify-self:center}.bonus-cans i:nth-child(7){grid-row:3;grid-column:6/span 2;justify-self:center}
+.bonus-cans i:nth-child(1){grid-row:4;grid-column:1/span 2;justify-self:center}.bonus-cans i:nth-child(2){grid-row:4;grid-column:3/span 2;justify-self:center}.bonus-cans i:nth-child(3){grid-row:4;grid-column:5/span 2;justify-self:center}.bonus-cans i:nth-child(4){grid-row:4;grid-column:7/span 2;justify-self:center}
+.bonus-pay{margin:0;font:800 13px/1.35 var(--ui);color:var(--cream)}
+.bonus-prize{margin:4px 0 6px;font:800 12px/1.35 var(--ui);letter-spacing:.06em;text-transform:uppercase;color:var(--mustard-l)}
+.bonus-prize:empty{display:none}

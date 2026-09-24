@@ -116,7 +116,7 @@
     r.overRow = kind === "over" ? (r.overRow || 0) + 1 : 0;
     if (r.overRow >= 3) foundSecret("moon");
     if (make && game.stage === 7 && game.streak >= 13) foundSecret("thirteen");
-    if (game.phase === "encore" && (r.encoreMakes || 0) >= 10) foundSecret("showstopper");
+    if (game.phase === "encore" && cans.length && !cansLeft() && game.throws - (r.bonusT0 || 0) <= 4) foundSecret("showstopper");   // (Can Alley in four throws, the fewest it can be)
   }
   function secretUpward() { game.run.upside = (game.run.upside || 0) + 1; if (game.run.upside >= 5) foundSecret("upside"); }
   function secretName(name) { if (/\bmort(y|imer)\b/i.test(name || "")) foundSecret("name"); }

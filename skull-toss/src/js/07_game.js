@@ -75,6 +75,7 @@
     if (!game.result && !s.crossed) obstacleCheck(s, prevPos);   // the map's obstacles: bumpers bounce, fans and lodestones push, the rest block (07m_obstacles.js)
     envAfterFlight(s, prevPos);   // props it brushes answer (07n_environment.js)
     if (targets.length) targetCheck(s, prevPos);
+    if (cans.length) canCheck(s, prevPos);   // Can Alley (07o_bonus.js)
     if (s.pos.z < -CAM_BACK + 0.9 || s.pos.z > 48) s.alpha = 0;
     const fade = game.result ? clamp(game.endTimer / 0.3, 0, 1) : 1;
     const v = velAt(s, s.t);
@@ -385,7 +386,7 @@
     }
     ring.x = rp.x; ring.y = rp.y; ring.z = rp.z;
     if (boss) updateBoss(dt);
-    updateSeeds(dt); updatePickup(dt); updatePowers(dt); updateTargets(dt); updateHazards(dt); updateObstacles(dt);
+    updateSeeds(dt); updatePickup(dt); updatePowers(dt); updateTargets(dt); updateCans(dt); updateBonusOffer(dt); updateHazards(dt); updateObstacles(dt);
 
     if (game.state === "flying") updateFlight(dt, phase0);
     else if (game.state === "cine") { updateCine(dt); skull.spawn = Math.min(1, skull.spawn + dt / 0.3); }

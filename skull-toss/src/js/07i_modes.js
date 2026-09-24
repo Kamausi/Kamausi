@@ -7,8 +7,8 @@
   //   Curtain Call twenty seconds, as many makes as you can; misses cost nothing (a mini-game)
   //   Longshot     a still ring that backs off after every make: how far can you reach? (a mini-game)
   //   Target Gallery ten throws through a still ring at the targets hanging behind it (a mini-game)
-  // Boss Rush and the mini-games open once you've put an end boss down. Story plays a short Curtain Call of its own
-  // after every end boss but the last: an encore, ten seconds, where misses are free and every make pays bones.
+  // Boss Rush and the mini-games open once you've put an end boss down. v45: after every end boss but the last the
+  // Adventure offers a bonus round, Can Alley (07o_bonus.js): the "encore" phase, where misses are free.
   const MODES = {
     story:    { lives: true, cont: true, board: true },
     arcade:   { lives: true, cont: true, maps: true },
@@ -24,7 +24,7 @@
   const MODE_IDS = Object.keys(MODES), MINI_IDS = MODE_IDS.filter(m => MODES[m].mini);
   const modeOf = () => MODES[game.mode] || MODES.story;
   const freeMiss = () => !!modeOf().free || game.phase === "encore";   // a miss that costs no skull
-  const ENCORE = { secs: 10, bones: 5 }, LONGSHOT = { z0: 4.6, step: 0.4, zMax: 14 };
+  const LONGSHOT = { z0: 4.6, step: 0.4, zMax: 14 };
   const practice = { ring: "full", half: "A", hazards: true };   // the Practice options (the Play sheet sets them)
   const modeSt = { real: null, rush: [], rushI: 0, clock: 0, far: 0, targetsHit: 0 };
   const inPractice = () => !!modeSt.real;
@@ -64,14 +64,15 @@
   }
   // ── the ring, mode by mode (ringTargets asks first)
   function modeRing() {
-    if (game.phase === "encore" || game.mode === "curtain") { const L = level(24); return { amp: 1.35, omega: 1.5, rc: L.rc + 0.02, bob: 0.14 }; }
+    if (game.phase === "encore") return { amp: 0, omega: 0, rc: RC_START + CANS.rc, bob: 0 };   // Can Alley: a still, generous ring
+    if (game.mode === "curtain") { const L = level(24); return { amp: 1.35, omega: 1.5, rc: L.rc + 0.02, bob: 0.14 }; }
     if (game.mode === "practice" && practice.ring === "slow") { const L = level(Math.min(game.stageHits || 0, STAGE_MINI) * 0.65); return { ...L, omega: L.omega * 0.5 }; }
     return null;
   }
   // ── after each throw has settled: true if the mode moved the run on (stageCheck's place)
   function modeCheck() {
     const m = game.mode, make = game.result && game.result.make;
-    if (game.phase === "encore") { if (game.run.encoreEnd != null && game.time >= game.run.encoreEnd) { encoreDone(); return true; } return false; }
+    if (game.phase === "encore") { if (game.run.encoreEnd != null && (!cansLeft() || game.time >= game.run.encoreEnd)) { encoreDone(); return true; } return true; }   // (the cans are the round: no director between throws)
     if (m === "rush") { if (boss && boss.dead) { rushNext(); return true; } return false; }
     if (m === "curtain") { if (modeSt.clock <= 0) { gameOver(true); return true; } return false; }
     if (m === "longshot" && make) {
@@ -132,19 +133,28 @@
     }
   }
 
-  // ── Story's encore: after an end boss, ten seconds of Curtain Call, for bones
+  // ── the Adventure's bonus round, taken (07o_bonus.js has the cans and the offer)
   function startEncore(then) {
-    game.phase = "encore"; game.run.encoreEnd = game.time + ENCORE.secs + 1.8; game.run.encoreThen = then; game.run.encoreMakes = 0;
-    setRingMode("line", false); snapRing(); Sound.setAct("A");
-    stageCard(t("mode.encore.k"), t("mode.curtain.name"), t("mode.encore.s", { secs: ENCORE.secs, bones: ENCORE.bones }), 1.8, "gold");
+    game.phase = "encore"; game.run.encoreEnd = game.time + CANS.secs + 1.8; game.run.encoreThen = then; game.run.encoreMakes = 0; game.run.bonusT0 = game.throws;
+    profile.bonusRounds++; clearPickups(); clearDirectors();
+    setRingMode("line", false); ring.morph = 0; ring.frozen = { x: 0, y: RING_Y, z: RING_Z }; snapRing(); canLayout(); Sound.setAct("A");
+    stageCard(t("cans.k"), t("cans.name"), t("cans.rule", { n: cans.length, secs: CANS.secs }), 1.8, "gold");
     mortySays("encore", { priority: true }); updateHud();
   }
-  function encoreMake() { if (game.phase !== "encore") return; game.run.encoreMakes++; addBones(ENCORE.bones); game.run.bossBones = (game.run.bossBones || 0) + ENCORE.bones; }
+  function encoreMake() { if (game.phase === "encore") game.run.encoreMakes++; }
   function encoreDone() {
     if (game.phase !== "encore") return;
-    const then = game.run.encoreThen; game.run.encoreEnd = null; game.run.encoreThen = null;
-    stageCard(t("mode.encore.done"), t("mode.encore.made", { n: game.run.encoreMakes || 0 }), t("mode.encore.paid", { bones: (game.run.encoreMakes || 0) * ENCORE.bones }), 1.6, "gold");
-    cine("mini-out", 1.6, () => { if (then) then(); }, 0);
+    const then = game.run.encoreThen, n = cans.filter(c => c.down).length, total = cans.length, clear = total > 0 && n === total, stage = game.stage;
+    game.run.encoreEnd = null; game.run.encoreThen = null;
+    const bones = n * CANS.per + (clear ? canClearBonus(stage) : 0); addBones(bones); game.run.bossBones = (game.run.bossBones || 0) + bones; game.run.canBones = (game.run.canBones || 0) + bones;
+    const P = canPrize(stage), key = P ? `${CAN_PRIZES[stage - 1][0]}:${P.id}` : "", had = !key || profile.unlocked.includes(key);
+    if (clear) { profile.canClears++; profile.canAlley = profile.canAlley || {}; profile.canAlley[stage] = (profile.canAlley[stage] || 0) + 1; checkUnlocks(); }
+    const won = !had && profile.unlocked.includes(key);
+    if (won) game.run.prizes = (game.run.prizes || []).concat(key);
+    stageCard(clear ? t("cans.clear") : t("cans.time"), t("cans.count", { n, total }), t("cans.paid", { bones }) + (won ? " · " + t("cans.won", { name: P.name }) : ""), 2.2, "gold");
+    Sound.toon(clear ? "fanfare" : "xylo"); Telemetry.emit("bonus_done", { stage, cans: n, clear, prize: won ? key : "" });
+    cine("mini-out", 2.2, () => { clearCans(); ring.frozen = null; if (then) then(); }, 0);
+    persist(); updateHud();
   }
 
   // ── the HUD's progress bar, mode by mode: a clock for Curtain Call and the encore, a reach for Longshot, the throws
@@ -156,9 +166,9 @@
     progEl.classList.remove("fight", "half", "beat"); delete progEl.dataset.boss;
     const clock = game.phase === "encore" ? Math.max(0, (game.run.encoreEnd || game.time) - game.time) : m === "curtain" ? modeSt.clock : -1;
     progEl.classList.toggle("arcade", clock >= 0);
-    if (clock >= 0) { progArc.textContent = `0:${String(Math.ceil(clock)).padStart(2, "0")}`; progFill.style.width = (100 * clock / (game.phase === "encore" ? ENCORE.secs + 1.8 : MODES.curtain.clock)).toFixed(1) + "%"; }
+    if (clock >= 0) { progArc.textContent = `0:${String(Math.ceil(clock)).padStart(2, "0")}`; progFill.style.width = (100 * clock / (game.phase === "encore" ? CANS.secs + 1.8 : MODES.curtain.clock)).toFixed(1) + "%"; }
     else progSt.textContent = game.stage || 1;
-    if (game.phase === "encore") progLbl.textContent = t("prog.encore", { n: game.run.encoreMakes || 0, bones: (game.run.encoreMakes || 0) * ENCORE.bones });
+    if (game.phase === "encore") progLbl.textContent = t("prog.encore", { n: cans.filter(c => c.down).length, total: cans.length });
     else if (m === "curtain") progLbl.textContent = t("prog.curtain", { n: game.hits });
     else if (m === "longshot") { const best = modeRec("longshot").best / 10; progLbl.textContent = t("prog.longshot", { m: ring.z.toFixed(1), best: Math.max(best, modeSt.far).toFixed(1) }); progFill.style.width = (100 * clamp((ring.z - LONGSHOT.z0) / (LONGSHOT.zMax - LONGSHOT.z0), 0, 1)).toFixed(1) + "%"; }
     else if (m === "gallery") { const left = Math.max(0, MODES.gallery.throws - game.throws); progLbl.textContent = t("prog.gallery", { n: game.run.targets || 0, left }); progFill.style.width = (100 * left / MODES.gallery.throws).toFixed(1) + "%"; }

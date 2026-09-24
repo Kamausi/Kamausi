@@ -47,7 +47,7 @@
         if (k === "t" && game.state !== "ready") break;   // (a throw waits for the skull, as the player did)
         P.i++;
         if (k === "t") launch(a, b); else if (k === "s") skipReelCard(); else if (k === "c") takeContinue(a === 1 ? "ad" : "bones");
-        else if (k === "n") declineContinue("no"); else if (k === "e") endRun();
+        else if (k === "n") declineContinue("no"); else if (k === "e") endRun(); else if (k === "b") takeBonus(a === 1);
       }
     },
     // a continue is offered exactly when the recording decided one

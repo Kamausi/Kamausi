@@ -147,7 +147,7 @@
       if (kind === "title") b.innerHTML += `<span class="t-name">${it.name}</span><span class="sub">${it.req ? REQ_TEXT[it.req[0]](it.req[1]) : it.season ? t("season.vaultState", { n: SEASONS[it.season].n }) : "Where everyone starts"}</span><span class="state">${state}</span>`;
       else { const cv = document.createElement("canvas"); b.appendChild(cv); b.insertAdjacentHTML("beforeend", `<span>${it.name}</span><span class="state">${state}</span>`); drawItemIcon(cv, kind, it.id); }
       if (!usable) b.insertAdjacentHTML("beforeend", '<svg class="lock" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-lock"/></svg>');
-      if (it.shame || it.boss || it.shop || it.souls || it.season) b.insertAdjacentHTML("beforeend", `<span class="ribbon ${it.shame ? "shame" : it.boss ? "boss" : it.souls ? "soul" : it.season ? "season" : "shop"}">${it.shame ? "Shame" : it.boss ? "Boss" : it.souls ? "Souls" : it.season ? t("season.ribbon") : "Cart"}</span>`);
+      if (it.shame || it.boss || it.prize || it.shop || it.souls || it.season) b.insertAdjacentHTML("beforeend", `<span class="ribbon ${it.shame ? "shame" : it.boss ? "boss" : it.prize ? "prize" : it.souls ? "soul" : it.season ? "season" : "shop"}">${it.shame ? "Shame" : it.boss ? "Boss" : it.prize ? "Prize" : it.souls ? "Souls" : it.season ? t("season.ribbon") : "Cart"}</span>`);
       if (fresh.includes(kind + ":" + it.id)) b.insertAdjacentHTML("beforeend", '<span class="new" aria-hidden="true"></span>');
       grid.appendChild(b);
     }
@@ -183,7 +183,7 @@
     const need = (it.price || 0) - profile.bones, btn = $("buyBtn");
     $("buyName").textContent = s.kind === "title" ? it.name : `${it.name} ${KIND_LABEL[s.kind]}`;
     $("buyRar").textContent = `${starsText(it)} ${STAR_NAME[starsOf(it)]}`; $("buyRar").className = "rar-name t-" + rarityOf(it);
-    $("buySub").textContent = it.shop ? "Only sold at Mort's Curio Cart" : it.req ? `${it.price ? "Or free: " : it.shame ? "Hall of Shame: " : it.boss ? "Boss prize: " : "Earn it: "}${REQ_TEXT[it.req[0]](it.req[1]).toLowerCase()} · ${fmt(Math.min(statNow(it.req[0]), it.req[1]))}/${fmt(it.req[1])}` : "Bones only · trying it on above";
+    $("buySub").textContent = it.shop ? "Only sold at Mort's Curio Cart" : it.req ? `${it.price ? "Or free: " : it.shame ? "Hall of Shame: " : it.boss ? "Boss prize: " : it.prize ? "Can Alley prize: " : "Earn it: "}${REQ_TEXT[it.req[0]](it.req[1]).toLowerCase()} · ${fmt(Math.min(statNow(it.req[0]), it.req[1]))}/${fmt(it.req[1])}` : "Bones only · trying it on above";
     if (it.souls) { $("buySub").textContent = t("souls.vaultSub"); btn.disabled = false; btn.textContent = t("souls.visit"); return; }
     if (it.shop) { btn.disabled = false; btn.textContent = "Visit the Curio Cart"; return; }
     if (!it.price) { btn.disabled = true; btn.textContent = "Earned, not sold"; return; }

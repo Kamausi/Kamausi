@@ -11,7 +11,7 @@
       case "careerLevel": return levelFor(profile.xp);   // (04h_career.js)
       case "goldShots": return goldShots();              // (09n_mastery.js)
       case "shards": return profile.fragments.length;   // (the Black Ring's shards)
-      default: return k.startsWith("beat:") ? profile.bossLog[k.slice(5)] || 0 : profile[k] || 0;   // (beat:<boss>: how often that boss has fallen)
+      default: return k.startsWith("beat:") ? profile.bossLog[k.slice(5)] || 0 : k.startsWith("cans:") ? (profile.canAlley || {})[k.slice(5)] || 0 : profile[k] || 0;   // (beat:<boss>: how often that boss has fallen; cans:<map>: Can Alley cleared after it)
     }
   }
   const findItem = (kind, id) => CATALOG[kind] && CATALOG[kind].find(i => i.id === id);

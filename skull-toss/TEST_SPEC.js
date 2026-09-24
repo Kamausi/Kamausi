@@ -217,7 +217,7 @@
   });
 
   // ── Cosmetics ─────────────────────────────────────────────
-  const ZERO = { bones: 0, bonks: 0, misses: 0, clutch: 0, bonesTotal: 0, makes: 0, best: 0, perfects: 0, rims: 0, bestStreak: 0, bestPerfStreak: 0, peakLives: 0, games: 0, points: 0, throws: 0, unlocked: [], boardBest: null, fragments: [], bossLog: {} };
+  const ZERO = { canAlley: {}, canClears: 0, cansDown: 0, bonusRounds: 0, bones: 0, bonks: 0, misses: 0, clutch: 0, bonesTotal: 0, makes: 0, best: 0, perfects: 0, rims: 0, bestStreak: 0, bestPerfStreak: 0, peakLives: 0, games: 0, points: 0, throws: 0, unlocked: [], boardBest: null, fragments: [], bossLog: {} };
   for (const [k, v] of Object.entries(T.profile())) if (typeof v === "number" && !(k in ZERO) && k !== "updatedAt" && k !== "schema") ZERO[k] = k === "bestStage" ? 1 : 0;   // every other counter too
   ZERO.achievements = T.achievements().map(a => a.id); ZERO.arcade = {};   // (all achievements in hand, so none pays out in the middle of a bones test)
   ZERO.shots = {}; ZERO.modes = {}; ZERO.met = []; ZERO.secrets = []; ZERO.history = []; ZERO.mastery = []; ZERO.flawless = {}; ZERO.mapMakes = {}; ZERO.arcadeTables = {}; ZERO.lastIni = ""; ZERO.streakLast = ""; ZERO.firsts = [];   // (v25–v27: signature shots, mode records, what the Codex has noted)
@@ -225,13 +225,13 @@
   const DEF = { skull: "bone", eyes: "pie", teeth: "grin", paint: "none", trail: "dust", impact: "classic", ring: "hoop", aim: "bone", reel: "standard", title: "rookie", hat: "none", aura: "none", pole: "wood" };
   const dressDefault = () => { for (const [k, v] of Object.entries(DEF)) T.equip(k, v); };
   test("Skull Vault: thirteen shelves (hats, auras and poles are new), over 350 things, titles earned not bought", () => {
-    const c = T.catalog(), want = { skull: 40, eyes: 24, teeth: 18, paint: 32, trail: 34, impact: 20, ring: 24, aim: 16, reel: 10, title: 49, hat: 52, aura: 31, pole: 21 };   // (titles: six career-level ones, v31, and the Shot Doctor, v32)
+    const c = T.catalog(), want = { skull: 40, eyes: 24, teeth: 18, paint: 32, trail: 35, impact: 21, ring: 25, aim: 17, reel: 10, title: 50, hat: 53, aura: 32, pole: 21 };   // (titles: six career-level ones, v31, and the Shot Doctor, v32; v45: one Can Alley prize on seven shelves)
     for (const [k, n] of Object.entries(want)) { const L = (c[k] || []).filter(i => !i.souls && !i.season); assert(L.length === n, `${k}: ${L.length} items, wanted ${n} (besides the Soul Shop's, v30, and the seasons', v42)`); }
     const all = Object.values(c).flat(); assert(all.length >= 351, `only ${all.length} cosmetics (117 × 3 = 351)`);
     for (const k of Object.keys(c)) for (const it of c[k]) {
       assert(!it.s || (it.s >= 1 && it.s <= 4), `${k} ${it.id} has ${it.s} stars`);
       if (k === "title") assert(!it.price, `title ${it.id} is for sale`);
-      else if (it.shame || it.boss) assert(!it.price && it.req, `${k} ${it.id}: prizes are won, not sold`);
+      else if (it.shame || it.boss || it.prize) assert(!it.price && it.req, `${k} ${it.id}: prizes are won, not sold`);
       else if (it.souls) assert(!it.price && !it.req && it.souls > 0, `${k} ${it.id}: a Soul item is sold for Souls alone`);
       else if (it.season) assert(!it.price && !it.req, `${k} ${it.id}: a season look is earned on its Ticket, never sold`);
       else if (it.s) assert(it.price > 0, `${k} ${it.id} has no price`);
@@ -244,7 +244,7 @@
     for (const kind of ["skull", "ring", "aim", "trail"]) {
       const it = T.catalog()[kind].filter(i => i.req).pop();
       assert(!T.equip(kind, it.id), `equipped a locked ${kind} (${it.id})`);
-      T.setStats({ [statFor[it.req[0]] || it.req[0]]: it.req[1] });
+      T.setStats(it.req[0].startsWith("cans:") ? { canAlley: { [it.req[0].slice(5)]: it.req[1] } } : { [statFor[it.req[0]] || it.req[0]]: it.req[1] });   // (a Can Alley prize: that map cleared, v45)
       const got = T.checkUnlocks();
       assert(got.includes(kind + ":" + it.id), `${kind} ${it.id} did not unlock at ${it.req[0]} ${it.req[1]}`);
       assert(T.equip(kind, it.id) && T.cosmetics()[kind] === it.id, `could not equip ${kind} ${it.id} after unlocking`);
@@ -1544,13 +1544,34 @@
     assert(T.state().state === "over" && T.profile().modes.gallery.best >= 1, `ten throws and it's over (${T.state().state}, ${JSON.stringify(T.profile().modes.gallery)})`);
     T.setStats(ZERO); T.toTitle();
   });
-  test("The Adventure's encore (the mini-game): after an end boss, ten seconds where misses are free and every make pays bones, then the next reel", () => {
-    T.encore(true); T.setStats(ZERO); fresh(); toHit(25); T.step(2.6); T.hurtBoss(99); T.endThrow(); T.step(3.2); toHit(50); T.step(2.9); T.hurtBoss(99); T.endThrow(); T.step(6);
-    assert(T.modeState().phase === "encore", `the encore after Reel One's end boss (${T.modeState().phase})`);
-    const lives = T.state().lives, b0 = T.bones(); T.step(1.9);
-    T.calm(); T.freezeRing(0, C.RING_Y); throwAndSettle(2.5, C.RING_Y); assert(T.state().lives === lives, "a miss is free");
-    T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); assert(T.bones() === b0 + 5, `a make pays five bones (${T.bones() - b0})`);
-    T.unfreezeRing(); T.step(8); T.step(2); assert(T.state().stage === 2 && T.state().phase === "A", `then Reel Two (${T.state().stage}, ${T.state().phase})`);
+  // ── v45: Can Alley, the optional bonus round after an end boss ──
+  const toCanAlley = () => { T.encore(true); T.setStats(ZERO); fresh(); toHit(25); T.step(2.6); T.hurtBoss(99); T.endThrow(); T.step(3.2); toHit(50); T.step(2.9); T.hurtBoss(99); T.endThrow(); T.step(6); };
+  test("v45: after an end boss, Can Alley is offered (Play or Skip, fifteen seconds); skipping goes straight on to the next map", () => {
+    toCanAlley();
+    assert(T.bonusOffered() && T.state().state === "cine", `the offer after Reel One's end boss (${T.state().state})`);
+    assert(/Prize Tickets/.test($("bonusPrize").textContent) && /bones a can/.test($("bonusPay").textContent), `it says what it pays (${$("bonusPay").textContent} / ${$("bonusPrize").textContent})`);
+    T.bonus(false); assert(!T.bonusOffered(), "skipped");
+    T.step(4); assert(T.state().stage === 2 && T.state().phase === "A", `then Reel Two (${T.state().stage}, ${T.state().phase})`);
+    toCanAlley(); T.step(16); assert(!T.bonusOffered(), "left alone, the offer lapses");
+    T.step(4); assert(T.state().stage === 2, "and the run goes on");
+    T.encore(false); T.setStats(ZERO); T.toTitle();
+  });
+  test("v45: Can Alley: ten cans on a stand behind a still ring; the stack falls together; misses are free; the lot pays and wins the map's prize", () => {
+    toCanAlley(); T.bonus(true); T.step(1.9);
+    const m = T.modeState(), cs = T.cans();
+    assert(m.phase === "encore" && m.frozen && cs.length === 10 && cs.every(c => c.z > C.RING_Z), `a still ring and ten cans behind it (${m.phase}, ${cs.length})`);
+    assert([4, 3, 2, 1].every((n, row) => cs.filter(c => c.row === row).length === n), "stacked four, three, two, one");
+    const lives = T.state().lives, b0 = T.bones();
+    T.calm(); throwAndSettle(2.5, C.RING_Y); assert(T.state().lives === lives, "a miss is free");
+    const b1 = cs.find(c => c.row === 0 && c.i === 1); T.throwThrough(b1.via.x, b1.via.y, C.RING_Z); T.step(3);
+    const down = T.cans().filter(c => c.down).length;
+    assert(down >= 6, `a make into the second can of the bottom row brings down everything resting on it (${down} down)`);
+    T.cans().forEach((c, i) => { if (!c.down) T.knockCan(i); }); T.endThrow(); T.step(2.6);
+    const P = T.profile();
+    assert(T.bones() === b0 + 10 * 5 + 125 && P.canAlley[1] === 1 && P.canClears === 1, `ten cans and the clear pay (${T.bones() - b0} bones)`);
+    assert(P.unlocked.includes("aim:tickets"), "and the first clear after map 1 wins its prize");
+    T.step(3); assert(T.state().stage === 2 && T.state().phase === "A" && !T.cans().length, `then Reel Two (${T.state().stage}, ${T.state().phase})`);
+    assert(T.canPrizes().length === 7 && T.canPrizes().every(k => { const [kind, id] = k.split(":"); return T.findItem(kind, id); }), "seven prizes, one a map before the last, all in the Vault");
     T.encore(false); T.setStats(ZERO); T.toTitle();
   });
   test("The Play sheet: five more ways to play, locked until an end boss falls; Practice picks a map and its options", () => {

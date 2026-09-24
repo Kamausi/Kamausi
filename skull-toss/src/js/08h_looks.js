@@ -263,3 +263,29 @@
       const fl = 0.7 + 0.3 * Math.sin(t * 30); c.fillStyle = "#F5B83A"; c.beginPath(); c.moveTo(x - w * 0.4, bodyBot); c.quadraticCurveTo(x, bot + pw * 2 * fl, x + w * 0.4, bodyBot); c.fill(); c.fillStyle = "#FFF3C0"; c.beginPath(); c.moveTo(x - w * 0.2, bodyBot); c.quadraticCurveTo(x, bot - pw * 1.5 * fl, x + w * 0.2, bodyBot); c.fill(); } }
   };
   function glintAt2(c, x, y, r, k) { if (k < 0.03) return; c.fillStyle = `rgba(255,252,236,${k})`; star(c, x, y, r * k, 4, 0.18, 0); c.fill(); }
+
+  // ── v45: the Can Alley prizes (07o_bonus.js), one for the first clear after each end boss but the last
+  Object.assign(RINGS, { bigtop: { style: "bigtop", color: "#C8503A", rgb: "200,80,58", shade: "rgba(70,14,8,.6)", hi: "rgba(255,240,220,.85)" } });
+  Object.assign(RING_STYLES, {
+    bigtop(c, x, y, r, lw, R, t) {   // a big-top stripe, red and cream, with a run of marquee bulbs round the outside
+      c.save(); c.translate(x, y); inkArc(c, r, lw * 1.2, CREAM); const n = 20, seg = TAU / n; c.lineWidth = lw * 1.2; c.strokeStyle = R.color;
+      for (let i = 0; i < n; i += 2) { c.beginPath(); c.arc(0, 0, r, i * seg, (i + 1) * seg); c.stroke(); }
+      for (let i = 0; i < 16; i++) { const a = (i / 16) * TAU, on = (Math.floor(t * 4) + i) % 2, bx = Math.cos(a) * (r + lw * 0.95), by = Math.sin(a) * (r + lw * 0.95);
+        c.fillStyle = on ? "#FFE36A" : "#B8862A"; c.strokeStyle = INK; c.lineWidth = Math.max(1, lw * 0.14); c.beginPath(); c.arc(bx, by, Math.max(1.4, lw * 0.26), 0, TAU); c.fill(); c.stroke(); }
+      c.restore();
+    }
+  });
+  Object.assign(AIMS, { tickets: { color: "#E8505B", alt: "#F5D84A", shape: "star" } });
+  Object.assign(TRAILS, { midway: { line: "dots", color: "#F5D84A", emit: "confetti", rate: 1.4 } });
+  Object.assign(IMPACTS, { ringer: { word: "RINGER!", fill: "#E8505B", text: CREAM, bits: "confetti" } });
+  Object.assign(AURAS, { bulbs: { twinkle: 12, cols: ["#FFE36A", "#FFB43A", "#FFFFFF"] } });
+  Object.assign(HATS, {
+    tincan(c) {   // a tin can worn as a top hat, skull on the label, its lid still hanging on
+      const lw = c.lineWidth; c.fillStyle = "#B8BCC4"; c.beginPath(); c.rect(-0.46, -1.62, 0.92, 0.76); c.fill(); c.stroke();
+      c.fillStyle = "#C8503A"; c.fillRect(-0.46, -1.42, 0.92, 0.36); c.strokeRect(-0.46, -1.42, 0.92, 0.36);
+      c.fillStyle = CREAM; c.beginPath(); c.arc(0, -1.26, 0.1, 0, TAU); c.fill(); c.fillRect(-0.06, -1.2, 0.12, 0.07);
+      c.strokeStyle = "rgba(23,19,15,.45)"; c.lineWidth = 0.025; for (const yy of [-1.52, -0.96]) { c.beginPath(); c.moveTo(-0.46, yy); c.lineTo(0.46, yy); c.stroke(); }
+      c.strokeStyle = INK; c.lineWidth = lw; c.fillStyle = "#D8DCE2"; c.beginPath(); c.ellipse(0, -1.62, 0.46, 0.1, 0, 0, TAU); c.fill(); c.stroke();
+      c.save(); c.translate(0.46, -1.62); c.rotate(-0.9); c.beginPath(); c.ellipse(0.3, 0, 0.3, 0.08, 0, 0, TAU); c.fill(); c.stroke(); c.restore();
+    }
+  });

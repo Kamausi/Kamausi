@@ -149,7 +149,7 @@
     profile.bossKills++; if (boss.flawless) { profile.bossFlawless++; profile.flawless[boss.kind] = 1; } game.run.bosses++;
     profile.bossLog[boss.kind] = (profile.bossLog[boss.kind] || 0) + 1;
     profile.bestStage = Math.max(profile.bestStage, game.stage + 1);
-    // the corrected roadmap's progression: END BOSS → BODY-PART REWARD → BLACK RING SHARD → MINI-GAME → NEXT MAP
+    // the corrected roadmap's progression: END BOSS → BODY-PART REWARD → BLACK RING SHARD → BONUS ROUND (optional) → NEXT MAP
     const M = mapData(game.stage), frag = M.fragment, fresh = !profile.fragments.includes(frag), part = BODY_PART[boss.kind], partKey = part ? part.kind + ":" + part.id : "";
     if (fresh) profile.fragments.push(frag);
     game.run.fragments = (game.run.fragments || []).concat(frag);
@@ -175,7 +175,7 @@
       updateHud();
     };
     // the boss goes down, then (Story) the encore: ten seconds of Curtain Call for bones (07i_modes.js), then the next map
-    cine("boss-out", 2.8, () => { boss = null; seeds.length = 0; obstaclesSync(true); shardCard(() => { if (encoreOn()) startEncore(nextMap); else nextMap(); }); }, 0.4);   // the mini-game: the encore (07i_modes.js)
+    cine("boss-out", 2.8, () => { boss = null; seeds.length = 0; obstaclesSync(true); shardCard(() => { if (encoreOn()) offerBonus(nextMap); else nextMap(); }); }, 0.4);   // the bonus round: Can Alley, if you want it (07o_bonus.js)
     checkUnlocks(); persist(); updateHud();
     challenge("bosses", 1);
   }
