@@ -69,6 +69,7 @@
     impact(TARGET_WORD[T.kind] || "DING!", p.x, p.y - U * 0.05, { fill: GOLD, text: INK, scale: 0.55, bits: false });
     flyPoints(`+${fmtN(pts)}`, p.x, p.y, false); Sound.toon(TARGET_SOUND[T.kind] || "ding", panOf(P.x));
     Telemetry.emit("target", { kind: T.kind, stage: game.stage }); challenge("targets", 1);
+    targetShot(p.x, p.y);   // a make that flew on into it: Two for One (07h_shots.js)
   }
 
   // ── hazards: each map's mechanic (src/maps: mechanic.kind), tuned by the tier. Wind blows through the flight; fog
@@ -147,8 +148,9 @@
   }
   function hazardCheck(s, prev) {
     for (const h of hazardBodies()) {
-      if (sweptDist(prev, s.pos, h) > SKULL_R + h.r) continue;
-      if (powerOn("ghost")) { if (!h.ghosted) { h.ghosted = true; usePower("ghost"); s.ghosted = 1; const p = project(h.x, h.y, h.z); caption("BOO! Phased through", p.x, p.y - U * 0.06); Sound.toon("poof"); } continue; }
+      const dd = sweptDist(prev, s.pos, h);
+      if (dd > SKULL_R + h.r) { if (dd < SKULL_R + h.r + NEAR_PASS && !game.result) s.close = true; continue; }   // a near pass (Thread the Needle)
+      if (powerOn("ghost")) { if (!h.ghosted) { h.ghosted = true; usePower("ghost"); s.ghosted = 1; const p = project(h.x, h.y, h.z); caption(t("result.ghost.caption"), p.x, p.y - U * 0.06); Sound.toon("poof"); } continue; }
       const p = project(s.pos.x, s.pos.y, s.pos.z);
       s.p0 = { ...s.pos }; s.t = 0; s.v0 = { x: (s.pos.x - h.x) * 6 + (h.kind === "bat" ? h.dir * 2 : 0), y: 2.4, z: -2 }; s.crossed = true; s.spin *= -2; s.ax = 0;
       if (h.kind === "balloon") { h.y = 9; Sound.toon("pop", panOf(h.x)); }

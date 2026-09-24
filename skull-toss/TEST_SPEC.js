@@ -1396,6 +1396,66 @@
     T.toTitle();
   });
 
+  // ── v25: signature shots and the cartoon camera ──
+  const shotAt = (x, y, z = C.RING_Z) => { T.calm(); T.freezeRing(x, y, z); assert(T.throwThrough(x, y, z), "throw refused"); T.step(2.5); return T.lastShots(); };
+  T.shots(true);
+  test("Signature shots by where the ring was: dead centre, a Long Bomb, Point Blank, the Top Corner; each pays and is counted", () => {
+    T.setStats(ZERO); fresh(); const s0 = T.state().score;
+    let s = shotAt(0, C.RING_Y); assert(s.includes("deadcentre") && T.profile().shots.deadcentre === 1, `a perfect through the middle is Dead Centre (${s})`);
+    assert(T.state().score === s0 + 250 + 450, `250 for the perfect, 150 × rarity 3 for the shot (${T.state().score})`);
+    s = shotAt(0.2, 2.3, 8.0); assert(s.includes("longbomb") && !s.includes("pointblank"), `a ring at 8 m is a Long Bomb (${s})`);
+    s = shotAt(0, 2.3, 4.7); assert(s.includes("pointblank"), `a ring at 4.7 m is Point Blank (${s})`);
+    s = shotAt(2.0, 2.3, 6.0); assert(s.includes("corner"), `a ring at the frame's edge is the Top Corner (${s})`);
+    T.calm(); T.freezeRing(0.6, 2.5, 6.0); T.throwThrough(0.6 + holeClear(T.state().ring.rc) * 0.6, 2.5, 6.0); T.step(2.5);
+    assert(T.state().lastResult.kind === "swish" && !T.lastShots().length, `an ordinary swish in the middle of the space earns nothing (${T.lastShots()})`);
+    T.toTitle();
+  });
+  test("Signature shots by what you did: led it, rode the wind, threaded a hazard, flew on into a target, phased through", () => {
+    T.setStats(ZERO); fresh(); T.calm(); T.freezeRing(-1.6, C.RING_Y); T.throwThrough(0.2, C.RING_Y, C.RING_Z); T.freezeRing(0.2, C.RING_Y); T.step(2.5);
+    assert(T.lastShots().includes("leading"), `leading a ring 1.8 m is Leading Man (${T.lastShots()})`);
+    fresh(); T.setStage(3); T.freezeRing(0.8, C.RING_Y); T.setWind(2.4); throwAndSettle(0, C.RING_Y);
+    assert(T.state().lastResult.make && T.lastShots().includes("windrider"), `carried 0.8 m by the wind is Wind Rider (${T.lastShots()})`);
+    fresh(); T.setStage(6); T.freezeRing(0, C.RING_Y); let a = T.aimFor(0, C.RING_Y, C.RING_Z), q = T.skullPathAt(a.AX, a.AY, 3.6 / (C.RING_Z / C.FLIGHT_T));
+    T.plantHazard("balloon", q.x + 0.75, q.y, q.z); T.throwAt(a.AX, a.AY); T.step(2.5);
+    assert(T.state().lastResult.make && T.lastShots().includes("needle"), `a balloon passed by a whisker is Thread the Needle (${T.state().lastResult.kind}, ${T.lastShots()})`);
+    fresh(); T.setStage(2); T.freezeRing(0, C.RING_Y); a = T.aimFor(0, C.RING_Y, C.RING_Z); q = T.skullPathAt(a.AX, a.AY, (C.RING_Z + 2) / (C.RING_Z / C.FLIGHT_T));
+    T.plantTarget(q.x, q.y, q.z); T.throwAt(a.AX, a.AY); T.step(2.5);
+    assert(T.lastShots().includes("twofer"), `a make that flies on into a target is Two for One (${T.lastShots()})`);
+    fresh(); T.givePower("ghost"); T.freezeRing(0, C.RING_Y); const r = T.state().ring; throwAndSettle(r.x + r.rc - 0.02, r.y);
+    assert(T.lastShots().includes("phantom"), `a Ghost Toss through the rim is Phantom (${T.state().lastResult.kind}, ${T.lastShots()})`);
+    T.toTitle();
+  });
+  test("The big ones: a Hat Trick, a Buzzer Beater and a Knockout Blow hold the reel; the rarest takes the card", () => {
+    T.setStats(ZERO); fresh(); shotAt(0, C.RING_Y); shotAt(0, C.RING_Y); const s = shotAt(0, C.RING_Y);
+    assert(s.includes("hattrick"), `three perfects running is a Hat Trick (${s})`);
+    fresh(); T.setLives(1); T.clearCamLog(); const b = shotAt(0, C.RING_Y);
+    assert(b.includes("buzzer") && b.includes("deadcentre") && T.bursts().some(w => /BUZZER BEATER/.test(w)), `a perfect on the last skull: the Buzzer Beater takes the card (${b}, ${T.bursts()})`);
+    assert(T.camfx().log.includes("hold"), `a big one holds the reel (${T.camfx().log})`);
+    fresh(); toHit(25); T.step(3); T.hurtBoss(T.boss().max - 1); const r = T.state().ring;
+    const k = shotAt(r.x, r.y, r.z); assert(k.includes("knockout") && T.boss().dead, `a perfect that puts a boss down is a Knockout Blow (${k})`);
+    T.toTitle();
+  });
+  test("The cartoon camera: a crash zoom punches in, a whip pan slides, a boss walks on to a Dutch tilt, and Camera Still leaves it level", () => {
+    T.setStats(ZERO); fresh(); T.calm(); T.freezeRing(0.2, 2.3, 8.0); T.throwThrough(0.2, 2.3, 8.0); T.step(1.2);
+    let f = T.camfx(); assert(f.kind === "crash" && /scale\(1\.0[1-9]/.test(f.css), `a Long Bomb crash-zooms (${JSON.stringify(f)})`);
+    T.step(1.5); T.freezeRing(2.0, 2.3, 6.0); T.throwThrough(2.0 - holeClear(T.state().ring.rc) * 0.6, 2.3, 6.0); T.step(1.1);   // (a swish: a perfect would be Dead Centre, which outranks it)
+    f = T.camfx(); assert(f.kind === "whip" && /translateX\(-?[1-9]/.test(f.css), `the Top Corner whips the frame (${JSON.stringify(f)})`);
+    T.step(2); assert(T.camfx().css === "", "and it comes back to rest");
+    fresh(); T.calm(); T.setHits(25); T.stageCheck(); T.step(0.4); f = T.camfx(); assert(f.kind === "dutch" && /rotate\((?!0\.00)/.test(f.css), `the mini-boss walks on to a Dutch tilt (${JSON.stringify(f)})`);
+    T.step(2); assert(T.camfx().css === "", "then the frame comes level");
+    T.setSetting("camera", "still"); fresh(); T.calm(); T.freezeRing(0.2, 2.3, 8.0); T.throwThrough(0.2, 2.3, 8.0); T.step(1.2);
+    f = T.camfx(); assert(!f.kind && f.css === "" && T.lastShots().includes("longbomb"), `Still: the shot counts, the frame stays put (${JSON.stringify(f)})`);
+    T.setSetting("camera", "full"); T.toTitle();
+  });
+  test("The profile lists the twelve signature shots, what each takes and how often you've made it", () => {
+    T.setStats({ ...ZERO, shots: { deadcentre: 3, longbomb: 1 } }); T.toTitle(); T.openSheet("profile");
+    const rows = [...document.querySelectorAll("#stats .stats.shots .stat")];
+    assert(rows.length === 12 && rows.filter(r => !r.classList.contains("unseen")).length === 2 && /2\/12/.test(document.querySelector("#stats").textContent), `${rows.length} rows`);
+    assert(rows.every(r => r.querySelector("small").textContent.length > 10), "each says what it takes");
+    T.closeSheet(); T.setStats(ZERO); T.toTitle();
+  });
+  T.shots(false);
+
   T.sandbox(false); T.start(); T.pause(false);  // leave the game playable, player's saved data untouched
   window.__skullTossResults = results;
   const passed = results.filter(r => r.pass).length;

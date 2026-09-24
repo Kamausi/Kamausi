@@ -118,13 +118,16 @@
       ["Career", "", [["Best score", N(P.bestScore)], ["Most hits in a run", P.best], ["Highest stage", P.bestStage || 1], ["Runs", N(P.games)], ["Points, all time", N(P.scoreTotal)], ["Time played", mins(P.playTime)]]],
       ["Tossing", "", [["Throws", N(P.throws)], ["Hits", N(P.makes)], ["Accuracy", pct(P.makes, P.throws)], ["Perfects", N(P.perfects)], ["Perfect rate", pct(P.perfects, P.makes)], ["Rim-ins", N(P.rims)],
         ["Best combo", `×${P.bestStreak}`], ["Perfects in a row", P.bestPerfStreak], ["Most skulls held", P.peakLives], ["Last-skull hits", N(P.clutch)], ["Times you grabbed Morty", N(P.grabs)]]],
-      ["Bosses", "", [["Crow King beaten", P.miniKills], ["…without a miss", P.miniFlawless], ["Pumpkin King beaten", P.bossKills], ["…without a miss", P.bossFlawless]]],
+      ["Bosses", "", [["Mini-bosses beaten", P.miniKills], ["…without a miss", P.miniFlawless], ["End bosses beaten", P.bossKills], ["…without a miss", P.bossFlawless], ["Morty's pieces back", `${P.fragments.length}/${MAP_COUNT}`], ["Story finished", N(P.storyClears)]]],
       ["Power-ups", "", [["Grabbed", N(P.powerups)], ["Cursed skulls taken", P.cursed], ["Second chances used", P.saves]]],
       ["Hall of Shame", "shame", [["Misses", N(P.misses)], ["Bonks", N(P.bonks)], ["Wide", N(P.wides)], ["Too high", N(P.overs)], ["Too low", N(P.lows)], ["Fell short", N(P.shorts)],
         ["Hit the post", N(P.posts)], ["Clanked off the rim", N(P.clanks)], ["Seeds to the face", N(P.seeds)], ["Runs without a hit", N(P.zeroRuns)], ["Out in 5 throws", N(P.quickDeaths)]]],
       ["Bones & the Vault", "", [["Bones earned", N(P.bonesTotal)], ["Bones spent", N(P.bonesSpent)], ["Curio Cart buys", N(P.shopBuys)], ["Coffins opened", N(P.coffins)], ["Vault", `${countUnlocked()}/${countAll()}`], ["Prizes for failing", `${countWon("shame")}/${countKind("shame")}`], ["Boss prizes", `${countWon("boss")}/${countKind("boss")}`]]]
     ];
-    $("stats").innerHTML = groups.map(([h, cls, rows]) => `<h3 class="stat-h ${cls}">${h}</h3><dl class="stats">${rows.map(([k, v]) => `<div class="stat"><dt>${k}</dt><dd>${v}</dd></div>`).join("")}</dl>`).join("");
+    // the signature shots (07h_shots.js): each one's name and what it takes, and how often you've made it
+    const shotRows = SHOT_IDS.map(id => `<div class="stat shot${P.shots[id] ? "" : " unseen"}"><dt>${t(`shot.${id}.name`)}<small>${t(`shot.${id}.desc`)}</small></dt><dd>${P.shots[id] ? N(P.shots[id]) : "—"}</dd></div>`).join("");
+    $("stats").innerHTML = groups.map(([h, cls, rows]) => `<h3 class="stat-h ${cls}">${h}</h3><dl class="stats">${rows.map(([k, v]) => `<div class="stat"><dt>${k}</dt><dd>${v}</dd></div>`).join("")}</dl>`).join("")
+      + `<h3 class="stat-h">${t("shot.heading")} <span class="n">${SHOT_IDS.filter(id => P.shots[id]).length}/${SHOT_IDS.length}</span></h3><dl class="stats shots">${shotRows}</dl>`;
   }
   const countKind = flag => KINDS.reduce((s, k) => s + CATALOG[k].filter(it => it[flag]).length, 0);
   const countWon = flag => KINDS.reduce((s, k) => s + CATALOG[k].filter(it => it[flag] && canUse(k, it)).length, 0);

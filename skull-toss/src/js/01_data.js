@@ -248,7 +248,7 @@
     "powerups", "cursed", "saves", "bonesSpent", "shopBuys", "coffins", "playTime", "grabs", "arcadeRuns", "chalClaims", "achSeen", "storyClears", "targetHits", "hazardHits", "continues"];
   // arcade: the best on each map, keyed by map number ({ score, secs, hits, runs }); achievements: the ones unlocked
   const DEFAULT_PROFILE = { name: "", bones: 0, daily: null, weekly: null, monthly: null, unlocked: [], seen: [], achievements: [], arcade: {}, updatedAt: 0, board: false, bestStage: 1, boardBest: null,
-    fragments: [], bossLog: {} };   // fragments: Morty's pieces recovered (ids); bossLog: each boss beaten, how many times
+    fragments: [], bossLog: {}, shots: {} };   // shots: each signature shot, how many times (07h_shots.js)   // fragments: Morty's pieces recovered (ids); bossLog: each boss beaten, how many times
   for (const k of STAT_KEYS) if (!(k in DEFAULT_PROFILE)) DEFAULT_PROFILE[k] = 0;
   const DEFAULT_COS = { skull: "bone", eyes: "pie", teeth: "grin", paint: "none", trail: "dust", impact: "classic", ring: "hoop", aim: "bone", reel: "standard", title: "rookie", updatedAt: 0 };
   let sandbox = null;   // while the spec runs, nothing is written to the player's storage or cloud
@@ -290,6 +290,8 @@
     out.fragments = Array.isArray(out.fragments) ? [...new Set(out.fragments.filter(f => typeof f === "string"))].slice(0, 16) : [];
     const log = {}; if (out.bossLog && typeof out.bossLog === "object") for (const [k, v] of Object.entries(out.bossLog)) if (/^[a-z]{2,16}$/.test(k)) log[k] = Math.max(0, Math.floor(Number(v) || 0));
     out.bossLog = log;
+    const sh = {}; if (out.shots && typeof out.shots === "object") for (const [k, v] of Object.entries(out.shots)) if (/^[a-z]{2,16}$/.test(k)) sh[k] = Math.max(0, Math.floor(Number(v) || 0));
+    out.shots = sh;
     return out;
   }
   function cleanArcade(a) {
@@ -321,6 +323,7 @@
     out.boardBest = b.boardBest && (!a.boardBest || b.boardBest.score > a.boardBest.score) ? b.boardBest : a.boardBest;
     out.fragments = [...new Set([...a.fragments, ...b.fragments])];
     out.bossLog = { ...a.bossLog }; for (const [k, v] of Object.entries(b.bossLog)) out.bossLog[k] = Math.max(out.bossLog[k] || 0, v);
+    out.shots = { ...a.shots }; for (const [k, v] of Object.entries(b.shots)) out.shots[k] = Math.max(out.shots[k] || 0, v);
     out.schema = Math.max(a.schema, b.schema);
     out.gift = a.gift || b.gift ? 1 : 0;
     out.updatedAt = Math.max(a.updatedAt, b.updatedAt);

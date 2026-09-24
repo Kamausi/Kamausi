@@ -256,6 +256,6 @@
     if (sheet === "customize") drawShopPreview(T, dt);
     if (sheet === "store") drawCart(T, dt);
     if (sheet === "challenges") { const s = Math.floor(T); if (s !== ui.tick) { ui.tick = s; tickChallenges(); } }
-    drawReelCard();
+    drawReelCard(); updateCamFx();
     filmFrame(now);
   }

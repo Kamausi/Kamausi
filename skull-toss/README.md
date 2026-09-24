@@ -1,8 +1,40 @@
-# SKULL TOSS v24
+# SKULL TOSS v25
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)), with a synthesised waltz standing in wherever they can't load.
+
+## New in v25: signature shots and the cartoon camera
+
+**Twelve signature shots.** Some makes deserve a name. A make is judged as it goes through the ring:
+
+| Shot | What it takes | Rarity |
+|---|---|---|
+| Knockout Blow | A perfect that puts a boss down | 5 |
+| Buzzer Beater | A perfect on your last skull | 5 |
+| Hat Trick | Three perfects running | 4 |
+| Two for One | A make that flies on into a bonus target | 4 |
+| Thread the Needle | A make that passes within 45 cm of a bat, bone, balloon, pendulum or seed | 4 |
+| Dead Centre | A perfect in the middle 30% of the perfect window | 3 |
+| Long Bomb | A make through a ring 7.6 m out or more | 3 |
+| Wind Rider | A make the wind carried 60 cm or more | 3 |
+| Leading Man | A make that led a moving ring 1.4 m or more | 2 |
+| Point Blank | A make through a ring 5 m out or less | 2 |
+| Top Corner | A make through a ring at the edge of the ring's space | 2 |
+| Phantom | A Ghost Toss that phased through the rim | 2 |
+
+Each pays 150 points × its rarity × the stage multiplier. Its name comes up over the lane. A throw can earn several: the rarest takes the card and the rest are counted under it ("and 1 more"). The first of each gets a toast, Morty has a line for them, and the Profile lists all twelve, what each takes and how often you've made it (the Shot Book will build on this).
+
+**The cartoon camera.** Moves the rostrum camera can't make, done on the whole painted frame so the HUD stays level:
+
+- **Crash zoom:** the frame punches in and springs back (Long Bomb, Dead Centre, Two for One…).
+- **Whip pan:** a fast slide with the picture smeared (Leading Man, Wind Rider, Thread the Needle, Top Corner).
+- **Dutch tilt:** the frame leans for a beat as a boss walks on.
+- **Hold:** the reel stops for half a second and an iris spot closes round the ring, then opens (Knockout Blow, Buzzer Beater, Hat Trick).
+
+Camera: Gentle halves them. Still (or reduced motion) leaves them out; the hold still holds, without the iris.
+
+Also: the Profile's boss stats now count all the mini-bosses and end bosses, plus Morty's pieces and story clears.
 
 ## New in v24: Morty has a personality, and every word has an ID
 
@@ -672,7 +704,7 @@ From the console, `SkullToss.debug.visualAnimation` lists the pose library (`pos
 
 ## Tests
 
-Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **146 checks**, covering:
+Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **151 checks**, covering:
 
 - **Layout, scoring and aiming.**
   - Everything is centred and every result is classified correctly.
@@ -769,3 +801,9 @@ Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to
   - Morty deals a pool like cards, with no repeats until it's done.
   - Big moments always get a line (a boss walking on, a boss down, the continue offer and taking it). Small ones wait out the cooldown. Twelve idle seconds get one nudge per lull.
   - His mood follows the run: nervous on the last skull, cocky on a streak, grumpy after misses.
+- **v25.**
+  - Dead Centre, Long Bomb, Point Blank and Top Corner come from where the ring was. Each pays 150 × rarity and is counted; an ordinary swish earns nothing.
+  - Leading Man, Wind Rider, Thread the Needle, Two for One and Phantom come from what the throw did.
+  - A Hat Trick, a Buzzer Beater and a Knockout Blow hold the reel, and the rarest shot takes the card.
+  - A crash zoom scales the frame, a whip pan slides it, and a boss walks on to a Dutch tilt. Each comes back to rest. Camera Still counts the shot and leaves the frame alone.
+  - The Profile lists the twelve shots, what each takes and how often you've made it.

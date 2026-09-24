@@ -34,7 +34,7 @@
     if (filmCv.width !== w || filmCv.height !== h) { filmCv.width = w; filmCv.height = h; film.w = W; film.h = H; film.last = 0; }
     const lvl = settings.film, R = REELS[cos.reel] || REELS.standard;
     const due = now - film.last > 83;
-    if (!due && !film.iris) return;
+    if (!due && !film.iris && !film.spot) return;
     if (due) { film.last = now; filmTick(R, lvl); }
     const c = fctx; c.setTransform(d, 0, 0, d, 0, 0); c.clearRect(0, 0, W, H);
     if (lvl !== "off" && !sandbox) {
@@ -61,6 +61,16 @@
       }
     }
     if (film.iris) drawIris(c, now);
+    if (film.spot) drawSpot(c, now);
+  }
+  // the iris spot: the picture closes to a circle round one thing, holds, and opens again (a signature shot's hold)
+  function irisSpot(x, y, dur = 0.9) { film.spot = { t0: performance.now(), x, y, dur: dur * 1000 }; }
+  function drawSpot(c, now) {
+    const S = film.spot, u = (now - S.t0) / S.dur; if (u >= 1) { film.spot = null; return; }
+    const max = Math.hypot(W, H), small = U * 0.3, k = u < 0.25 ? 1 - Math.pow(u / 0.25, 1.4) : u < 0.7 ? 0 : Math.pow((u - 0.7) / 0.3, 1.3);
+    const r = small + (max - small) * k;
+    c.fillStyle = "rgba(23,19,15,.88)"; c.beginPath(); c.rect(0, 0, W, H); c.arc(S.x, S.y, r, 0, TAU, true); c.fill();
+    c.strokeStyle = "rgba(242,231,201,.3)"; c.lineWidth = 2; c.beginPath(); c.arc(S.x, S.y, r, 0, TAU); c.stroke();
   }
   // the iris: the picture closes to a circle and opens on the next scene
   function irisTo(fn, cx = W / 2, cy = H / 2) {

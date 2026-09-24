@@ -185,3 +185,9 @@
 .ach-pop .s{font:700 11.5px/1.25 var(--ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ach-pop .r{flex:none;display:inline-flex;align-items:center;gap:4px;padding:4px 7px 2px;border-radius:6px;background:var(--mustard);border:2px solid var(--ink);font:18px/1 var(--num)}
 .ach-pop .r svg{width:14px;height:14px}
+/* the signature shots on the profile: two to a row, what each takes under its name, the ones not yet made dimmed */
+#stats .stats.shots{grid-template-columns:repeat(2,1fr)}
+#stats .stat.shot dt{min-height:0}
+#stats .stat.shot dt small{display:block;margin-top:3px;font:700 10px/1.25 var(--ui);letter-spacing:0;text-transform:none;color:var(--ink);opacity:.7}
+#stats .stat.shot.unseen{opacity:.55}
+.stat-h .n{font:16px/1 var(--num);color:var(--cream-dim)}

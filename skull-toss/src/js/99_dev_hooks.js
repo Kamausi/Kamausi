@@ -18,7 +18,8 @@
     fakeAds(on) { Ads = on ? { available: () => true, show: () => ({ then: f => f(true) }) } : { available: () => false, show: () => Promise.resolve(false) }; },   // (a synchronous reel, for the spec)
     continues(on = true) { if (sandbox) sandbox.contOn = on; },
     cards(on = true) { if (sandbox) sandbox.cardsOn = on; reelSt.leaderShown = false; reelSt.shown = []; reelSt.cues = []; },
-    skipReel: () => skipReelCard(), setStreak(n) { game.streak = n; }, bossInfo: () => Object.fromEntries(BOSS_IDS.map(id => [id, { ...BOSS_INFO[id] }])),
+    skipReel: () => skipReelCard(), shots(on = true) { if (sandbox) sandbox.shotsOn = on; }, lastShots: () => (skull.shots || []).slice(), shotList: () => SHOTS.map(S => ({ id: S.id, rare: S.rare, cam: S.cam })),
+    camfx: () => (updateCamFx(), { kind: camfx.kind, log: camfx.log.slice(), css: cvs.style.transform, spot: !!film.spot }), clearCamLog() { camfx.log = []; }, setStreak(n) { game.streak = n; }, bossInfo: () => Object.fromEntries(BOSS_IDS.map(id => [id, { ...BOSS_INFO[id] }])),
     tr: (id, vars) => t(id, vars), lineIds: prefix => lineIds(prefix).slice(),
     reel: () => ({ card: reelSt.card ? reelSt.card.kind : null, n: reelSt.card ? reelSt.card.n || 0 : 0, shown: reelSt.shown.slice(), cues: reelSt.cues.length, title: $("rcTitle").textContent, reel: $("rcReel").textContent, hidden: reelEl.hidden, cine: game.cine ? game.cine.kind : null, dur: game.cine ? game.cine.dur : 0 }),
     snapOn(on = true) { if (sandbox) { sandbox.snapOn = on; sandbox.snap = null; } }, snapshot: () => readRunSnapshot(),

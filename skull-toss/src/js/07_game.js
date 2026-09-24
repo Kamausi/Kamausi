@@ -10,6 +10,7 @@
   function launch(AX, AY) {
     voice.quiet = game.time; voice.idleSaid = false;
     const v = aimVelocity(AX, AY);
+    Object.assign(skull, { launchRing: { x: ring.x, y: ring.y, z: ring.z }, ax0: windNow(), close: false, shots: [] });   // (what the signature shots read: 07h_shots.js)
     Object.assign(skull, { p0: { x: 0, y: START_Y, z: 0 }, v0: v, t: 0, crossed: false, resting: false, bounces: 0, ax: windNow(),
       spin: (1.3 + Math.abs(v.x) * 0.5) * (v.x < 0 ? -1 : 1), hang: 0, take: 0, alpha: 1, flightTime: 0, trail: [], spawn: 1, emit: 0, missed: false });
     skull.pos = { ...skull.p0 };
@@ -86,10 +87,10 @@
     s.crossed = true;
     const dx = s.p0.x - rp.x, dy = s.p0.y - rp.y, d = Math.hypot(dx, dy), zr = rp.z;
     const rc = ring.rc, inner = rc - RING_TUBE - SKULL_R, outer = rc + RING_TUBE + SKULL_R;
-    game.lastCross = { x: s.p0.x, y: s.p0.y, ringX: rp.x, ringY: rp.y, ringZ: zr, d, rc };
+    const perfR = inner * 0.38 * (powerOn("deadeye") ? 2 : 1);   // Deadeye: a perfect window twice as wide
+    game.lastCross = { x: s.p0.x, y: s.p0.y, ringX: rp.x, ringY: rp.y, ringZ: zr, d, rc, perfR, t: s.flightTime };
     const at = project(rp.x, rp.y, zr), pan = panOf(rp.x);
     const strength = Math.hypot(s.v0.x, s.v0.y, s.v0.z) / IMPACT_REF;   // how hard it arrives (1 = a normal throw)
-    const perfR = inner * 0.38 * (powerOn("deadeye") ? 2 : 1);   // Deadeye: a perfect window twice as wide
     const ux = d > 1e-6 ? dx / d : 0, uy = d > 1e-6 ? dy / d : 1;
     if (d <= inner) { const kind = d <= perfR ? "perfect" : "swish"; VisualSystem.triggerImpact(kind, { at, strength, pan }); resolve(kind, at, null, d); }
     else if (d >= outer) {
@@ -178,6 +179,7 @@
       if (powerOn("magnet")) magnetBones(at || { x, y });
       if (pickup && d != null && pickupHit(game.lastCross)) collectPickup(at);
       if (boss && !boss.dead) boss.hit(kind, at);
+      judgeShots(kind, x, y);   // a signature shot? (07h_shots.js)
       showCombo(game.streak);
       if (game.streak % 5 === 0 && game.lives < MAX_LIVES) { // every 5 in a row earns a skull, stacking up to five
         game.lives++; game.slots = Math.max(game.slots, game.lives); game.peakLives = Math.max(game.peakLives, game.lives);

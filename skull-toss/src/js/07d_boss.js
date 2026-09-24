@@ -286,8 +286,8 @@
       const e = { x: b.x - a.x, y: b.y - a.y, z: b.z - a.z }, ee = e.x * e.x + e.y * e.y + e.z * e.z;
       const u = ee > 1e-9 ? clamp(-(a.x * e.x + a.y * e.y + a.z * e.z) / ee, 0, 1) : 1;
       const d = Math.hypot(a.x + e.x * u, a.y + e.y * u, a.z + e.z * u);
-      if (d > SKULL_R + SEED_R) continue;
-      if (powerOn("ghost")) { if (!sd.ghosted) { sd.ghosted = true; usePower("ghost"); s.ghosted = 1; const p = project(sd.x, sd.y, sd.z); caption("BOO! Phased through", p.x, p.y - U * 0.06); Sound.toon("poof"); } continue; }
+      if (d > SKULL_R + SEED_R) { if (d < SKULL_R + SEED_R + NEAR_PASS && !game.result) s.close = true; continue; }
+      if (powerOn("ghost")) { if (!sd.ghosted) { sd.ghosted = true; usePower("ghost"); s.ghosted = 1; const p = project(sd.x, sd.y, sd.z); caption(t("result.ghost.caption"), p.x, p.y - U * 0.06); Sound.toon("poof"); } continue; }
       const p = project(s.pos.x, s.pos.y, s.pos.z);
       s.p0 = { ...s.pos }; s.t = 0; s.v0 = { x: (s.pos.x - sd.x) * 8 + sd.vx * 0.4, y: 2.5, z: -2.2 }; s.crossed = true; s.spin *= -2;
       VisualSystem.triggerImpact("seed", { at: project(ring.x, ring.y, ring.z), hit: p, strength: 1, pan: panOf(s.pos.x) });
