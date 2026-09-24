@@ -2155,6 +2155,21 @@
     T.gaWith(null); T.resetConsent(); T.analyticsOn(false); T.setStats(ZERO); T.toTitle();
   });
 
+  test("Firebase partly set up (no database or functions yet, or sign-in not switched on): the game plays on, and Google Analytics still works", async () => {
+    const stub = signIn => { const app = { auth: () => ({ currentUser: null, signInAnonymously: () => (signIn ? Promise.resolve({ user: { uid: "u1", displayName: "" } }) : Promise.reject(new Error("auth/admin-restricted-operation"))) }),
+      firestore: () => ({ doc: () => ({ onSnapshot: () => () => {}, get: () => Promise.resolve({ exists: false }) }) }), functions: () => ({ httpsCallable: () => () => Promise.resolve({ data: {} }) }) };
+      return { apps: [], initializeApp: () => app, app: () => app, auth: {}, firestore: {}, functions: {} }; };
+    const cfg = { apiKey: "k", projectId: "p", appId: "a", measurementId: "G-TEST" };
+    let r = await T.useFirebaseWith({ ...cfg, services: { firestore: false, functions: false } }, stub(true));
+    assert(r.kind === "firebase" && r.me === "u1" && !r.db && !r.call && r.ga && !r.souls, `signed in, no database or functions (${JSON.stringify(r)})`);
+    T.toTitle(); T.openSheet("souls"); assert(!$("soulsStatus").hidden && /opens when the game's server does/.test($("soulsStatus").textContent) && !/README/.test($("soulsStatus").textContent), `the Soul Shop waits politely (${$("soulsStatus").textContent})`); T.closeSheet();
+    r = await T.useFirebaseWith(cfg, stub(false));
+    assert(r.kind === "firebase" && !r.me && !r.db && !r.call && r.ga && /sign-in/.test(r.error), `sign-in off: no server parts, but analytics can run (${JSON.stringify(r)})`);
+    r = await T.useFirebaseWith(cfg, stub(true));
+    assert(r.me === "u1" && r.db && r.call && r.souls, `everything up (${JSON.stringify(r)})`);
+    delete window.firebase; T.noServer(); T.toTitle();
+  });
+
   (async () => {
     for (const q of queue) {
       if (q.step) { q.fn(); continue; }

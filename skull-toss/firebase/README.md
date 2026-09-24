@@ -20,6 +20,12 @@ page, so the spec drives the real server logic.
    (`apiKey`, `authDomain`, `projectId`, `appId`, and `measurementId` if Google Analytics is on) into
    `src/firebase.config.json`. Only the release builds carry it: the dev build (the spec, the matrix, the soak bot)
    stays off the real project unless built with `--live`.
+
+   **Bringing it up in stages.** `services` in the same file says which parts exist yet: `{ "firestore": false,
+   "functions": false }` means hosting, anonymous sign-in and Google Analytics only (all on the free Spark plan). The
+   game then treats the rest as absent, as it does with no server at all. Saves stay on the device, the board is
+   local, and the Soul Shop says it opens later. Set `firestore` to `true` once the database exists (step 3), and
+   `functions` to `true` once the functions are deployed (step 6, which needs Blaze). Rebuild and deploy each time.
 2. **Authentication:** enable **Anonymous** sign-in. You can add Google, Apple and others later; an anonymous
    account can be linked to one without losing anything.
 3. **Firestore:** create a database in production mode.

@@ -1,5 +1,5 @@
 {
-  "_doc": "Your Firebase web app's config (Firebase console → Project settings → Your apps → Web app). Fill in apiKey, authDomain, projectId and appId (and measurementId for Google Analytics) and rebuild; left empty, the game runs without a server. See firebase/README.md.",
+  "_doc": "Your Firebase web app's config (Firebase console → Project settings → Your apps → Web app); left empty, the game runs without a server. services says which parts of the project are up yet: set firestore to true once the Firestore database exists, and functions to true once the Cloud Functions are deployed (they need the Blaze plan). See firebase/README.md.",
   "apiKey": "AIzaSyDAAEmkMcdY75U7tpN1cQlTzAjMTyQT0Bg",
   "authDomain": "skull-toss-c7099.firebaseapp.com",
   "projectId": "skull-toss-c7099",
@@ -7,5 +7,9 @@
   "messagingSenderId": "1059647779946",
   "appId": "1:1059647779946:web:7ad687da7dc45248c54613",
   "measurementId": "G-36H6K36F8J",
-  "functionsRegion": "us-central1"
+  "functionsRegion": "us-central1",
+  "services": {
+    "firestore": false,
+    "functions": false
+  }
 }

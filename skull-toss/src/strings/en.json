@@ -737,7 +737,7 @@
  "souls.error": "Can't reach the server just now. Your Souls are safe; try again in a moment.",
  "souls.inApp": "Soul packs are bought in the app",
  "souls.loading": "Checking your wallet…",
- "souls.offline": "Souls live on the server. Connect a Firebase project (see firebase/README.md), or play where the game is published with one, to use them.",
+ "souls.offline": "The Soul Shop opens when the game's server does. Everything else plays as normal, and your bones and looks are safe.",
  "souls.owed": "A refunded pack left {n} Souls owed. New Souls pay it off first; the shop opens again once it's paid.",
  "souls.pack": "◆ {n}",
  "souls.packGot": "+{n} Souls",

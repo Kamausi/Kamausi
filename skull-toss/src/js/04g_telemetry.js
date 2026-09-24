@@ -116,7 +116,7 @@
   let gaTest = null;   // (the spec's stand-in: { measurementId, sdk })
   const GA = {
     state: "off", sdk: null, pending: [],   // state: off | loading | on | failed
-    config: () => (gaTest || (Backend.kind === "firebase" && FIREBASE_CONFIG) || null),
+    config: () => (gaTest || (Backend.kind === "firebase" && Backend.app && Backend.cfg) || null),   // (the app is enough: no database or sign-in needed)
     configured() { const c = this.config(); return !!(c && c.measurementId); },
     wanted() { return this.configured() && PlayData.allowed(); },
     async start() {

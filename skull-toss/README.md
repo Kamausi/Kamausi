@@ -952,7 +952,7 @@ From the console, `SkullToss.debug.visualAnimation` lists the pose library (`pos
 
 ## Tests
 
-Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **215 checks**, covering:
+Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **216 checks**, covering:
 
 - **Layout, scoring and aiming.**
   - Everything is centred and every result is classified correctly.
@@ -1141,3 +1141,4 @@ Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to
   - Two devices' Tickets merge.
 - **v43.**
   - Google Analytics waits for the same yes and gets the same cut-down events, with advertising off, and a no stops it.
+  - Firebase partly set up (no database or functions yet, or sign-in off): the game plays on, and analytics still works.

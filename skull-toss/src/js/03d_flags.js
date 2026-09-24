@@ -30,7 +30,7 @@
     on(k) { return !!this.get(k); },
     // live values from the server (Firebase only: config/live), cached for next time
     watch() {
-      if (Backend.kind !== "firebase" || this.unsub) return;
+      if (Backend.kind !== "firebase" || !Backend.db || this.unsub) return;   // (no database yet: the defaults, and whatever was cached)
       this.unsub = Backend.db.doc("config/live").onSnapshot(s => { if (!s.exists) return; this.values = { ...FLAG_DEFAULTS }; this.merge(s.data() || {}); this.source = "live";
         if (!sandbox) store.set(FLAGS_KEY, JSON.stringify(this.values)); Flags.changed(); }, () => {});
     },

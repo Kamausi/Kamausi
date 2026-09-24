@@ -8,10 +8,10 @@
   const FIREBASE_SDK = "https://www.gstatic.com/firebasejs/10.12.2/";
   const Backend = {
     kind: "none",     // none | host | firebase | fake
-    db: null, me: null, call: null, ready: null, error: null, fakeDocs: null,
+    app: null, db: null, me: null, call: null, ready: null, error: null, fakeDocs: null,
     init() {
       if (!this.ready) this.ready = (async () => {
-        if (FIREBASE_CONFIG) return this.useFirebase();
+        if (FIREBASE_CONFIG) return this.useFirebase(FIREBASE_CONFIG);
         const host = window.claude; if (host && typeof host.use === "function") return this.useHost(host);
         return this;
       })().catch(e => { this.error = String(e && e.message || e); this.kind = "none"; return this; });
@@ -24,13 +24,21 @@
       if (db && me && me.id) Object.assign(this, { kind: "host", db, me });
       return this;
     },
-    async useFirebase() {
-      for (const f of ["firebase-app-compat.js", "firebase-auth-compat.js", "firebase-firestore-compat.js", "firebase-functions-compat.js"]) await loadScript(FIREBASE_SDK + f);
-      const fb = window.firebase, app = fb.apps.length ? fb.app() : fb.initializeApp(FIREBASE_CONFIG), auth = app.auth();
-      const user = auth.currentUser || (await auth.signInAnonymously()).user;
-      const fns = app.functions(FIREBASE_CONFIG.functionsRegion || "us-central1");
-      Object.assign(this, { kind: "firebase", db: app.firestore(), me: { id: user.uid, name: user.displayName || "" },
-        call: (name, data) => fns.httpsCallable(name)(data || {}).then(r => r.data) });
+    // The project's parts come up one at a time: config.services says which exist yet ({ firestore, functions }, both
+    // on unless set false). A part that isn't there is treated as absent, the way a game with no server treats it:
+    // saves stay on the device, the board is local, the Soul Shop waits. Sign-in can fail too (Anonymous not switched
+    // on yet): the app still starts, so Google Analytics works whatever else doesn't.
+    async useFirebase(cfg) {
+      const svc = { firestore: true, functions: true, ...(cfg.services || {}) }, { services, functionsRegion, ...options } = cfg;
+      const need = [["app", "firebase-app-compat.js"], ["auth", "firebase-auth-compat.js"], ...(svc.firestore ? [["firestore", "firebase-firestore-compat.js"]] : []), ...(svc.functions ? [["functions", "firebase-functions-compat.js"]] : [])];
+      for (const [part, file] of need) if (!(window.firebase && (part === "app" || window.firebase[part]))) await loadScript(FIREBASE_SDK + file);
+      const fb = window.firebase, app = fb.apps.length ? fb.app() : fb.initializeApp(options);
+      Object.assign(this, { kind: "firebase", app, cfg });
+      let user = null;
+      try { const auth = app.auth(); user = auth.currentUser || (await auth.signInAnonymously()).user; } catch (e) { this.error = "sign-in: " + String((e && e.message) || e); }
+      const fns = user && svc.functions ? app.functions(functionsRegion || "us-central1") : null;
+      Object.assign(this, { db: user && svc.firestore ? app.firestore() : null, me: user ? { id: user.uid, name: user.displayName || "" } : null,
+        call: fns ? (name, data) => fns.httpsCallable(name)(data || {}).then(r => r.data) : null });
       return this;
     },
     // the dev build's stand-in: the server's real handlers (firebase/functions/handlers.js) over an in-memory store,
@@ -43,7 +51,7 @@
         call: async (name, data) => { if (!H[name]) throw Object.assign(new Error("not-found"), { code: "not-found" }); return H[name]({ db, uid: this.me.id, data: copy(data || {}), now: Date.now() + (this.fakeClock || 0) }); } });
       return this;
     },
-    reset() { Object.assign(this, { kind: "none", db: null, me: null, call: null, ready: null, error: null, fakeDocs: null, fakeH: null, fakeDB: null }); }
+    reset() { Object.assign(this, { kind: "none", app: null, cfg: null, db: null, me: null, call: null, ready: null, error: null, fakeDocs: null, fakeH: null, fakeDB: null }); }
   };
   function loadScript(src) {
     return new Promise((ok, fail) => { const s = document.createElement("script"); s.src = src; s.async = true; s.onload = ok; s.onerror = () => fail(new Error("couldn't load " + src)); document.head.appendChild(s); });

@@ -22,7 +22,7 @@
       }
       this.state = "loading"; renderSoulsUI();
       try {
-        if (Backend.kind === "firebase") this.unsub = Backend.db.doc("wallets/" + Backend.me.id).onSnapshot(s => this.set(s.exists ? s.data() : Economy.emptyWallet()), () => { this.state = "error"; renderSoulsUI(); });
+        if (Backend.kind === "firebase" && Backend.db) this.unsub = Backend.db.doc("wallets/" + Backend.me.id).onSnapshot(s => this.set(s.exists ? s.data() : Economy.emptyWallet()), () => { this.state = "error"; renderSoulsUI(); });
         else this.set(await Backend.call("wallet"));
       } catch (e) { this.state = "error"; renderSoulsUI(); }
     },
