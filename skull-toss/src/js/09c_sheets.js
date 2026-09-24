@@ -63,7 +63,9 @@
     $("voiceNote").textContent = VOICE_NOTE[settings.voice];
     segValue($("set-flashes"), settings.flashes); $("flashNote").textContent = FLASH_NOTE[settings.flashes];
     set("set-contrast", settings.contrast); segValue($("set-text"), settings.text);
+    segValue($("set-cards"), settings.cards); $("cardsNote").textContent = CARDS_NOTE[settings.cards];
   }
+  const CARDS_NOTE = { full: "The countdown leader, then each reel's title card", short: "A brief title card for each reel", off: "Straight into play" };
   const FLASH_NOTE = { full: "Camera flashes, lightning and the film's flicker", reduced: "One soft flash, dim lightning, a steady picture", off: "No flashes at all" };
   const FILM_NOTE = { full: "Grain, dust, scratches and a wobbly gate", light: "Just a little grain", off: "A clean print" };
   const CAMERA_NOTE = { full: "Leans with your aim, follows the throw", gentle: "The same moves, smaller", still: "A locked-off camera" };
@@ -87,6 +89,7 @@
   $("set-shake").addEventListener("click", () => toggleSetting("shake"));
   $("set-contrast").addEventListener("click", () => { toggleSetting("contrast"); applyAccess(); });
   bindSeg("set-flashes", v => { settings.flashes = v; persist(); applyAccess(); renderSettings(); Sound.ui("tick"); });
+  bindSeg("set-cards", v => { settings.cards = v; persist(); renderSettings(); Sound.ui("tick"); });
   bindSeg("set-text", v => { settings.text = v; persist(); applyAccess(); renderSettings(); Sound.ui("tick"); });
   for (const key of SLIDERS) {
     const el = $("set-" + key);

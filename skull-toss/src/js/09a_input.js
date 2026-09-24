@@ -50,6 +50,7 @@
     if (game.state === "continue") { if (k === "Escape") { declineContinue("no"); e.preventDefault(); } return; }
     if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
     if (screen === "pause") { if (k === "Escape" || k === "p" || k === "P") { resumeRun(); e.preventDefault(); } return; }
+    if (reelSt.card && (k === " " || k === "Enter")) { skipReelCard(); e.preventDefault(); return; }
     if (screen !== "play" || game.state !== "ready") {
       if (inRun() && (k === "Escape" || k === "p" || k === "P")) { pauseRun(); e.preventDefault(); }
       return;
@@ -84,7 +85,8 @@
     if (pressed(9)) {
       if (screen === "pause") resumeRun();
       else if (inRun() && !sheet) { cancelAim(); pauseRun(); }
-    } else if (screen === "play" && game.state === "ready" && !paused && !sheet) {
+    } else if (reelSt.card && !paused && !sheet && (pressed(0) || pressed(7))) skipReelCard();   // A skips a title card
+    else if (screen === "play" && game.state === "ready" && !paused && !sheet) {
       if (mag > PAD_DEAD) {
         const L = pullMax(), k = Math.min(1, (mag - PAD_DEAD) / (1 - PAD_DEAD)) / mag;   // full travel is a full draw
         if (!(aim.active && aim.source === "pad")) { Object.assign(aim, { active: true, source: "pad", sx: 0, sy: 0 }); cvs.classList.add("aiming"); Sound.pullStart(); skullGrabbed(); }

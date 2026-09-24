@@ -54,7 +54,9 @@
         }
         for (const s of film.scratches) { c.globalAlpha = s.a; c.fillStyle = s.light ? CREAM : INK; c.fillRect(s.x, 0, 1, H); }
         c.globalAlpha = 1;
-        const fl = (Math.random() - 0.5) * 0.05 * R.flicker * flashK();   // (the flicker is a flash too) c.fillStyle = fl > 0 ? `rgba(242,231,201,${fl})` : `rgba(10,8,6,${-fl})`; c.fillRect(0, 0, W, H);
+        drawCueMarks(c);   // the changeover cues between reels (09i_reel.js)
+        const fl = (Math.random() - 0.5) * 0.05 * R.flicker * flashK();   // (the flicker is a flash too)
+        c.fillStyle = fl > 0 ? `rgba(242,231,201,${fl})` : `rgba(10,8,6,${-fl})`; c.fillRect(0, 0, W, H);
         if (film.burn) { const bx = W * 0.8, by = H * 0.2, gr = c.createRadialGradient(bx, by, 0, bx, by, U * 0.4); gr.addColorStop(0, "rgba(255,244,210,.5)"); gr.addColorStop(1, "rgba(255,200,120,0)"); c.fillStyle = gr; c.fillRect(0, 0, W, H); }
       }
     }

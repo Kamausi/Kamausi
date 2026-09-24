@@ -1294,6 +1294,48 @@
   });
   T.continues(false);
 
+  // ── v23: the reel's own cards ──
+  const skipCards = () => { for (let i = 0; i < 6 && T.reel().card; i++) { T.skipReel(); T.step(0.02); } };
+  const beatBoth = stage => { fresh(); skipCards(); T.setStage(stage); toHit(25); T.step(2.6); T.hurtBoss(99); T.endThrow(); T.step(3.2); toHit(50); T.step(2.9); T.hurtBoss(99); T.endThrow(); };
+  T.cards(true);
+  test("A Story run opens on the countdown leader, then Reel One's title card; the throw waits, and a tap skips", () => {
+    T.setStats(ZERO); T.start(); T.freezeRing(0, C.RING_Y);
+    let R = T.reel(); assert(R.card === "leader" && !R.hidden && T.state().state === "cine", `the leader first (${JSON.stringify(R)})`);
+    assert(!T.throwAt(0, C.RING_Y), "no throw while a card is up");
+    T.step(2.5); R = T.reel(); assert(R.card === "title" && R.n === 1 && R.title === T.maps()[0].name && /Reel One of Eight/.test(R.reel), JSON.stringify(R));
+    $("reelCard").dispatchEvent(new PointerEvent("pointerdown", { bubbles: true })); T.step(0.05);
+    R = T.reel(); assert(R.hidden && T.state().state === "ready", `a tap skips to play (${JSON.stringify(R)})`);
+    T.start(); R = T.reel(); assert(R.card === "title", `the leader plays once a session; the next run opens on the title (${R.card})`);
+    T.step(2.9); assert(T.state().state === "ready" && T.reel().hidden, "then play");
+    T.toTitle();
+  });
+  test("Between reels: the changeover cues, then the next reel's card; after Reel Four, an intermission", () => {
+    T.setStats(ZERO); beatBoth(1); const c0 = T.reel().cues; T.step(3.7);   // (the knockout's hold, then the 2.8 s boss-out)
+    let R = T.reel(); assert(c0 === 2 && R.card === "title" && R.n === 2 && /Reel Two/.test(R.reel), `map 2's card after two cues (${c0}, ${JSON.stringify(R)})`);
+    skipCards(); assert(T.state().state === "ready" && T.state().stage === 2, "and map 2 plays");
+    beatBoth(4); T.step(3.7); R = T.reel(); assert(R.card === "intermission" && /pieces back/.test($("rcSub").textContent), `the intermission after Reel Four (${JSON.stringify(R)})`);
+    T.step(3.7); R = T.reel(); assert(R.card === "title" && R.n === 5, `then Reel Five (${JSON.stringify(R)})`);
+    T.step(2.9); assert(T.state().state === "ready" && T.state().stage === 5, "and play");
+    T.setStats(ZERO); T.toTitle();
+  });
+  test("After Reel Eight: THE END card, then the headstone", () => {
+    T.setStats(ZERO); beatBoth(8); T.step(2.5);
+    const R = T.reel(); assert(R.card === "end" && R.title === "The End" && T.state().state === "cine", `THE END (${JSON.stringify(R)})`);
+    T.step(4.7); assert(T.state().state === "over" && T.reel().hidden, `the reel ends (${T.state().state})`);
+    T.step(1); assert(/The end/.test(document.querySelector("#over .rip").textContent), "on the stone's The end");
+    T.setStats(ZERO); T.toTitle();
+  });
+  test("Title cards Short: a brief card and no leader; Off: straight into play; Arcade: the map's own card", () => {
+    T.cards(true); T.setSetting("cards", "short"); T.setStats(ZERO); T.start();
+    let R = T.reel(); assert(R.card === "title" && R.dur <= 1.5, `a short card, no leader (${JSON.stringify(R)})`);
+    T.step(1.5); assert(T.state().state === "ready", "then play");
+    T.setSetting("cards", "off"); T.start(); assert(T.reel().hidden && T.state().state === "ready", "off: no card at all");
+    T.setSetting("cards", "full"); T.setStats({ ...ZERO, bestStage: 9 }); T.startArcade(2);
+    R = T.reel(); assert(R.card === "title" && R.n === 3 && /no bosses/.test(R.reel), `Arcade opens on its map's card, no leader (${JSON.stringify(R)})`);
+    skipCards(); T.setStats(ZERO); T.toTitle();
+  });
+  T.cards(false);
+
   T.sandbox(false); T.start(); T.pause(false);  // leave the game playable, player's saved data untouched
   window.__skullTossResults = results;
   const passed = results.filter(r => r.pass).length;

@@ -35,6 +35,9 @@
 <div class="ach-pop" id="achPop" hidden role="status"></div>
 <div class="gameover" id="gameOver" hidden aria-hidden="true"><div class="go-card"><span class="go-w"><i style="--i:0">G</i><i style="--i:1">A</i><i style="--i:2">M</i><i style="--i:3">E</i></span><span class="go-w"><i style="--i:4">O</i><i style="--i:5">V</i><i style="--i:6">E</i><i style="--i:7">R</i></span></div></div>
 <div class="stagecard" id="stagecard" hidden role="status"></div>
+<div class="reelcard" id="reelCard" hidden><canvas id="reelCv" aria-hidden="true"></canvas>
+  <div class="rc-text"><p class="rc-k" id="rcK"></p><p class="rc-reel" id="rcReel"></p><h2 class="rc-t" id="rcTitle"></h2><p class="rc-s" id="rcSub"></p><p class="rc-n" id="rcNote"></p></div>
+  <p class="rc-skip">Tap to skip</p></div>
 
 <section class="screen title" id="title">
   <div class="curtain left"></div><div class="curtain right"></div><div class="valance"></div><div class="footlights"></div>
@@ -182,6 +185,8 @@
       <div class="seg" role="radiogroup" aria-label="Camera" id="set-camera"><button type="button" role="radio" data-v="full" aria-checked="true">Full</button><button type="button" role="radio" data-v="gentle" aria-checked="false">Gentle</button><button type="button" role="radio" data-v="still" aria-checked="false">Still</button></div></div>
     <div class="row stack"><div><div class="lbl">Morty's voice</div><div class="sub" id="voiceNote">Cartoon mumbles when you grab him</div></div>
       <div class="seg" role="radiogroup" aria-label="Morty's voice" id="set-voice"><button type="button" role="radio" data-v="babble" aria-checked="true">Mumble</button><button type="button" role="radio" data-v="spoken" aria-checked="false">Spoken</button><button type="button" role="radio" data-v="off" aria-checked="false">Off</button></div></div>
+    <div class="row stack"><div><div class="lbl">Title cards</div><div class="sub" id="cardsNote">The countdown leader, then each reel's title card</div></div>
+      <div class="seg" role="radiogroup" aria-label="Title cards" id="set-cards"><button type="button" role="radio" data-v="full" aria-checked="true">Full</button><button type="button" role="radio" data-v="short" aria-checked="false">Short</button><button type="button" role="radio" data-v="off" aria-checked="false">Off</button></div></div>
     <div class="row"><div><div class="lbl">Vibration</div><div class="sub" id="vibeNote">Buzz on hits and misses</div></div><button class="switch" role="switch" id="set-vibe" aria-checked="true" aria-label="Vibration" type="button"></button></div>
     <div class="row"><div><div class="lbl">Camera jolts</div><div class="sub">The scenery knocks on bonks, perfects and lightning</div></div><button class="switch" role="switch" id="set-shake" aria-checked="true" aria-label="Camera jolts" type="button"></button></div>
     <div class="row stack"><div><div class="lbl">Aim guide</div><div class="sub" id="guideNote">Full path and crosshair</div></div>

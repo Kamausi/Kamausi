@@ -240,7 +240,7 @@
     return p;
   }
   const DEFAULT_SETTINGS = { sound: true, music: 45, sfx: 80, amb: 50, vibe: true, shake: true, guide: "full", film: reduceMotion ? "light" : "full", camera: reduceMotion ? "still" : "full", voice: "babble",
-    flashes: reduceMotion ? "reduced" : "full", contrast: false, text: "normal" };   // accessibility: flash strength, high contrast, text size
+    flashes: reduceMotion ? "reduced" : "full", contrast: false, text: "normal", cards: "full" };   // cards: the reel's title cards (09i_reel.js)   // accessibility: flash strength, high contrast, text size
   // "best" is the most hits in one run (what older saves called their best score); "bestScore" is the arcade score
   const STAT_KEYS = ["games", "throws", "makes", "perfects", "rims", "bestStreak", "bestPerfStreak", "peakLives", "points", "best", "bonesTotal", "bonks", "misses", "clutch",
     "bestScore", "scoreTotal", "bestStage", "miniKills", "miniFlawless", "bossKills", "bossFlawless",
@@ -344,6 +344,7 @@
     if (!["babble", "spoken", "off"].includes(settings.voice)) settings.voice = DEFAULT_SETTINGS.voice;
     if (!["full", "reduced", "off"].includes(settings.flashes)) settings.flashes = DEFAULT_SETTINGS.flashes;
     if (!["normal", "large"].includes(settings.text)) settings.text = "normal";
+    if (!["full", "short", "off"].includes(settings.cards)) settings.cards = "full";
     settings.contrast = !!settings.contrast;
     profile = cleanProfile(readSaved(KEYS.profile));
     profile.best = Math.max(profile.best, Number(store.get(KEYS.best, 0)) || 0);

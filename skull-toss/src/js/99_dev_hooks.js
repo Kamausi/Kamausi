@@ -17,6 +17,9 @@
     setLives(n) { game.lives = n; updateHud(); }, cont: () => game.cont && { ...game.cont }, continueRule: () => continueRule(),
     fakeAds(on) { Ads = on ? { available: () => true, show: () => ({ then: f => f(true) }) } : { available: () => false, show: () => Promise.resolve(false) }; },   // (a synchronous reel, for the spec)
     continues(on = true) { if (sandbox) sandbox.contOn = on; },
+    cards(on = true) { if (sandbox) sandbox.cardsOn = on; reelSt.leaderShown = false; reelSt.shown = []; reelSt.cues = []; },
+    skipReel: () => skipReelCard(),
+    reel: () => ({ card: reelSt.card ? reelSt.card.kind : null, n: reelSt.card ? reelSt.card.n || 0 : 0, shown: reelSt.shown.slice(), cues: reelSt.cues.length, title: $("rcTitle").textContent, reel: $("rcReel").textContent, hidden: reelEl.hidden, cine: game.cine ? game.cine.kind : null, dur: game.cine ? game.cine.dur : 0 }),
     snapOn(on = true) { if (sandbox) { sandbox.snapOn = on; sandbox.snap = null; } }, snapshot: () => readRunSnapshot(),
     tier: () => ({ ...tierNow() }),
     // the Power-Up Director alone: n makes in a row from the start of the first half, noting the hits where a prop turned up

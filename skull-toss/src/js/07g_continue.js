@@ -83,7 +83,7 @@
   }
   function resumeRunSnapshot() {
     const S = readRunSnapshot(); if (!S) return false;
-    startGame({ mode: S.mode, map: S.map, seed: (S.seed ^ S.throws) >>> 0 });
+    startGame({ mode: S.mode, map: S.map, seed: (S.seed ^ S.throws) >>> 0, quiet: true });
     Object.assign(game, { stage: S.stage, phase: S.phase === "A" || S.phase === "B" ? S.phase : "A", stageHits: S.stageHits, hits: S.hits, score: S.score, lives: Math.max(0, S.lives),
       slots: S.slots, streak: S.streak, perfStreak: S.perfStreak, peakLives: S.peakLives, throws: S.throws });
     Object.assign(game.run, S.run || {}); game.run.t0 = game.time - (S.secs || 0);

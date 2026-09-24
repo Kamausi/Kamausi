@@ -1,8 +1,22 @@
-# SKULL TOSS v22
+# SKULL TOSS v23
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)), with a synthesised waltz standing in wherever they can't load.
+
+## New in v23: the reel's own cards
+
+Skull Toss is a restored 1933 cartoon, and now it opens like one:
+
+- **The countdown leader.** 3, 2, 1 on grey film, the sweep going round and a tick on each number. It plays once a session, before your first Story run.
+- **Main title cards.** Each reel gets one: *A Morty Bones Cartoon*, **Reel Three of Eight**, the map's name, its premise and what's odd about its ring. Morty peeks up from the corner. Arcade runs open on the map's card with no leader.
+- **The intermission.** After Reel Four the picture stops: *Stretch your bones!*, with your score, hits and pieces so far.
+- **THE END.** After Reel Eight's boss falls, *The End* comes up with Morty whole again, top hat and all. He winks, and the iris closes on him and opens on the headstone.
+- **Changeover cues.** Between reels, the round mark that told a projectionist to switch machines flashes twice in the top corner, as on a real print.
+
+A card holds the throw like any cut-scene. A tap, Space, Enter or the pad's A button skips it. **Settings → Title cards** picks Full (leader and cards), Short (a brief card, no leader) or Off (the old small stage card). Resuming a run skips the cards.
+
+Fixed: the film's flicker had stopped drawing in v15. It's back, still scaled by the Flashes setting.
 
 ## New in v22: one more skull, and runs that survive a reload
 
@@ -641,7 +655,7 @@ From the console, `SkullToss.debug.visualAnimation` lists the pose library (`pos
 
 ## Tests
 
-Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **137 checks**, covering:
+Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **141 checks**, covering:
 
 - **Layout, scoring and aiming.**
   - Everything is centred and every result is classified correctly.
@@ -727,3 +741,8 @@ Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to
   - One continue a map; no offer without the bones or an ad; with an ad provider the reel buys the skull.
   - A run that used a continue never goes on the leaderboard, but still counts for your own best.
   - A run survives a reload: it picks up where it left off, a boss fight from its start, and a waiting continue is offered again.
+- **v23.**
+  - A Story run opens on the leader, then Reel One's card. No throw is allowed while a card is up, and a tap skips it. The leader plays once a session.
+  - Between reels, two changeover cues, then the next reel's card. After Reel Four comes the intermission, then Reel Five.
+  - After Reel Eight, THE END card, then the headstone reading The end.
+  - Title cards Short gives a brief card and no leader. Off goes straight into play. Arcade opens on its map's own card.

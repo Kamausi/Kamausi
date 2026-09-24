@@ -157,13 +157,12 @@
     game.score += bonus; flyPoints(`+${fmtN(bonus)}`, W / 2, H * 0.36, true);
     const bones = 150 + game.stage * 50; addBones(bones); game.run.bossBones = (game.run.bossBones || 0) + bones;
     stageCard(`${mapData(game.stage).name} clear!`, `${FRAGMENTS[frag].name} recovered`, `+${bones} bones · a skull back${boss.flawless ? " · flawless!" : ""}`, 2.8, "gold");
-    Sound.toon("fanfare");
+    Sound.toon("fanfare"); changeoverCues(2.8);
     cine("boss-out", 2.8, () => {
       boss = null; seeds.length = 0; game.stage++; game.stageHits = 0; game.phase = "A"; VisualSystem.setStage(game.stage); setScene(game.stage - 1);
       if (game.lives < MAX_LIVES) { game.lives++; game.slots = Math.max(game.slots, game.lives); }
       setRingMode("line"); snapRing(); Sound.setAct("A"); hazardsReset(); refillTargets();
-      const S = stageDef();
-      stageCard(S.map.reel, S.name, S.map.identity.mechanic.split(":")[0], 2.2);
+      nextReel();   // the next reel's title card (and the intermission, halfway): 09i_reel.js
       updateHud();
     }, 0.4);
     checkUnlocks(); persist(); updateHud();
@@ -172,9 +171,10 @@
   // the last end boss: THE END. Morty is whole again and the run is over, won.
   function storyComplete() {
     profile.storyClears++; game.run.story = true;
-    stageCard("The End", "Morty is whole again", "All eight reels restored", 3.4, "gold");
     Sound.toon("fanfare"); Telemetry.emit("story_complete", { score: game.score, secs: Math.round(game.time - (game.run.t0 || 0)) });
-    cine("boss-out", 3.4, () => { boss = null; seeds.length = 0; gameOver(true); }, 0.4);
+    const done = card => { boss = null; seeds.length = 0; gameOver(card); };
+    if (cardsMode() === "off") { stageCard("The End", "Morty is whole again", "All eight reels restored", 3.4, "gold"); cine("boss-out", 3.4, () => done(true), 0.4); }
+    else cine("boss-out", 1.6, () => endReel(() => done(false)), 0.4);   // the boss falls, then THE END card (09i_reel.js)
     checkUnlocks(); persist(); updateHud();
     challenge("bosses", 1);
   }

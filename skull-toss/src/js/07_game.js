@@ -264,9 +264,8 @@
     resetSkull(); aim.active = false; Sound.pullEnd(); Sound.flightStop(true);
     paused = false; Sound.setPaused(false); showCombo(0); gameOverCard(false); contEl.hidden = true; game.cont = null;
     showScreen("play");
-    setHint("Pull down · aim · let go");
-    if (mode === "arcade") stageCard("Arcade", STAGES[map].name, "No bosses, no end: survive as long as you can", 2);
     hazardsReset(); refillTargets();
+    if (opts.quiet) setHint("Pull down · aim · let go"); else introReel(mode, map);   // the leader and the reel's title card (09i_reel.js)
     updateHud();
     Telemetry.emit("run_start", { mode, map, stage: game.stage, career: profile.games });   // career: runs finished before this one
   }
