@@ -640,6 +640,24 @@
     T.throwAt(0, C.RING_Y); T.step(0.08); assert(T.hat().lift > 0.05, `lift ${T.hat().lift}`);
     T.step(3); assert(T.hat().lift < 0.01, "hat didn't settle"); T.equip("hat", "none"); T.setStats(ZERO);
   });
+  test("v45 Leaderboard: a board for each way to play; a tapped headstone opens its card, read-only and as plain text; ten of each kind on the device", () => {
+    T.fakeBoard([{ id: "a", name: "<b>Ada</b>", score: 9000, hits: 20, stage: 2, bio: "<img src=x onerror=alert(1)> hi", pic: { face: "happy", frame: "plain" }, rank: "Crypt Keeper", level: 7, ach: 12 }]);
+    T.setStats(ZERO); T.openSheet("board");
+    const chips = [...$("boardModes").children].map(b => b.dataset.mode); assert(chips.join() === "story,arcade,rush,curtain,longshot,gallery", chips.join());
+    $("boardList").querySelector("li").click();
+    assert(!$("playerCard").hidden && $("pcName").textContent === "bAda/b" && !$("playerCard").querySelector("img") && /Crypt Keeper/.test($("pcTitle").textContent) && / hi$/.test($("pcBio").textContent), "the card, as plain text");
+    assert(!$("playerCard").querySelector("input, textarea, [contenteditable]") && /View only/.test($("playerCard").textContent), "and read-only");
+    $("pcClose").click(); assert($("playerCard").hidden, "Close shuts it");
+    assert($("boardOnline").hidden, "no presence to count, no online line");
+    T.closeSheet(); T.unfakeBoard();
+    T.boardLocal([{ mode: "arcade", name: "Me", score: 700, hits: 9, stage: 1, at: 1 }, { name: "Me", score: 300, hits: 4, stage: 1, at: 2 }]);
+    T.openSheet("board"); $("boardTabs").querySelector('[data-tab="local"]').click();
+    const scores = () => [...$("boardList").querySelectorAll(".sc")].map(e => e.textContent).join();
+    assert(scores() === "300", `the Adventure's runs (${scores()})`);
+    $("boardModes").querySelector('[data-mode="arcade"]').click(); assert(scores() === "700", `the Arcade's (${scores()})`);
+    assert($("boardTabs").querySelector('[data-tab="week"]').disabled, "the weekly board is the Adventure's");
+    T.closeSheet(); T.unfakeBoard();
+  });
   test("Leaderboard: opt-in, only your headstone name, and other names shown as plain text", () => {
     const fk = T.fakeBoard([{ id: "a", name: "<img src=x onerror=alert(1)>", score: 9000, hits: 20, stage: 2 }, { id: "b", name: "Mort", score: 12000, hits: 30, stage: 3 }]);
     T.setName("Blake"); T.setStats({ ...ZERO, bestScore: 5000, best: 12, board: false, boardBest: { score: 5000, hits: 12, stage: 1, at: 1 } }); T.openSheet("board");
@@ -648,7 +666,7 @@
     assert(fk.writes.length === 0, "posted without opting in");
     $("set-board").click();
     assert(fk.writes.length === 1 && fk.writes[0].path === "leaderboard/me1" && fk.writes[0].d.name === "Blake" && fk.writes[0].d.score === 5000, JSON.stringify(fk.writes));
-    assert(Object.keys(fk.writes[0].d).every(k => ["name", "score", "hits", "stage", "title", "look", "at"].includes(k)), "posted more than name, score and looks");
+    assert(Object.keys(fk.writes[0].d).every(k => ["name", "score", "hits", "stage", "title", "look", "at", "bio", "pic", "rank", "level", "ach"].includes(k)), "posted more than the headstone: name, score, looks and its card (v45)");
     assert($("boardList").querySelector("li.me"), "your row isn't marked");
     $("set-board").click(); assert(!$("boardList").querySelector("li.me") && !T.profile().board, "opting out should take the score down");
     T.closeSheet(); T.unfakeBoard(); T.setName(""); T.setStats(ZERO);
@@ -1871,7 +1889,7 @@
   test("The run checks: a fair run passes, and each kind of forgery is named", () => {
     const fair = { mode: "story", score: 48250, hits: 61, stage: 3, throws: 80, secs: 190, perfects: 20, bosses: 4, targets: 3, shots: 5, continues: 0, fragments: 2 };
     assert(T.checkRun(fair).ok, JSON.stringify(T.checkRun(fair)));
-    for (const [r, why] of [[{ score: 5e9 }, "score-ceiling"], [{ hits: 500 }, "more-hits-than-throws"], [{ secs: 10 }, "clock"], [{ continues: 1 }, "continued"], [{ mode: "arcade" }, "story-only"]])
+    for (const [r, why] of [[{ score: 5e9 }, "score-ceiling"], [{ hits: 500 }, "more-hits-than-throws"], [{ secs: 10 }, "clock"], [{ continues: 1 }, "continued"], [{ mode: "director" }, "no-such-board"], [{ mode: "arcade" }, "fragments"]])
       assert(T.checkRun({ ...fair, ...r }).why === why, `${JSON.stringify(r)} → ${T.checkRun({ ...fair, ...r }).why}`);
   });
   test("The board has a This week tab beside all time and this device", () => {

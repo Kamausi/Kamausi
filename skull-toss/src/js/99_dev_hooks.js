@@ -280,10 +280,11 @@
         doc: path => ({ get: () => Promise.resolve({ exists: docs.has(id(path)), data: () => docs.get(id(path)) }),
           set: d => o.readonly ? Promise.reject({ code: "invalid_argument" }) : (writes.push({ path, d }), docs.set(id(path), { id: id(path), ...d }), cb && cb(snap()), Promise.resolve()),
           delete: () => { docs.delete(id(path)); if (cb) cb(snap()); return Promise.resolve(); } }) };
-      Board.unwatch(); Object.assign(Board, { db, me: { id: "me1" }, state: "live", rows: [], mine: null, fake: true, tab: "live" });
+      Board.unwatch(); Object.assign(Board, { db, me: { id: "me1" }, state: "live", rows: [], mine: null, fake: true, tab: "live", mode: "story" });
       return { writes, docs };
     },
-    unfakeBoard() { Board.unwatch(); Object.assign(Board, { db: null, me: null, state: "local", rows: [], mine: null, fake: false }); },
+    unfakeBoard() { Board.unwatch(); Object.assign(Board, { db: null, me: null, state: "local", rows: [], mine: null, fake: false, mode: "story", fakeLocal: null }); },
+    boardLocal(list) { Board.fakeLocal = list; }, boardMode(m) { Board.mode = m; if (sheet === "board") renderBoard(); },
     boardPush: () => Board.push(true), boardState: () => Board.state, boardInit() { Board.state = "local"; Board.db = null; Board.init(Backend.db, Backend.me); },
     sandbox(on) {
       if (on) { sandbox = {}; Sound.apply(); }

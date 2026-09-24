@@ -319,6 +319,9 @@
       if (!game.run.continues && game.score > (profile.boardBest ? profile.boardBest.score : 0)) profile.boardBest = { score: game.score, hits: game.hits, stage: game.stage, at: Date.now(),   // what the leaderboard posts
         throws: game.throws, secs: Math.ceil(game.run.secs), perfects: game.run.perfects, bosses: game.run.bosses, targets: game.run.targets || 0, shots: (game.run.shots || []).length, fragments: (game.run.fragments || []).length, continues: 0 };
     }
+    if (BOARD_MODES.includes(game.mode) && game.mode !== "story" && !game.run.continues && !inPractice() && !Replay.play && game.score > ((profile.boardBests || {})[game.mode] || { score: 0 }).score)   // v45: every scored mode's board
+      (profile.boardBests = profile.boardBests || {})[game.mode] = { score: game.score, hits: game.hits, stage: game.stage, at: Date.now(), throws: game.throws, secs: Math.ceil(game.run.secs), perfects: game.run.perfects,
+        bosses: game.run.bosses, targets: game.run.targets || 0, shots: (game.run.shots || []).length, fragments: 0, continues: 0 };
     profile.games++;
     profile.best = Math.max(profile.best, game.hits);
     if (game.hits === 0) profile.zeroRuns++;
@@ -330,7 +333,7 @@
     profile.bones += game.run.bones; profile.bonesTotal += game.run.bones;
     checkUnlocks(); persist(300);
     showCombo(0); setHint(""); Sound.over(); Sound.setAct("menu"); VisualSystem.emit("death"); updateHud();
-    renderResults(); if (game.mode === "story" && !Replay.play) Board.post();
+    renderResults(); if (BOARD_MODES.includes(game.mode) && !Replay.play && !inPractice()) Board.post();
     Telemetry.emit("run_end", { mode: game.mode, map: game.map, score: game.score, hits: game.hits, stage: game.stage, phase: game.phase, tier: tierNow().id, secs: Math.round(game.run.secs), throws: game.throws,
       misses: game.run.misses, perfects: game.run.perfects, continues: game.run.continues, powerups: game.run.powerups, bosses: game.run.bosses, quit: !card });
     if (!Replay.play) PlayData.runs++;

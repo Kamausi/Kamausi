@@ -92,11 +92,17 @@
           if (now - (meta.lastRun || 0) < 15000) refuse("resource-exhausted", "too-soon");
           t.set(`meta/${uid}`, { ...meta, lastRun: now });
           t.set(`runs/${uid}_${now}`, { uid, at: now, run: r, log: typeof (data && data.log) === "string" ? data.log.slice(0, 200000) : "" });
-          const entry = { name: r.name, score: r.score, hits: r.hits, stage: r.stage, title: r.title, look: r.look, at: now };
+          const entry = { name: r.name, score: r.score, hits: r.hits, stage: r.stage, title: r.title, look: r.look, bio: r.bio, pic: r.pic, rank: r.rank, level: r.level, ach: r.ach, at: now };
+          if (r.mode !== "story") {   // v45: every scored mode has a board of its own
+            const path = `boards/${r.mode}_${uid}`, had = await t.get(path), isBest = !had || r.score > had.score;
+            if (isBest) t.set(path, { ...entry, mode: r.mode, uid });
+            else t.set(path, { ...had, name: r.name, bio: r.bio, pic: r.pic, rank: r.rank, level: r.level, ach: r.ach, title: r.title, look: r.look });   // (the card stays current)
+            return { accepted: true, best: isBest, mode: r.mode };
+          }
           const best = await t.get(`leaderboard/${uid}`), wk = await t.get(`weekly/${week}_${uid}`);
           const isBest = !best || r.score > best.score, isWeek = !wk || r.score > wk.score;
           if (isBest) t.set(`leaderboard/${uid}`, entry);
-          else if (best.name !== r.name) t.set(`leaderboard/${uid}`, { ...best, name: r.name });   // (a new headstone name follows the entry)
+          else t.set(`leaderboard/${uid}`, { ...best, name: r.name, bio: r.bio, pic: r.pic, rank: r.rank, level: r.level, ach: r.ach, title: r.title, look: r.look });   // (a new headstone name, bio or look follows the entry)
           if (isWeek) t.set(`weekly/${week}_${uid}`, { ...entry, week });
           return { accepted: true, best: isBest, weekBest: isWeek, week };
         });

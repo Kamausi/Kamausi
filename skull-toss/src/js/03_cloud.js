@@ -14,7 +14,7 @@
         Souls.connect(); Flags.watch(); renderConsent(); PlayData.flush(); GA.start();   // (Souls need the server's functions: 09m_souls.js; live flags: 03d_flags.js; play data: 04g_telemetry.js)
         if (!B.db || !B.me) { this.state = "off"; renderSave(); return; }
         this.me = B.me; this.ref = B.db.doc("data/users/" + B.me.id + "/save");
-        Board.init(B.db, B.me);
+        Board.init(B.db, B.me); Presence.start(B.db, B.me);   // (v45: the players-online count on the board)
         await this.pull();
       } catch (e) { this.state = "error"; renderSave(); }
     },

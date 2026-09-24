@@ -19,7 +19,8 @@ test("a fair run passes; forged ones don't", () => {
   assert.strictEqual(why({ stage: 12 }), "stage");
   assert.strictEqual(why({ bosses: 9 }), "bosses");
   assert.strictEqual(why({ score: 48251 }), "score-steps");
-  assert.strictEqual(why({ mode: "arcade" }), "story-only");
+  assert.strictEqual(why({ mode: "director" }), "no-such-board");   // (v45: the scored modes have boards; the rest don't)
+  assert.strictEqual(why({ mode: "arcade", fragments: 1 }), "fragments");
   assert.strictEqual(why({ score: "lots" }), "not-a-number:score");
 });
 test("a checked run goes on the board and this week's; a better one replaces it; a worse one doesn't", async () => {

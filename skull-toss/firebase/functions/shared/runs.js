@@ -17,9 +17,16 @@
       const o = {}; r = r && typeof r === "object" ? r : {};
       for (const k of ["score", "hits", "stage", "throws", "secs", "perfects", "bosses", "targets", "shots", "continues", "fragments"]) o[k] = int(r[k] == null ? 0 : r[k]);
       o.mode = String(r.mode || "story"); o.name = cleanName(r.name); o.title = String(r.title || "").slice(0, 24);
-      o.look = r.look && typeof r.look === "object" ? Object.fromEntries(Object.entries(r.look).filter(([k, v]) => /^[a-z]{2,8}$/.test(k) && typeof v === "string" && v.length < 24)) : {};
+      o.look = r.look && typeof r.look === "object" ? Object.fromEntries(Object.entries(r.look).filter(([k, v]) => /^[a-z]{2,10}$/.test(k) && typeof v === "string" && v.length < 24)) : {};
+      // v45: what the board's profile card shows (read-only to everyone else): the headstone's bio and picture, rank and level
+      o.bio = String(r.bio || "").replace(/[\u0000-\u001f<>]/g, "").slice(0, 120);
+      o.pic = r.pic && typeof r.pic === "object" && typeof r.pic.face === "string" && typeof r.pic.frame === "string" ? { face: r.pic.face.slice(0, 12), frame: r.pic.frame.slice(0, 12) } : null;
+      o.rank = String(r.rank || "").replace(/[\u0000-\u001f<>]/g, "").slice(0, 32);
+      o.level = Math.max(1, Math.min(99, int(r.level) || 1)); o.ach = Math.max(0, Math.min(999, int(r.ach) || 0));
       return o;
     }
+    // v45: the boards: the Adventure's (leaderboard/, and the week's), and one for each scored mode (boards/<mode>_<uid>)
+    const MODES = ["story", "arcade", "rush", "curtain", "longshot", "gallery"];
     function cleanName(n) { return String(n || "").replace(/[\u0000-\u001f<>]/g, "").replace(/\s+/g, " ").trim().slice(0, L.maxNameLen) || "Nameless soul"; }
     const ceiling = r => {
       const perMake = L.perfectPts * L.comboMax * L.stageMultMax * L.powerMax, makes = r.hits;
@@ -29,7 +36,8 @@
     function check(raw) {
       const r = clean(raw), bad = why => ({ ok: false, why });
       for (const k of ["score", "hits", "stage", "throws", "secs", "perfects", "bosses", "targets", "shots", "continues", "fragments"]) if (!Number.isFinite(r[k]) || r[k] < 0) return bad("not-a-number:" + k);
-      if (r.mode !== "story") return bad("story-only");
+      if (!MODES.includes(r.mode)) return bad("no-such-board");
+      if (r.mode !== "story" && r.fragments > 0) return bad("fragments");   // (only the Adventure wins shards)
       if (r.continues > 0) return bad("continued");
       if (r.throws < 1 || r.throws > L.maxThrows) return bad("throws");
       if (r.hits > r.throws + L.encoreMakes) return bad("more-hits-than-throws");   // (encore makes are throws too; the margin is for rounding in old saves)
@@ -48,6 +56,6 @@
       const y = d.getUTCFullYear(), jan4 = new Date(Date.UTC(y, 0, 4)), wk = 1 + Math.round(((d - jan4) / 864e5 - 3 + ((jan4.getUTCDay() + 6) % 7)) / 7);
       return `${y}-W${String(wk).padStart(2, "0")}`;
     }
-    return { LIMITS: L, clean, cleanName, check, ceiling, weekOf };
+    return { LIMITS: L, MODES, clean, cleanName, check, ceiling, weekOf };
   })();
   if (typeof module !== "undefined" && module.exports) module.exports = Runs;

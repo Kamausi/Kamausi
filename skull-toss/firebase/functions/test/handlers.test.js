@@ -59,3 +59,14 @@ test("v45: the Curio Cart sells for Souls: its exclusives at the server's price,
   assert.strictEqual(w.souls, before - Economy.COFFIN); assert.ok(!w.owned.some(k => k.startsWith("coffin")), "the coffin leaves nothing on the wallet");
   const db2 = memoryDb(); await refusal(call(h, "openCoffinSouls", db2, "u2", {}, now), "failed-precondition");
 });
+
+test("v45: every scored mode has a board of its own, and each entry carries its player's card (bio, picture, rank)", async () => {
+  const db = memoryDb(), h = makeHandlers(Economy, accept, require("../shared/runs.js")), now = Date.UTC(2026, 8, 24, 12);
+  const run = { mode: "arcade", score: 5000, hits: 20, stage: 1, throws: 30, secs: 90, perfects: 5, bosses: 0, targets: 0, shots: 0, continues: 0, fragments: 0, name: "Ada", bio: "Tosses <b>skulls</b>", pic: { face: "grin", frame: "hollow" }, rank: "Crypt Keeper", level: 7, ach: 12 };
+  const r = await call(h, "submitRun", db, "u1", { run }, now);
+  assert.ok(r.accepted && r.mode === "arcade");
+  const e = db.docs.get("boards/arcade_u1"); assert.ok(e && e.score === 5000 && e.mode === "arcade" && e.uid === "u1", "the Arcade board, not the Adventure's");
+  assert.ok(!db.docs.has("leaderboard/u1"), "the Adventure's board is left alone");
+  assert.strictEqual(e.bio, "Tosses bskulls/b"); assert.deepStrictEqual(e.pic, { face: "grin", frame: "hollow" }); assert.strictEqual(e.rank, "Crypt Keeper");
+  await refusal(call(h, "submitRun", db, "u1", { run: { ...run, mode: "director" } }, now + 60e3), "invalid-argument");
+});
