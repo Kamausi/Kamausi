@@ -85,7 +85,11 @@ def web():
     (dest / "manifest.webmanifest").write_text(json.dumps(MANIFEST, indent=1))
     files = ["./", "manifest.webmanifest"] + [f"icons/{fn}" for fn in ICONS] + [f"music/{fn}" for fn in MUSIC if (dest / "music" / fn).exists()]
     (dest / "sw.js").write_text(SW.replace("__BUILD__", str(VERSION["build"])).replace("__FILES__", json.dumps(files)))
-    print(f"dist/web: build {VERSION['build']}, {sum(f.stat().st_size for f in dest.rglob('*') if f.is_file()) // 1024} KB")
+    # Firebase Hosting only uploads a folder inside the Firebase project: a copy goes to firebase/public
+    hosted = ROOT / "firebase" / "public"
+    if hosted.exists(): shutil.rmtree(hosted)
+    shutil.copytree(dest, hosted)
+    print(f"dist/web (and firebase/public): build {VERSION['build']}, {sum(f.stat().st_size for f in dest.rglob('*') if f.is_file()) // 1024} KB")
 
 
 def shell(name, sub):

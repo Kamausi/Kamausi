@@ -37,7 +37,7 @@ page, so the spec drives the real server logic.
    deleted 30 days after it arrives:
    `gcloud firestore fields ttls update expireAt --collection-group=events --enable-ttl --project=<your-project>`.
 8. **Package and host the game (v40):** `python3 ../tools/package.py web`, then `firebase deploy --only hosting`.
-   That hosts `dist/web`: the page, its music, the app icons, a manifest, and a service worker so the installed web
+   That hosts `dist/web` (copied to `firebase/public`, since Firebase only uploads from inside this folder): the page, its music, the app icons, a manifest, and a service worker so the installed web
    app plays offline. Hosting serves it over HTTPS on Google's CDN, with the page and service worker never cached
    and the music cached for a week. Or host `index.html` anywhere; the config inside it points at your project.
 

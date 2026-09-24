@@ -37,7 +37,7 @@ python3 tools/package.py web
 cd firebase && firebase deploy --only hosting
 ```
 
-`dist/web` has the page with a manifest, icons and theme colour; `sw.js`, a service worker that fetches the page fresh
+`dist/web` (copied to `firebase/public` for Hosting) has the page with a manifest, icons and theme colour; `sw.js`, a service worker that fetches the page fresh
 when online (a new build arrives at once) and serves it from the cache offline; and the music. Firebase Hosting
 serves it over HTTPS from a CDN (headers in `firebase/firebase.json`). The service worker registers only over HTTPS
 (or localhost), never in a frame or a claude.ai page, and each build has its own cache.
