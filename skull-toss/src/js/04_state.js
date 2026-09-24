@@ -24,6 +24,12 @@
   for (let i = 0; i < MAX_LIVES; i++) livesEl.insertAdjacentHTML("beforeend", '<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-skull"/></svg>');
   const lifeIcons = [...livesEl.querySelectorAll("svg")];
 
+  // accessibility: how strong a flash may be (screen flashes, lightning, the film's flicker), and the page's contrast and text size
+  const flashK = () => settings.flashes === "off" ? 0 : settings.flashes === "reduced" ? 0.3 : 1;
+  function applyAccess() {
+    const r = document.documentElement;
+    r.classList.toggle("hc", !!settings.contrast); r.dataset.text = settings.text; r.dataset.flashes = settings.flashes;
+  }
   let userActed = false; // browsers allow audio + vibration only after a real tap
   const buzz = ms => { if (!userActed || sandbox || !settings.vibe) return; try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
 

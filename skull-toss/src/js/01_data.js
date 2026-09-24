@@ -34,6 +34,9 @@
   const UIFONT = '"Nunito Sans",ui-sans-serif,system-ui,sans-serif';
   const reduceMotion = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
 
+  // ── the performance budget (docs/PERFORMANCE.md). The effects are capped to it and the spec checks it.
+  // frameMs: a whole frame at 60 Hz; stepMs: one 1/240 s step of the game, on average; the rest are live counts.
+  const PERF = { frameMs: 16.7, stepMs: 0.5, particles: 360, inkStars: 24, bursts: 18, domNodes: 2500, lightKB: 2600 };
   function level(score) {
     return {
       amp: Math.min(0.55 + score * 0.11, 1.5),
@@ -227,7 +230,8 @@
     p.schema = Math.max(from, SAVE_SCHEMA);
     return p;
   }
-  const DEFAULT_SETTINGS = { sound: true, music: 45, sfx: 80, amb: 50, vibe: true, shake: true, guide: "full", film: reduceMotion ? "light" : "full", camera: reduceMotion ? "still" : "full", voice: "babble" };
+  const DEFAULT_SETTINGS = { sound: true, music: 45, sfx: 80, amb: 50, vibe: true, shake: true, guide: "full", film: reduceMotion ? "light" : "full", camera: reduceMotion ? "still" : "full", voice: "babble",
+    flashes: reduceMotion ? "reduced" : "full", contrast: false, text: "normal" };   // accessibility: flash strength, high contrast, text size
   // "best" is the most hits in one run (what older saves called their best score); "bestScore" is the arcade score
   const STAT_KEYS = ["games", "throws", "makes", "perfects", "rims", "bestStreak", "bestPerfStreak", "peakLives", "points", "best", "bonesTotal", "bonks", "misses", "clutch",
     "bestScore", "scoreTotal", "bestStage", "miniKills", "miniFlawless", "bossKills", "bossFlawless",
@@ -322,6 +326,9 @@
     if (!["full", "light", "off"].includes(settings.film)) settings.film = DEFAULT_SETTINGS.film;
     if (!["full", "gentle", "still"].includes(settings.camera)) settings.camera = DEFAULT_SETTINGS.camera;
     if (!["babble", "spoken", "off"].includes(settings.voice)) settings.voice = DEFAULT_SETTINGS.voice;
+    if (!["full", "reduced", "off"].includes(settings.flashes)) settings.flashes = DEFAULT_SETTINGS.flashes;
+    if (!["normal", "large"].includes(settings.text)) settings.text = "normal";
+    settings.contrast = !!settings.contrast;
     profile = cleanProfile(readSaved(KEYS.profile));
     profile.best = Math.max(profile.best, Number(store.get(KEYS.best, 0)) || 0);
     cos = cleanCos(readSaved(KEYS.cos));

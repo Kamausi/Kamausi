@@ -39,6 +39,7 @@
     if (powerOn("cursed")) { const g = ctx.createRadialGradient(p.x, p.y, r * 0.6, p.x, p.y, r * 1.6); g.addColorStop(0, "rgba(154,107,192,.5)"); g.addColorStop(1, "rgba(154,107,192,0)"); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, r * 1.6, 0, TAU); ctx.fill(); }
     const squashed = Math.abs(T.sq) > 0.003;   // a contact squashes the ring along the line of the hit, then it springs back
     if (squashed) { ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(T.dir); ctx.scale(1 - T.sq, 1 + T.sq * 0.6); ctx.rotate(-T.dir); ctx.translate(-p.x, -p.y); }
+    if (settings.contrast) contrastHalo(p.x, p.y, r, lw * 1.6 + 3);
     drawRingShape(ctx, p.x, p.y, r, lw, cos.ring, T.t, ring.flash);
     if (squashed) ctx.restore();
     if (powerOn("deadeye")) {          // Deadeye shows its doubled perfect window
@@ -47,6 +48,13 @@
       ctx.beginPath(); ctx.moveTo(p.x - pr * 0.3, p.y); ctx.lineTo(p.x + pr * 0.3, p.y); ctx.moveTo(p.x, p.y - pr * 0.3); ctx.lineTo(p.x, p.y + pr * 0.3); ctx.stroke();
     }
     if (morph > 0) { ctx.globalAlpha = morph; ctx.fillStyle = MUSTARD; for (let i = 0; i < 8; i++) { const a = i * 0.785 + game.time * 3; star(ctx, p.x + Math.cos(a) * r * 1.4, p.y + Math.sin(a) * r * 1.4, r * 0.14, 5, 0.45, a); ctx.fill(); } ctx.globalAlpha = 1; }
+  }
+  // Settings → High contrast: an inked, pale-yellow halo that lifts the ring and the skull off the scenery
+  function contrastHalo(x, y, r, w, fill = false) {
+    ctx.save(); ctx.beginPath(); ctx.arc(x, y, r, 0, TAU);
+    if (fill) { ctx.fillStyle = "rgba(255,243,176,.85)"; ctx.fill(); ctx.lineWidth = 2.5; ctx.strokeStyle = INK; ctx.stroke(); }
+    else { ctx.lineWidth = w + 4; ctx.strokeStyle = INK; ctx.stroke(); ctx.lineWidth = w; ctx.strokeStyle = "#FFF3B0"; ctx.stroke(); }
+    ctx.restore();
   }
   // the ring's post (a cosmetic: poles)
   function drawPole(x, top, bottom, pw, s, id = cos.pole, c = ctx, t = game.time, ringTop = top) {
@@ -203,6 +211,7 @@
     const x = p.x + s.pullOff.x * recoil, y = p.y + s.pullOff.y * recoil + sink;
     const ghostly = (powerOn("ghost") || s.ghosted) ? 0.5 + 0.12 * Math.sin(game.time * 20) : 1;
     if (s.alpha * fade > 0.05) { drawPowerGlow(x, y, r); drawAura(ctx, x, y, r, V.t, false); drawRushWings(ctx, x, y, r, V.t, V.angle); drawPowerAura(ctx, x, y, r, V.t); }
+    if (settings.contrast && s.alpha * fade > 0.3) contrastHalo(x, y, r * 1.18, 0, true);
     if (V.smear > 0 && s.alpha * fade > 0.05) drawSmear(ctx, x, y, r, V.mdir == null ? V.dir : V.mdir, V.smear, s.alpha * fade * ghostly, V.t);
     drawSkull(ctx, x, y, r, { ang: V.angle + V.tilt, alpha: s.alpha * fade * ghostly, a: V.a, dir: V.dir, t: V.t, look: cos, face: V.face, jaw: V.jaw });
     if (s.alpha * fade > 0.05) { drawAura(ctx, x, y, r, V.t, true); drawHat(ctx, x, y, r, V.angle + V.tilt, V.t, hat, s.alpha * fade * ghostly, cos.hat, V.a, V.dir); voice.anchor = { x, y, r }; }
@@ -284,6 +293,7 @@
       if (aim.active && aim.valid) drawPower(rest.x + off.x, rest.y + off.y, r, aim.ny);
       const tr = V.tremble || { x: 0, y: 0 };   // the full-draw shiver: the whole skull moves, it never changes shape
       const k = easeOutBack(skull.spawn), sx = rest.x + off.x + tr.x * r, sy = rest.y + off.y + tr.y * r, ang = V.tilt + (aim.active ? off.x / (r * 14) : 0);
+      if (settings.contrast) contrastHalo(sx, sy, r * k * 1.18, 0, true);
       drawPowerGlow(sx, sy, r * k); drawAura(ctx, sx, sy, r * k, V.t, false); drawRushWings(ctx, sx, sy, r * k, V.t); drawPowerAura(ctx, sx, sy, r * k, V.t);
       drawSkull(ctx, sx, sy, r * k, { ang, a: V.a, dir: V.dir, t: V.t, look: cos, face: V.face, jaw: V.jaw, alpha: powerOn("ghost") ? 0.6 : 1 });
       drawLauncherFront(rest.x, rest.y, r, off);

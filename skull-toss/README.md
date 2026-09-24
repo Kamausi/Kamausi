@@ -1,8 +1,19 @@
-# SKULL TOSS v14
+# SKULL TOSS v15
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)), with a synthesised waltz standing in wherever they can't load.
+
+## New in v15: accessibility and the performance budget
+
+- **Flashes: Full, Reduced or Off** (Settings). Reduced swaps every camera flash for one soft one and dims lightning and the film's flicker. Off removes them. A device that asks for reduced motion starts on Reduced.
+- **High contrast.** An inked, pale-yellow halo lifts the ring and Morty off the scenery, and dim text and lines are brightened.
+- **Text size: Normal or Large.** Large zooms the menus, sheets and HUD by 15%.
+- **Keyboard focus stays inside an open sheet,** and the new radio rows move with the arrow keys.
+- **A performance budget** (`PERF` in `01_data.js`, [docs/PERFORMANCE.md](docs/PERFORMANCE.md)). Particles, comic bursts and contact stars are capped. The spec checks the cost of a game step and the page's element count, and the build refuses a light page over 2,600 KB.
+- **A small UI kit** (`09_ui_kit.js`) that the new screens are built from.
+
+See [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md) for everything the game does for access.
 
 ## New in v14: the foundation pass
 
@@ -552,7 +563,7 @@ From the console, `SkullToss.debug.visualAnimation` lists the pose library (`pos
 
 ## Tests
 
-Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **109 checks**, covering:
+Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **114 checks**, covering:
 
 - **Layout, scoring and aiming.**
   - Everything is centred and every result is classified correctly.
@@ -603,3 +614,9 @@ Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to
   - The fixed step: one throw ends in exactly the same state at 60 Hz and at a jittery mix of 30–144 Hz frames.
   - A gamepad aims where the same finger drag would, throws on A, throws nothing when the stick springs back, and pauses on Start.
   - The play log records a run from start to end on the device.
+- **v15.**
+  - Flashes Full, Reduced and Off each give the right flash, lightning strength and flicker.
+  - High contrast and large text reach the page, and both switch off again.
+  - Tab wraps inside an open sheet, and the arrows move along a radio row.
+  - The budget: effects are capped, a step costs under 0.5 ms, and the page stays under 2,500 elements.
+  - The UI kit builds elements with text, attributes, data and handlers.

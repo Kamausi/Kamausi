@@ -52,7 +52,7 @@
   function beat(after, fn, name) { SHOT.beats.push({ at: VCLOCK.t + after, fn, name }); }
   function directorReset() { SHOT.beats.length = 0; SHOT.cues.length = 0; SHOT.outcome = null; SHOT.contact = null; SHOT.rush = false; inkStars = []; for (const k in cueAt) delete cueAt[k]; }
   function directorUpdate(dt, frozen) {
-    if (!frozen) { for (const s of inkStars) s.t += dt; inkStars = inkStars.filter(s => s.t < s.n / 24); }
+    if (!frozen) { for (const s of inkStars) s.t += dt; inkStars = inkStars.filter(s => s.t < s.n / 24); if (inkStars.length > PERF.inkStars) inkStars.splice(0, inkStars.length - PERF.inkStars); }
     if (!SHOT.beats.length) return;
     const now = VCLOCK.t + 1e-6, due = SHOT.beats.filter(b => b.at <= now);
     if (!due.length) return;
@@ -136,9 +136,11 @@
     if (R) beat(R.dur * T.settle, () => { if (TARGET_HIT[VSTATE.target]) setTargetState("settle"); }, "settle");
   }
   // the camera-flash frame: stronger the bigger the moment
-  function screenFlash(w) {
-    if (reduceMotion || sandbox) return;
-    flashEl.className = "flash"; void flashEl.offsetWidth; flashEl.classList.add(w >= 1.3 ? "ko" : w > 1 ? "boss" : "perfect");
+  function screenFlash(w) {   // Settings → Flashes: Reduced swaps every flash for one soft one; Off skips them
+    const cls = settings.flashes === "off" || reduceMotion ? "" : settings.flashes === "reduced" ? "soft" : w >= 1.3 ? "ko" : w > 1 ? "boss" : "perfect";
+    flashEl.dataset.last = cls || "none";
+    if (!cls || sandbox) return;
+    flashEl.className = "flash"; void flashEl.offsetWidth; flashEl.classList.add(cls);
   }
   // a make: the sting lands as the score pops (three drawings after the contact)
   function directScore(d) {

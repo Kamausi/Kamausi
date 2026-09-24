@@ -26,7 +26,7 @@
     if (visualsOn()) visualTick(raw, performance.now() - t0);
     requestAnimationFrame(frame);
   }
-  loadAll(); welcomeGift(); ensureDaily(); applyCosmetics(); resize(); snapRing(); VisualSystem.init(); showScreen("title", false); updateHud();
+  loadAll(); welcomeGift(); ensureDaily(); applyCosmetics(); applyAccess(); resize(); snapRing(); VisualSystem.init(); showScreen("title", false); updateHud();
   requestAnimationFrame(frame);
   Cloud.init();
   // canvas-only fonts are never fetched unless asked for; once they're in, redraw anything painted once

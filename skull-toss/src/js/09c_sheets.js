@@ -61,7 +61,10 @@
     $("set-shake").disabled = settings.camera === "still";   // a locked-off camera doesn't jolt either
     for (const b of $("set-voice").querySelectorAll("button")) b.setAttribute("aria-checked", String(b.dataset.v === settings.voice));
     $("voiceNote").textContent = VOICE_NOTE[settings.voice];
+    segValue($("set-flashes"), settings.flashes); $("flashNote").textContent = FLASH_NOTE[settings.flashes];
+    set("set-contrast", settings.contrast); segValue($("set-text"), settings.text);
   }
+  const FLASH_NOTE = { full: "Camera flashes, lightning and the film's flicker", reduced: "One soft flash, dim lightning, a steady picture", off: "No flashes at all" };
   const FILM_NOTE = { full: "Grain, dust, scratches and a wobbly gate", light: "Just a little grain", off: "A clean print" };
   const CAMERA_NOTE = { full: "Leans with your aim, follows the throw", gentle: "The same moves, smaller", still: "A locked-off camera" };
   const VOICE_NOTE = { babble: "Cartoon mumbles when you grab him", spoken: "Your device reads his lines out loud", off: "A strong, silent skull" };
@@ -82,6 +85,9 @@
   $("set-sound").addEventListener("click", () => toggleSetting("sound"));
   $("set-vibe").addEventListener("click", () => toggleSetting("vibe"));
   $("set-shake").addEventListener("click", () => toggleSetting("shake"));
+  $("set-contrast").addEventListener("click", () => { toggleSetting("contrast"); applyAccess(); });
+  bindSeg("set-flashes", v => { settings.flashes = v; persist(); applyAccess(); renderSettings(); Sound.ui("tick"); });
+  bindSeg("set-text", v => { settings.text = v; persist(); applyAccess(); renderSettings(); Sound.ui("tick"); });
   for (const key of SLIDERS) {
     const el = $("set-" + key);
     el.addEventListener("input", () => { settings[key] = Number(el.value); $("out-" + key).textContent = el.value; Sound.apply(); if (paused) Sound.setPaused(true); });

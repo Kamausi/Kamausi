@@ -998,6 +998,52 @@
     T.setStats({ ...ZERO, bestScore: 0 }); T.toTitle();
   });
 
+  // ── v15: flashes, contrast and text size, focus in sheets, the performance budget, the UI kit ──
+  test("Flashes: Reduced swaps each flash for one soft one, Off skips them, and lightning and the film's flicker follow", () => {
+    for (const [v, want, k] of [["full", "perfect", 1], ["reduced", "soft", 0.3], ["off", "none", 0]]) {
+      T.setSetting("flashes", v); fresh(); throwAndSettle(0, C.RING_Y);
+      assert(T.state().lastResult.kind === "perfect", `a centred toss should be a perfect (${T.state().lastResult.kind})`);
+      assert(T.access().lastFlash === want && T.access().flashK === k, `${v}: flash ${T.access().lastFlash}, strength ${T.access().flashK}`);
+    }
+    T.setSetting("flashes", "full"); T.toTitle();
+  });
+  test("High contrast and large text reach the page", () => {
+    T.setSetting("contrast", true); T.setSetting("text", "large");
+    assert(T.access().hc && T.access().text === "large", JSON.stringify(T.access()));
+    assert(getComputedStyle(document.querySelector(".hud")).zoom === "1.15", `the HUD should zoom for large text (${getComputedStyle(document.querySelector(".hud")).zoom})`);
+    fresh(); T.step(0.2);   // the picture still draws with the halo on
+    T.setSetting("contrast", false); T.setSetting("text", "normal");
+    assert(!T.access().hc && getComputedStyle(document.querySelector(".hud")).zoom === "1", "both should switch off again");
+    T.toTitle();
+  });
+  test("Focus stays inside an open sheet, and its radio rows move with the arrow keys", () => {
+    T.toTitle(); T.openSheet("settings");
+    const root = $("sheet-settings"), list = [...root.querySelectorAll("button, input")].filter(el => !el.disabled && el.getClientRects().length);
+    list[list.length - 1].focus();
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true }));
+    assert(root.contains(document.activeElement) && document.activeElement === list[0], `Tab off the end should wrap to the top (${document.activeElement && document.activeElement.id})`);
+    const full = $("set-flashes").querySelector('[data-v="full"]'); T.setSetting("flashes", "full"); T.openSheet("settings"); full.focus();
+    full.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true, cancelable: true }));
+    assert(T.settings().flashes === "reduced", `the arrow should pick the next choice (${T.settings().flashes})`);
+    T.setSetting("flashes", "full"); T.closeSheet();
+  });
+  test("The performance budget: effects are capped, a game step is cheap, the page stays small", () => {
+    fresh(); T.spray(2000); T.step(1 / 60);
+    const P = T.perf();
+    assert(P.now.particles <= P.particles && P.now.bursts <= P.bursts, `over budget: ${JSON.stringify(P.now)}`);
+    fresh(); T.throwThrough(0.2, C.RING_Y, C.RING_Z); T.simReset();
+    const t0 = performance.now(), n = T.simAdvance(4); const ms = (performance.now() - t0) / n;
+    assert(n === Math.round(4 / T.simStep) && ms < P.stepMs, `${ms.toFixed(3)} ms a step (budget ${P.stepMs})`);
+    const nodes = document.getElementsByTagName("*").length;
+    assert(nodes <= P.domNodes, `${nodes} elements on the page (budget ${P.domNodes})`);
+    T.toTitle();
+  });
+  test("The UI kit builds elements with text, attributes, data and handlers", () => {
+    let clicked = 0; const el = T.h("button", { class: "chip-btn", type: "button", data: { k: "v" }, onclick: () => clicked++, "aria-label": "Poke" }, "Poke ", T.h("b", { text: "him" }));
+    el.click();
+    assert(el.className === "chip-btn" && el.dataset.k === "v" && el.getAttribute("aria-label") === "Poke" && el.textContent === "Poke him" && clicked === 1, el.outerHTML);
+  });
+
   T.sandbox(false); T.start(); T.pause(false);  // leave the game playable, player's saved data untouched
   window.__skullTossResults = results;
   const passed = results.filter(r => r.pass).length;

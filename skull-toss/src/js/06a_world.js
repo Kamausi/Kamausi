@@ -136,5 +136,5 @@
   }
   function flashAlpha() {
     const b = world.bolt; if (!b) return 0; const t = b.t;
-    return t < 0.07 ? 0.55 : t < 0.14 ? 0.08 : t < 0.22 ? 0.4 : Math.max(0, 0.4 - (t - 0.22) * 0.9);
+    return flashK() * (t < 0.07 ? 0.55 : t < 0.14 ? 0.08 : t < 0.22 ? 0.4 : Math.max(0, 0.4 - (t - 0.22) * 0.9));
   }

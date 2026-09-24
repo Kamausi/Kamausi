@@ -102,7 +102,7 @@
 
 <div class="sheet-scrim" id="sheetScrim" hidden></div>
 
-<section class="sheet" id="sheet-customize" role="dialog" aria-labelledby="h-customize" hidden>
+<section class="sheet" id="sheet-customize" role="dialog" aria-modal="true" aria-labelledby="h-customize" hidden>
   <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-customize">Skull Vault</h2><span class="bones" id="bonesShop"><svg><use href="#i-bone"/></svg><span>0</span></span></div>
   <div class="sheet-body">
     <div class="preview"><canvas id="previewCv" aria-label="Morty on the pedestal, in your looks. Drag to spin him."></canvas><span class="tag">On the pedestal</span></div>
@@ -131,7 +131,7 @@
   </div>
 </section>
 
-<section class="sheet" id="sheet-play" role="dialog" aria-labelledby="h-play" hidden>
+<section class="sheet" id="sheet-play" role="dialog" aria-modal="true" aria-labelledby="h-play" hidden>
   <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-play">Play</h2><span></span></div>
   <div class="sheet-body">
     <div class="modes" id="modePick">
@@ -145,7 +145,7 @@
   </div>
 </section>
 
-<section class="sheet" id="sheet-achievements" role="dialog" aria-labelledby="h-achievements" hidden>
+<section class="sheet" id="sheet-achievements" role="dialog" aria-modal="true" aria-labelledby="h-achievements" hidden>
   <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-achievements">Achievements</h2><span class="bones" id="bonesAch"><svg><use href="#i-bone"/></svg><span>0</span></span></div>
   <div class="sheet-body">
     <div class="ach-head"><p id="achCount"></p><div class="bar" id="achBar"><i></i></div></div>
@@ -154,7 +154,7 @@
   </div>
 </section>
 
-<section class="sheet" id="sheet-challenges" role="dialog" aria-labelledby="h-challenges" hidden>
+<section class="sheet" id="sheet-challenges" role="dialog" aria-modal="true" aria-labelledby="h-challenges" hidden>
   <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-challenges">Challenges</h2><span class="bones" id="bonesChal"><svg><use href="#i-bone"/></svg><span>0</span></span></div>
   <div class="sheet-body">
     <div class="cat-tabs chal-tabs" id="chalTabs" role="tablist">
@@ -168,7 +168,7 @@
   </div>
 </section>
 
-<section class="sheet" id="sheet-settings" role="dialog" aria-labelledby="h-settings" hidden>
+<section class="sheet" id="sheet-settings" role="dialog" aria-modal="true" aria-labelledby="h-settings" hidden>
   <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-settings">Settings</h2></div>
   <div class="sheet-body">
     <div class="row"><div><div class="lbl">Sound</div><div class="sub">Music, effects and the graveyard</div></div><button class="switch" role="switch" id="set-sound" aria-checked="true" aria-label="Sound" type="button"></button></div>
@@ -185,11 +185,16 @@
     <div class="row"><div><div class="lbl">Camera jolts</div><div class="sub">The scenery knocks on bonks, perfects and lightning</div></div><button class="switch" role="switch" id="set-shake" aria-checked="true" aria-label="Camera jolts" type="button"></button></div>
     <div class="row stack"><div><div class="lbl">Aim guide</div><div class="sub" id="guideNote">Full path and crosshair</div></div>
       <div class="seg" role="radiogroup" aria-label="Aim guide" id="set-guide"><button type="button" role="radio" data-v="full" aria-checked="true">Full</button><button type="button" role="radio" data-v="short" aria-checked="false">Short</button><button type="button" role="radio" data-v="off" aria-checked="false">Off</button></div></div>
+    <div class="row stack"><div><div class="lbl">Flashes</div><div class="sub" id="flashNote">Camera flashes, lightning and the film's flicker</div></div>
+      <div class="seg" role="radiogroup" aria-label="Flashes" id="set-flashes"><button type="button" role="radio" data-v="full" aria-checked="true">Full</button><button type="button" role="radio" data-v="reduced" aria-checked="false">Reduced</button><button type="button" role="radio" data-v="off" aria-checked="false">Off</button></div></div>
+    <div class="row"><div><div class="lbl">High contrast</div><div class="sub">A bright halo round the ring and Morty, bolder text</div></div><button class="switch" role="switch" id="set-contrast" aria-checked="false" aria-label="High contrast" type="button"></button></div>
+    <div class="row stack"><div><div class="lbl">Text size</div><div class="sub">Menus, sheets and the HUD</div></div>
+      <div class="seg" role="radiogroup" aria-label="Text size" id="set-text"><button type="button" role="radio" data-v="normal" aria-checked="true">Normal</button><button type="button" role="radio" data-v="large" aria-checked="false">Large</button></div></div>
     <div class="row"><div><div class="lbl">Reset progress</div><div class="sub">Clears stats, bones, best score and the Vault</div></div><button class="ghost-btn danger" id="resetBtn" type="button">Reset</button></div>
   </div>
 </section>
 
-<section class="sheet" id="sheet-store" role="dialog" aria-labelledby="h-store" hidden>
+<section class="sheet" id="sheet-store" role="dialog" aria-modal="true" aria-labelledby="h-store" hidden>
   <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-store">Curio Cart</h2><span class="bones" id="bonesStore"><svg><use href="#i-bone"/></svg><span>0</span></span></div>
   <div class="sheet-body">
     <div class="preview cart"><canvas id="cartCv" aria-label="Mort the ghoul behind his cart, showing off an item"></canvas><span class="tag" id="cartQuip">No refunds. No returns. No pulse.</span></div>
@@ -206,7 +211,7 @@
   </div>
 </section>
 
-<section class="sheet" id="sheet-board" role="dialog" aria-labelledby="h-board" hidden>
+<section class="sheet" id="sheet-board" role="dialog" aria-modal="true" aria-labelledby="h-board" hidden>
   <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-board">Leaderboard</h2></div>
   <div class="sheet-body">
     <div class="seg board-tabs" role="tablist" id="boardTabs"><button type="button" role="tab" data-tab="live" aria-selected="true">The graveyard</button><button type="button" role="tab" data-tab="local" aria-selected="false">This device</button></div>
@@ -217,7 +222,7 @@
   </div>
 </section>
 
-<section class="sheet" id="sheet-profile" role="dialog" aria-labelledby="h-profile" hidden>
+<section class="sheet" id="sheet-profile" role="dialog" aria-modal="true" aria-labelledby="h-profile" hidden>
   <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-profile">Profile</h2></div>
   <div class="sheet-body">
     <div class="card" id="saveCard">

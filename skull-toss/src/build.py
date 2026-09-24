@@ -108,6 +108,9 @@ out = page.replace("/*__STYLE__*/", css).replace("<!--__MARKUP__-->", markup).re
 args = [a for a in sys.argv[1:] if not a.startswith("--")]
 if dev and args and not embed_music: sys.exit("build refused: the published build never carries the test hooks; drop --dev")
 suffix = "-dev" if dev else ""
+# the performance budget (docs/PERFORMANCE.md): the light page may not outgrow PERF.lightKB (01_data.js)
+budget = int(re.search(r"lightKB:\s*(\d+)", (root / "js" / "01_data.js").read_text()).group(1))
+if not embed_music and len(out.encode()) > budget * 1024: sys.exit(f"build refused: the page is {len(out.encode()) // 1024} KB, over the {budget} KB budget in PERF.lightKB")
 if not embed_music: (root.parent / f"index{suffix}.html").write_text(out)
 art = out  # artifact build: no document wrapper, no test loader
 for pat in [r'<!doctype html>\s*', r'<html lang="en">\s*', r'<head>\s*', r'</head>\s*', r'<body>\s*', r'</body>\s*', r'</html>\s*', r'<meta charset="utf-8">\s*', r'<meta name="viewport"[^>]*>\s*']:

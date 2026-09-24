@@ -273,7 +273,9 @@
     const grav = U * 1.6;
     for (const p of particles) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += grav * dt * p.g; p.vx *= 1 - dt * 1.5; if (p.grow) p.size += p.grow * dt; if (p.vr) p.rot += p.vr * dt; }
     particles = particles.filter(p => p.life > 0);
+    if (particles.length > PERF.particles) particles.splice(0, particles.length - PERF.particles);   // the budget: the oldest go first
     for (const b of bursts) b.t += dt; bursts = bursts.filter(b => b.t < b.dur);
+    if (bursts.length > PERF.bursts) bursts.splice(0, bursts.length - PERF.bursts);
     for (const w of waves) w.t += dt; waves = waves.filter(w => w.t < w.dur);
     game.shake = Math.max(0, game.shake - dt * U * 0.08);
     updateCamera(dt);
