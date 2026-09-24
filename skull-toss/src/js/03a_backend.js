@@ -29,7 +29,7 @@
     // saves stay on the device, the board is local, the Soul Shop waits. Sign-in can fail too (Anonymous not switched
     // on yet): the app still starts, so Google Analytics works whatever else doesn't.
     async useFirebase(cfg) {
-      const svc = { firestore: true, functions: true, ...(cfg.services || {}) }, { services, functionsRegion, ...options } = cfg;
+      const svc = { firestore: true, functions: true, ...(cfg.services || {}) }, { services: _services, functionsRegion, ...options } = cfg;   // (options: what Firebase itself takes)
       const need = [["app", "firebase-app-compat.js"], ["auth", "firebase-auth-compat.js"], ...(svc.firestore ? [["firestore", "firebase-firestore-compat.js"]] : []), ...(svc.functions ? [["functions", "firebase-functions-compat.js"]] : [])];
       for (const [part, file] of need) if (!(window.firebase && (part === "app" || window.firebase[part]))) await loadScript(FIREBASE_SDK + file);
       const fb = window.firebase, app = fb.apps.length ? fb.app() : fb.initializeApp(options);
