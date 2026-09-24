@@ -70,8 +70,8 @@
       el.classList.toggle("bonus", i >= START_LIVES);
     });
     const tb = $("titleBest");
-    tb.innerHTML = profile.bestScore > 0 ? `Best <b>${fmtN(profile.bestScore)}</b> · ${rankFor(profile.makes).name}`
-      : profile.best > 0 ? `Best <b>${profile.best}</b> hits · ${rankFor(profile.makes).name}` : "Pull down · aim · let go";
+    tb.innerHTML = profile.bestScore > 0 ? t("title.best", { score: fmtN(profile.bestScore), rank: rankFor(profile.makes).name })
+      : profile.best > 0 ? t("title.bestHits", { hits: profile.best, rank: rankFor(profile.makes).name }) : t("hint.start");
     renderBones(); renderProgress(); renderPowers(); renderWind();
     Sound.setTension(inRun() && game.lives === 1);
     updatePips();

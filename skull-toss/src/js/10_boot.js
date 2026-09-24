@@ -26,7 +26,9 @@
     if (visualsOn()) visualTick(raw, performance.now() - t0);
     requestAnimationFrame(frame);
   }
-  loadAll(); welcomeGift(); ensureDaily(); applyCosmetics(); applyAccess(); layOutProps(); resize(); snapRing(); VisualSystem.init(); showScreen("title", false); updateHud();
+  loadAll();
+  { const q = (location.search.match(/[?&]lang=([\w-]+)/) || [])[1]; if (q || settings.lang !== "en") setLang(q || settings.lang); }   // ?lang=pseudo tries the text-length locale
+  welcomeGift(); ensureDaily(); applyCosmetics(); applyAccess(); layOutProps(); resize(); snapRing(); VisualSystem.init(); showScreen("title", false); updateHud();
   requestAnimationFrame(frame);
   Cloud.init();
   // canvas-only fonts are never fetched unless asked for; once they're in, redraw anything painted once

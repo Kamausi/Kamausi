@@ -1,8 +1,25 @@
-# SKULL TOSS v23
+# SKULL TOSS v24
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)), with a synthesised waltz standing in wherever they can't load.
+
+## New in v24: Morty has a personality, and every word has an ID
+
+**Morty talks more, and to the point.** His 151 lines are dealt from pools like cards: shuffled, and no line comes round again until the whole pool has been said.
+
+- **Mood.** What he says when you grab him depends on his mood: cocky on a streak, nervous on the last skull, grumpy after misses, odd when cursed.
+- **Big moments always get a line:** each of the sixteen bosses walking on, a boss going down, each of his eight pieces coming back, a new reel starting, the offer of one more skull (and taking it), a resumed run, and THE END.
+- **Small moments wait their turn:** a perfect, a near miss, a knock from a bat or a bone, a streak of five, the last skull, a power-up. They roll the dice and wait out a five-second cooldown.
+- **Stalling.** Leave him in the pouch for twelve seconds and he nags you, once per lull.
+
+**Every word has an ID** (groundwork for other languages; see [docs/LOCALIZATION.md](docs/LOCALIZATION.md)).
+
+- **Where the text lives.** The code's text is in `src/strings/en.json`. The markup keeps its English and marks it `data-t="ui.…"`.
+- **What the build checks.** It refuses an ID that's used but missing, one that's defined but never used, and a translation whose placeholders don't match.
+- **Adding a language.** Drop `src/strings/fr.json` in and **Settings → Language** appears.
+- **Testing text length.** `?lang=pseudo` accents and pads every string by a third to show what won't fit. The spec checks the menus, Settings and the continue box for overflow that way; long labels now wrap inside their buttons.
+- **Recorded voice.** Morty's line IDs are voice-line IDs: a recording saved as `src/sfx/vo.<id>.mp3` replaces the mumble for that line.
 
 ## New in v23: the reel's own cards
 
@@ -655,7 +672,7 @@ From the console, `SkullToss.debug.visualAnimation` lists the pose library (`pos
 
 ## Tests
 
-Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **141 checks**, covering:
+Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **146 checks**, covering:
 
 - **Layout, scoring and aiming.**
   - Everything is centred and every result is classified correctly.
@@ -746,3 +763,9 @@ Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to
   - Between reels, two changeover cues, then the next reel's card. After Reel Four comes the intermission, then Reel Five.
   - After Reel Eight, THE END card, then the headstone reading The end.
   - Title cards Short gives a brief card and no leader. Off goes straight into play. Arcade opens on its map's own card.
+- **v24.**
+  - The markup, the code's text and every one of Morty's pools come from the string table, and nothing goes missing in play.
+  - In the pseudo-locale every tagged text is accented and padded, placeholders survive, and no title button, settings label or continue button overflows.
+  - Morty deals a pool like cards, with no repeats until it's done.
+  - Big moments always get a line (a boss walking on, a boss down, the continue offer and taking it). Small ones wait out the cooldown. Twelve idle seconds get one nudge per lull.
+  - His mood follows the run: nervous on the last skull, cocky on a streak, grumpy after misses.

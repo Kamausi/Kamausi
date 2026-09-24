@@ -20,12 +20,12 @@
     const R = continueRule(); if (!R.ok) return false;
     game.state = "continue"; game.cont = { t: 0, cost: R.cost };
     resetSkull(); VisualSystem.emit("death"); Sound.flightStop(true); showCombo(0); setHint("");
-    $("contBones").textContent = `Spend ${R.cost.toLocaleString("en-US")} bones`; $("contBones").disabled = !R.pay;
-    $("contSub").textContent = R.pay ? `You have ${profile.bones.toLocaleString("en-US")} bones. Morty gets one more skull; your score stays.` : "Not enough bones for this one.";
+    $("contBones").textContent = t("cont.bones", { n: fmtN(R.cost) }); $("contBones").disabled = !R.pay;
+    $("contSub").textContent = R.pay ? t("cont.have", { n: fmtN(profile.bones) }) : t("cont.short");
     $("contAd").hidden = !R.ad; contEl.hidden = false; renderContinueTimer();
     Sound.toon("whistleDown"); Telemetry.emit("continue_offer", { stage: game.stage, cost: R.cost, pay: R.pay, ad: R.ad, n: game.run.continues || 0 });
-    srEl.textContent = `Out of skulls. Continue for ${R.cost} bones? ${CONTINUE.window} seconds.`;
-    saveRunSnapshot(true);
+    srEl.textContent = t("cont.sr", { n: R.cost, secs: CONTINUE.window });
+    saveRunSnapshot(true); mortySays("continue", { priority: true });
     const f = !$("contBones").disabled ? $("contBones") : !$("contAd").hidden ? $("contAd") : $("contNo"); if (ui.kbd) f.focus({ preventScroll: true });
     return true;
   }
@@ -43,8 +43,8 @@
     game.run.continues = (game.run.continues || 0) + 1; game.run.contMaps = (game.run.contMaps || []).concat(game.stage); profile.continues++;
     game.lives = 1; game.streak = 0; game.perfStreak = 0;
     Telemetry.emit("continue_take", { method, cost: method === "bones" ? cost : 0, stage: game.stage });
-    const p = project(0, START_Y, 0); impact("ENCORE!", W / 2, p.y - U * 0.28, { fill: GOLD, text: INK, scale: 1, bits: true, sub: "one more skull" });
-    Sound.toon("encore"); buzz([20, 40, 20]);
+    const p = project(0, START_Y, 0); impact(t("cont.encore"), W / 2, p.y - U * 0.28, { fill: GOLD, text: INK, scale: 1, bits: true, sub: t("cont.encoreSub") });
+    Sound.toon("encore"); buzz([20, 40, 20]); mortySays("encore", { priority: true });
     persist(300);
     settleThrow();   // pick the run up where the last throw left it
     updateHud(); return true;
@@ -90,10 +90,10 @@
     for (const [id, p] of Object.entries(S.powers || {})) if (POWERS[id]) powers[id] = { left: p.left, uses: p.uses, t: 0 };
     VisualSystem.setStage(game.stage); setScene(game.stage - 1); hazardsReset(); HZ.wind = S.wind || 0; renderWind();
     setRingMode(game.phase === "B" ? bMode() : "line", false); snapRing(); renderPowers();
-    hideStageCard(); stageCard(mapData(game.stage).reel, "Picking up where you left off", `${fmtN(game.score)} points · ${game.hits} hits`, 2.2);
-    Telemetry.emit("run_resume", { stage: game.stage, score: game.score, cont: !!S.cont });
+    hideStageCard(); stageCard(mapData(game.stage).reel, t("card.resume.t"), t("card.resume.s", { score: fmtN(game.score), hits: game.hits }), 2.2);
+    Telemetry.emit("run_resume", { stage: game.stage, score: game.score, cont: !!S.cont }); mortySays("resume", { priority: true });
     if (S.cont || game.lives <= 0) { game.lives = 0; if (!offerContinue()) gameOver(); }
-    else if (!stageCheck()) setHint("Pull down · aim · let go");
+    else if (!stageCheck()) setHint(t("hint.start"));
     updateHud(); return true;
   }
   function renderResumeOffer() { const b = $("resumeRunBtn"); if (b) b.hidden = !readRunSnapshot(); }

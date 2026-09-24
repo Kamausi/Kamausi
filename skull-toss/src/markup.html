@@ -22,14 +22,14 @@
   <symbol id="i-star" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.8l2.7 5.9 6.4.7-4.8 4.3 1.4 6.4L12 16.9l-5.7 3.2 1.4-6.4-4.8-4.3 6.4-.7z"/></symbol>
 </svg>
 
-<canvas id="stage" aria-label="Skull Toss play field. Pull down to aim, release to throw. Arrow keys aim, Space throws, Escape pauses."></canvas>
+<canvas id="stage" aria-label="Skull Toss play field. Pull down to aim, release to throw. Arrow keys aim, Space throws, Escape pauses." data-t-aria="ui.skull-toss-play-field-pull"></canvas>
 <div id="vig" aria-hidden="true"></div>
 
 <header class="hud" id="hud" hidden>
   <div class="hud-score"><b id="score" class="num" data-v="0"><span>0</span></b><span class="hits"><b id="hits">0</b> hits</span><span id="best">Best 0</span></div>
-  <div class="hud-left"><div class="lives-row"><div id="lives" aria-label="Skulls left"></div><div class="combo" id="combo" hidden aria-live="polite"><span class="x">×<b id="comboN">2</b></span><span class="word" id="comboWord">Nice</span><svg><use href="#i-flame"/></svg></div></div></div>
+  <div class="hud-left"><div class="lives-row"><div id="lives" aria-label="Skulls left" data-t-aria="ui.skulls-left"></div><div class="combo" id="combo" hidden aria-live="polite"><span class="x">×<b id="comboN">2</b></span><span class="word" id="comboWord">Nice</span><svg><use href="#i-flame"/></svg></div></div></div>
   <div class="prog" id="prog"><span class="st">Stage <b id="progStage">1</b></span><span class="st arc" id="progArc">0:00</span><div class="track"><i id="progFill"></i><span class="mark mini" title="The Crow King"><svg><use href="#i-crow"/></svg></span><span class="mark boss" title="The Pumpkin King"><svg><use href="#i-pumpkin"/></svg></span></div><span class="lbl" id="progLabel">25 to the Crow King</span></div>
-  <div class="hud-right"><button class="icon-btn" id="pauseBtn" type="button" aria-label="Pause"><svg class="icon"><use href="#i-pause"/></svg><span class="badge" id="menuBadge" hidden></span></button><div class="powers" id="powers" hidden></div><div class="wind" id="wind" hidden role="img" aria-label="No wind"><span class="arr">·</span><b>0.0</b><span class="k">wind</span></div></div>
+  <div class="hud-right"><button class="icon-btn" id="pauseBtn" type="button" aria-label="Pause" data-t-aria="ui.pause"><svg class="icon"><use href="#i-pause"/></svg><span class="badge" id="menuBadge" hidden></span></button><div class="powers" id="powers" hidden></div><div class="wind" id="wind" hidden role="img" aria-label="No wind"><span class="arr">·</span><b>0.0</b><span class="k" data-t="ui.wind">wind</span></div></div>
 </header>
 <p id="hint" hidden></p>
 <div class="ach-pop" id="achPop" hidden role="status"></div>
@@ -37,26 +37,26 @@
 <div class="stagecard" id="stagecard" hidden role="status"></div>
 <div class="reelcard" id="reelCard" hidden><canvas id="reelCv" aria-hidden="true"></canvas>
   <div class="rc-text"><p class="rc-k" id="rcK"></p><p class="rc-reel" id="rcReel"></p><h2 class="rc-t" id="rcTitle"></h2><p class="rc-s" id="rcSub"></p><p class="rc-n" id="rcNote"></p></div>
-  <p class="rc-skip">Tap to skip</p></div>
+  <p class="rc-skip" data-t="ui.tap-to-skip">Tap to skip</p></div>
 
 <section class="screen title" id="title">
   <div class="curtain left"></div><div class="curtain right"></div><div class="valance"></div><div class="footlights"></div>
   <div class="screen-top"><span></span><span class="bones" id="bonesTitle"><svg><use href="#i-bone"/></svg><span>0</span></span></div>
   <div class="col">
-    <h1 class="logo" aria-label="Skull Toss"><span class="w1" aria-hidden="true"><i style="--i:0">S</i><i style="--i:1">K</i><i style="--i:2">U</i><i style="--i:3">L</i><i style="--i:4">L</i></span><span class="w2" aria-hidden="true"><i style="--i:5">T</i><span class="mascot" id="mascot" role="img" aria-label="Morty (poke him)"><canvas class="m-back" id="mascotBack"></canvas><canvas class="m-front" id="mascotFront"></canvas></span><i style="--i:7">S</i><i style="--i:8">S</i></span></h1>
-    <p class="tagline">A lost cartoon from 1933</p>
-    <nav class="menu-stack" aria-label="Main menu">
-      <button class="btn primary" id="play" type="button"><svg class="toss"><use href="#i-skull"/></svg><svg class="icon"><use href="#i-play"/></svg>Play</button>
-      <button class="btn" id="resumeRunBtn" type="button" hidden><svg class="toss"><use href="#i-skull"/></svg><svg class="icon"><use href="#i-retry"/></svg>Resume run</button>
-      <button class="btn" id="challengesBtn" data-sheet="challenges" type="button"><svg class="toss"><use href="#i-skull"/></svg><svg class="icon"><use href="#i-tomb"/></svg>Challenges<span class="pip" id="challengePip" hidden></span></button>
-      <button class="btn" id="customizeBtn" data-sheet="customize" type="button"><svg class="toss"><use href="#i-skull"/></svg><svg class="icon"><use href="#i-vault"/></svg>Skull Vault<span class="pip" id="customizePip" hidden></span></button>
-      <button class="btn" id="storeBtn" data-sheet="store" type="button"><svg class="toss"><use href="#i-skull"/></svg><svg class="icon"><use href="#i-cart"/></svg>Curio Cart<span class="pip" id="storePip" hidden></span></button>
+    <h1 class="logo" aria-label="Skull Toss"><span class="w1" aria-hidden="true"><i style="--i:0">S</i><i style="--i:1">K</i><i style="--i:2">U</i><i style="--i:3">L</i><i style="--i:4">L</i></span><span class="w2" aria-hidden="true"><i style="--i:5">T</i><span class="mascot" id="mascot" role="img" aria-label="Morty (poke him)" data-t-aria="ui.morty-poke-him"><canvas class="m-back" id="mascotBack"></canvas><canvas class="m-front" id="mascotFront"></canvas></span><i style="--i:7">S</i><i style="--i:8">S</i></span></h1>
+    <p class="tagline" data-t="ui.a-lost-cartoon-from-1933">A lost cartoon from 1933</p>
+    <nav class="menu-stack" aria-label="Main menu" data-t-aria="ui.main-menu">
+      <button class="btn primary" id="play" type="button"><svg class="toss"><use href="#i-skull"/></svg><svg class="icon"><use href="#i-play"/></svg><span data-t="ui.play">Play</span></button>
+      <button class="btn" id="resumeRunBtn" type="button" hidden><svg class="toss"><use href="#i-skull"/></svg><svg class="icon"><use href="#i-retry"/></svg><span data-t="ui.resume-run">Resume run</span></button>
+      <button class="btn" id="challengesBtn" data-sheet="challenges" type="button"><svg class="toss"><use href="#i-skull"/></svg><svg class="icon"><use href="#i-tomb"/></svg><span data-t="ui.challenges">Challenges</span><span class="pip" id="challengePip" hidden></span></button>
+      <button class="btn" id="customizeBtn" data-sheet="customize" type="button"><svg class="toss"><use href="#i-skull"/></svg><svg class="icon"><use href="#i-vault"/></svg><span data-t="ui.skull-vault">Skull Vault</span><span class="pip" id="customizePip" hidden></span></button>
+      <button class="btn" id="storeBtn" data-sheet="store" type="button"><svg class="toss"><use href="#i-skull"/></svg><svg class="icon"><use href="#i-cart"/></svg><span data-t="ui.curio-cart">Curio Cart</span><span class="pip" id="storePip" hidden></span></button>
     </nav>
     <div class="menu-row">
-      <button class="chip-btn" data-sheet="settings" type="button"><svg class="icon"><use href="#i-gear"/></svg>Settings</button>
-      <button class="chip-btn" data-sheet="board" type="button"><svg class="icon"><use href="#i-crown"/></svg>Leaders</button>
-      <button class="chip-btn" data-sheet="profile" type="button"><svg class="icon"><use href="#i-profile"/></svg>Profile</button>
-      <button class="chip-btn" data-sheet="achievements" type="button"><svg class="icon"><use href="#i-star"/></svg>Achievements<span class="badge" id="achPip" hidden></span></button>
+      <button class="chip-btn" data-sheet="settings" type="button"><svg class="icon"><use href="#i-gear"/></svg><span data-t="ui.settings">Settings</span></button>
+      <button class="chip-btn" data-sheet="board" type="button"><svg class="icon"><use href="#i-crown"/></svg><span data-t="ui.leaders">Leaders</span></button>
+      <button class="chip-btn" data-sheet="profile" type="button"><svg class="icon"><use href="#i-profile"/></svg><span data-t="ui.profile">Profile</span></button>
+      <button class="chip-btn" data-sheet="achievements" type="button"><svg class="icon"><use href="#i-star"/></svg><span data-t="ui.achievements">Achievements</span><span class="badge" id="achPip" hidden></span></button>
     </div>
     <p class="meta" id="titleBest"></p>
   </div>
@@ -65,13 +65,13 @@
 <section class="screen pause" id="pause" hidden>
   <div class="col">
     <p class="eyebrow">Score <b id="pauseScore">0</b> · the reel is paused</p>
-    <h2 class="logo sm">Paused</h2>
-    <nav class="menu-stack" aria-label="Pause menu">
-      <button class="btn primary" id="resumeBtn" type="button"><svg class="toss"><use href="#i-skull"/></svg><svg class="icon"><use href="#i-play"/></svg>Resume</button>
-      <button class="btn" data-sheet="customize" type="button"><svg class="toss"><use href="#i-skull"/></svg><svg class="icon"><use href="#i-vault"/></svg>Skull Vault</button>
-      <button class="btn" data-sheet="settings" type="button"><svg class="toss"><use href="#i-skull"/></svg><svg class="icon"><use href="#i-gear"/></svg>Settings</button>
-      <button class="btn" data-sheet="profile" type="button"><svg class="toss"><use href="#i-skull"/></svg><svg class="icon"><use href="#i-profile"/></svg>Profile</button>
-      <button class="btn danger" id="quitBtn" type="button">End run</button>
+    <h2 class="logo sm" data-t="ui.paused">Paused</h2>
+    <nav class="menu-stack" aria-label="Pause menu" data-t-aria="ui.pause-menu">
+      <button class="btn primary" id="resumeBtn" type="button"><svg class="toss"><use href="#i-skull"/></svg><svg class="icon"><use href="#i-play"/></svg><span data-t="ui.resume">Resume</span></button>
+      <button class="btn" data-sheet="customize" type="button"><svg class="toss"><use href="#i-skull"/></svg><svg class="icon"><use href="#i-vault"/></svg><span data-t="ui.skull-vault">Skull Vault</span></button>
+      <button class="btn" data-sheet="settings" type="button"><svg class="toss"><use href="#i-skull"/></svg><svg class="icon"><use href="#i-gear"/></svg><span data-t="ui.settings">Settings</span></button>
+      <button class="btn" data-sheet="profile" type="button"><svg class="toss"><use href="#i-skull"/></svg><svg class="icon"><use href="#i-profile"/></svg><span data-t="ui.profile">Profile</span></button>
+      <button class="btn danger" id="quitBtn" type="button" data-t="ui.end-run">End run</button>
     </nav>
   </div>
 </section>
@@ -96,10 +96,10 @@
     </div>
     <div class="next" id="nextUnlock"><div class="res-bones" id="resBonesBox"><b>+<span id="resBones">0</span></b><svg><use href="#i-bone"/></svg><span>Bones</span></div><div class="next-text" id="nextText"></div><div class="bar" id="nextBar"><i></i></div></div>
     <div class="res-actions">
-      <button class="btn primary" id="again" type="button"><svg class="toss"><use href="#i-skull"/></svg><svg class="icon"><use href="#i-retry"/></svg>Toss again</button>
-      <button class="btn" id="toMenu" type="button"><svg class="icon"><use href="#i-home"/></svg>Menu</button>
+      <button class="btn primary" id="again" type="button"><svg class="toss"><use href="#i-skull"/></svg><svg class="icon"><use href="#i-retry"/></svg><span data-t="ui.toss-again">Toss again</span></button>
+      <button class="btn" id="toMenu" type="button"><svg class="icon"><use href="#i-home"/></svg><span data-t="ui.menu">Menu</span></button>
     </div>
-    <div class="menu-row"><button class="chip-btn" data-sheet="board" type="button"><svg class="icon"><use href="#i-crown"/></svg>Leaders</button><button class="chip-btn" data-sheet="store" type="button"><svg class="icon"><use href="#i-cart"/></svg>Shop</button></div>
+    <div class="menu-row"><button class="chip-btn" data-sheet="board" type="button"><svg class="icon"><use href="#i-crown"/></svg><span data-t="ui.leaders">Leaders</span></button><button class="chip-btn" data-sheet="store" type="button"><svg class="icon"><use href="#i-cart"/></svg><span data-t="ui.shop">Shop</span></button></div>
     <p class="meta" id="bestLine"></p>
   </div>
 </section>
@@ -107,27 +107,27 @@
 <div class="sheet-scrim" id="sheetScrim" hidden></div>
 
 <section class="sheet" id="sheet-customize" role="dialog" aria-modal="true" aria-labelledby="h-customize" hidden>
-  <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-customize">Skull Vault</h2><span class="bones" id="bonesShop"><svg><use href="#i-bone"/></svg><span>0</span></span></div>
+  <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back" data-t-aria="ui.back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-customize" data-t="ui.skull-vault">Skull Vault</h2><span class="bones" id="bonesShop"><svg><use href="#i-bone"/></svg><span>0</span></span></div>
   <div class="sheet-body">
-    <div class="preview"><canvas id="previewCv" aria-label="Morty on the pedestal, in your looks. Drag to spin him."></canvas><span class="tag">On the pedestal</span></div>
+    <div class="preview"><canvas id="previewCv" aria-label="Morty on the pedestal, in your looks. Drag to spin him." data-t-aria="ui.morty-on-the-pedestal-in"></canvas><span class="tag" data-t="ui.on-the-pedestal">On the pedestal</span></div>
     <div class="cat-tabs" id="catTabs" role="tablist">
-      <button type="button" role="tab" data-cat="skull" aria-selected="true">Skulls</button>
-      <button type="button" role="tab" data-cat="eyes" aria-selected="false">Eyes</button>
-      <button type="button" role="tab" data-cat="teeth" aria-selected="false">Teeth</button>
-      <button type="button" role="tab" data-cat="paint" aria-selected="false">Paint</button>
-      <button type="button" role="tab" data-cat="hat" aria-selected="false">Hats</button>
-      <button type="button" role="tab" data-cat="aura" aria-selected="false">Auras</button>
-      <button type="button" role="tab" data-cat="trail" aria-selected="false">Trails</button>
-      <button type="button" role="tab" data-cat="impact" aria-selected="false">Impacts</button>
-      <button type="button" role="tab" data-cat="ring" aria-selected="false">Rings</button>
-      <button type="button" role="tab" data-cat="pole" aria-selected="false">Poles</button>
-      <button type="button" role="tab" data-cat="aim" aria-selected="false">Aim</button>
-      <button type="button" role="tab" data-cat="reel" aria-selected="false">Reels</button>
-      <button type="button" role="tab" data-cat="title" aria-selected="false">Titles</button>
+      <button type="button" role="tab" data-cat="skull" aria-selected="true" data-t="ui.skulls">Skulls</button>
+      <button type="button" role="tab" data-cat="eyes" aria-selected="false" data-t="ui.eyes">Eyes</button>
+      <button type="button" role="tab" data-cat="teeth" aria-selected="false" data-t="ui.teeth">Teeth</button>
+      <button type="button" role="tab" data-cat="paint" aria-selected="false" data-t="ui.paint">Paint</button>
+      <button type="button" role="tab" data-cat="hat" aria-selected="false" data-t="ui.hats">Hats</button>
+      <button type="button" role="tab" data-cat="aura" aria-selected="false" data-t="ui.auras">Auras</button>
+      <button type="button" role="tab" data-cat="trail" aria-selected="false" data-t="ui.trails">Trails</button>
+      <button type="button" role="tab" data-cat="impact" aria-selected="false" data-t="ui.impacts">Impacts</button>
+      <button type="button" role="tab" data-cat="ring" aria-selected="false" data-t="ui.rings">Rings</button>
+      <button type="button" role="tab" data-cat="pole" aria-selected="false" data-t="ui.poles">Poles</button>
+      <button type="button" role="tab" data-cat="aim" aria-selected="false" data-t="ui.aim">Aim</button>
+      <button type="button" role="tab" data-cat="reel" aria-selected="false" data-t="ui.reels">Reels</button>
+      <button type="button" role="tab" data-cat="title" aria-selected="false" data-t="ui.titles">Titles</button>
     </div>
     <div class="section-k"><span class="k" id="catLabel">Skulls</span><b id="catCount"></b></div>
     <div class="grid" id="shopGrid"></div>
-    <div class="tip">Nothing in the Vault changes how Morty flies. <b>Look what you're throwing</b>: that's the whole flex.</div>
+    <div class="tip" data-t="ui.nothing-in-the-vault-changes">Nothing in the Vault changes how Morty flies. <b>Look what you're throwing</b>: that's the whole flex.</div>
   </div>
   <div class="sheet-foot buybar" id="buybar" hidden>
     <div class="info"><div class="lbl"><span id="buyName"></span><span class="rar-name" id="buyRar"></span></div><div class="sub" id="buySub"></div></div>
@@ -136,80 +136,81 @@
 </section>
 
 <section class="sheet" id="sheet-play" role="dialog" aria-modal="true" aria-labelledby="h-play" hidden>
-  <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-play">Play</h2><span></span></div>
+  <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back" data-t-aria="ui.back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-play" data-t="ui.play">Play</h2><span></span></div>
   <div class="sheet-body">
     <div class="modes" id="modePick">
-      <button class="mode-card story" type="button" data-mode="story"><span class="mode-ic"><svg><use href="#i-crow"/></svg></span><span class="mode-t"><span class="k">Story mode</span><b>Story</b><span class="mode-s">Eight maps, a mini-boss and an end boss on each. Every end boss holds one of Morty's missing pieces: win them all back to end the reel.</span><span class="mode-best" id="storyBest"></span></span></button>
-      <button class="mode-card arcade" type="button" data-mode="arcade"><span class="mode-ic"><svg><use href="#i-retry"/></svg></span><span class="mode-t"><span class="k">Arcade mode</span><b>Arcade</b><span class="mode-s">Any map you've reached in Story. No bosses, no end: the ring keeps speeding up. Survive as long as you can and beat your best.</span><span class="mode-best" id="arcadeBest"></span></span></button>
+      <button class="mode-card story" type="button" data-mode="story"><span class="mode-ic"><svg><use href="#i-crow"/></svg></span><span class="mode-t"><span class="k" data-t="ui.story-mode">Story mode</span><b data-t="ui.story">Story</b><span class="mode-s" data-t="ui.eight-maps-a-mini-boss">Eight maps, a mini-boss and an end boss on each. Every end boss holds one of Morty's missing pieces: win them all back to end the reel.</span><span class="mode-best" id="storyBest"></span></span></button>
+      <button class="mode-card arcade" type="button" data-mode="arcade"><span class="mode-ic"><svg><use href="#i-retry"/></svg></span><span class="mode-t"><span class="k" data-t="ui.arcade-mode">Arcade mode</span><b data-t="ui.arcade">Arcade</b><span class="mode-s" data-t="ui.any-map-you-ve-reached">Any map you've reached in Story. No bosses, no end: the ring keeps speeding up. Survive as long as you can and beat your best.</span><span class="mode-best" id="arcadeBest"></span></span></button>
     </div>
     <div class="maps" id="mapPick" hidden>
-      <p class="map-k">Arcade · pick a map</p>
+      <p class="map-k" data-t="ui.arcade-pick-a-map">Arcade · pick a map</p>
       <div id="mapList"></div>
     </div>
   </div>
 </section>
 
 <section class="sheet" id="sheet-achievements" role="dialog" aria-modal="true" aria-labelledby="h-achievements" hidden>
-  <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-achievements">Achievements</h2><span class="bones" id="bonesAch"><svg><use href="#i-bone"/></svg><span>0</span></span></div>
+  <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back" data-t-aria="ui.back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-achievements" data-t="ui.achievements">Achievements</h2><span class="bones" id="bonesAch"><svg><use href="#i-bone"/></svg><span>0</span></span></div>
   <div class="sheet-body">
     <div class="ach-head"><p id="achCount"></p><div class="bar" id="achBar"><i></i></div></div>
     <div class="ach-list" id="achList"></div>
-    <div class="tip">Every achievement pays its <b>bones</b> the moment you reach it.</div>
+    <div class="tip" data-t="ui.every-achievement-pays-its-bones">Every achievement pays its <b>bones</b> the moment you reach it.</div>
   </div>
 </section>
 
 <section class="sheet" id="sheet-challenges" role="dialog" aria-modal="true" aria-labelledby="h-challenges" hidden>
-  <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-challenges">Challenges</h2><span class="bones" id="bonesChal"><svg><use href="#i-bone"/></svg><span>0</span></span></div>
+  <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back" data-t-aria="ui.back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-challenges" data-t="ui.challenges">Challenges</h2><span class="bones" id="bonesChal"><svg><use href="#i-bone"/></svg><span>0</span></span></div>
   <div class="sheet-body">
     <div class="cat-tabs chal-tabs" id="chalTabs" role="tablist">
-      <button type="button" role="tab" data-per="daily" aria-selected="true">Daily<span class="dot" hidden></span></button>
-      <button type="button" role="tab" data-per="weekly" aria-selected="false">Weekly<span class="dot" hidden></span></button>
-      <button type="button" role="tab" data-per="monthly" aria-selected="false">Monthly<span class="dot" hidden></span></button>
+      <button type="button" role="tab" data-per="daily" aria-selected="true"><span data-t="ui.daily">Daily</span><span class="dot" hidden></span></button>
+      <button type="button" role="tab" data-per="weekly" aria-selected="false"><span data-t="ui.weekly">Weekly</span><span class="dot" hidden></span></button>
+      <button type="button" role="tab" data-per="monthly" aria-selected="false"><span data-t="ui.monthly">Monthly</span><span class="dot" hidden></span></button>
     </div>
     <div class="timer"><svg class="icon"><use href="#i-tomb"/></svg><span>New <span id="chalWhat">daily</span> challenges in <b id="chalTimer">—</b></span></div>
     <div id="chalList"></div>
-    <div class="tip">Earn <b>bones</b> from every run and every challenge. Spend them in the <b>Skull Vault</b> on skulls, faces, paint, trails, impacts and more.</div>
+    <div class="tip" data-t="ui.earn-bones-from-every-run">Earn <b>bones</b> from every run and every challenge. Spend them in the <b>Skull Vault</b> on skulls, faces, paint, trails, impacts and more.</div>
   </div>
 </section>
 
 <section class="sheet" id="sheet-settings" role="dialog" aria-modal="true" aria-labelledby="h-settings" hidden>
-  <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-settings">Settings</h2></div>
+  <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back" data-t-aria="ui.back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-settings" data-t="ui.settings">Settings</h2></div>
   <div class="sheet-body">
-    <div class="row"><div><div class="lbl">Sound</div><div class="sub">Music, effects and the graveyard</div></div><button class="switch" role="switch" id="set-sound" aria-checked="true" aria-label="Sound" type="button"></button></div>
-    <label class="row slider" id="row-music"><span class="lbl">Music</span><input type="range" id="set-music" min="0" max="100" step="1"><output id="out-music" for="set-music">45</output></label>
-    <label class="row slider" id="row-sfx"><span class="lbl">Effects</span><input type="range" id="set-sfx" min="0" max="100" step="1"><output id="out-sfx" for="set-sfx">80</output></label>
-    <label class="row slider" id="row-amb"><span class="lbl">Ambience</span><input type="range" id="set-amb" min="0" max="100" step="1"><output id="out-amb" for="set-amb">50</output></label>
-    <div class="row stack"><div><div class="lbl">Film look</div><div class="sub" id="filmNote">Grain, dust, scratches and a wobbly gate</div></div>
-      <div class="seg" role="radiogroup" aria-label="Film look" id="set-film"><button type="button" role="radio" data-v="full" aria-checked="true">Full</button><button type="button" role="radio" data-v="light" aria-checked="false">Light</button><button type="button" role="radio" data-v="off" aria-checked="false">Off</button></div></div>
-    <div class="row stack"><div><div class="lbl">Camera</div><div class="sub" id="cameraNote">Leans with your aim, follows the throw</div></div>
-      <div class="seg" role="radiogroup" aria-label="Camera" id="set-camera"><button type="button" role="radio" data-v="full" aria-checked="true">Full</button><button type="button" role="radio" data-v="gentle" aria-checked="false">Gentle</button><button type="button" role="radio" data-v="still" aria-checked="false">Still</button></div></div>
-    <div class="row stack"><div><div class="lbl">Morty's voice</div><div class="sub" id="voiceNote">Cartoon mumbles when you grab him</div></div>
-      <div class="seg" role="radiogroup" aria-label="Morty's voice" id="set-voice"><button type="button" role="radio" data-v="babble" aria-checked="true">Mumble</button><button type="button" role="radio" data-v="spoken" aria-checked="false">Spoken</button><button type="button" role="radio" data-v="off" aria-checked="false">Off</button></div></div>
-    <div class="row stack"><div><div class="lbl">Title cards</div><div class="sub" id="cardsNote">The countdown leader, then each reel's title card</div></div>
-      <div class="seg" role="radiogroup" aria-label="Title cards" id="set-cards"><button type="button" role="radio" data-v="full" aria-checked="true">Full</button><button type="button" role="radio" data-v="short" aria-checked="false">Short</button><button type="button" role="radio" data-v="off" aria-checked="false">Off</button></div></div>
-    <div class="row"><div><div class="lbl">Vibration</div><div class="sub" id="vibeNote">Buzz on hits and misses</div></div><button class="switch" role="switch" id="set-vibe" aria-checked="true" aria-label="Vibration" type="button"></button></div>
-    <div class="row"><div><div class="lbl">Camera jolts</div><div class="sub">The scenery knocks on bonks, perfects and lightning</div></div><button class="switch" role="switch" id="set-shake" aria-checked="true" aria-label="Camera jolts" type="button"></button></div>
-    <div class="row stack"><div><div class="lbl">Aim guide</div><div class="sub" id="guideNote">Full path and crosshair</div></div>
-      <div class="seg" role="radiogroup" aria-label="Aim guide" id="set-guide"><button type="button" role="radio" data-v="full" aria-checked="true">Full</button><button type="button" role="radio" data-v="short" aria-checked="false">Short</button><button type="button" role="radio" data-v="off" aria-checked="false">Off</button></div></div>
-    <div class="row stack"><div><div class="lbl">Flashes</div><div class="sub" id="flashNote">Camera flashes, lightning and the film's flicker</div></div>
-      <div class="seg" role="radiogroup" aria-label="Flashes" id="set-flashes"><button type="button" role="radio" data-v="full" aria-checked="true">Full</button><button type="button" role="radio" data-v="reduced" aria-checked="false">Reduced</button><button type="button" role="radio" data-v="off" aria-checked="false">Off</button></div></div>
-    <div class="row"><div><div class="lbl">High contrast</div><div class="sub">A bright halo round the ring and Morty, bolder text</div></div><button class="switch" role="switch" id="set-contrast" aria-checked="false" aria-label="High contrast" type="button"></button></div>
-    <div class="row stack"><div><div class="lbl">Text size</div><div class="sub">Menus, sheets and the HUD</div></div>
-      <div class="seg" role="radiogroup" aria-label="Text size" id="set-text"><button type="button" role="radio" data-v="normal" aria-checked="true">Normal</button><button type="button" role="radio" data-v="large" aria-checked="false">Large</button></div></div>
-    <div class="row"><div><div class="lbl">Reset progress</div><div class="sub">Clears stats, bones, best score and the Vault</div></div><button class="ghost-btn danger" id="resetBtn" type="button">Reset</button></div>
+    <div class="row"><div><div class="lbl" data-t="ui.sound">Sound</div><div class="sub" data-t="ui.music-effects-and-the-graveyard">Music, effects and the graveyard</div></div><button class="switch" role="switch" id="set-sound" aria-checked="true" aria-label="Sound" data-t-aria="ui.sound" type="button"></button></div>
+    <label class="row slider" id="row-music"><span class="lbl" data-t="ui.music">Music</span><input type="range" id="set-music" min="0" max="100" step="1"><output id="out-music" for="set-music">45</output></label>
+    <label class="row slider" id="row-sfx"><span class="lbl" data-t="ui.effects">Effects</span><input type="range" id="set-sfx" min="0" max="100" step="1"><output id="out-sfx" for="set-sfx">80</output></label>
+    <label class="row slider" id="row-amb"><span class="lbl" data-t="ui.ambience">Ambience</span><input type="range" id="set-amb" min="0" max="100" step="1"><output id="out-amb" for="set-amb">50</output></label>
+    <div class="row stack"><div><div class="lbl" data-t="ui.film-look">Film look</div><div class="sub" id="filmNote">Grain, dust, scratches and a wobbly gate</div></div>
+      <div class="seg" role="radiogroup" aria-label="Film look" data-t-aria="ui.film-look" id="set-film"><button type="button" role="radio" data-v="full" aria-checked="true" data-t="ui.full">Full</button><button type="button" role="radio" data-v="light" aria-checked="false" data-t="ui.light">Light</button><button type="button" role="radio" data-v="off" aria-checked="false" data-t="ui.off">Off</button></div></div>
+    <div class="row stack"><div><div class="lbl" data-t="ui.camera">Camera</div><div class="sub" id="cameraNote">Leans with your aim, follows the throw</div></div>
+      <div class="seg" role="radiogroup" aria-label="Camera" data-t-aria="ui.camera" id="set-camera"><button type="button" role="radio" data-v="full" aria-checked="true" data-t="ui.full">Full</button><button type="button" role="radio" data-v="gentle" aria-checked="false" data-t="ui.gentle">Gentle</button><button type="button" role="radio" data-v="still" aria-checked="false" data-t="ui.still">Still</button></div></div>
+    <div class="row stack"><div><div class="lbl" data-t="ui.morty-s-voice">Morty's voice</div><div class="sub" id="voiceNote">Cartoon mumbles when you grab him</div></div>
+      <div class="seg" role="radiogroup" aria-label="Morty's voice" data-t-aria="ui.morty-s-voice" id="set-voice"><button type="button" role="radio" data-v="babble" aria-checked="true" data-t="ui.mumble">Mumble</button><button type="button" role="radio" data-v="spoken" aria-checked="false" data-t="ui.spoken">Spoken</button><button type="button" role="radio" data-v="off" aria-checked="false" data-t="ui.off">Off</button></div></div>
+    <div class="row stack" id="row-lang" hidden><div><div class="lbl" data-t="ui.language">Language</div><div class="sub" id="langNote"></div></div><div class="seg" role="radiogroup" aria-label="Language" data-t-aria="ui.language" id="set-lang"></div></div>
+    <div class="row stack"><div><div class="lbl" data-t="ui.title-cards">Title cards</div><div class="sub" id="cardsNote">The countdown leader, then each reel's title card</div></div>
+      <div class="seg" role="radiogroup" aria-label="Title cards" data-t-aria="ui.title-cards" id="set-cards"><button type="button" role="radio" data-v="full" aria-checked="true" data-t="ui.full">Full</button><button type="button" role="radio" data-v="short" aria-checked="false" data-t="ui.short">Short</button><button type="button" role="radio" data-v="off" aria-checked="false" data-t="ui.off">Off</button></div></div>
+    <div class="row"><div><div class="lbl" data-t="ui.vibration">Vibration</div><div class="sub" id="vibeNote">Buzz on hits and misses</div></div><button class="switch" role="switch" id="set-vibe" aria-checked="true" aria-label="Vibration" data-t-aria="ui.vibration" type="button"></button></div>
+    <div class="row"><div><div class="lbl" data-t="ui.camera-jolts">Camera jolts</div><div class="sub" data-t="ui.the-scenery-knocks-on-bonks">The scenery knocks on bonks, perfects and lightning</div></div><button class="switch" role="switch" id="set-shake" aria-checked="true" aria-label="Camera jolts" data-t-aria="ui.camera-jolts" type="button"></button></div>
+    <div class="row stack"><div><div class="lbl" data-t="ui.aim-guide">Aim guide</div><div class="sub" id="guideNote">Full path and crosshair</div></div>
+      <div class="seg" role="radiogroup" aria-label="Aim guide" data-t-aria="ui.aim-guide" id="set-guide"><button type="button" role="radio" data-v="full" aria-checked="true" data-t="ui.full">Full</button><button type="button" role="radio" data-v="short" aria-checked="false" data-t="ui.short">Short</button><button type="button" role="radio" data-v="off" aria-checked="false" data-t="ui.off">Off</button></div></div>
+    <div class="row stack"><div><div class="lbl" data-t="ui.flashes">Flashes</div><div class="sub" id="flashNote">Camera flashes, lightning and the film's flicker</div></div>
+      <div class="seg" role="radiogroup" aria-label="Flashes" data-t-aria="ui.flashes" id="set-flashes"><button type="button" role="radio" data-v="full" aria-checked="true" data-t="ui.full">Full</button><button type="button" role="radio" data-v="reduced" aria-checked="false" data-t="ui.reduced">Reduced</button><button type="button" role="radio" data-v="off" aria-checked="false" data-t="ui.off">Off</button></div></div>
+    <div class="row"><div><div class="lbl" data-t="ui.high-contrast">High contrast</div><div class="sub" data-t="ui.a-bright-halo-round-the">A bright halo round the ring and Morty, bolder text</div></div><button class="switch" role="switch" id="set-contrast" aria-checked="false" aria-label="High contrast" data-t-aria="ui.high-contrast" type="button"></button></div>
+    <div class="row stack"><div><div class="lbl" data-t="ui.text-size">Text size</div><div class="sub" data-t="ui.menus-sheets-and-the-hud">Menus, sheets and the HUD</div></div>
+      <div class="seg" role="radiogroup" aria-label="Text size" data-t-aria="ui.text-size" id="set-text"><button type="button" role="radio" data-v="normal" aria-checked="true" data-t="ui.normal">Normal</button><button type="button" role="radio" data-v="large" aria-checked="false" data-t="ui.large">Large</button></div></div>
+    <div class="row"><div><div class="lbl" data-t="ui.reset-progress">Reset progress</div><div class="sub" data-t="ui.clears-stats-bones-best-score">Clears stats, bones, best score and the Vault</div></div><button class="ghost-btn danger" id="resetBtn" type="button" data-t="ui.reset">Reset</button></div>
   </div>
 </section>
 
 <section class="sheet" id="sheet-store" role="dialog" aria-modal="true" aria-labelledby="h-store" hidden>
-  <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-store">Curio Cart</h2><span class="bones" id="bonesStore"><svg><use href="#i-bone"/></svg><span>0</span></span></div>
+  <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back" data-t-aria="ui.back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-store" data-t="ui.curio-cart">Curio Cart</h2><span class="bones" id="bonesStore"><svg><use href="#i-bone"/></svg><span>0</span></span></div>
   <div class="sheet-body">
-    <div class="preview cart"><canvas id="cartCv" aria-label="Mort the ghoul behind his cart, showing off an item"></canvas><span class="tag" id="cartQuip">No refunds. No returns. No pulse.</span></div>
-    <div class="section-k"><span class="k">Today's deals</span><b id="dealTimer"></b></div>
+    <div class="preview cart"><canvas id="cartCv" aria-label="Mort the ghoul behind his cart, showing off an item" data-t-aria="ui.mort-the-ghoul-behind-his"></canvas><span class="tag" id="cartQuip">No refunds. No returns. No pulse.</span></div>
+    <div class="section-k"><span class="k" data-t="ui.today-s-deals">Today's deals</span><b id="dealTimer"></b></div>
     <div class="grid" id="dealGrid"></div>
-    <div class="coffin"><div><div class="lbl">The Mystery Coffin</div><div class="sub" id="coffinNote">Something you don't own yet</div></div><button class="btn primary sm" id="coffinBtn" type="button">Open</button></div>
-    <div class="section-k"><span class="k">Cart exclusives</span><b id="exclCount"></b></div>
+    <div class="coffin"><div><div class="lbl" data-t="ui.the-mystery-coffin">The Mystery Coffin</div><div class="sub" id="coffinNote">Something you don't own yet</div></div><button class="btn primary sm" id="coffinBtn" type="button">Open</button></div>
+    <div class="section-k"><span class="k" data-t="ui.cart-exclusives">Cart exclusives</span><b id="exclCount"></b></div>
     <div class="grid" id="exclGrid"></div>
-    <div class="tip">Exclusives are <b>only sold here</b>, never in the Vault. Deals change at midnight. It's all looks: nothing Mort sells changes how Morty flies.</div>
+    <div class="tip" data-t="ui.exclusives-are-only-sold-here">Exclusives are <b>only sold here</b>, never in the Vault. Deals change at midnight. It's all looks: nothing Mort sells changes how Morty flies.</div>
   </div>
   <div class="sheet-foot buybar" id="cartBar" hidden>
     <div class="info"><div class="lbl" id="cartName"></div><div class="sub" id="cartSub"></div></div>
@@ -218,10 +219,10 @@
 </section>
 
 <section class="sheet" id="sheet-board" role="dialog" aria-modal="true" aria-labelledby="h-board" hidden>
-  <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-board">Leaderboard</h2></div>
+  <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back" data-t-aria="ui.back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-board" data-t="ui.leaderboard">Leaderboard</h2></div>
   <div class="sheet-body">
     <div class="seg board-tabs" role="tablist" id="boardTabs"><button type="button" role="tab" data-tab="live" aria-selected="true">The graveyard</button><button type="button" role="tab" data-tab="local" aria-selected="false">This device</button></div>
-    <div class="row" id="boardOpt"><div><div class="lbl">Post my best score</div><div class="sub" id="boardNote">Shows the name on your headstone, your best score and your skull</div></div><button class="switch" role="switch" id="set-board" aria-checked="false" aria-label="Post my best score" type="button"></button></div>
+    <div class="row" id="boardOpt"><div><div class="lbl" data-t="ui.post-my-best-score">Post my best score</div><div class="sub" id="boardNote">Shows the name on your headstone, your best score and your skull</div></div><button class="switch" role="switch" id="set-board" aria-checked="false" aria-label="Post my best score" data-t-aria="ui.post-my-best-score" type="button"></button></div>
     <ol class="board" id="boardList"></ol>
     <p class="board-empty" id="boardEmpty" hidden></p>
     <div class="tip" id="boardTip"></div>
@@ -229,15 +230,15 @@
 </section>
 
 <section class="sheet" id="sheet-profile" role="dialog" aria-modal="true" aria-labelledby="h-profile" hidden>
-  <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-profile">Profile</h2></div>
+  <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back" data-t-aria="ui.back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-profile" data-t="ui.profile">Profile</h2></div>
   <div class="sheet-body">
     <div class="card" id="saveCard">
       <div class="save-head"><img id="saveAvatar" alt="" hidden><span class="save-icon" id="saveIcon" aria-hidden="true"><svg class="icon"><use href="#i-cloud"/></svg></span>
         <div class="save-who"><div class="lbl" id="saveTitle">Saved on this device</div><div class="sub"><span class="status" id="saveStatus">Local save</span></div></div></div>
-      <div class="save-actions"><button class="ghost-btn" id="copyCodeBtn" type="button">Copy save code</button><button class="ghost-btn" id="loadCodeBtn" type="button">Load save code</button></div>
-      <div class="code-box" id="codeBox" hidden><textarea id="codeText" spellcheck="false" aria-label="Save code"></textarea><div class="row-btns"><button class="ghost-btn" id="codeCancel" type="button">Cancel</button><button class="ghost-btn" id="codeApply" type="button">Load</button></div></div>
+      <div class="save-actions"><button class="ghost-btn" id="copyCodeBtn" type="button" data-t="ui.copy-save-code">Copy save code</button><button class="ghost-btn" id="loadCodeBtn" type="button" data-t="ui.load-save-code">Load save code</button></div>
+      <div class="code-box" id="codeBox" hidden><textarea id="codeText" spellcheck="false" aria-label="Save code" data-t-aria="ui.save-code"></textarea><div class="row-btns"><button class="ghost-btn" id="codeCancel" type="button" data-t="ui.cancel">Cancel</button><button class="ghost-btn" id="codeApply" type="button" data-t="ui.load">Load</button></div></div>
     </div>
-    <label class="field"><span class="k">Name on your headstone</span><input id="prof-name" maxlength="16" placeholder="Nameless soul" autocomplete="off" autocapitalize="words" spellcheck="false"></label>
+    <label class="field"><span class="k" data-t="ui.name-on-your-headstone">Name on your headstone</span><input id="prof-name" maxlength="16" placeholder="Nameless soul" data-t-ph="ui.nameless-soul" autocomplete="off" autocapitalize="words" spellcheck="false"></label>
     <span class="prof-title" id="profTitle">Grave Rookie</span>
     <div class="card"><div class="k">Rank</div><div class="rank-name" id="rankName">Gravedigger</div><div class="bar"><i id="rankBar"></i></div><div class="sub" id="rankNext"></div></div>
     <div id="stats"></div>
@@ -245,9 +246,9 @@
 </section>
 
 <div class="continue" id="continueBox" hidden role="dialog" aria-modal="true" aria-labelledby="contTitle">
-  <div class="cont-card"><p class="k">Out of skulls</p><h2 id="contTitle">One more skull?</h2><p class="cont-sub" id="contSub"></p>
+  <div class="cont-card"><p class="k" data-t="ui.out-of-skulls">Out of skulls</p><h2 id="contTitle" data-t="ui.one-more-skull">One more skull?</h2><p class="cont-sub" id="contSub"></p>
     <div class="cont-timer" aria-hidden="true"><b id="contTimer">8</b></div>
-    <div class="cont-actions"><button class="btn primary" id="contBones" type="button">Spend 200 bones</button><button class="btn" id="contAd" type="button" hidden>Watch a short reel</button><button class="ghost-btn" id="contNo" type="button">No thanks</button></div></div>
+    <div class="cont-actions"><button class="btn primary" id="contBones" type="button">Spend 200 bones</button><button class="btn" id="contAd" type="button" hidden data-t="ui.watch-a-short-reel">Watch a short reel</button><button class="ghost-btn" id="contNo" type="button" data-t="ui.no-thanks">No thanks</button></div></div>
 </div>
 <div class="flash" id="flash"></div>
 <div id="toast" class="toast" role="status" hidden></div>

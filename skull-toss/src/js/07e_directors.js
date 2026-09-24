@@ -173,7 +173,7 @@
     const w = HZ.wind, n = Math.min(3, Math.ceil(Math.abs(w) / 0.6));
     el.querySelector(".arr").textContent = w === 0 ? "·" : (w > 0 ? "→" : "←").repeat(Math.max(1, n));
     el.querySelector("b").textContent = Math.abs(w).toFixed(1);
-    el.setAttribute("aria-label", w === 0 ? "No wind" : `Wind ${Math.abs(w).toFixed(1)} to the ${w > 0 ? "right" : "left"}`);
+    el.setAttribute("aria-label", w === 0 ? t("hud.wind.none") : w > 0 ? t("hud.wind.right", { w: Math.abs(w).toFixed(1) }) : t("hud.wind.left", { w: Math.abs(w).toFixed(1) }));
   }
 
   // ── drawing: targets and hazards on either side of the ring (front: nearer than it)

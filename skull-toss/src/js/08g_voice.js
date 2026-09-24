@@ -1,42 +1,78 @@
-  // ───────────────────────── the skull talks back ─────────────────────────
-  // His name is Mortimer "Morty" Bones, and now and then he says so.
-  // Grab the skull and, now and then, it complains: a speech bubble plus a cartoon mumble (or the browser's own
-  // voice, pitched up, if you pick "Spoken" in Settings). Never twice in a row, never every throw.
-  const VOICE_LINES = {
-    grab: ["Hey! What do you think you're doing?!", "Put me down!", "Not the face!", "Careful, I bruise easy!", "Oh no, not again…", "I just got my jaw back on!",
-      "Watch the teeth!", "Is this a union job?", "My agent will hear about this!", "Wheee— wait, no!", "Aim for the hoop, not the tree!", "I'm too old for this. I'm like 300.",
-      "Can we talk about this?!", "At least buy me dinner first!", "Mind the cranium!", "I get airsick!", "Again?! I'm still dizzy!", "Ooh! Ooh! Do a flip!",
-      "Hands off the merchandise!", "Easy on the elastic!", "Somebody call my mummy!", "I had plans tonight!", "Do you even have a licence for this?", "Tell my bones I love them.",
-      "It's MISTER Bones to you!", "Do you know who I am?! I'm Morty Bones!", "Mortimer Bones, professional projectile. Charmed.", "Call me Morty. Everybody does, right before they throw me."],
-    last: ["Last skull! Don't blow it!", "No pressure, pal. None at all.", "This is fine. This is FINE."],
-    crow: ["That bird's got my hoop!", "Beak off, featherbrain!", "Uh oh. Big bird."],
-    pumpkin: ["Is that a PUMPKIN?!", "Somebody's getting carved.", "That's a lot of pie."],
-    cursed: ["I feel… cursed-ish.", "Why is everything purple?!"],
-    missing: ["Maybe aim this time?", "Are your eyes on backwards?", "I'm getting motion sick here."],
-    hot: ["Now we're rolling!", "Did you see that?!", "Nothing but ring, baby!"]
-  };
-  const voice = { text: "", t: -9, last: -99, lastLine: "", said: 0, pool: "" };
-  function sayLine(poolName) {
-    const pool = VOICE_LINES[poolName].filter(l => l !== voice.lastLine);
-    const text = pool[Math.floor(Math.random() * pool.length)];
-    Object.assign(voice, { text, t: game.time, last: game.time, lastLine: text, pool: poolName }); voice.said++;
-    if (settings.voice === "spoken") Sound.speak(text); else Sound.babble(text);
+  // ───────────────────────── Morty talks back ─────────────────────────
+  // His name is Mortimer "Morty" Bones, and he has opinions. Every line is a string with an ID
+  // (morty.<pool>.<nn> in src/strings/en.json), and the ID is also the voice-line ID: drop a recording in as
+  // src/sfx/vo.<id>.mp3 and it plays instead of the mumble, one line at a time. A pool is dealt like a deck of
+  // cards: shuffled, and no line comes round again until the whole pool has been said. Most lines wait out a
+  // cooldown and a roll of the dice. The ones that matter always get said: a boss walking on, a piece of him coming
+  // back, the offer of one more skull, a new reel. What he reaches for when you grab him depends on his mood: cocky
+  // on a streak, nervous on the last skull, grumpy after misses, odd when he's cursed.
+  const MORTY = { cooldown: 5, firstGrab: 1, grabChance: 0.38, perfect: 0.35, nearMiss: 0.3, bonk: 0.35, power: 0.6, hot: 0.6, last: 0.5, idleAfter: 12 };
+  const voice = { text: "", id: "", t: -9, last: -99, said: 0, pool: "", bags: {}, quiet: 0, idleSaid: false, test: false };
+  const mortyMuted = () => settings.voice === "off" || (sandbox && !voice.test);
+  function mortyMood() {
+    if (powerOn("cursed")) return "cursed";
+    if (game.lives === 1) return "nervous";
+    if (game.streak >= 5) return "cocky";
+    if ((game.run.misses || 0) >= 2 && game.streak === 0) return "grumpy";
+    return "chipper";
+  }
+  function dealLine(pool) {   // the next card off the pool's shuffled deck (never the line he just said)
+    const ids = lineIds(`morty.${pool}.`); if (!ids.length) return null;
+    let bag = voice.bags[pool];
+    if (!bag || !bag.length) {
+      bag = voice.bags[pool] = ids.slice();
+      for (let i = bag.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [bag[i], bag[j]] = [bag[j], bag[i]]; }
+      if (bag.length > 1 && bag[bag.length - 1] === voice.id) [bag[0], bag[bag.length - 1]] = [bag[bag.length - 1], bag[0]];
+    }
+    return bag.pop();
+  }
+  function sayLine(pool) {
+    const id = dealLine(pool); if (!id) return null;
+    const text = t(id);
+    Object.assign(voice, { text, id, t: game.time, last: game.time, pool }); voice.said++;
+    const read = () => { if (settings.voice === "spoken") Sound.speak(text); else Sound.babble(text); };
+    if (SFX_EMBED && SFX_EMBED["vo." + id]) Sound.sample("vo." + id, read); else read();   // a recorded read, where there is one
+    Telemetry.emit("morty_line", { id });
     return text;
+  }
+  // an event wants a line: priority ones always get said; the rest wait out the cooldown and roll the dice
+  function mortySays(pool, { chance = 1, priority = false } = {}) {
+    if (mortyMuted()) return null;
+    if (!priority && (game.time - voice.last < MORTY.cooldown || Math.random() > chance)) return null;
+    return sayLine(pool);
   }
   // called when you grab the skull: the first grab of a run always gets a line, then about one in three
   function skullGrabbed() {
-    profile.grabs++;
-    if (settings.voice === "off" || sandbox && !voice.test) return null;
+    profile.grabs++; voice.quiet = game.time; voice.idleSaid = false;
+    if (mortyMuted()) return null;
     const since = game.time - voice.last;
-    if (voice.said > 0 && (since < 6 || Math.random() > 0.38)) return null;
+    if (voice.said > 0 && (since < 6 || Math.random() > MORTY.grabChance)) return null;
+    const mood = mortyMood(), r = Math.random();
     let pool = "grab";
-    if (boss && boss.kind === "crow" && Math.random() < 0.5) pool = "crow";
-    else if (boss && boss.kind === "pumpkin" && Math.random() < 0.5) pool = "pumpkin";
-    else if (powerOn("cursed") && Math.random() < 0.6) pool = "cursed";
-    else if (game.lives === 1 && Math.random() < 0.6) pool = "last";
-    else if (game.run.misses >= 2 && game.streak === 0 && Math.random() < 0.4) pool = "missing";
-    else if (game.streak >= 5 && Math.random() < 0.4) pool = "hot";
+    if (boss && r < 0.5) pool = "boss." + boss.kind;
+    else if (mood === "cursed" && r < 0.6) pool = "cursed";
+    else if (mood === "nervous" && r < 0.6) pool = "last";
+    else if (mood === "grumpy" && r < 0.4) pool = "missing";
+    else if (mood === "cocky" && r < 0.4) pool = "hot";
     return sayLine(pool);
+  }
+  // how a throw went: a perfect, a near miss, a knock from something in the air, a streak, the last skull
+  function mortyAfterThrow(kind, make) {
+    if (make) {
+      if (game.streak === 5 || game.streak === 10) return mortySays("hot", { chance: MORTY.hot });
+      if (kind === "perfect") return mortySays("perfect", { chance: MORTY.perfect });
+      return null;
+    }
+    if (game.lives === 1) return mortySays("last", { chance: MORTY.last });
+    if (kind === "clank" || kind === "post") return mortySays("nearmiss", { chance: MORTY.nearMiss });
+    if (["seed", "bat", "bone", "balloon", "pendulum"].includes(kind)) return mortySays("bonk", { chance: MORTY.bonk });
+    return null;
+  }
+  // left waiting: once per lull, after twelve seconds without a throw
+  function mortyIdle() {
+    if (game.state !== "ready" || aim.active || paused || screen !== "play" || voice.idleSaid) return;
+    if (game.time - Math.max(voice.quiet, voice.last) < MORTY.idleAfter) return;
+    voice.idleSaid = true; mortySays("idle", { priority: true });
   }
   function drawSpeech(x, y, r) {
     if (!voice.text) return;

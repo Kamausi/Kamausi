@@ -65,7 +65,7 @@
     pickup = { id, t: 0, left: 4, pop: 0 };
     Sound.toon("poof");
     srEl.textContent = `${POWERS[id].name} in the ring. Thread the middle to grab it.`;
-    if (!profile.powerups) setHint("Thread the middle to grab it");
+    if (!profile.powerups) setHint(t("hint.grab"));
   }
   // the grab: the skull has to overlap the power-up as it's drawn (its circle, where it has bobbed to), by a good
   // part of its own width. Before, only the skull's centre counted, so a toss could go through the icon and miss it.
@@ -86,6 +86,7 @@
     const id = pickup.id, P = POWERS[id];
     pickup.pop = 0.001; givePower(id); VisualSystem.emit("power", { id }); Telemetry.emit("powerup", { id, stage: game.stage });
     profile.powerups++; game.run.powerups++; challenge("powerups", 1); if (id === "cursed") profile.cursed++;
+    mortySays("power." + id, { chance: MORTY.power });
     const p = at || project(ring.x, ring.y, ring.z);
     impact("POP!", p.x, p.y - ring.rc * p.s * 1.2, { fill: P.color, text: INK, scale: 0.75, delay: 0.3, bits: false, sub: P.name });
     for (let i = 0; i < 16; i++) { const a = (i / 16) * TAU, v = U * rand(0.4, 0.8); particles.push({ kind: i % 2 ? "star" : "dot", x: p.x, y: p.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, rot: a, vr: 6, life: 0.5, max: 0.5, size: rand(2, 4), color: i % 3 ? P.color : CREAM, g: 0.3, a: 1 }); }

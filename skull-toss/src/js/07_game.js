@@ -8,6 +8,7 @@
   function screenDir(s) { const a = project(s.pos.x, s.pos.y, s.pos.z), v = velAt(s, s.t), b = project(s.pos.x + v.x * 0.02, s.pos.y + v.y * 0.02, s.pos.z + v.z * 0.02); return Math.atan2(b.y - a.y, b.x - a.x); }
 
   function launch(AX, AY) {
+    voice.quiet = game.time; voice.idleSaid = false;
     const v = aimVelocity(AX, AY);
     Object.assign(skull, { p0: { x: 0, y: START_Y, z: 0 }, v0: v, t: 0, crossed: false, resting: false, bounces: 0, ax: windNow(),
       spin: (1.3 + Math.abs(v.x) * 0.5) * (v.x < 0 ? -1 : 1), hang: 0, take: 0, alpha: 1, flightTime: 0, trail: [], spawn: 1, emit: 0, missed: false });
@@ -127,27 +128,23 @@
   const bonkWord = () => (IMPACTS[cos.impact] || IMPACTS.classic).word;
 
   const RESULT = {
-    perfect: { word: "PERFECT!", make: true, pts: 2, fill: MUSTARD, text: INK, mood: "perfect" },
-    swish:   { word: "SWISH!",   make: true, pts: 1, fill: TEAL, text: CREAM, mood: "excited" },
-    rim:     { word: "RIM IN!",  make: true, pts: 1, fill: CREAM, text: INK, mood: "confused" },
-    clank:   { call: "BONK", sub: "off the rim", make: false, hit: true },
-    post:    { call: "BONK", sub: "hit the post", make: false, hit: true },
-    wide:    { call: "WHIFF", sub: "wide", make: false },
-    over:    { call: "OOF", sub: "too high", make: false },
-    low:     { call: "OOF", sub: "too low", make: false },
-    short:   { call: "OOF", sub: "short", make: false, hit: true },
-    seed:    { call: "BONK", sub: "seed to the face", make: false, hit: true },
-    bat:     { call: "BONK", sub: "bat to the face", make: false, hit: true },
-    bone:    { call: "BONK", sub: "hit by a falling bone", make: false, hit: true },
-    balloon: { call: "POP", sub: "a balloon got in the way", make: false, hit: true },
-    pendulum: { call: "CLANG", sub: "the pendulum", make: false, hit: true }
+    perfect: { make: true, pts: 2, fill: MUSTARD, text: INK, mood: "perfect" },
+    swish:   { make: true, pts: 1, fill: TEAL, text: CREAM, mood: "excited" },
+    rim:     { make: true, pts: 1, fill: CREAM, text: INK, mood: "confused" },
+    clank:   { make: false, hit: true },
+    post:    { make: false, hit: true },
+    wide:    { make: false },
+    over:    { make: false },
+    low:     { make: false },
+    short:   { make: false, hit: true },
+    seed:    { make: false, hit: true },
+    bat:     { make: false, hit: true },
+    bone:    { make: false, hit: true },
+    balloon: { make: false, hit: true },
+    pendulum: { make: false, hit: true }
   };
+  // the words are strings: result.<kind>.word for a make, result.<kind>.call and .sub for a miss; coach.<kind> the tip after one
   const MISS_STAT = { wide: "wides", over: "overs", low: "lows", post: "posts", short: "shorts", clank: "clanks", seed: "seeds" };
-  const COACH = { short: "Pull further for more height", low: "Pull further for more height", over: "Ease off — less pull",
-    wide: "Lead it: aim where the ring is going", clank: "Close. Aim for the middle of the ring", post: "Too low. Pull a little further",
-    seed: "Wait for the seeds to pass, then toss", bat: "Wait for the bat to pass", bone: "Watch the shadows: a bone is falling",
-    balloon: "Throw around the balloons", pendulum: "Count the ticks: throw between swings" };
-
   function resolve(kind, at, hitAt, d = null, ghosted = false) {
     const R = RESULT[kind], run = game.run;
     Telemetry.emit("throw", { result: kind, make: !!R.make, stage: game.stage, stageHits: game.stageHits, lives: game.lives, boss: boss ? boss.kind : null, n: game.throws });
@@ -175,7 +172,7 @@
       setMood(rig, R.mood, game.time);
       VisualSystem.emit("score", { kind, streak: game.streak }); buzz(kind === "perfect" ? [10, 30, 16] : 12);   // the swish was the contact; the director lands the sting
       const word = game.streak >= 2 ? comboWord(game.streak) : "";
-      impact(ghosted ? "BOO!" : R.word, x, y, { fill: ghosted ? PURPLE : R.fill, text: ghosted ? CREAM : R.text, scale: kind === "perfect" ? 1.1 : 0.9, sub: word ? `×${game.streak} · ${word}` : ghosted ? "phased through" : "" });
+      impact(ghosted ? t("result.ghost.word") : t(`result.${kind}.word`), x, y, { fill: ghosted ? PURPLE : R.fill, text: ghosted ? CREAM : R.text, scale: kind === "perfect" ? 1.1 : 0.9, sub: word ? `×${game.streak} · ${word}` : ghosted ? t("result.ghost.sub") : "" });
       flyPoints(`+${fmtN(pts)}`, x, y + U * 0.05, kind === "perfect");
       if (blast) bonkBlast(at || { x, y, s: U / 9 });
       if (powerOn("magnet")) magnetBones(at || { x, y });
@@ -187,12 +184,12 @@
         profile.peakLives = Math.max(profile.peakLives, game.peakLives); challenge("lives", game.lives);
         const icon = lifeIcons[game.lives - 1];
         updateHud(); icon.classList.remove("gain"); void icon.offsetWidth; icon.classList.add("gain");
-        impact(game.lives > START_LIVES ? "BONUS SKULL!" : "+1 SKULL!", x, y - U * 0.16, { fill: GOLD, text: INK, scale: 0.6, delay: 0.35, bits: false }); Sound.life();
+        impact(game.lives > START_LIVES ? t("result.bonusSkull") : t("result.plusSkull"), x, y - U * 0.16, { fill: GOLD, text: INK, scale: 0.6, delay: 0.35, bits: false }); Sound.life();
       }
-      if (game.throws <= 6 && game.hits <= 2) setHint("Nice. The ring speeds up as you score");
+      if (game.throws <= 6 && game.hits <= 2) setHint(t("hint.speedsUp"));
     } else {
       const saved = powerOn("second");   // Second Chance: this miss is on the house
-      if (saved) { usePower("second"); profile.saves++; impact("SAVED!", W / 2, H * 0.3, { fill: TEAL, text: CREAM, scale: 0.7, delay: 0.25, bits: false }); Sound.life(); }
+      if (saved) { usePower("second"); profile.saves++; impact(t("result.saved"), W / 2, H * 0.3, { fill: TEAL, text: CREAM, scale: 0.7, delay: 0.25, bits: false }); Sound.life(); }
       else game.lives--;
       game.streak = 0; game.perfStreak = 0; run.misses++; profile.misses++;
       if (MISS_STAT[kind]) profile[MISS_STAT[kind]]++;
@@ -203,21 +200,22 @@
         game.result.bonked = true; profile.bonks++;
         const hx = hitAt ? hitAt.x : x, hy = hitAt ? hitAt.y : y;
         setMood(rig, "dizzy", game.time);
-        impact(bonkWord(), hx, Math.min(hy, y), { scale: 0.95, sub: `${R.sub}${game.lives > 0 ? ` · ${game.lives} left` : ""}` });   // (the bonk was the contact's)
+        impact(bonkWord(), hx, Math.min(hy, y), { scale: 0.95, sub: `${t(`result.${kind}.sub`)}${game.lives > 0 ? ` · ${t("result.left", { n: game.lives })}` : ""}` });   // (the bonk was the contact's)
       } else {      // a clean miss: it turns, looks right at you… then gravity
         setMood(rig, "deadpan", game.time); rig.dots = 0;
         // the caption goes on the far side of the ring, so it never covers the skull's deadpan look
         let cx = x, cy = y;
         if (at) { const sp = project(skull.p0.x, skull.p0.y, skull.p0.z), dx = at.x - sp.x, dy = at.y - sp.y, d = Math.hypot(dx, dy) || 1, off = ring.rc * at.s + U * 0.075;
           cx = at.x + (dx / d) * off * 1.25; cy = at.y + (dy / d) * off; }
-        caption(`${R.call}… ${R.sub}`, cx, cy);
+        caption(`${t(`result.${kind}.call`)}… ${t(`result.${kind}.sub`)}`, cx, cy);
         if (!skull.resting) skull.hang = reduceMotion ? 0.2 : 0.38;
         VisualSystem.emit("miss");
       }
       buzz(30);
-      if (game.throws <= 8 && game.lives > 0) setHint(COACH[kind], true);
+      if (game.throws <= 8 && game.lives > 0) setHint(t(`coach.${kind}`), true);
     }
-    srEl.textContent = `${(R.make ? R.word.replace("!", "") : R.call + ", " + R.sub).toLowerCase()}. Score ${fmtN(game.score)}, ${game.hits} hits. ${game.lives} skulls left.`;
+    mortyAfterThrow(kind, R.make);   // Morty's two cents (08g_voice.js)
+    srEl.textContent = t("result.sr", { what: (R.make ? t(`result.${kind}.word`).replace("!", "") : t(`result.${kind}.call`) + ", " + t(`result.${kind}.sub`)).toLowerCase(), score: fmtN(game.score), hits: game.hits, lives: game.lives });
     checkUnlocks(); persist(); updateHud();
   }
 
@@ -233,7 +231,7 @@
     if (boss && boss.after) boss.after();
     if (!stageCheck()) {
       pickupSchedule(); directorsAfterThrow();
-      if (game.throws < 2 && !hintEl.textContent) setHint("Pull down · aim · let go");
+      if (game.throws < 2 && !hintEl.textContent) setHint(t("hint.start"));
     }
     saveRunSnapshot();
   }
@@ -250,7 +248,7 @@
     const mode = opts.mode === "arcade" ? "arcade" : "story", pick = clamp(opts.map | 0, 0, STAGES.length - 1), map = mode === "arcade" && mapUnlocked(pick) ? pick : 0;
     Object.assign(game, { state: "ready", score: 0, hits: 0, lives: START_LIVES, slots: START_LIVES, streak: 0, perfStreak: 0, peakLives: START_LIVES, throws: 0,
       result: null, lastCross: null, newBest: false, shake: 0, slowmo: 0, run: freshRun(), mode, map });
-    game.run.t0 = game.time; voice.said = 0; voice.text = "";
+    game.run.t0 = game.time; Object.assign(voice, { said: 0, text: "", quiet: game.time, idleSaid: false });
     seedRun(opts.seed != null ? opts.seed : sandbox ? 1933 : (Date.now() ^ (Math.random() * 0x7fffffff)) >>> 0);   // the run's dice (07e_directors.js)
     setScene(map);   // Story starts on map 1; Arcade on the map picked
     ring.frozen = null; ring.flash = 0; ring.wobble = 0; ring.morph = 0;
@@ -265,7 +263,7 @@
     paused = false; Sound.setPaused(false); showCombo(0); gameOverCard(false); contEl.hidden = true; game.cont = null;
     showScreen("play");
     hazardsReset(); refillTargets();
-    if (opts.quiet) setHint("Pull down · aim · let go"); else introReel(mode, map);   // the leader and the reel's title card (09i_reel.js)
+    if (opts.quiet) setHint(t("hint.start")); else introReel(mode, map);   // the leader and the reel's title card (09i_reel.js)
     updateHud();
     Telemetry.emit("run_start", { mode, map, stage: game.stage, career: profile.games });   // career: runs finished before this one
   }
@@ -356,5 +354,6 @@
     else if (game.state === "cine") { updateCine(dt); skull.spawn = Math.min(1, skull.spawn + dt / 0.3); }
     else if (game.state === "ready" || game.state === "title") skull.spawn = Math.min(1, skull.spawn + dt / 0.3);
     if (game.state === "continue") updateContinue(dt);
+    else if (game.state === "ready") mortyIdle();
     if (game.state === "over" && screen === "play" && game.time - game.overAt > (game.overHold || 0.6)) showScreen("over");
   }

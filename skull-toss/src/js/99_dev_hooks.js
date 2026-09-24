@@ -18,7 +18,8 @@
     fakeAds(on) { Ads = on ? { available: () => true, show: () => ({ then: f => f(true) }) } : { available: () => false, show: () => Promise.resolve(false) }; },   // (a synchronous reel, for the spec)
     continues(on = true) { if (sandbox) sandbox.contOn = on; },
     cards(on = true) { if (sandbox) sandbox.cardsOn = on; reelSt.leaderShown = false; reelSt.shown = []; reelSt.cues = []; },
-    skipReel: () => skipReelCard(),
+    skipReel: () => skipReelCard(), setStreak(n) { game.streak = n; }, bossInfo: () => Object.fromEntries(BOSS_IDS.map(id => [id, { ...BOSS_INFO[id] }])),
+    tr: (id, vars) => t(id, vars), lineIds: prefix => lineIds(prefix).slice(),
     reel: () => ({ card: reelSt.card ? reelSt.card.kind : null, n: reelSt.card ? reelSt.card.n || 0 : 0, shown: reelSt.shown.slice(), cues: reelSt.cues.length, title: $("rcTitle").textContent, reel: $("rcReel").textContent, hidden: reelEl.hidden, cine: game.cine ? game.cine.kind : null, dur: game.cine ? game.cine.dur : 0 }),
     snapOn(on = true) { if (sandbox) { sandbox.snapOn = on; sandbox.snap = null; } }, snapshot: () => readRunSnapshot(),
     tier: () => ({ ...tierNow() }),
@@ -77,7 +78,10 @@
     cartBuy: (kind, id) => cartBuy(kind, id), deals: () => dailyDeals().map(d => ({ kind: d.kind, id: d.it.id, price: d.price, full: d.it.price, shop: !!d.it.shop })),
     coffin() { const g = openCoffin(mulberry32(7)); return g && { kind: g.kind, id: g.it.id, shop: !!g.it.shop }; },
     plantSeed(x, y, z) { seeds.length = 0; seeds.push({ live: true, fixed: true, x, y, z, ox: x, oy: y, oz: z, vx: 0, vy: 0, vz: 0, rot: 0, at: 0 }); },
-    skullPathAt(AX, AY, t) { const v = aimVelocity(AX, AY); return { x: v.x * t + 0.5 * windNow() * t * t, y: START_Y + v.y * t - 0.5 * G * t * t, z: v.z * t }; }, say(pool = "grab") { voice.test = true; const t = sayLine(pool); voice.test = false; return t; }, voiceLines: () => JSON.parse(JSON.stringify(VOICE_LINES)), grab() { return skullGrabbed(); }, hat: () => ({ ...hatSpring }), digger: () => GY.digger && { t: GY.digger.t, dirt: GY.digger.dirt.length }, cat: () => GY.cat && { x: GY.cat.x, z: GY.cat.z, state: GY.cat.state },
+    skullPathAt(AX, AY, t) { const v = aimVelocity(AX, AY); return { x: v.x * t + 0.5 * windNow() * t * t, y: START_Y + v.y * t - 0.5 * G * t * t, z: v.z * t }; }, say(pool = "grab") { voice.test = true; const s = sayLine(pool); voice.test = false; return s; },
+    voiceLines: () => { const o = {}; for (const id of lineIds("morty.")) { const pool = id.split(".").slice(1, -1).join("."); (o[pool] = o[pool] || []).push(t(id)); } return o; },
+    voiceTest(on = true) { voice.test = on; voice.bags = {}; voice.last = -99; }, voice: () => ({ text: voice.text, id: voice.id, pool: voice.pool, said: voice.said, mood: mortyMood() }),
+    lang: l => (l ? setLang(l) : LANG), missingStrings: () => [...t.missing], grab() { return skullGrabbed(); }, hat: () => ({ ...hatSpring }), digger: () => GY.digger && { t: GY.digger.t, dirt: GY.digger.dirt.length }, cat: () => GY.cat && { x: GY.cat.x, z: GY.cat.z, state: GY.cat.state },
     music() {
       const out = { want: reel.want, on: reel.on, synth: !!mus, tracks: {} };
       for (const [k, t] of Object.entries(reel.tracks)) out.tracks[k] = { live: t.live, paused: t.el ? t.el.paused : null, at: t.el ? +t.el.currentTime.toFixed(2) : null, gain: t.gain ? +t.gain.gain.value.toFixed(3) : null };

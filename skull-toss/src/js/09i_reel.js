@@ -10,17 +10,16 @@
   const reelEl = $("reelCard"), reelCv = $("reelCv");
   const reelSt = { card: null, t0: 0, shown: [], cues: [], leaderShown: false };
   const cardsMode = () => (sandbox && !sandbox.cardsOn ? "off" : settings.cards);   // (older tests expect play to start at once)
-  const NUMBER_WORDS = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight"];
-  // the cards themselves: kind, the four lines of type, and what the Off setting shows instead
+  // the cards themselves: kind, the four lines of type, and what the Off setting shows instead (the map's own words come from its data)
   function titleCard(n, arcade = false) {
     const M = mapData(n);
-    return { kind: "title", n, k: arcade ? "Arcade" : "A Morty Bones Cartoon", reel: arcade ? `${M.reel} · no bosses, no end` : `${M.reel} of ${NUMBER_WORDS[MAP_COUNT]}`, title: M.name, sub: M.premise, note: M.blurb,
-      fallback: arcade ? () => stageCard("Arcade", M.name, "No bosses, no end: survive as long as you can", 2) : n > 1 ? () => stageCard(M.reel, M.name, M.identity.mechanic.split(":")[0], 2.2) : null };
+    return { kind: "title", n, k: arcade ? t("card.arcade.k") : t("reel.k"), reel: arcade ? t("reel.arcade", { reel: M.reel }) : t("reel.of", { reel: M.reel, total: t(`num.${MAP_COUNT}`) }), title: M.name, sub: M.premise, note: M.blurb,
+      fallback: arcade ? () => stageCard(t("card.arcade.k"), M.name, t("card.arcade.s"), 2) : n > 1 ? () => stageCard(M.reel, M.name, M.identity.mechanic.split(":")[0], 2.2) : null };
   }
-  const intermissionCard = () => ({ kind: "intermission", k: "A Morty Bones Cartoon", reel: "Intermission", title: "Stretch your bones!",
-    sub: `${fmtN(game.score)} points · ${game.hits} hits · ${(game.run.fragments || []).length} of ${MAP_COUNT} pieces back`, note: `Reel ${NUMBER_WORDS[game.stage] || game.stage} after the break` });
-  const endCard = () => ({ kind: "end", k: "A Morty Bones Cartoon", reel: "All eight reels restored", title: "The End", sub: "Morty is whole again", note: "",
-    fallback: () => stageCard("The End", "Morty is whole again", "All eight reels restored", 3.4, "gold") });
+  const intermissionCard = () => ({ kind: "intermission", k: t("reel.k"), reel: t("reel.intermission"), title: t("reel.stretch"),
+    sub: t("reel.soFar", { score: fmtN(game.score), hits: game.hits, n: (game.run.fragments || []).length, total: MAP_COUNT }), note: t("reel.afterBreak", { n: t(`num.${game.stage}`) }) });
+  const endCard = () => ({ kind: "end", k: t("reel.k"), reel: t("reel.restored"), title: t("reel.theEnd"), sub: t("reel.whole"), note: "",
+    fallback: () => stageCard(t("reel.theEnd"), t("reel.whole"), t("reel.restored"), 3.4, "gold") });
 
   // play cards in order, holding the throw; then() runs after the last one (at once, if cards are off)
   function reelCards(list, then) {
@@ -38,8 +37,8 @@
     reelEl.dataset.kind = c.kind; reelEl.hidden = false;
     $("rcK").textContent = c.k || ""; $("rcReel").textContent = c.reel || ""; $("rcTitle").textContent = c.title || ""; $("rcSub").textContent = c.sub || ""; $("rcNote").textContent = c.note || "";
     reelEl.classList.remove("in"); void reelEl.offsetWidth; reelEl.classList.add("in");
-    srEl.textContent = c.kind === "leader" ? "Three, two, one." : [c.reel, c.title, c.sub].filter(Boolean).join(". ");
-    Sound.toon(c.kind === "end" ? "fanfare" : c.kind === "leader" ? "tick" : "brass");
+    srEl.textContent = c.kind === "leader" ? t("reel.countdown") : [c.reel, c.title, c.sub].filter(Boolean).join(". ");
+    Sound.toon(c.kind === "end" ? "fanfare" : c.kind === "leader" ? "tick" : "brass"); if (c.kind === "end") mortySays("end", { priority: true });
     Telemetry.emit("reel_card", { kind: c.kind, n: c.n || 0 });
   }
   function hideReelCard() { reelSt.card = null; reelEl.hidden = true; reelEl.classList.remove("in"); }
@@ -110,11 +109,11 @@
     const leader = mode !== "arcade" && !reelSt.leaderShown && cardsMode() === "full";
     if (leader) reelSt.leaderShown = true;
     const list = mode === "arcade" ? [titleCard(map + 1, true)] : (leader ? [{ kind: "leader" }] : []).concat(titleCard(1));
-    reelCards(list, () => setHint("Pull down · aim · let go"));
+    reelCards(list, () => { setHint(t("hint.start")); mortySays(`map.${game.stage}`, { priority: true }); });
   }
   function nextReel() {   // a map is clear and the next one is set: its card (after the intermission, halfway)
     const list = (game.stage === MAP_COUNT / 2 + 1 ? [intermissionCard()] : []).concat(titleCard(game.stage));
-    reelCards(list, () => { updateHud(); });
+    reelCards(list, () => { updateHud(); mortySays(`map.${game.stage}`, { priority: true }); });
   }
   function endReel(done) {   // the last boss is down: THE END, then the iris closes on Morty and opens on the headstone
     return reelCards([endCard()], () => {

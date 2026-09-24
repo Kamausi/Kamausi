@@ -112,8 +112,8 @@
   }
   function arcadeGo3D() {
     game.phase = "B"; clearPickups(); Sound.toon("brass");
-    stageCard("The ring goes 3D", "Left, right, up, down, near and far", "It only gets quicker from here", 2.2, "gold");
-    cine("mini-out", 2.2, () => { snapRing(); setHint("Watch the ring: its flight repeats"); updateHud(); }, 0.45);
+    stageCard(t("card.go3d.k"), t("card.go3d.t"), t("card.go3d.s"), 2.2, "gold");
+    cine("mini-out", 2.2, () => { snapRing(); setHint(t("hint.watch")); updateHud(); }, 0.45);
     setRingMode(bMode()); snapRing(); ring.morph = 1; Sound.setAct("B");
     updateHud();
   }
@@ -121,17 +121,17 @@
   function startMiniBoss() {
     game.phase = "mini"; clearPickups(); clearPowers(); clearDirectors(); Sound.toon("brass"); Sound.setAct("boss");
     boss = makeBoss(bossIds().mini, game.stage); setRingMode("boss"); snapRing(); Telemetry.emit("boss_start", { kind: boss.kind, stage: game.stage });
-    stageCard("Mini-boss", BOSS_INFO[boss.kind].name, `Toss through his ring ${boss.max} times`, 2.3, "boss");
+    stageCard(t("card.mini.k"), BOSS_INFO[boss.kind].name, t("card.mini.s", { n: boss.max }), 2.3, "boss"); mortySays("boss." + boss.kind, { priority: true });
     cine("mini-in", 2.3, () => setHint(BOSS_INFO[boss ? boss.kind : "crow"].hint));
     updateHud();
   }
   function miniBossDown() {
     profile.miniKills++; profile.bossLog[boss.kind] = (profile.bossLog[boss.kind] || 0) + 1; if (boss.flawless) profile.miniFlawless++; game.run.bosses++;
     const bonus = Math.round(2500 * stageMult() * (boss.flawless ? 1.5 : 1));
-    game.score += bonus; flyPoints(`+${fmtN(bonus)}`, W / 2, H * 0.36, true); Sound.toon("fanfare");
-    stageCard("Mini-boss defeated!", "The ring goes 3D", `Left, right, up, down, near and far${boss.flawless ? " · flawless!" : ""}`, 2.6, "gold");
+    game.score += bonus; flyPoints(`+${fmtN(bonus)}`, W / 2, H * 0.36, true); Sound.toon("fanfare"); mortySays("bossdown", { priority: true });
+    stageCard(t("card.miniDown.k"), t("card.go3d.k"), `${t("card.go3d.t")}${boss.flawless ? " · " + t("card.flawless") : ""}`, 2.6, "gold");
     // the rules change: the camera pulls back, the ring shakes loose and grows wings, the band changes key
-    cine("mini-out", 2.6, () => { boss = null; game.phase = "B"; snapRing(); setHint("Watch the ring: its flight repeats"); updateHud(); }, 0.55);
+    cine("mini-out", 2.6, () => { boss = null; game.phase = "B"; snapRing(); setHint(t("hint.watch")); updateHud(); }, 0.55);
     setRingMode(bMode()); snapRing(); ring.morph = 1; Sound.setAct("B");
     checkUnlocks(); persist(); updateHud();
     challenge("bosses", 1);
@@ -139,7 +139,7 @@
   function startMainBoss() {
     game.phase = "boss"; clearPickups(); clearPowers(); clearDirectors(); Sound.toon("brass"); Sound.setAct("boss");
     boss = makeBoss(bossIds().end, game.stage); setRingMode("boss"); snapRing(); Telemetry.emit("boss_start", { kind: boss.kind, stage: game.stage });
-    stageCard("End boss", BOSS_INFO[boss.kind].name, BOSS_INFO[boss.kind].tell, 2.6, "boss");
+    stageCard(t("card.boss.k"), BOSS_INFO[boss.kind].name, BOSS_INFO[boss.kind].tell, 2.6, "boss"); mortySays("boss." + boss.kind, { priority: true });
     cine("boss-in", 2.6, () => setHint(BOSS_INFO[boss ? boss.kind : "pumpkin"].hint), 0.35);
     updateHud();
   }
@@ -151,12 +151,12 @@
     const frag = mapData(game.stage).fragment, fresh = !profile.fragments.includes(frag);
     if (fresh) profile.fragments.push(frag);
     game.run.fragments = (game.run.fragments || []).concat(frag);
-    Telemetry.emit("fragment", { id: frag, fresh, stage: game.stage });
+    Telemetry.emit("fragment", { id: frag, fresh, stage: game.stage }); mortySays("fragment." + frag, { priority: true });
     if (game.stage >= MAP_COUNT) { storyComplete(); return; }
     const bonus = Math.round((10000 + (boss.flawless ? 5000 : 0)) * stageMult());
     game.score += bonus; flyPoints(`+${fmtN(bonus)}`, W / 2, H * 0.36, true);
     const bones = 150 + game.stage * 50; addBones(bones); game.run.bossBones = (game.run.bossBones || 0) + bones;
-    stageCard(`${mapData(game.stage).name} clear!`, `${FRAGMENTS[frag].name} recovered`, `+${bones} bones · a skull back${boss.flawless ? " · flawless!" : ""}`, 2.8, "gold");
+    stageCard(t("card.clear.k", { map: mapData(game.stage).name }), t("card.clear.t", { piece: FRAGMENTS[frag].name }), `${t("card.clear.s", { bones })}${boss.flawless ? " · " + t("card.flawless") : ""}`, 2.8, "gold");
     Sound.toon("fanfare"); changeoverCues(2.8);
     cine("boss-out", 2.8, () => {
       boss = null; seeds.length = 0; game.stage++; game.stageHits = 0; game.phase = "A"; VisualSystem.setStage(game.stage); setScene(game.stage - 1);
@@ -173,7 +173,7 @@
     profile.storyClears++; game.run.story = true;
     Sound.toon("fanfare"); Telemetry.emit("story_complete", { score: game.score, secs: Math.round(game.time - (game.run.t0 || 0)) });
     const done = card => { boss = null; seeds.length = 0; gameOver(card); };
-    if (cardsMode() === "off") { stageCard("The End", "Morty is whole again", "All eight reels restored", 3.4, "gold"); cine("boss-out", 3.4, () => done(true), 0.4); }
+    if (cardsMode() === "off") { stageCard(t("reel.theEnd"), t("reel.whole"), t("reel.restored"), 3.4, "gold"); cine("boss-out", 3.4, () => done(true), 0.4); }
     else cine("boss-out", 1.6, () => endReel(() => done(false)), 0.4);   // the boss falls, then THE END card (09i_reel.js)
     checkUnlocks(); persist(); updateHud();
     challenge("bosses", 1);

@@ -117,6 +117,54 @@ if len(set(bosses)) != len(bosses): problems.append("two maps share a boss")
 if problems: sys.exit("build refused: the maps don't check out\n  " + "\n  ".join(problems))
 js = ("  const MAP_DATA = " + json.dumps(MAP_DATA, separators=(",", ":"), ensure_ascii=False) + ";\n  const TIER_DATA = " + json.dumps(TIERS, separators=(",", ":")) +
       ";\n  const BLUEPRINT = " + json.dumps(BLUEPRINT, separators=(",", ":")) + ";\n  const MAP_REGISTRY = " + json.dumps(REG, separators=(",", ":")) + ";\n" + js)
+# ── strings: every word the game shows has an ID (docs/LOCALIZATION.md). The code's text is src/strings/en.json;
+#    the markup keeps its own English and marks it data-t="ui.…" (text), data-t-aria (aria-label) or data-t-ph
+#    (placeholder). Other languages are src/strings/<lang>.json, overriding by ID. Refused: an ID the code uses that
+#    doesn't exist, an ID nobody uses, a markup ID with two different texts, a translation whose {placeholders}
+#    differ from the English. ──
+STR_DIR = root / "strings"
+EN = json.loads((STR_DIR / "en.json").read_text())
+LOCALES = {f.stem: json.loads(f.read_text()) for f in sorted(STR_DIR.glob("*.json")) if f.stem != "en"}
+sp = []
+UI, INLINE = {}, r"(?:[^<]|<(?:b|i|br)\b[^>]*>|</(?:b|i)>)*"
+def ui_def(k, v, where):
+    v = re.sub(r"\s+", " ", v).strip()
+    if not k.startswith("ui."): sp.append(f"markup {where} ID {k} must start with ui.")
+    elif k in UI and UI[k] != v: sp.append(f"markup ID {k} has two texts: \"{UI[k]}\" and \"{v}\"")
+    UI[k] = v
+found = 0
+for m in re.finditer(r'<(\w+)\b[^>]*?\sdata-t="([\w.-]+)"[^>]*>(' + INLINE + r')</\1>', markup): ui_def(m.group(2), m.group(3), "text"); found += 1
+if found != markup.count('data-t="'): sp.append("a data-t element holds more than text and <b>/<i>/<br>; put the ID on the innermost element")
+for tag in re.findall(r'<[^>]*\sdata-t-(?:aria|ph)="[^"]*"[^>]*>', markup):
+    for kind, attr in (("aria", "aria-label"), ("ph", "placeholder")):
+        k = re.search(rf'data-t-{kind}="([\w.-]+)"', tag)
+        if not k: continue
+        v = re.search(rf'\s{attr}="([^"]*)"', tag)
+        if not v: sp.append(f"{k.group(1)}: data-t-{kind} without a {attr}"); continue
+        ui_def(k.group(1), v.group(1), kind)
+for k in UI:
+    if k in EN: sp.append(f"{k} is defined in both the markup and en.json")
+ALL = {**EN, **UI}
+# what the code asks for: t("id"), t(`pre.${x}.post`) and lineIds("prefix.")
+code = "\n".join(p.read_text() for p in parts if p.name != "99_dev_hooks.js")
+lits = set(re.findall(r'\bt\(\s*"([\w.-]+)"', code))
+pats = [re.compile("^" + re.sub(r"\\\$\\\{[^}]*\\\}", r"[\\w-]+", re.escape(x)) + "$") for x in re.findall(r"\bt\(\s*`([^`]+)`", code)]
+pres = set(re.findall(r'\blineIds\(\s*[`"]([\w.-]+)', code))
+for k in sorted(lits - set(ALL)): sp.append(f"the code uses string {k}, which isn't defined")
+for pat in pats:
+    if not any(pat.match(k) for k in ALL): sp.append(f"the code builds string IDs like {pat.pattern}, and none exist")
+for pre in pres:
+    if not any(k.startswith(pre) for k in ALL): sp.append(f"no lines start {pre}")
+used = lambda k: k in lits or k in UI or any(p.match(k) for p in pats) or any(k.startswith(pre) for pre in pres)
+for k in sorted(EN):
+    if not used(k): sp.append(f"en.json's {k} is never used")
+ph = lambda v: sorted(set(re.findall(r"\{(\w+)\}", v)))
+for lang, L in LOCALES.items():
+    for k, v in L.items():
+        if k not in ALL: sp.append(f"{lang}.json translates {k}, which English doesn't have")
+        elif ph(v) != ph(ALL[k]): sp.append(f"{lang}.json's {k} has placeholders {ph(v)}, English has {ph(ALL[k])}")
+if sp: sys.exit("build refused: the strings don't check out\n  " + "\n  ".join(sp[:40]))
+js = "  const STRINGS = " + json.dumps({"en": ALL, **LOCALES}, separators=(",", ":"), ensure_ascii=False) + ";\n" + js
 # ── optional ring art: src/art/rings/<id>.(webp|png) plus <id>.json from measure.py ──
 RING_ART = {}
 for f in sorted((root / "art" / "rings").glob("*")):

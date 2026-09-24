@@ -170,3 +170,8 @@
 .reelcard[data-kind="leader"] .rc-skip{color:rgba(23,19,15,.55)}
 html.hc .rc-text{text-shadow:0 0 2px var(--ink),0 0 4px var(--ink)}
 @media (prefers-reduced-motion:reduce){.reelcard.in .rc-text{animation:none}}
+
+/* a label from the string table may run long in another language: it wraps inside its button rather than spilling out */
+.btn>[data-t],.chip-btn>[data-t]{min-width:0;overflow-wrap:anywhere;text-align:center;line-height:1.02}
+.chip-btn{max-width:100%}
+.seg button{min-width:0;overflow-wrap:anywhere}

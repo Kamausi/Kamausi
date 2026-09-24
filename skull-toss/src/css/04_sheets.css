@@ -31,7 +31,8 @@
 .switch[aria-checked="true"]{background:var(--mustard)}
 .switch[aria-checked="true"]::after{transform:translateX(26px)}
 .switch:disabled{opacity:.35;cursor:not-allowed}
-.slider{display:grid;grid-template-columns:92px 1fr 40px;align-items:center;gap:12px}
+.slider{display:grid;grid-template-columns:minmax(92px,max-content) 1fr 40px;align-items:center;gap:12px}
+.slider .lbl{min-width:0;max-width:44vw;overflow-wrap:anywhere}
 .slider input{width:100%;height:30px;margin:0;accent-color:var(--mustard);cursor:pointer}
 .slider output{font:22px/1 var(--num);color:var(--cream-dim);text-align:right}
 .slider.off{opacity:.4}

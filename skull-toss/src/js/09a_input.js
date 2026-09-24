@@ -15,13 +15,13 @@
       aim.tension = aim.upward ? 0 : clamp(Math.hypot(aim.cx - aim.sx, aim.cy - aim.sy) / pullMax(), 0, 1);
     } else { aim.valid = true; aim.upward = false; aim.tension = clamp(Math.hypot(aim.nx * 0.8, aim.ny), 0, 1); }
     const a = aimPoint(aim.nx, aim.ny); aim.AX = a.AX; aim.AY = a.AY;
-    if (aim.upward) setHint("Pull down, not up", true);
-    else if (hintEl.textContent === "Pull down, not up") setHint("");
+    if (aim.upward) setHint(t("hint.pullDown"), true);
+    else if (hintEl.textContent === t("hint.pullDown")) setHint("");
   }
   function release() {
     if (!aim.active) return;
     if (aim.valid) { skull.pullOff = pullOffset(); launch(aim.AX, aim.AY); }
-    else { aim.active = false; cvs.classList.remove("aiming"); Sound.slack(); if (aim.upward) setHint("Pull down, then let go", true); }
+    else { aim.active = false; cvs.classList.remove("aiming"); Sound.slack(); if (aim.upward) setHint(t("hint.pullRelease"), true); }
   }
   function cancelAim() { if (!aim.active) return; aim.active = false; cvs.classList.remove("aiming"); Sound.pullEnd(); }
 

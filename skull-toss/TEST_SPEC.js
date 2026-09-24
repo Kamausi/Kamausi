@@ -1336,6 +1336,66 @@
   });
   T.cards(false);
 
+  // ── v24: every word has an ID, and Morty has a personality ──
+  const POOLS = ["grab", "last", "cursed", "missing", "hot", "perfect", "nearmiss", "bonk", "bossdown", "continue", "encore", "resume", "idle", "end"];
+  test("Every word has an ID: the markup, the code's text and Morty's lines come from the string table", () => {
+    assert(document.querySelector('#play [data-t]').textContent === T.tr("ui.play") && T.tr("ui.play") === "Play", "the Play button reads its string");
+    assert(T.tr("cont.bones", { n: "200" }) === "Spend 200 bones" && T.tr("no.such.string") === "no.such.string", "placeholders fill in; a missing ID shows itself");
+    const L = T.voiceLines(); for (const p of POOLS) assert((L[p] || []).length >= 2, `Morty's ${p} lines (${(L[p] || []).length})`);
+    for (const b of Object.keys(T.bossInfo ? T.bossInfo() : {})) assert((L["boss." + b] || []).length >= 1, `a line for ${b}`);
+    for (let n = 1; n <= 8; n++) assert((L["map." + n] || []).length, `a line for map ${n}`);
+    for (const f of ["tophat", "bowtie", "gloves", "cane", "spats", "whistle", "watch", "shadow"]) assert((L["fragment." + f] || []).length, `a line for the ${f}`);
+    assert(T.lineIds("morty.grab.").length >= 28 && T.lineIds("morty.grab.")[0] === "morty.grab.01", "line IDs are voice-line IDs");
+    T.setStats(ZERO); fresh(); toHit(25); T.step(3); T.toTitle();
+    const miss = T.missingStrings().filter(k => k !== "no.such.string"); assert(!miss.length, `no string went missing in play (${miss.join(", ")})`);
+  });
+  test("The pseudo-locale: every tagged text changes, numbers survive, and nothing overflows its button", () => {
+    T.toTitle(); T.lang("pseudo");
+    const play = document.querySelector('#play [data-t]').textContent;
+    assert(/^\[Ƥļáý ·+\]$/.test(play), `accented and padded (${play})`);
+    assert(/200/.test(T.tr("cont.bones", { n: "200" })) && /\{/.test(T.tr("cont.bones")) === true, "placeholders keep their braces until filled");
+    const inside = (a, b) => a.left >= b.left - 1 && a.right <= b.right + 1 && a.top >= b.top - 1 && a.bottom <= b.bottom + 1;
+    const over = sel => [...document.querySelectorAll(sel)].filter(el => el.getClientRects().length).filter(el => {   // the label's box must sit inside its button (a pip may overhang on purpose)
+      const lbl = el.matches("[data-t]") ? el : el.querySelector("[data-t]") || el;
+      return lbl.scrollWidth > lbl.clientWidth + 1 || (lbl !== el && !inside(lbl.getBoundingClientRect(), el.getBoundingClientRect()));
+    }).map(el => el.textContent.slice(0, 24));
+    let bad = over("#title .btn, #title .chip-btn"); assert(!bad.length, `title buttons overflow: ${bad.join(" | ")}`);
+    T.openSheet("settings"); bad = over("#sheet-settings .seg button, #sheet-settings .lbl"); T.closeSheet(); assert(!bad.length, `settings overflow: ${bad.join(" | ")}`);
+    T.continues(true); T.setStats({ ...ZERO, bones: 1000 }); fresh(); T.setLives(1); missOut();
+    bad = over("#continueBox .btn, #continueBox .ghost-btn"); $("contNo").click(); T.continues(false); assert(!bad.length, `continue buttons overflow: ${bad.join(" | ")}`);
+    T.lang("en"); assert(document.querySelector('#play [data-t]').textContent === "Play", "and back to English");
+    T.setStats(ZERO); T.toTitle();
+  });
+  test("Morty deals his lines like cards: none again until the whole pool has been said", () => {
+    T.voiceTest(true); const n = T.lineIds("morty.grab.").length, seen = new Set();
+    for (let i = 0; i < n; i++) { T.say("grab"); seen.add(T.voice().id); }
+    const last = T.voice().id; T.say("grab");
+    assert(seen.size === n && T.voice().id !== last, `${seen.size} of ${n} different lines, and the next round doesn't open on the last one`);
+    T.voiceTest(false);
+  });
+  test("Morty's big moments always get a line; the rest wait their turn; and he nags once if you stall", () => {
+    T.setStats(ZERO); fresh(); T.voiceTest(true); toHit(25);
+    assert(T.voice().pool === "boss.crow", `the Crow King walks on to a line (${T.voice().pool})`);
+    const id = T.voice().id; T.step(2.4); T.freezeRing(T.state().ring.x, T.state().ring.y, T.state().ring.z); T.hurtBoss(1);
+    assert(T.voice().id === id, "a small moment inside the cooldown stays quiet");
+    T.hurtBoss(99); T.endThrow(); assert(T.voice().pool === "bossdown", `the mini-boss falls to a line (${T.voice().pool})`);
+    T.step(3.2); const said = T.voice().said; T.step(12.5);
+    assert(T.voice().pool === "idle" && T.voice().said === said + 1, `twelve seconds idle gets a nudge (${T.voice().pool})`);
+    T.step(13); assert(T.voice().said === said + 1, "once per lull");
+    T.continues(true); T.setStats({ ...ZERO, bones: 1000 }); fresh(); T.setLives(1); missOut();
+    assert(T.voice().pool === "continue", `the offer of one more skull gets a line (${T.voice().pool})`);
+    $("contBones").click(); assert(T.voice().pool === "encore", `and taking it (${T.voice().pool})`);
+    T.continues(false); T.voiceTest(false); T.setStats(ZERO); T.toTitle();
+  });
+  test("His mood picks his lines: nervous on the last skull, cocky on a streak, grumpy after misses", () => {
+    fresh(); assert(T.voice().mood === "chipper", T.voice().mood);
+    T.setLives(1); assert(T.voice().mood === "nervous", T.voice().mood);
+    T.setLives(3); T.setStreak(6); assert(T.voice().mood === "cocky", T.voice().mood);
+    T.setStreak(0); T.setLives(5); T.freezeRing(0, C.RING_Y); throwAndSettle(2.5, C.RING_Y); T.freezeRing(0, C.RING_Y); throwAndSettle(2.5, C.RING_Y);
+    assert(T.voice().mood === "grumpy", T.voice().mood);
+    T.toTitle();
+  });
+
   T.sandbox(false); T.start(); T.pause(false);  // leave the game playable, player's saved data untouched
   window.__skullTossResults = results;
   const passed = results.filter(r => r.pass).length;

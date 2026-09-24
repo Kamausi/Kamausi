@@ -40,36 +40,33 @@
   $("sheetScrim").addEventListener("click", () => closeSheet());
 
   // ───────────────────────── settings ─────────────────────────
-  const GUIDE_NOTE = { full: "Full path and crosshair", short: "Only the start of the arc", off: "No guide. Pure instinct." };
   const SLIDERS = ["music", "sfx", "amb"];
   function renderSettings() {
     const set = (id, v) => $(id).setAttribute("aria-checked", String(!!v));
     set("set-sound", settings.sound); set("set-shake", settings.shake);
     const canVibe = typeof navigator.vibrate === "function";
     $("set-vibe").disabled = !canVibe; set("set-vibe", canVibe && settings.vibe);
-    $("vibeNote").textContent = canVibe ? "Buzz on hits and misses" : "Not supported on this device";
+    $("vibeNote").textContent = canVibe ? t("settings.vibe.on") : t("settings.vibe.none");
     for (const k of SLIDERS) {
       $("set-" + k).value = settings[k]; $("out-" + k).textContent = settings[k];
       $("row-" + k).classList.toggle("off", !settings.sound); $("set-" + k).disabled = !settings.sound;
     }
     for (const b of $("set-guide").querySelectorAll("button")) b.setAttribute("aria-checked", String(b.dataset.v === settings.guide));
-    $("guideNote").textContent = GUIDE_NOTE[settings.guide];
+    $("guideNote").textContent = t(`settings.guide.${settings.guide}`);
     for (const b of $("set-film").querySelectorAll("button")) b.setAttribute("aria-checked", String(b.dataset.v === settings.film));
-    $("filmNote").textContent = FILM_NOTE[settings.film];
+    $("filmNote").textContent = t(`settings.film.${settings.film}`);
     for (const b of $("set-camera").querySelectorAll("button")) b.setAttribute("aria-checked", String(b.dataset.v === settings.camera));
-    $("cameraNote").textContent = CAMERA_NOTE[settings.camera];
+    $("cameraNote").textContent = t(`settings.camera.${settings.camera}`);
     $("set-shake").disabled = settings.camera === "still";   // a locked-off camera doesn't jolt either
     for (const b of $("set-voice").querySelectorAll("button")) b.setAttribute("aria-checked", String(b.dataset.v === settings.voice));
-    $("voiceNote").textContent = VOICE_NOTE[settings.voice];
-    segValue($("set-flashes"), settings.flashes); $("flashNote").textContent = FLASH_NOTE[settings.flashes];
+    $("voiceNote").textContent = t(`settings.voice.${settings.voice}`);
+    segValue($("set-flashes"), settings.flashes); $("flashNote").textContent = t(`settings.flash.${settings.flashes}`);
     set("set-contrast", settings.contrast); segValue($("set-text"), settings.text);
-    segValue($("set-cards"), settings.cards); $("cardsNote").textContent = CARDS_NOTE[settings.cards];
+    const langs = LOCALE_IDS().filter(l => l !== "pseudo"); $("row-lang").hidden = langs.length < 2;   // (a picker once there's a translation)
+    if (langs.length > 1 && !$("set-lang").children.length) for (const l of langs) $("set-lang").append(h("button", { type: "button", role: "radio", data: { v: l } }, (STRINGS[l] && STRINGS[l]["lang.name"]) || l));
+    segValue($("set-lang"), LANG); $("langNote").textContent = t("lang.name");
+    segValue($("set-cards"), settings.cards); $("cardsNote").textContent = t(`settings.cards.${settings.cards}`);
   }
-  const CARDS_NOTE = { full: "The countdown leader, then each reel's title card", short: "A brief title card for each reel", off: "Straight into play" };
-  const FLASH_NOTE = { full: "Camera flashes, lightning and the film's flicker", reduced: "One soft flash, dim lightning, a steady picture", off: "No flashes at all" };
-  const FILM_NOTE = { full: "Grain, dust, scratches and a wobbly gate", light: "Just a little grain", off: "A clean print" };
-  const CAMERA_NOTE = { full: "Leans with your aim, follows the throw", gentle: "The same moves, smaller", still: "A locked-off camera" };
-  const VOICE_NOTE = { babble: "Cartoon mumbles when you grab him", spoken: "Your device reads his lines out loud", off: "A strong, silent skull" };
   $("set-voice").addEventListener("click", e => {
     const b = e.target.closest("button"); if (!b) return;
     settings.voice = b.dataset.v; persist(); renderSettings(); Sound.ui("tick");
@@ -89,6 +86,7 @@
   $("set-shake").addEventListener("click", () => toggleSetting("shake"));
   $("set-contrast").addEventListener("click", () => { toggleSetting("contrast"); applyAccess(); });
   bindSeg("set-flashes", v => { settings.flashes = v; persist(); applyAccess(); renderSettings(); Sound.ui("tick"); });
+  bindSeg("set-lang", v => { settings.lang = setLang(v); persist(); renderSettings(); Sound.ui("tick"); });
   bindSeg("set-cards", v => { settings.cards = v; persist(); renderSettings(); Sound.ui("tick"); });
   bindSeg("set-text", v => { settings.text = v; persist(); applyAccess(); renderSettings(); Sound.ui("tick"); });
   for (const key of SLIDERS) {
