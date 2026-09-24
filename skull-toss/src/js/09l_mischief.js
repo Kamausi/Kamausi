@@ -18,7 +18,7 @@
   function mischiefAfterThrow() {
     if (!mischiefOn() || misc.kind || boss || game.state !== "ready" || (game.mode !== "story" && game.mode !== "arcade") || game.throws < MISCHIEF.minThrows) return null;
     if (game.mode === "story" ? misc.lastMap === game.stage : game.throws - misc.lastThrow < MISCHIEF.arcadeGap) return null;
-    if (runRand() > MISCHIEF.chance) return null;
+    if (runRand() > Flags.get("mischief.chance")) return null;   // (the live config can tune it: 03d_flags.js)
     let pool = MISCHIEF.kinds; if (reduceMotion) pool = pool.filter(k => k !== "slip" && k !== "wrong");
     return misbehave(pool[Math.floor(runRand() * pool.length)]);
   }

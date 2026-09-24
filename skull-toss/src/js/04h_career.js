@@ -22,6 +22,18 @@
       Telemetry.emit("level_up", { from, to });
       if (!sandbox) toast(`<b>${t("career.levelUp", { n: to })}</b> · +${fmtN(bones)} ${t("career.bones")}`);
     }
+    streakAfterRun();
     profile.history = [{ mode: game.mode, map: game.map, stage: game.stage, score: game.score, hits: game.hits, won: !!r.story, xp, at: Date.now() }].concat(profile.history || []).slice(0, 10);
     return r.levelUp;
+  }
+  // the daily streak (v37): the first run of a day extends it (or starts it again after a day missed); it pays 20
+  // bones a day of it, up to a week's worth
+  function streakAfterRun(now = new Date()) {
+    const today = dayKey(now), y = new Date(now); y.setDate(y.getDate() - 1);
+    if (profile.streakLast === today) return 0;
+    profile.streakDays = profile.streakLast === dayKey(y) ? profile.streakDays + 1 : 1; profile.streakLast = today;
+    const pay = Math.round(20 * Math.min(7, profile.streakDays) * Math.max(1, Number(Flags.get("event.bones")) || 1));
+    addBones(pay); game.run.streak = { days: profile.streakDays, bones: pay };
+    if (!sandbox && profile.streakDays > 1) toast(`<b>${t("streak.toast", { n: profile.streakDays })}</b> · +${pay}`);
+    return pay;
   }

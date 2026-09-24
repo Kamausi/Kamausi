@@ -227,6 +227,7 @@
     const per = chalTab, d = ensurePeriod(per), P = PERIODS[per];
     for (const b of $("chalTabs").querySelectorAll("button")) { b.setAttribute("aria-selected", b.dataset.per === per); b.querySelector(".dot").hidden = !claimable(b.dataset.per); }
     $("chalWhat").textContent = P.label.toLowerCase();
+    $("streakLine").hidden = profile.streakDays < 1; $("streakLine").textContent = t("streak.line", { n: profile.streakDays, next: 20 * Math.min(7, profile.streakDays + 1) });   // (v37)
     $("chalList").innerHTML = d.items.map((it, i) => {
       const def = chalDef(it.id), done = chalDone(it), have = Math.min(it.have, it.n), pct = Math.round((have / it.n) * 100);
       const show = v => it.id === "arcadeSecs" ? `${Math.floor(v / 60)}:${String(v % 60).padStart(2, "0")}` : fmt(v);

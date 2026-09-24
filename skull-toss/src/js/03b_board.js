@@ -37,6 +37,7 @@
         e => { this.lastSubmit = { accepted: false, why: e.message, code: e.code }; return false; });
     },
     push(force = false) {
+      if (Flags.on("kill.board")) return Promise.resolve(false);   // (03d_flags.js)
       if (Backend.hasFunctions()) return this.submit();   // (the server writes the board; the page can't)
       if (!this.db || !this.me || !profile.board || (sandbox && !this.fake)) return Promise.resolve(false);
       const e = this.entry();

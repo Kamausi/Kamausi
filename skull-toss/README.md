@@ -1,8 +1,15 @@
-# SKULL TOSS v36
+# SKULL TOSS v37
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)), with a synthesised waltz standing in wherever they can't load.
+
+## New in v37: challenges on a live rotation, and a daily streak
+
+- **New kinds of challenge**, daily, weekly and monthly: make signature shots, hit bonus targets, and play Boss Rush or the mini-games.
+- **Live config.** The rotation now follows it (`config/live` in Firestore; see [firebase/README.md](firebase/README.md)). Kinds can be taken out of the rotation, and an event can raise every challenge's pay. The same day still picks the same goals for everyone.
+- **Other flags** in the same config: an event banner under the title, how often the print misbehaves, and **kill switches** that close the Soul Shop, stop posting to the board, or hide sharing, for anything that has to be turned off in a hurry. The last values seen are kept for offline play.
+- **The daily streak.** The first run of each day extends it, or starts it again after a day missed. It pays 20 bones for each day of the streak, up to a week's worth (140). It shows on the Challenges sheet and the headstone.
 
 ## New in v36: the Diegetic Arcade
 
@@ -851,7 +858,7 @@ From the console, `SkullToss.debug.visualAnimation` lists the pose library (`pos
 
 ## Tests
 
-Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **187 checks**, covering:
+Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **191 checks**, covering:
 
 - **Layout, scoring and aiming.**
   - Everything is centred and every result is classified correctly.
@@ -1003,3 +1010,8 @@ Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to
   - The Arcade shows a cabinet per map: marquee, top scores and coin slot, or Out of Order until reached. A coin starts that cabinet.
   - A top-five score asks for initials (ALO from Ada Lovelace), and ▲ changes a letter.
   - A score below the five asks nothing and leaves the table alone.
+- **v37.**
+  - The new challenge kinds are in all three pools, the live config can take kinds out, and a signature shot counts toward its challenge.
+  - An event doubles the pay on the same goals.
+  - The daily streak pays 20 a day up to a week, once a day, and a missed day starts it again.
+  - Kill switches close the Soul Shop, and the event banner shows and goes.

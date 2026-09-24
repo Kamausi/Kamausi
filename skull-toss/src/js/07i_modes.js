@@ -167,6 +167,7 @@
     const m = game.mode, R = profile.modes[m] || (profile.modes[m] = { best: 0, runs: 0 });
     const value = m === "rush" ? game.run.bosses : m === "curtain" ? game.hits : m === "longshot" ? Math.round(modeSt.far * 10) : m === "gallery" ? (game.run.targets || 0) : 0;
     game.newBest = value > R.best; R.best = Math.max(R.best, value); R.runs++;
+    if (m === "rush" || MODES[m].mini) challenge("modeRuns", 1);
     if (m === "rush") R.score = Math.max(R.score || 0, game.score);
     game.run.modeValue = value;
     Telemetry.emit("mode_end", { mode: m, value, best: R.best });

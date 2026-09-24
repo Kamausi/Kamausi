@@ -10,7 +10,7 @@
     wallet: null, state: "off", unsub: null, busy: false,   // state: off | loading | ok | error
     known() { return !!this.wallet; },
     owns(key) { return !!this.wallet && this.wallet.owned.includes(key); },
-    available() { return Backend.hasFunctions(); },
+    available() { return Backend.hasFunctions() && !Flags.on("kill.souls"); },   // (a kill switch can close the shop: 03d_flags.js)
     async connect() {
       if (this.unsub) { try { this.unsub(); } catch (e) {} this.unsub = null; }
       if (!Backend.hasFunctions()) {   // no server at all: nothing can be Soul-bound, so no Soul look stays on

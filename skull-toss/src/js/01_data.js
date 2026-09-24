@@ -176,7 +176,11 @@
     { id: "rims",     text: n => `Rattle in ${n} rim-ins`,       range: [2, 5],   mode: "add", reward: n => n * 45 },
     { id: "runs",     text: n => `Play ${n} runs`,               range: [3, 6],   mode: "add", reward: n => n * 30 },
     { id: "lives",    text: n => `Hold ${n} skulls at once`,     range: [4, 5],   mode: "max", reward: n => (n === 5 ? 300 : 160) },
-    { id: "arcadeSecs", text: n => `Survive ${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")} in one Arcade run`, range: [45, 90], mode: "max", reward: n => 40 + n * 2, step: 15 }
+    { id: "arcadeSecs", text: n => `Survive ${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")} in one Arcade run`, range: [45, 90], mode: "max", reward: n => 40 + n * 2, step: 15 },
+    // v37: the newer things to do
+    { id: "shots",    text: n => n > 1 ? `Make ${n} signature shots` : "Make a signature shot", range: [1, 3], mode: "add", reward: n => 80 + n * 60 },
+    { id: "targets",  text: n => `Hit ${n} bonus targets`,       range: [2, 5],   mode: "add", reward: n => n * 45 },
+    { id: "modeRuns", text: n => `Play ${n} runs of Boss Rush or a mini-game`, range: [2, 4], mode: "add", reward: n => n * 55 }
   ];
   // weekly and monthly challenges: the same kinds of goal, bigger, and they pay far more. A week runs Monday to
   // Sunday, a month from the 1st. Each set is three, picked from its pool, seeded by the week or the month.
@@ -192,7 +196,8 @@
     { id: "combo",    range: [8, 14],    reward: n => n * 50 },
     { id: "rims",     range: [8, 16],    reward: n => n * 55 },
     { id: "runs",     range: [12, 25],   reward: n => n * 35 },
-    { id: "arcadeSecs", range: [90, 180], reward: n => 200 + n * 3, step: 15 }
+    { id: "arcadeSecs", range: [90, 180], reward: n => 200 + n * 3, step: 15 },
+    { id: "shots", range: [5, 12], reward: n => 250 + n * 60 }, { id: "targets", range: [10, 25], reward: n => 150 + n * 40 }, { id: "modeRuns", range: [6, 12], reward: n => 150 + n * 50 }
   ];
   const CHALLENGES_MONTHLY = [
     { id: "perfects", range: [60, 120],  reward: n => 600 + n * 14, step: 5 },
@@ -205,7 +210,8 @@
     { id: "combo",    range: [12, 20],   reward: n => 500 + n * 50 },
     { id: "rims",     range: [30, 60],   reward: n => n * 40, step: 5 },
     { id: "runs",     range: [40, 80],   reward: n => n * 25, step: 5 },
-    { id: "arcadeSecs", range: [180, 360], reward: n => 400 + n * 4, step: 30 }
+    { id: "arcadeSecs", range: [180, 360], reward: n => 400 + n * 4, step: 30 },
+    { id: "shots", range: [20, 45], reward: n => 500 + n * 50, step: 5 }, { id: "targets", range: [40, 90], reward: n => 400 + n * 30, step: 5 }, { id: "modeRuns", range: [20, 40], reward: n => 400 + n * 40, step: 5 }
   ];
   const REQ_TEXT = {
     makes: n => `Make ${n}`, best: n => `${n} hits in one run`, perfects: n => `${n} perfects`, bestStreak: n => `${n} in a row`,
@@ -250,7 +256,7 @@
     "powerups", "cursed", "saves", "bonesSpent", "shopBuys", "coffins", "playTime", "grabs", "arcadeRuns", "chalClaims", "achSeen", "storyClears", "targetHits", "hazardHits", "continues", "xp"];   // xp: career experience (04h_career.js)
   // arcade: the best on each map, keyed by map number ({ score, secs, hits, runs }); achievements: the ones unlocked
   const DEFAULT_PROFILE = { name: "", bones: 0, daily: null, weekly: null, monthly: null, unlocked: [], seen: [], achievements: [], arcade: {}, updatedAt: 0, board: false, bestStage: 1, boardBest: null,
-    fragments: [], bossLog: {}, shots: {}, modes: {}, met: [], secrets: [], history: [], mastery: [], flawless: {}, mapMakes: {}, arcadeTables: {}, lastIni: "" };   // arcadeTables: each cabinet's top five (09o_arcade.js)   // mastery: claimed tiers; flawless: end bosses beaten without a miss; mapMakes: makes per map (09n_mastery.js)   // history: the last ten runs (04h_career.js)   // met: what the Codex has noted ("boss:crow", "power:rush"…); secrets: the ones found (09l_mischief.js)   // modes: Boss Rush's and each mini-game's record (07i_modes.js)   // shots: each signature shot, how many times (07h_shots.js)   // fragments: Morty's pieces recovered (ids); bossLog: each boss beaten, how many times
+    fragments: [], bossLog: {}, shots: {}, modes: {}, met: [], secrets: [], history: [], mastery: [], flawless: {}, mapMakes: {}, arcadeTables: {}, lastIni: "", streakDays: 0, streakLast: "" };   // streak: days played in a row (v37)   // arcadeTables: each cabinet's top five (09o_arcade.js)   // mastery: claimed tiers; flawless: end bosses beaten without a miss; mapMakes: makes per map (09n_mastery.js)   // history: the last ten runs (04h_career.js)   // met: what the Codex has noted ("boss:crow", "power:rush"…); secrets: the ones found (09l_mischief.js)   // modes: Boss Rush's and each mini-game's record (07i_modes.js)   // shots: each signature shot, how many times (07h_shots.js)   // fragments: Morty's pieces recovered (ids); bossLog: each boss beaten, how many times
   for (const k of STAT_KEYS) if (!(k in DEFAULT_PROFILE)) DEFAULT_PROFILE[k] = 0;
   const DEFAULT_COS = { skull: "bone", eyes: "pie", teeth: "grin", paint: "none", trail: "dust", impact: "classic", ring: "hoop", aim: "bone", reel: "standard", title: "rookie", updatedAt: 0 };
   let sandbox = null;   // while the spec runs, nothing is written to the player's storage or cloud
@@ -302,6 +308,7 @@
     for (const f of ["flawless", "mapMakes"]) { const o = {}; if (out[f] && typeof out[f] === "object") for (const [k, v] of Object.entries(out[f])) if (/^[a-z0-9]{1,16}$/.test(k)) o[k] = Math.max(0, Math.floor(Number(v) || 0)); out[f] = o; }
     const tabs = {}; if (out.arcadeTables && typeof out.arcadeTables === "object") for (const [k, list] of Object.entries(out.arcadeTables)) if (/^\d{1,2}$/.test(k) && Array.isArray(list))
       tabs[k] = list.filter(e => e && /^[A-Z]{3}$/.test(e.ini) && Number(e.score) > 0).map(e => ({ ini: e.ini, score: Math.floor(Number(e.score)), secs: Math.max(0, Math.floor(Number(e.secs) || 0)), at: Number(e.at) || 0 })).sort((a, b) => b.score - a.score).slice(0, 5);
+    out.streakDays = Math.max(0, Math.floor(Number(out.streakDays) || 0)); out.streakLast = typeof out.streakLast === "string" ? out.streakLast.slice(0, 12) : "";
     out.arcadeTables = tabs; out.lastIni = /^[A-Z]{3}$/.test(out.lastIni || "") ? out.lastIni : "";
     out.history = Array.isArray(out.history) ? out.history.filter(h => h && typeof h === "object").slice(0, 10).map(h => ({ mode: String(h.mode || "story").slice(0, 12), map: Math.max(0, Math.floor(Number(h.map) || 0)), stage: Math.max(1, Math.floor(Number(h.stage) || 1)),
       score: Math.max(0, Math.floor(Number(h.score) || 0)), hits: Math.max(0, Math.floor(Number(h.hits) || 0)), won: !!h.won, xp: Math.max(0, Math.floor(Number(h.xp) || 0)), at: Number(h.at) || 0 })) : [];

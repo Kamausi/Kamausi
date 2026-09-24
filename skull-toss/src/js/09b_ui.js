@@ -12,7 +12,7 @@
   // big scene changes iris out and back in, like the end of an old cartoon; pausing is instant
   function showScreen(name, fx = true) {
     const prev = screen; screen = name;
-    if (name === "title") { renderResumeOffer(); renderSharedOffer(); }
+    if (name === "title") { renderResumeOffer(); renderSharedOffer(); renderEventBanner(); }
     if (fx && prev !== name && name !== "pause" && prev !== "pause") irisTo(() => applyScreen(name)); else applyScreen(name);
   }
   // GAME OVER pops up over the picture when the last skull is gone; the headstone follows it
@@ -167,6 +167,7 @@
     if (r.fragments && r.fragments.length) rows.push(["Morty's pieces", r.fragments.map(f => FRAGMENTS[f].name).join(", ")]);
     rows.push(["Skill level", g.stars ? `<span class="stars">${"★".repeat(g.stars)}</span>` : "—"]);
     if (r.xp) rows.push([t("career.xpRow"), `+${fmtN(r.xp)}`]);   // (04h_career.js)
+    if (r.streak && r.streak.days > 1) rows.push([t("streak.row"), t("streak.val", { n: r.streak.days, bones: r.streak.bones })]);
     if (r.levelUp) rows.push([t("career.levelUpRow"), t("career.levelUpVal", { from: r.levelUp.from, to: r.levelUp.to, bones: fmtN(r.levelUp.bones) })]);
     const mode = game.mode, M = MODES[mode] || {};
     if (mode === "practice") rows.splice(0, rows.length, [t("res.throws"), game.throws], [t("res.hits"), game.hits], [t("res.perfect"), `${r.perfects}/${game.throws}`], [t("res.accuracy"), game.throws ? Math.round((100 * game.hits) / game.throws) + "%" : "—"]);
@@ -181,7 +182,7 @@
     $("resTitle").textContent = best || longer ? "" : arcade ? `Arcade · ${STAGES[game.map].name}` : titleName();
     $("resBones").textContent = r.bones;
     renderInitials();   // a cabinet's top five: your initials (09o_arcade.js)
-    $("watchBtn").hidden = !Replay.last && !Replay.play; $("shareBtn").hidden = !Replay.last || !!Replay.play;   // (07j_replay.js)
+    $("watchBtn").hidden = !Replay.last && !Replay.play; $("shareBtn").hidden = !Replay.last || !!Replay.play || Flags.on("kill.replays");   // (07j_replay.js)
     if (mode !== "story" && mode !== "arcade") {   // the other modes: their own record on the ribbon and the line below
       const R = modeRec(mode), fresh = game.newBest && (r.modeValue || 0) > 0;
       $("newBest").hidden = !fresh; $("newBest").textContent = t("res.newRecord", { mode: t(`mode.${mode}.name`) });

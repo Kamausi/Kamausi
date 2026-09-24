@@ -281,3 +281,6 @@
 .ini b{font:40px/1 var(--num);color:#BFF4D8;text-shadow:0 0 8px rgba(120,240,190,.7)}
 .ini button{width:34px;height:22px;border-radius:6px;border:2px solid var(--ink);background:var(--cream);color:var(--ink);font:12px/1 var(--ui);cursor:pointer}
 .ini-tip{margin:6px 0 0;font:700 10.5px var(--ui);color:var(--cream-faint)}
+
+.streak{margin:10px 0 0;font:18px/1 var(--num);letter-spacing:.06em;color:#FFB070}
+.event-banner{margin:-6px 0 0;padding:5px 12px;border-radius:999px;background:var(--red);border:2px solid var(--ink);font:800 11px/1.2 var(--ui);letter-spacing:.08em;text-transform:uppercase;color:var(--cream)}

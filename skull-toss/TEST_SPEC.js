@@ -220,7 +220,7 @@
   const ZERO = { bones: 0, bonks: 0, misses: 0, clutch: 0, bonesTotal: 0, makes: 0, best: 0, perfects: 0, rims: 0, bestStreak: 0, bestPerfStreak: 0, peakLives: 0, games: 0, points: 0, throws: 0, unlocked: [], boardBest: null, fragments: [], bossLog: {} };
   for (const [k, v] of Object.entries(T.profile())) if (typeof v === "number" && !(k in ZERO) && k !== "updatedAt" && k !== "schema") ZERO[k] = k === "bestStage" ? 1 : 0;   // every other counter too
   ZERO.achievements = T.achievements().map(a => a.id); ZERO.arcade = {};   // (all achievements in hand, so none pays out in the middle of a bones test)
-  ZERO.shots = {}; ZERO.modes = {}; ZERO.met = []; ZERO.secrets = []; ZERO.history = []; ZERO.mastery = []; ZERO.flawless = {}; ZERO.mapMakes = {}; ZERO.arcadeTables = {}; ZERO.lastIni = "";   // (v25–v27: signature shots, mode records, what the Codex has noted)
+  ZERO.shots = {}; ZERO.modes = {}; ZERO.met = []; ZERO.secrets = []; ZERO.history = []; ZERO.mastery = []; ZERO.flawless = {}; ZERO.mapMakes = {}; ZERO.arcadeTables = {}; ZERO.lastIni = ""; ZERO.streakLast = "";   // (v25–v27: signature shots, mode records, what the Codex has noted)
   const statFor = { perfStreak: "bestPerfStreak" };
   const DEF = { skull: "bone", eyes: "pie", teeth: "grin", paint: "none", trail: "dust", impact: "classic", ring: "hoop", aim: "bone", reel: "standard", title: "rookie", hat: "none", aura: "none", pole: "wood" };
   const dressDefault = () => { for (const [k, v] of Object.entries(DEF)) T.equip(k, v); };
@@ -294,7 +294,7 @@
     for (let i = 0; i < 3; i++) throwAndSettle(3, C.RING_Y);
     const r = T.runStats(), got = T.bones();
     assert(r.perfects === 2 && r.misses === 3 && r.bones > 0, `run stats ${JSON.stringify(r)}`);
-    assert(got === r.bones, `balance ${got}, run paid ${r.bones}`);
+    assert(got === r.bones + (r.streak ? r.streak.bones : 0), `balance ${got}, run paid ${r.bones} (and the day's streak bonus, v37)`);
     assert(T.runBones({ perfects: 6, bestCombo: 9 }, 15, true) > T.runBones({ perfects: 0, bestCombo: 1 }, 2, false), "a better run should pay more");
   });
   test("Results: a headstone carved with the round, a grade, a ribbon and the bones earned", () => {
@@ -1846,6 +1846,39 @@
     T.setStats({ ...ZERO, bestStage: 2, arcadeTables: { 0: full } }); arcadeRun(0, 1); T.step(2);
     assert($("iniBox").hidden && JSON.stringify(T.profile().arcadeTables["0"].map(e => e.score)) === JSON.stringify([50000, 40000, 30000, 20000, 10000]), "unchanged");
     T.setStats(ZERO); T.toTitle();
+  });
+
+  // ── v37: challenges on a rotation the live config can steer, and a daily streak ──
+  const ALL_KINDS = ["perfects", "makes", "throws", "best", "score", "bosses", "powerups", "combo", "rims", "runs", "lives", "arcadeSecs", "shots", "targets", "modeRuns"];
+  test("New kinds of challenge (signature shots, bonus targets, other modes), and the live config can take kinds out of the rotation", () => {
+    T.setFlags({ "challenges.off": ALL_KINDS.filter(k => !["shots", "targets", "modeRuns"].includes(k)) }); T.setStats({ ...ZERO, daily: null, weekly: null, monthly: null });
+    const D = T.ensurePeriod("daily"); assert(D.items.map(i => i.id).sort().join() === "modeRuns,shots,targets", `only the kinds left in (${D.items.map(i => i.id)})`);
+    assert(T.ensurePeriod("weekly").items.length === 3 && T.ensurePeriod("monthly").items.every(i => ["shots", "targets", "modeRuns"].includes(i.id)), "weekly and monthly too");
+    T.shots(true); fresh(); T.calm(); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); T.shots(false);
+    assert(T.ensurePeriod("daily").items.find(i => i.id === "shots").have >= 1, "a signature shot counts toward it");
+    T.setFlags({}); T.setStats({ ...ZERO, daily: null, weekly: null, monthly: null }); T.toTitle();
+  });
+  test("An event can raise every challenge's pay, and the same day picks the same goals for everyone", () => {
+    T.setFlags({}); T.setStats({ ...ZERO, weekly: null }); const a = T.ensurePeriod("weekly");
+    T.setFlags({ "challenges.bonus": 2 }); T.setStats({ ...ZERO, weekly: null }); const b = T.ensurePeriod("weekly");
+    assert(a.items.map(i => i.id + i.n).join() === b.items.map(i => i.id + i.n).join(), "the same goals");
+    assert(b.items.every((it, i) => Math.abs(it.reward - 2 * a.items[i].reward) <= 5), `double the pay (${a.items.map(i => i.reward)} → ${b.items.map(i => i.reward)})`);
+    T.setFlags({}); T.setStats({ ...ZERO, weekly: null });
+  });
+  test("The daily streak: a day in a row pays 20 bones a day of it, up to a week; a missed day starts it again", () => {
+    T.setStats({ ...ZERO, bones: 0, streakDays: 0, streakLast: "" });
+    const day = n => new Date(2026, 8, 20 + n, 12);
+    assert(T.streakAfterRun(day(0)) === 20 && T.streakAfterRun(day(0)) === 0, "day one pays 20, and only once a day");
+    assert(T.streakAfterRun(day(1)) === 40 && T.streakAfterRun(day(2)) === 60 && T.profile().streakDays === 3, "day three pays 60");
+    for (let i = 3; i < 12; i++) T.streakAfterRun(day(i)); assert(T.profile().streakDays === 12 && T.streakAfterRun(day(12)) === 140, "the pay stops rising at a week");
+    assert(T.streakAfterRun(day(14)) === 20 && T.profile().streakDays === 1, "a missed day starts it again");
+    T.setStats(ZERO);
+  });
+  test("Kill switches and the event banner: the live config can close the Soul Shop, the board and sharing, and hang out a banner", async () => {
+    await T.fakeServer(); assert(T.soulsApi().available(), "the shop's open");
+    T.setFlags({ "kill.souls": true, "event.banner": "Double bones weekend!" }); assert(!T.soulsApi().available(), "a kill switch closes it");
+    T.toTitle(); assert(!$("eventBanner").hidden && /Double bones/.test($("eventBanner").textContent), "the banner on the title");
+    T.setFlags({}); T.noServer(); T.toTitle(); assert($("eventBanner").hidden, "and gone when it's off");
   });
 
   (async () => {

@@ -47,6 +47,24 @@ end.
 | `config/live` | you, from the console (v39) | remote config and feature flags |
 | `events/{id}` | functions only (v39) | analytics, with consent |
 
+## Remote config and feature flags (`config/live`)
+
+Create a document `config/live` in Firestore and set any of these fields. Every player picks them up live, and
+they're cached in the browser for offline play. Anything left out keeps its default.
+
+| Field | Default | What it does |
+|---|---|---|
+| `challenges.off` | `[]` | challenge kinds kept out of the rotation, e.g. `["arcadeSecs", "lives"]` |
+| `challenges.bonus` | `1` | multiplies every challenge's pay (0.5 to 5), e.g. `2` for a double-bones weekend |
+| `event.banner` | `""` | a line under the title, e.g. `"Double bones weekend!"` |
+| `event.bones` | `1` | multiplies the daily streak's pay |
+| `mischief.chance` | `0.07` | how often, per throw, the print can misbehave |
+| `kill.souls` | `false` | closes the Soul Shop |
+| `kill.board` | `false` | stops posting to the leaderboard |
+| `kill.replays` | `false` | hides Share on the headstone |
+| `season.id` | `""` | which season is running (v42) |
+| `analytics.sample` | `1` | the share of consenting players whose events are sent (v39) |
+
 ## The functions
 
 - `wallet`: the caller's balance and owned Soul items.

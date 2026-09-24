@@ -86,13 +86,15 @@
   const PERIOD_IDS = Object.keys(PERIODS);
   function ensurePeriod(per) {
     const P = PERIODS[per], key = P.key(), cur = profile[per];
-    if (cur && cur.day === key && cur.items.length === 3) return cur;
-    const rnd = mulberry32(hashStr(P.seed + key)), pool = P.pool.slice(), items = [];
-    while (items.length < 3) {
+    if (cur && cur.day === key && cur.items.length >= 1) return cur;
+    // the rotation (v37): kinds the live config has switched off stay out, and an event can raise the pay (03d_flags.js)
+    const off = Flags.get("challenges.off"), bonus = Math.max(0.5, Math.min(5, Number(Flags.get("challenges.bonus")) || 1));
+    const rnd = mulberry32(hashStr(P.seed + key)), pool = P.pool.filter(c => !off.includes(c.id)), items = [];
+    while (items.length < 3 && pool.length) {
       const c = pool.splice(Math.floor(rnd() * pool.length), 1)[0];
       let k = c.range[0] + Math.floor(rnd() * (c.range[1] - c.range[0] + 1));
       if (c.step) k = Math.max(c.step, Math.round(k / c.step) * c.step);
-      items.push({ id: c.id, n: k * (c.scale || 1), reward: Math.round(c.reward(k) / 5) * 5, have: 0, claimed: false });
+      items.push({ id: c.id, n: k * (c.scale || 1), reward: Math.round((c.reward(k) * bonus) / 5) * 5, have: 0, claimed: false });
     }
     profile[per] = { day: key, items };
     return profile[per];

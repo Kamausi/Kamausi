@@ -664,6 +664,10 @@
  "souls.vaultSub": "Soul-bound: sold for Souls at the Soul Shop",
  "souls.visit": "Visit the Soul Shop",
  "souls.worn": "Wearing",
+ "streak.line": "🔥 {n}-day streak · come back tomorrow for {next}",
+ "streak.row": "Streak",
+ "streak.toast": "Day {n} in a row",
+ "streak.val": "day {n} · +{bones} bones",
  "title.best": "Best <b>{score}</b> · {rank}",
  "title.bestHits": "Best <b>{hits}</b> hits · {rank}"
 }
