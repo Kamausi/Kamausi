@@ -60,10 +60,29 @@ their stats.)
 - **Limits.** Fifty events a batch, six batches a minute per player. Nobody can read `events` or `metrics` from a
   client: the Firestore rules refuse it.
 
+## Google Analytics (v43)
+
+The Firebase console's **daily active users** and **retention** charts come from Google Analytics. The game feeds
+them on the same terms as everything above:
+
+- **Only after a yes.** Google's analytics SDK isn't even loaded until the player agrees, so nobody who hasn't said
+  yes gets its cookie. A no, or turning the switch off, stops it at once.
+- **The same events, cut down the same way.** Google gets exactly what the list allows, with no throw-by-throw
+  data. Google's own names are left to Google: it counts sessions itself, and the game's `error` goes as
+  `game_error`.
+- **Advertising off.** The game sets consent mode with ad storage, ad user data and ad personalisation denied,
+  Google signals off, and ad-personalisation signals off. Keep **Google signals** off in the GA property's settings
+  too (Admin → Data collection).
+- **What Google keeps:** a random client id in a first-party cookie (`_ga`), the events, and coarse location and
+  device info that Google derives. GA4 doesn't log or store IP addresses. Set the property's data retention
+  (Admin → Data retention) to 2 months to match the 30-day spirit of the rest.
+- **Setting it up:** put the web app's `measurementId` (`G-…`) in `src/firebase.config.json` and rebuild. Without
+  one, nothing goes to Google.
+
 ## Switches
 
 In `config/live`: `analytics.sample` (0 to 1; the same install is always in or always out) and `kill.analytics` (stops
-it on the device and on the server).
+it on the device and on the server, Google Analytics included).
 
 ## Errors
 
@@ -76,10 +95,10 @@ When a store asks for a data declaration (App Store privacy "nutrition label", G
 this page is the source:
 
 - **Data collected (with consent only):** product interaction and gameplay (the table above), crash and diagnostic
-  data (errors), and an anonymous user id (Firebase Auth). Purchase history for Soul packs is kept by the server to
-  credit and refund them.
+  data (errors), an anonymous user id (Firebase Auth), and a device/app-instance id (Google Analytics' client id).
+  Purchase history for Soul packs is kept by the server to credit and refund them.
 - **Not collected:** contact info, location, contacts, photos, browsing history, health, financial info beyond the
   store's receipt, advertising identifiers.
-- **Use:** app functionality (saves, the leaderboard, Souls) and analytics. Not used for tracking or advertising;
-  not shared with third parties; not sold.
+- **Use:** app functionality (saves, the leaderboard, Souls) and analytics. Not used for tracking or advertising, and
+  not sold. It's processed by Google (Firebase and Google Analytics) on the game's behalf.
 - **Deletion:** analytics after 30 days automatically; on request, by the player's id.

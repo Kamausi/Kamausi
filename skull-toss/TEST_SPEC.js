@@ -2135,6 +2135,26 @@
     assert(m.xp === 900 && m.free.sort().join() === "0,1,2" && m.prem.join() === "0" && m.notes.hits === 90 && m.notes.targets === 3 && m.done.join() === "shots", JSON.stringify(m));
   });
 
+  // ── v43: Google Analytics, behind the same yes ──
+  test("Google Analytics waits for the same yes, gets the same cut-down events with advertising off, and stops at a no", async () => {
+    const calls = [], sdk = { on: null, logEvent: (n, p) => calls.push([n, p]), setAnalyticsCollectionEnabled(v) { this.on = v; } };
+    T.noServer(); T.gaWith({ measurementId: "G-TEST", sdk }); T.analyticsOn(); T.resetConsent(); T.setStats({ ...ZERO, games: 1 });
+    assert(T.renderConsent(), "with only Google Analytics set up, the question is still asked");
+    T.start(); T.calm(); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); T.endRun(); T.step(1); T.toTitle();
+    assert(calls.length === 0 && T.gaState() === "off" && sdk.on === null, "nothing, and no SDK, before a yes");
+    T.setConsent("yes"); for (let i = 0; i < 3; i++) await tick();
+    assert(T.gaState() === "on" && sdk.on === true, `on after the yes (${T.gaState()})`);
+    const dl = (window.dataLayer || []).map(a => Array.from(a));
+    assert(dl.some(a => a[0] === "consent" && a[2] && a[2].ad_storage === "denied" && a[2].ad_personalization === "denied") && dl.some(a => a[0] === "set" && a[1] && a[1].allow_google_signals === false), "advertising features off");
+    T.start(); T.calm(); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); T.endRun(); T.step(1); T.reportError("boom", "x.js:1");
+    const names = calls.map(c => c[0]), end = calls.filter(c => c[0] === "run_end").pop();
+    assert(names.includes("run_start") && names.includes("consent") && end && end[1].mode === "story" && !("name" in end[1]) && !("t" in end[1]), `the events and their fields (${names.join()})`);
+    assert(!names.includes("throw") && !names.includes("session_start") && !names.includes("error") && names.includes("game_error"), "never a throw, never Google's own names");
+    const n = calls.length; T.setConsent("no"); T.start(); T.calm(); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); T.endRun(); T.step(1);
+    assert(calls.length === n && sdk.on === false, "a no stops it at once");
+    T.gaWith(null); T.resetConsent(); T.analyticsOn(false); T.setStats(ZERO); T.toTitle();
+  });
+
   (async () => {
     for (const q of queue) {
       if (q.step) { q.fn(); continue; }

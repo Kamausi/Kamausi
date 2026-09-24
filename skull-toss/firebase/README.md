@@ -17,7 +17,8 @@ page, so the spec drives the real server logic.
 ## Set it up
 
 1. **Create a project** at https://console.firebase.google.com. Add a **Web app** to it, and copy the app's config
-   (`apiKey`, `authDomain`, `projectId`, `appId`) into `src/firebase.config.json`.
+   (`apiKey`, `authDomain`, `projectId`, `appId`, and `measurementId` if Google Analytics is on) into
+   `src/firebase.config.json`.
 2. **Authentication:** enable **Anonymous** sign-in. You can add Google, Apple and others later; an anonymous
    account can be linked to one without losing anything.
 3. **Firestore:** create a database in production mode.

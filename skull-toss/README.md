@@ -1,8 +1,17 @@
-# SKULL TOSS v42
+# SKULL TOSS v43
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)), with a synthesised waltz standing in wherever they can't load.
+
+## New in v43: Google Analytics, behind the same yes
+
+- **The Firebase console's daily players and retention charts** now fill in. Google Analytics gets the game's cut-down play events, on the same terms as the rest of its play data:
+  - it's loaded only after the player says yes to sharing play data, so there's no cookie before that;
+  - advertising features are off;
+  - a no stops it at once.
+- **To turn it on,** put the web app's `measurementId` in `src/firebase.config.json`. Details are in [docs/ANALYTICS.md](docs/ANALYTICS.md).
+- With only Google Analytics set up (no Cloud Functions yet), the game still asks, and sends to Google alone.
 
 ## New in v42: seasons, starting with the Midnight Matinee
 
@@ -943,7 +952,7 @@ From the console, `SkullToss.debug.visualAnimation` lists the pose library (`pos
 
 ## Tests
 
-Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **214 checks**, covering:
+Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **215 checks**, covering:
 
 - **Layout, scoring and aiming.**
   - Everything is centred and every result is classified correctly.
@@ -1130,3 +1139,5 @@ Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to
   - After the season there's a week to claim, then it all expires, and unearned season looks leave the Vault.
   - The Feature plays its map after dark with its twists, its bar names it, and its replay keeps its rules.
   - Two devices' Tickets merge.
+- **v43.**
+  - Google Analytics waits for the same yes and gets the same cut-down events, with advertising off, and a no stops it.

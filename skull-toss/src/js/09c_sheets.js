@@ -72,7 +72,7 @@
     segValue($("set-soundset"), settings.soundSet); $("soundSetNote").textContent = t(`settings.soundset.${settings.soundSet}`);
     segValue($("set-cards"), settings.cards); $("cardsNote").textContent = t(`settings.cards.${settings.cards}`);
     $("row-fullscreen").hidden = !Platform.caps.fullscreen; set("set-fullscreen", Platform.isFullscreen());   // (03e_platform.js)
-    const c = PlayData.consent(), srv = Backend.hasFunctions();   // play data (04g_telemetry.js)
+    const c = PlayData.consent(), srv = canShare();   // play data (04g_telemetry.js)
     set("set-analytics", c === "yes"); $("set-analytics").disabled = !srv && c !== "yes";
     $("analyticsNote").textContent = !srv && c !== "yes" ? t("settings.analytics.none") : settings.analytics === "ask" && PlayData.privacySignal() ? t("settings.analytics.gpc") : t(`settings.analytics.${c}`);
     const pts = restorePoints(), list = $("restoreList"); list.textContent = "";   // restore points (01_data.js)

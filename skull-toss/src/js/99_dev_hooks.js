@@ -130,6 +130,7 @@
     seasonRec: () => realProfile().season && JSON.parse(JSON.stringify(realProfile().season)), setSeasonRec(r) { realProfile().season = r ? JSON.parse(JSON.stringify(r)) : null; },
     claimSeason: (i, prem = false) => claimSeasonTier(i, prem), seasonPips: () => seasonClaimableCount(), twists: () => twistsNow().slice(), feature: () => game.feature && { ...game.feature },
     shopCat(k) { shop.cat = k; if (sheet === "customize") renderShop(); }, canUse: (kind, id) => { const it = findItem(kind, id); return !!it && canUse(kind, it); },
+    gaWith(cfg) { gaTest = cfg; GA.state = "off"; GA.sdk = null; GA.pending = []; }, gaState: () => GA.state, gaStart: () => GA.start(),
     economyAudit: () => economyAudit(), analyticsOn(on = true) { if (sandbox) sandbox.analyticsOn = on; }, playData: () => ({ q: PlayData.q.map(e => ({ ...e })), sent: PlayData.sent, consent: PlayData.consent(), allowed: PlayData.allowed() }),
     flushPlayData: () => PlayData.flush(), setConsent: v => PlayData.set(v), resetConsent() { settings.analytics = "ask"; PlayData.q = []; PlayData.sent = 0; PlayData.errorsSent = 0; }, firsts: () => realProfile().firsts.slice(),
     reportError: (m, s) => PlayData.error(m, s), errors: () => Telemetry.errors.map(e => ({ ...e })), renderConsent() { renderConsent(); return !$("consentCard").hidden; },

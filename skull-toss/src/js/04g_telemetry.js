@@ -64,6 +64,7 @@
     add(e) {
       if (!this.allowed() || e.replay) return;
       const c = Analytics.clean(e); if (!c) return;
+      GA.log(c);   // (Google Analytics gets the same cut-down event, below)
       this.q.push(c); if (this.q.length > 300) this.q.splice(0, this.q.length - 300);
       if (this.q.length >= 40 || e.name === "run_end") this.flush();
     },
@@ -78,7 +79,9 @@
     },
     set(v) {
       settings.analytics = v; persist(); this.q = [];
+      if (v !== "yes") GA.stop();
       if (v === "yes") {   // (this session so far goes too: the player has just agreed to share it)
+        GA.start();
         const before = Telemetry.events.slice(-150); this.sessionStart(); for (const e of before) this.add(e);
         Telemetry.emit("consent", { v }); this.flush();
       }
@@ -104,10 +107,50 @@
     else if (PlayData.hiddenAt && Date.now() - PlayData.hiddenAt > 30 * 60e3) { Object.assign(PlayData, { session: Math.random().toString(36).slice(2, 12), sessionAt: Date.now(), runs: 0 }); PlayData.sessionStart(); }
   });
   setInterval(() => PlayData.flush(), 30000);
-  // the question, asked once on the title after the first finished run (and only where there's a server to send to)
+  // ── Google Analytics (v43): the Firebase console's daily players and retention. The same rule as everything above:
+  // nothing until the player says yes. Only then is Google's SDK loaded at all (so nobody who hasn't agreed gets its
+  // cookie), with advertising features off: no Google signals, no ad personalisation, ad storage denied. It gets
+  // the same cut-down events (shared/analytics.js); Google counts sessions and returning players itself. Needs a
+  // measurementId in src/firebase.config.json (the web app's config in the Firebase console).
+  const GA_NAMES = { session_start: null, session_end: null, error: "game_error" };   // (Google's own names: it keeps sessions itself)
+  let gaTest = null;   // (the spec's stand-in: { measurementId, sdk })
+  const GA = {
+    state: "off", sdk: null, pending: [],   // state: off | loading | on | failed
+    config: () => (gaTest || (Backend.kind === "firebase" && FIREBASE_CONFIG) || null),
+    configured() { const c = this.config(); return !!(c && c.measurementId); },
+    wanted() { return this.configured() && PlayData.allowed(); },
+    async start() {
+      if (this.state === "loading" || this.state === "on" || !this.wanted()) return false;
+      this.state = "loading";
+      try {
+        window.dataLayer = window.dataLayer || []; window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+        window.gtag("consent", "default", { analytics_storage: "granted", ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied" });
+        window.gtag("set", { allow_google_signals: false, allow_ad_personalization_signals: false });
+        if (gaTest) this.sdk = gaTest.sdk;
+        else {
+          if (!window.firebase || !window.firebase.analytics) await loadScript(FIREBASE_SDK + "firebase-analytics-compat.js");
+          if (!(await window.firebase.analytics.isSupported())) { this.state = "failed"; return false; }   // (some app webviews can't)
+          this.sdk = window.firebase.analytics();
+        }
+        this.sdk.setAnalyticsCollectionEnabled(true); this.state = "on";
+        for (const c of this.pending.splice(0)) this.log(c);
+        return true;
+      } catch (e) { this.state = "failed"; return false; }
+    },
+    stop() { this.pending = []; if (this.sdk) try { this.sdk.setAnalyticsCollectionEnabled(false); } catch (e) {} if (this.state === "on") this.state = "off"; },
+    log(c) {
+      if (!this.wanted()) return;
+      if (this.state !== "on") { if (this.state === "loading" && this.pending.length < 200) this.pending.push(c); return; }
+      let name = c.name; if (Object.prototype.hasOwnProperty.call(GA_NAMES, name)) { name = GA_NAMES[name]; if (!name) return; }
+      const params = {}; for (const [k, v] of Object.entries(c)) if (k !== "name" && k !== "t") params[k] = v;
+      try { this.sdk.logEvent(name, params); } catch (e) {}
+    }
+  };
+  // the question, asked once on the title after the first finished run (and only where there's somewhere to send to)
+  const canShare = () => Backend.hasFunctions() || GA.configured();
   function renderConsent() {
     const c = $("consentCard"); if (!c) return;
-    c.hidden = PlayData.consent() !== "ask" || !Backend.hasFunctions() || realProfile().games < 1 || Replay.play || !!sandbox && !sandbox.analyticsOn;
+    c.hidden = PlayData.consent() !== "ask" || !canShare() || realProfile().games < 1 || Replay.play || !!sandbox && !sandbox.analyticsOn;
   }
   $("consentYes").addEventListener("click", () => { PlayData.set("yes"); toast(t("consent.thanks")); Sound.ui("claim"); });
   $("consentNo").addEventListener("click", () => { PlayData.set("no"); Sound.ui("tick"); });

@@ -1,8 +1,9 @@
 {
-  "_doc": "Your Firebase web app's config (Firebase console → Project settings → Your apps → Web app). Fill in apiKey, authDomain, projectId and appId and rebuild; left empty, the game runs without a server. See firebase/README.md.",
+  "_doc": "Your Firebase web app's config (Firebase console → Project settings → Your apps → Web app). Fill in apiKey, authDomain, projectId and appId (and measurementId for Google Analytics) and rebuild; left empty, the game runs without a server. See firebase/README.md.",
   "apiKey": "",
   "authDomain": "",
   "projectId": "",
   "appId": "",
+  "measurementId": "",
   "functionsRegion": "us-central1"
 }
