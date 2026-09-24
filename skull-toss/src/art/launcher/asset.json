@@ -1,0 +1,13 @@
+{
+  "id": "launcher",
+  "name": "ST_MOON_CEM_LAUNCHER_BASE",
+  "version": "1.0.0",
+  "canvas": [1000, 1000],
+  "file": "launcher.svg",
+  "layers": ["frame", "tips", "pouch"],
+  "optional": ["pouch-front", "shadow"],
+  "unit": 150,
+  "anchors": { "seat": [500, 400], "bandL": [268, 384], "bandR": [732, 384], "pouchL": [380, 456], "pouchR": [620, 456], "foot": [500, 826] },
+  "bands": { "outline": "ink", "color": "red", "width": 24, "core": 12 },
+  "notes": "The skull's centre rests on the seat, and unit canvas units are one skull radius. frame and tips jump with the frame after a shot; pouch (and the optional pouch-front, drawn over the skull) follows the pull. The bands run from bandL/bandR to pouchL/pouchR."
+}

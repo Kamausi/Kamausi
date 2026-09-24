@@ -1,0 +1,187 @@
+/* ── The Skull Vault ─────────────────────────────────────────────────── */
+.preview{position:relative;height:200px;margin:12px 0 4px;border-radius:14px;overflow:hidden;border:4px solid var(--ink);box-shadow:0 5px 0 var(--ink);
+  background:radial-gradient(60% 70% at 50% 100%,rgba(224,184,92,.35),transparent 70%),linear-gradient(180deg,#5E1F18,#7E2A22 60%,#4A1812)}
+.preview::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.35),transparent 12%,rgba(0,0,0,.2) 24%,transparent 36%,rgba(0,0,0,.25) 50%,transparent 62%,rgba(0,0,0,.2) 76%,transparent 88%,rgba(0,0,0,.35));pointer-events:none}
+.preview::after{content:"";position:absolute;left:0;right:0;bottom:0;height:22%;background:linear-gradient(#6B4526,#4A2F19);border-top:3px solid var(--ink);pointer-events:none}
+.preview canvas{position:absolute;inset:0;width:100%;height:100%;z-index:1;cursor:grab;touch-action:pan-y}
+.preview .tag{position:absolute;z-index:2;left:10px;top:9px;padding:5px 8px 3px;border-radius:5px;background:var(--paper);border:2px solid var(--ink);font:14px/1 var(--display);letter-spacing:.04em;text-transform:uppercase;color:var(--ink);transform:rotate(-2deg)}
+.cat-tabs{position:sticky;top:0;z-index:3;margin:12px -16px 0;padding:8px 16px 10px;background:var(--panel);display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;border-bottom:2px dashed var(--line)}
+.cat-tabs::-webkit-scrollbar{display:none}
+.cat-tabs button{flex:none;border:3px solid var(--ink);border-radius:8px;background:var(--paper);color:var(--ink);font:17px/1 var(--display);letter-spacing:.04em;text-transform:uppercase;padding:9px 12px 7px;cursor:pointer;box-shadow:0 3px 0 var(--ink)}
+.cat-tabs button[aria-selected="true"]{background:var(--mustard);transform:translateY(-2px) rotate(-2deg)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+@media (min-width:440px){.grid{grid-template-columns:repeat(4,1fr)}}
+.grid.rows{grid-template-columns:1fr}
+.item{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:18px 4px 8px;border-radius:12px;border:3px solid var(--ink);background:var(--panel-2);cursor:pointer;
+  font:15px/1.1 var(--display);letter-spacing:.02em;text-transform:uppercase;color:var(--cream);text-align:center;box-shadow:0 4px 0 var(--ink);transition:transform .14s var(--snap)}
+.item:hover{transform:translateY(-2px) rotate(-1deg)}
+.item:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.item canvas{width:60px;height:60px}
+.item .stars{position:absolute;left:7px;top:5px;font:11px/1 var(--ui);letter-spacing:1px;color:var(--mustard)}
+.item .stars.r-lost{color:var(--gold);text-shadow:0 0 6px rgba(227,182,75,.8)}
+.item .stars.r-special{color:#D98A6E}
+.item .stars.r-featured{color:#8FC0B8}
+.item .price{display:inline-flex;align-items:center;gap:4px;font:18px/1 var(--num);letter-spacing:.04em;color:var(--mustard-l)}
+.item .price svg{width:14px;height:14px}
+.item .state{font:18px/1 var(--num);letter-spacing:.06em;min-height:16px;color:var(--cream-faint)}
+.item.equipped{background:var(--teal);box-shadow:0 4px 0 var(--ink),0 0 0 3px var(--mustard)}
+.item.equipped .state{color:var(--mustard-l)}
+.item.locked canvas{opacity:.35;filter:grayscale(1) brightness(.85)}
+.item.locked{color:var(--cream-dim);background:var(--panel)}
+.item.selected{background:var(--purple);transform:translateY(-3px) rotate(-1.5deg)}
+.item.selected canvas{opacity:1;filter:none}
+.item .lock{position:absolute;right:7px;top:5px;width:16px;height:16px;color:var(--cream-faint)}
+.item .new{position:absolute;right:-6px;top:-6px;width:16px;height:16px;border-radius:50%;background:var(--red);border:3px solid var(--ink)}
+.item.deny{animation:deny .3s}
+.grid.rows .item{flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between;text-align:left;padding:16px 14px 12px;gap:4px 12px}
+.grid.rows .item .t-name{flex:1 1 60%;font-size:20px}
+.grid.rows .item .sub{order:3;flex-basis:100%;margin:0;text-transform:none;letter-spacing:0}
+.grid.rows .item .state{font-size:20px}
+.grid.rows .item .lock{top:auto;bottom:10px}
+.rar-name{font:900 11px/1 var(--ui);letter-spacing:.12em;text-transform:uppercase}
+.t-stock{color:var(--cream-faint)}.t-featured{color:#8FC0B8}.t-special{color:#E0A58E}.t-lost{color:var(--gold)}
+.buybar{display:flex;align-items:center;gap:12px}
+.buybar .info{flex:1;min-width:0;text-align:left}
+.buybar .info .lbl{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;font:20px/1.1 var(--display);letter-spacing:.02em;text-transform:uppercase;text-shadow:0 2px 0 var(--ink)}
+.buybar .info .sub{color:var(--cream-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.buybar .btn{width:auto;min-width:150px}
+
+/* challenges: paper tickets */
+.timer{display:flex;align-items:center;gap:8px;margin:16px 0 4px;font:800 13px/1.3 var(--ui);color:var(--cream-dim)}
+.timer b{font:22px/1 var(--num);letter-spacing:.06em;color:var(--mustard-l)}
+.chal{position:relative;margin-top:14px;padding:16px 16px 14px;border-radius:12px;background:var(--paper);color:var(--ink);border:3px solid var(--ink);box-shadow:0 5px 0 var(--ink)}
+.chal:nth-child(odd){transform:rotate(-.6deg)}.chal:nth-child(even){transform:rotate(.6deg)}
+.chal::before,.chal::after{content:"";position:absolute;top:50%;width:18px;height:18px;margin-top:-9px;border-radius:50%;background:var(--panel);border:3px solid var(--ink)}
+.chal::before{left:-11px;clip-path:inset(0 0 0 50%)}.chal::after{right:-11px;clip-path:inset(0 50% 0 0)}
+.chal.done{background:#EAD9A0}
+.chal.claimed{opacity:.6}
+.chal-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.chal-title{font:22px/1.05 var(--display);text-transform:uppercase;letter-spacing:.02em;color:var(--ink)}
+.chal-reward{flex:none;display:inline-flex;align-items:center;gap:5px;padding:5px 9px 3px;border-radius:6px;background:var(--red);border:2px solid var(--ink);font:22px/1 var(--num);letter-spacing:.04em;color:var(--cream);transform:rotate(3deg)}
+.chal-reward svg{width:16px;height:16px}
+.chal-prog{display:flex;align-items:center;gap:12px;margin-top:14px}
+.chal-prog .bar{flex:1;background:rgba(23,19,15,.2)}
+.chal-prog span{font:20px/1 var(--num);letter-spacing:.06em;color:var(--ink);min-width:48px;text-align:right}
+.chal .btn{margin-top:14px}
+.chal .k{color:var(--wood)}
+.chal-tabs{margin-top:4px}
+.chal-tabs button{position:relative}
+.chal-tabs .dot{position:absolute;top:-6px;right:-6px;width:13px;height:13px;border-radius:50%;background:var(--red);border:2.5px solid var(--ink)}
+.chal.weekly .chal-reward{background:var(--teal)}
+.chal.monthly .chal-reward{background:var(--purple)}
+.tip{margin-top:20px;padding:14px;border-radius:12px;border:3px dashed var(--line-2);font:700 13px/1.5 var(--ui);color:var(--cream-dim)}
+.tip b{color:var(--mustard-l)}
+
+/* ribbons for things that can't be bought in the Vault */
+.item .ribbon{position:absolute;left:50%;bottom:-8px;transform:translateX(-50%) rotate(-2deg);padding:2px 6px 1px;border-radius:4px;border:2px solid var(--ink);font:10px/1 var(--display);letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
+.item .ribbon.shame{background:#8E8A7E;color:var(--ink)}
+.item .ribbon.boss{background:var(--red);color:var(--cream)}
+.item .ribbon.shop{background:var(--mustard);color:var(--ink)}
+.grid.rows .item .ribbon{left:auto;right:36px;bottom:auto;top:8px;transform:rotate(2deg)}
+/* the Curio Cart */
+.preview.cart{height:232px;background:#1C1620}
+@media (max-height:760px){.preview.cart{height:188px}}
+.preview.cart::before,.preview.cart::after{display:none}
+.preview.cart::after{height:26%;background:linear-gradient(#8C6239,#5B3B20)}
+.preview.cart .tag{left:12px;right:12px;top:auto;bottom:8px;max-width:none;padding:5px 10px 4px;text-align:center;border-radius:4px;background:#171310;border-color:#0C0A08;color:var(--cream);box-shadow:inset 0 0 0 2px rgba(242,231,201,.14);font:800 11.5px/1.3 var(--ui);letter-spacing:.02em;text-transform:none;transform:none}
+.item .kindtag{font:800 9px/1 var(--ui);letter-spacing:.14em;text-transform:uppercase;color:var(--cream-faint)}
+.item s{font:14px/1 var(--num);color:var(--cream-faint)}
+.item .sale{position:absolute;right:-6px;top:-8px;padding:3px 5px 2px;border-radius:5px;background:var(--red);border:2px solid var(--ink);font:13px/1 var(--num);color:var(--cream);transform:rotate(6deg)}
+.coffin{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:16px 0 4px;padding:12px 14px;border-radius:12px;background:linear-gradient(180deg,#4A2F19,#2E1C0E);border:3px solid var(--ink);box-shadow:0 4px 0 var(--ink)}
+.coffin .lbl{font:20px/1 var(--display);letter-spacing:.03em;color:var(--cream);text-shadow:0 2px 0 var(--ink)}
+.coffin .sub{margin-top:4px;font:700 12px/1.3 var(--ui);color:var(--cream-dim)}
+.coffin .btn{width:auto;flex:none}
+.coffin .btn svg{width:16px;height:16px}
+/* the leaderboard */
+.board-tabs{margin-top:6px;grid-template-columns:1fr 1fr}
+.board{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.board li{display:grid;grid-template-columns:34px 44px 1fr auto;align-items:center;gap:8px;padding:6px 12px 6px 8px;border-radius:12px;background:var(--panel-2);border:3px solid var(--ink);box-shadow:0 3px 0 var(--ink)}
+.board li.me{background:var(--teal);box-shadow:0 3px 0 var(--ink),0 0 0 3px var(--mustard)}
+.board .rank{font:22px/1 var(--num);color:var(--cream-dim);text-align:center}
+.board .rank.r1{color:var(--gold)}.board .rank.r2{color:#D8DCE2}.board .rank.r3{color:#D8955A}
+.board canvas{width:44px;height:44px}
+.board .who{display:flex;flex-direction:column;gap:3px;min-width:0}
+.board .who b{font:17px/1.05 var(--display);letter-spacing:.02em;color:var(--cream);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.board .who span{font:700 11px/1 var(--ui);color:var(--cream-faint)}
+.board .sc{font:24px/1 var(--num);letter-spacing:.03em;color:#FFD94E;text-shadow:0 2px 0 var(--ink)}
+.board-empty{margin:14px 4px 0;font:700 13px/1.4 var(--ui);color:var(--cream-dim);text-align:center}
+/* profile stat groups */
+.stat-h{margin:18px 0 0;font:18px/1 var(--display);letter-spacing:.04em;color:var(--mustard-l);text-shadow:var(--outline)}
+.stat-h.shame{color:#C8C0B0}
+#stats .stats{grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+#stats .stat{padding:8px 9px 7px;border-width:2px;box-shadow:0 2px 0 var(--ink)}
+#stats .stat dt{font-size:8.5px;letter-spacing:.1em;line-height:1.15;min-height:2.3em}
+#stats .stat dd{margin-top:3px;font-size:23px}
+
+/* ── Play: Story or Arcade, then (for Arcade) a map ─────────────────────────── */
+.modes{display:flex;flex-direction:column;gap:16px;margin-top:10px}
+.mode-card{display:flex;align-items:flex-start;gap:14px;width:100%;padding:16px;border-radius:14px;border:3px solid var(--ink);box-shadow:0 6px 0 var(--ink);text-align:left;cursor:pointer;color:var(--ink);background:var(--paper);transition:transform .14s var(--snap)}
+.mode-card:nth-child(odd){transform:rotate(-.8deg)}.mode-card:nth-child(even){transform:rotate(.8deg)}
+.mode-card:hover,.mode-card:focus-visible{transform:rotate(0) scale(1.02);outline:none}
+.mode-card:active{transform:translateY(4px);box-shadow:0 2px 0 var(--ink)}
+.mode-card.story{background:linear-gradient(180deg,var(--mustard-l),var(--mustard))}
+.mode-ic{flex:none;display:grid;place-items:center;width:54px;height:54px;border-radius:50%;background:var(--ink);color:var(--cream)}
+.mode-ic svg{width:32px;height:32px}
+.mode-card.story .mode-ic{background:var(--cream);box-shadow:inset 0 0 0 3px var(--ink)}   /* the Crow King is an ink-black bird: he needs a light sky */
+.mode-card.story .mode-ic svg{width:36px;height:36px}
+.mode-t{display:flex;flex-direction:column;gap:4px;min-width:0}
+.mode-t .k{color:var(--wood)}
+.mode-t b{font:34px/1 var(--display);letter-spacing:.03em;text-transform:uppercase}
+.mode-s{font:700 13px/1.4 var(--ui)}
+.mode-best{font:17px/1 var(--num);letter-spacing:.06em;color:var(--red-d)}
+.mode-best:empty{display:none}
+.map-k{margin:8px 0 0;font:800 11px/1 var(--ui);letter-spacing:.18em;text-transform:uppercase;color:var(--cream-faint)}
+.map-card{position:relative;display:block;width:100%;margin-top:14px;padding:14px 16px 13px 22px;border-radius:12px;border:3px solid var(--ink);box-shadow:0 5px 0 var(--ink);background:var(--panel-2);color:var(--cream);text-align:left;cursor:pointer;overflow:hidden;transition:transform .14s var(--snap)}
+.map-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:9px;background:var(--tint,#26364A);border-right:3px solid var(--ink)}
+.map-card:hover,.map-card:focus-visible{transform:scale(1.02) rotate(-.5deg);outline:none}
+.map-card:active{transform:translateY(3px);box-shadow:0 2px 0 var(--ink)}
+.map-card b{display:block;font:22px/1.05 var(--display);letter-spacing:.02em;text-transform:uppercase}
+.map-card .n{float:right;margin:3px 0 0 12px;font:16px/1 var(--num);letter-spacing:.08em;color:var(--mustard-l)}
+.map-card .d{display:block;margin-top:6px;font:700 12.5px/1.4 var(--ui);color:var(--cream-dim)}
+.map-card .rec{display:flex;gap:14px;margin-top:9px;font:17px/1 var(--num);letter-spacing:.06em;color:var(--mustard-l)}
+.map-card .rec i{font-style:normal;color:var(--cream-faint)}
+
+/* ── Achievements ─────────────────────────────────────────────── */
+.ach-head{margin-top:8px}
+.ach-head p{margin:0 0 8px;font:800 13px/1 var(--ui);color:var(--cream-dim)}
+.ach-head p b{font:24px/1 var(--num);letter-spacing:.04em;color:var(--mustard-l);margin-right:2px}
+.ach-list{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.ach{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;border:3px solid var(--ink);box-shadow:0 4px 0 var(--ink);background:var(--panel-2);color:var(--cream-dim)}
+.ach .medal{flex:none;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:#3A4254;border:3px solid var(--ink);color:rgba(242,231,201,.45)}
+.ach .medal svg{width:22px;height:22px}
+.ach.got{background:var(--paper);color:var(--ink)}
+.ach.got .medal{background:radial-gradient(circle at 40% 35%,#FFE38A,var(--gold) 55%,#A77A22);color:var(--ink);box-shadow:inset 0 0 0 2px rgba(255,248,220,.6)}
+/* the skull icon is ink-eyed: on a gold medal its head goes bone-white with an ink edge, or it's just a blot */
+.ach.got .medal use[href="#i-skull"],.ach-pop .medal use[href="#i-skull"]{color:var(--cream);stroke:var(--ink);stroke-width:1.3px}
+.ach-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.ach-t b{font:18px/1.05 var(--display);letter-spacing:.02em;text-transform:uppercase;color:var(--cream)}
+.ach.got .ach-t b{color:var(--ink)}
+.ach-t span{font:700 12px/1.3 var(--ui)}
+.ach-prog{display:flex;align-items:center;gap:8px;margin-top:5px}
+.ach-prog .bar{flex:1}
+.ach-prog em{font:14px/1 var(--num);font-style:normal;letter-spacing:.05em;color:var(--mustard-l);white-space:nowrap}
+.ach-r{flex:none;font:17px/1 var(--num);letter-spacing:.05em;color:var(--mustard-l)}
+.ach.got .ach-r{color:var(--teal)}
+
+/* the medal that drops in when one unlocks */
+.ach-pop{position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top,0px));z-index:14;display:flex;align-items:center;gap:10px;width:min(360px,calc(100% - 24px));padding:9px 12px 9px 9px;border-radius:12px;
+  background:var(--paper);border:3px solid var(--ink);box-shadow:0 5px 0 var(--ink),0 12px 26px rgba(0,0,0,.45);color:var(--ink);pointer-events:none;transform:translate(-50%,-140%)}
+.ach-pop.in{animation:achin .5s var(--snap) forwards}
+.ach-pop.out{animation:achout .35s ease-in forwards}
+@keyframes achin{0%{transform:translate(-50%,-140%) rotate(-2deg)}100%{transform:translate(-50%,0) rotate(-1deg)}}
+@keyframes achout{0%{transform:translate(-50%,0) rotate(-1deg)}100%{transform:translate(-50%,-140%)}}
+/* mid-run it drops in just under the score instead, so your skulls, score and pause button stay in sight */
+.ach-pop.play{width:min(330px,calc(100% - 24px));opacity:0;transform:translate(-50%,-24px)}
+.ach-pop.play.in{animation:achinp .45s var(--snap) forwards}
+.ach-pop.play.out{animation:achoutp .3s ease-in forwards}
+@keyframes achinp{0%{opacity:0;transform:translate(-50%,-24px) scale(.9) rotate(-2deg)}100%{opacity:1;transform:translate(-50%,0) rotate(-1deg)}}
+@keyframes achoutp{0%{opacity:1;transform:translate(-50%,0) rotate(-1deg)}100%{opacity:0;transform:translate(-50%,-16px) scale(.94)}}
+.ach-pop .medal{flex:none;display:grid;place-items:center;width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#FFE38A,var(--gold) 55%,#A77A22);border:3px solid var(--ink);animation:medal .7s var(--snap)}
+.ach-pop .medal svg{width:24px;height:24px}
+@keyframes medal{0%{transform:scale(.3) rotate(-40deg)}100%{transform:none}}
+.ach-pop .t{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.ach-pop .k{color:var(--red-d);letter-spacing:.14em}
+.ach-pop b{font:20px/1 var(--display);letter-spacing:.02em;text-transform:uppercase}
+.ach-pop .s{font:700 11.5px/1.25 var(--ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ach-pop .r{flex:none;display:inline-flex;align-items:center;gap:4px;padding:4px 7px 2px;border-radius:6px;background:var(--mustard);border:2px solid var(--ink);font:18px/1 var(--num)}
+.ach-pop .r svg{width:14px;height:14px}

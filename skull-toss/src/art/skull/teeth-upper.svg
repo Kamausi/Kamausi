@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">
+<path d="M307 592
+C365 618 431 631 500 631
+C569 631 635 618 693 592
+C687 612 678 629 665 642
+C618 660 562 670 500 670
+C438 670 382 660 335 642
+C322 629 313 612 307 592 Z"
+fill="#F7F1DF" stroke="#111" stroke-width="12" stroke-linejoin="round"/>
+<path d="M380 618 L377 654 M438 629 L438 665 M500 631 L500 669 M562 629 L562 665 M620 618 L623 654"
+fill="none" stroke="#111" stroke-width="10" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">
+<path d="M347 686
+C390 713 443 726 500 726
+C557 726 610 713 653 686
+C643 715 620 739 590 753
+C538 778 462 778 410 753
+C380 739 357 715 347 686 Z"
+fill="#F7F1DF" stroke="#111" stroke-width="12" stroke-linejoin="round"/>
+<path d="M402 715 L398 751 M464 728 L463 766 M536 728 L537 766 M598 715 L602 751"
+fill="none" stroke="#111" stroke-width="10" stroke-linecap="round"/>
+</svg>

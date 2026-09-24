@@ -1,0 +1,928 @@
+// Skull Toss v11 — behavioural acceptance tests.
+//
+// How to run: put this file next to index.html and open  index.html?test
+// Results appear on screen and in the console (window.__skullTossResults).
+// The tests drive the game through window.SkullToss.debug with the clock paused,
+// so every result is deterministic. Port these behaviours when moving to a native engine.
+(function runSkullTossSpec() {
+  const T = window.SkullToss && window.SkullToss.debug;
+  if (!T) { console.error("SkullToss debug API not found — load this after index.html's script."); return; }
+  const C = T.constants;
+  const results = [];
+  const test = (name, fn) => {
+    try { fn(); results.push({ name, pass: true }); }
+    catch (e) { results.push({ name, pass: false, error: e.message }); }
+  };
+  const assert = (cond, msg) => { if (!cond) throw new Error(msg); };
+  const near = (a, b, eps, msg) => assert(Math.abs(a - b) <= eps, `${msg}: expected ≈${b}, got ${a}`);
+
+  T.pause(true);
+  T.sandbox(true);  // don't touch the player's saved stats, settings or unlocks
+  const fresh = (score = 0) => { T.start(); if (score) T.setScore(score); T.freezeRing(0, C.RING_Y); };
+  const throwAndSettle = (AX, AY) => { assert(T.throwAt(AX, AY), "throw was refused"); T.step(3); return T.state(); };
+  const holeClear = rc => rc - C.RING_TUBE - C.SKULL_R;   // how far off-centre a clean pass can be
+
+  // ── Layout ────────────────────────────────────────────────
+  test("Skull rests horizontally centred", () => {
+    fresh(); const L = T.layout(); near(L.skull.x, L.W / 2, 0.5, "skull x");
+  });
+  test("Ring starts centred, over its post and its shadow", () => {
+    T.start(); const L = T.layout();
+    near(L.ring.x, L.W / 2, 0.5, "ring x"); near(L.ringShadowX, L.ring.x, 0.5, "shadow x"); near(L.trackCenterX, L.W / 2, 0.5, "rail centre");
+  });
+  test("Ring slides left and right, symmetric about the centre", () => {
+    T.start(); T.unfreezeRing(); T.setScore(5);
+    let min = Infinity, max = -Infinity;
+    for (let i = 0; i < 900; i++) { T.step(1 / 60); const x = T.state().ring.x; min = Math.min(min, x); max = Math.max(max, x); }
+    assert(min < -0.8 && max > 0.8, `sweep too small (${min.toFixed(2)} … ${max.toFixed(2)})`);
+    near(min + max, 0, 0.05, "sweep symmetry");
+  });
+
+  // ── The ring is a ring ────────────────────────────────────
+  test("Through the dead centre of the hole = PERFECT (250 points, 1 hit)", () => {
+    fresh(); const s = throwAndSettle(0, C.RING_Y);
+    assert(s.lastResult.kind === "perfect", `got ${s.lastResult.kind}`); assert(s.score === 250 && s.hits === 1, `score ${s.score}, hits ${s.hits}`);
+  });
+  test("Off-centre but clear of the rim = SWISH (100 points, 1 hit)", () => {
+    fresh(); const s = throwAndSettle(holeClear(C.RC_START) * 0.75, C.RING_Y);
+    assert(s.lastResult.kind === "swish", `got ${s.lastResult.kind}`); assert(s.score === 100 && s.hits === 1, `score ${s.score}`);
+  });
+  test("Clipping the inside of the rim rattles in (RIM IN, 75 points)", () => {
+    fresh(); const s = throwAndSettle(C.RC_START - C.RING_TUBE - C.SKULL_R * 0.4, C.RING_Y);
+    assert(s.lastResult.kind === "rim", `got ${s.lastResult.kind}`); assert(s.lives === 3 && s.score === 75 && s.hits === 1, "rim-in should score");
+  });
+  test("Clipping the outside of the rim clanks out and costs a skull", () => {
+    fresh(); const s = throwAndSettle(C.RC_START + C.RING_TUBE, C.RING_Y);
+    assert(s.lastResult.kind === "clank", `got ${s.lastResult.kind}`); assert(s.lives === 2 && s.score === 0 && s.hits === 0, "clank is a miss");
+  });
+  test("Score climbs with the combo: base × combo multiplier; hits count one each", () => {
+    fresh(); throwAndSettle(0, C.RING_Y); T.freezeRing(0, C.RING_Y); const s = throwAndSettle(0, C.RING_Y);
+    assert(s.hits === 2 && s.score === 250 + T.scoreFor("perfect", 2), `score ${s.score}, hits ${s.hits}`);
+    assert(T.scoreFor("perfect", 2) === 375 && T.scoreFor("swish", 11) === 600 && T.scoreFor("swish", 40) === 600, "combo multiplier should be +0.5 a hit, capped at ×6");
+    assert(T.scoreFor("swish", 1, 3) === 150, "later stages multiply the score");
+  });
+  test("Hitting the solid ring material never counts as a make", () => {
+    fresh(); const s = throwAndSettle(0, C.RING_Y + C.RC_START); // aimed straight at the top of the tube
+    assert(!s.lastResult.make, `got ${s.lastResult.kind}`);
+  });
+  test("Misses are classified: wide, too high, too low, post, short", () => {
+    const cases = [[C.RC_START + 1.2, C.RING_Y, "wide"], [0.2, C.RING_Y + C.RC_START + 0.7, "over"],
+      [0.6, C.RING_Y - C.RC_START - 0.7, "low"], [0, 0.9, "post"], [0, -2, "short"]];
+    for (const [ax, ay, want] of cases) { fresh(); const s = throwAndSettle(ax, ay); assert(s.lastResult.kind === want, `aim (${ax}, ${ay}) → ${s.lastResult.kind}, wanted ${want}`); }
+  });
+
+  // ── Aiming ────────────────────────────────────────────────
+  test("Aim preview is exact: predicted crossing = real crossing", () => {
+    fresh(); const P = T.predictCrossing(0.31, 2.05);
+    T.throwAt(0.31, 2.05); T.step(C.FLIGHT_T + 0.05);
+    const X = T.state().lastCross; near(X.x, P.x, 1e-6, "crossing x"); near(X.y, P.y, 1e-6, "crossing y");
+  });
+  test("Slingshot input: pull down-left → throws right; more pull → higher", () => {
+    const a = T.aimFromDrag(-60, 80); assert(a.valid && a.AX > 0, "down-left should aim right");
+    const b = T.aimFromDrag(60, 80); assert(b.valid && b.AX < 0, "down-right should aim left");
+    assert(T.aimFromDrag(0, 140).AY > T.aimFromDrag(0, 50).AY, "longer pull should aim higher");
+  });
+  test("Pulling up, or barely moving, is not a throw", () => {
+    assert(!T.aimFromDrag(0, -90).valid, "upward drag accepted"); assert(!T.aimFromDrag(2, 3).valid, "tap accepted");
+  });
+  test("There is a pull length that lands dead centre (ring is reachable)", () => {
+    const L = T.layout().pullMax; let hit = false;
+    for (let dy = 0; dy <= L && !hit; dy += 1) { const a = T.aimFromDrag(0, dy); if (a.valid && Math.abs(a.AY - C.RING_Y) < 0.05) hit = true; }
+    assert(hit, "no straight pull reaches ring height");
+  });
+
+  // ── Moving target ─────────────────────────────────────────
+  test("Moving ring rewards leading: aim at where it is → miss, where it will be → make", () => {
+    T.start(); T.setScore(8); T.unfreezeRing(); T.setRingPhase(0);
+    const now = T.state().ring; let s = throwAndSettle(now.x, now.y);
+    assert(!s.lastResult.make, `aiming at the ring's current spot should miss at speed (got ${s.lastResult.kind})`);
+    T.start(); T.setScore(8); T.unfreezeRing(); T.setRingPhase(0);
+    const ahead = T.ringAhead(C.FLIGHT_T); s = throwAndSettle(ahead.x, ahead.y);
+    assert(s.lastResult.make, `leading the ring should score (got ${s.lastResult.kind})`);
+  });
+  test("Difficulty ramps with score but stays makeable", () => {
+    const a = T.level(0), b = T.level(20);
+    assert(b.amp * b.omega > a.amp * a.omega * 3, "ring should get much faster");
+    assert(b.rc < a.rc, "ring should shrink"); assert(holeClear(b.rc) > 0.15, "hardest ring must still fit the skull");
+  });
+
+  // ── Run loop ──────────────────────────────────────────────
+  test("Every throw resolves and a fresh skull is ready within 2.5 s", () => {
+    for (const [ax, ay] of [[0, C.RING_Y], [3, C.RING_Y], [0, -2], [C.RC_START + C.RING_TUBE, C.RING_Y]]) {
+      fresh(); T.throwAt(ax, ay); T.step(2.5); assert(T.state().state === "ready", `stuck after aim (${ax}, ${ay})`);
+    }
+  });
+  test("Three misses end the run; retry resets score and skulls", () => {
+    fresh(); throwAndSettle(0, C.RING_Y); // +2
+    for (let i = 0; i < 3; i++) throwAndSettle(3, C.RING_Y);
+    let s = T.state(); assert(s.state === "over", `state ${s.state}`); assert(s.lives === 0, "lives should be 0");
+    T.start(); s = T.state(); assert(s.score === 0 && s.lives === C.START_LIVES && s.state === "ready", "retry did not reset");
+  });
+  test("Bonus skulls stack past 3, up to a maximum of 5", () => {
+    fresh(); assert(T.state().lives === 3, "should start with 3");
+    for (let i = 0; i < 5; i++) throwAndSettle(0, C.RING_Y);
+    assert(T.state().lives === 4, `5 in a row at full health should give a 4th skull (got ${T.state().lives})`);
+    for (let i = 0; i < 5; i++) throwAndSettle(0, C.RING_Y);
+    assert(T.state().lives === 5, `10 in a row should give a 5th skull (got ${T.state().lives})`);
+    for (let i = 0; i < 5; i++) throwAndSettle(0, C.RING_Y);
+    assert(T.state().lives === C.MAX_LIVES, `skulls must cap at ${C.MAX_LIVES} (got ${T.state().lives})`);
+    assert(T.profile().peakLives >= 5, "most-skulls-held stat not recorded");
+  });
+  test("A new best score is kept", () => {
+    fresh(); const before = T.state().best;
+    for (let i = 0; i < 3; i++) { T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); }
+    for (let i = 0; i < 3; i++) throwAndSettle(3, C.RING_Y);
+    const s = T.state(); assert(s.best >= Math.max(before, 250 + 375 + 500), `best ${s.best}`); assert(s.bestHits >= 3, `best hits ${s.bestHits}`);
+    assert(T.storedBest() === s.best, "saved best out of sync");
+  });
+
+  // ── Screens, pause and sheets ─────────────────────────────
+  const $ = id => document.getElementById(id);
+  const SHEETS = ["customize", "challenges", "settings", "profile"];
+  test("Main menu: Play, Challenges, Customize, then Settings and Profile", () => {
+    T.toTitle(); const s = T.state();
+    assert(s.screen === "title" && !$("title").hidden && $("hud").hidden, "title screen not showing");
+    for (const id of ["play", "challengesBtn", "customizeBtn"]) assert($(id) && $("title").contains($(id)), `missing ${id}`);
+    for (const k of ["settings", "profile"]) assert($("title").querySelector(`[data-sheet="${k}"]`), `missing ${k} button`);
+  });
+  test("Each menu button opens its own sheet, and Back closes it", () => {
+    T.toTitle();
+    for (const k of SHEETS) {
+      $("title").querySelector(`[data-sheet="${k}"]`).click();
+      for (const o of SHEETS) assert($("sheet-" + o).hidden === (o !== k), `${o} sheet visibility wrong after opening ${k}`);
+      assert(T.state().sheet === k, `state says ${T.state().sheet}`);
+      $("sheet-" + k).querySelector("[data-back]").click();
+      assert($("sheet-" + k).hidden && !T.state().sheet && $("sheetScrim").hidden, `${k} did not close`);
+    }
+  });
+  test("Pause button freezes the run; Resume carries on", () => {
+    T.start(); T.unfreezeRing(); T.setScore(5); T.step(0.3);
+    $("pauseBtn").click(); let s = T.state(); assert(s.paused && s.screen === "pause" && !$("pause").hidden, "did not pause");
+    const x0 = s.ring.x; T.step(1); near(T.state().ring.x, x0, 1e-9, "ring moved while paused");
+    $("resumeBtn").click(); s = T.state(); assert(!s.paused && s.screen === "play" && !$("hud").hidden, "did not resume");
+    T.step(0.5); assert(Math.abs(T.state().ring.x - x0) > 0.01, "ring did not resume");
+  });
+  test("A sheet opened from pause keeps the run frozen", () => {
+    T.start(); T.unfreezeRing(); T.setScore(5); T.pauseRun(); const x0 = T.state().ring.x;
+    $("pause").querySelector('[data-sheet="settings"]').click(); T.step(1);
+    near(T.state().ring.x, x0, 1e-9, "ring moved under the sheet");
+    T.closeSheet(); assert(T.state().paused && T.state().screen === "pause", "closing the sheet should land back on pause"); T.resumeRun();
+  });
+  test("Pausing mid-flight freezes the skull, and the throw still lands after", () => {
+    fresh(); T.throwAt(0, C.RING_Y); T.step(0.3); const z0 = T.state().skull.z;
+    T.pauseRun(); T.step(1); near(T.state().skull.z, z0, 1e-9, "skull moved while paused"); T.resumeRun();
+    T.step(2.5); assert(T.state().lastResult && T.state().lastResult.make, "throw should still score after resuming");
+  });
+  test("End run (two taps) goes to the results screen", () => {
+    fresh(); throwAndSettle(0, C.RING_Y); T.pauseRun();
+    $("quitBtn").click(); assert(T.state().state !== "over", "one tap should only arm the button");
+    $("quitBtn").click(); T.step(0.2); const s = T.state();
+    assert(s.state === "over" && s.screen === "over" && !$("over").hidden, `ended on ${s.state}/${s.screen}`);
+  });
+  test("Aim guide: Full = path + crosshair, Short = start of path, Off = nothing", () => {
+    fresh(); T.setSetting("guide", "full"); const full = T.previewInfo(0, C.RING_Y);
+    assert(full.dots > 10 && full.crosshair, "full guide missing path or crosshair");
+    T.setSetting("guide", "short"); const short = T.previewInfo(0, C.RING_Y);
+    assert(short.dots > 0 && short.dots < full.dots && !short.crosshair, "short guide wrong");
+    T.setSetting("guide", "off"); const off = T.previewInfo(0, C.RING_Y);
+    assert(off.dots === 0 && !off.crosshair, "off guide still drawing");
+    T.setSetting("guide", "full");
+  });
+  test("Settings switches change the saved settings", () => {
+    T.openSheet("settings");
+    const before = T.settings().shake; document.getElementById("set-shake").click();
+    assert(T.settings().shake === !before, "camera jolts switch did nothing");
+    document.getElementById("set-shake").click();
+    document.querySelector('#set-camera [data-v="gentle"]').click(); assert(T.settings().camera === "gentle", "camera setting did nothing");
+    document.querySelector('#set-camera [data-v="still"]').click(); assert(document.getElementById("set-shake").disabled, "jolts should switch off with a still camera");
+    document.querySelector('#set-camera [data-v="full"]').click(); T.closeSheet();
+  });
+
+  // ── Profile ───────────────────────────────────────────────
+  test("Profile records throws, makes, perfects, points and best streak", () => {
+    fresh(); const a = T.profile();
+    throwAndSettle(0, C.RING_Y); throwAndSettle(0, C.RING_Y); throwAndSettle(3, C.RING_Y);
+    const b = T.profile();
+    assert(b.throws === a.throws + 3, `throws ${a.throws}→${b.throws}`); assert(b.makes === a.makes + 2, "makes");
+    assert(b.perfects === a.perfects + 2, "perfects"); assert(b.points === a.points + 4, "points"); assert(b.bestStreak >= 2, "best streak");
+  });
+  test("Your name goes on the headstone", () => {
+    T.setName("Blake"); fresh();
+    for (let i = 0; i < 3; i++) throwAndSettle(3, C.RING_Y);
+    assert(T.state().state === "over", "run did not end");
+    const e = document.getElementById("epitaph").textContent; assert(e === "Blake", `headstone reads "${e}"`);
+    T.setName("");
+  });
+
+  // ── Cosmetics ─────────────────────────────────────────────
+  const ZERO = { bones: 0, bonks: 0, misses: 0, clutch: 0, bonesTotal: 0, makes: 0, best: 0, perfects: 0, rims: 0, bestStreak: 0, bestPerfStreak: 0, peakLives: 0, games: 0, points: 0, throws: 0, unlocked: [] };
+  for (const [k, v] of Object.entries(T.profile())) if (typeof v === "number" && !(k in ZERO) && k !== "updatedAt") ZERO[k] = k === "bestStage" ? 1 : 0;   // every other counter too
+  ZERO.achievements = T.achievements().map(a => a.id); ZERO.arcade = {};   // (all achievements in hand, so none pays out in the middle of a bones test)
+  const statFor = { perfStreak: "bestPerfStreak" };
+  const DEF = { skull: "bone", eyes: "pie", teeth: "grin", paint: "none", trail: "dust", impact: "classic", ring: "hoop", aim: "bone", reel: "standard", title: "rookie", hat: "none", aura: "none", pole: "wood" };
+  const dressDefault = () => { for (const [k, v] of Object.entries(DEF)) T.equip(k, v); };
+  test("Skull Vault: thirteen shelves (hats, auras and poles are new), over 350 things, titles earned not bought", () => {
+    const c = T.catalog(), want = { skull: 40, eyes: 24, teeth: 18, paint: 32, trail: 34, impact: 20, ring: 24, aim: 16, reel: 10, title: 42, hat: 52, aura: 31, pole: 21 };
+    for (const [k, n] of Object.entries(want)) assert(c[k] && c[k].length === n, `${k}: ${c[k] ? c[k].length : 0} items, wanted ${n}`);
+    const all = Object.values(c).flat(); assert(all.length >= 351, `only ${all.length} cosmetics (117 × 3 = 351)`);
+    for (const k of Object.keys(c)) for (const it of c[k]) {
+      assert(!it.s || (it.s >= 1 && it.s <= 4), `${k} ${it.id} has ${it.s} stars`);
+      if (k === "title") assert(!it.price, `title ${it.id} is for sale`);
+      else if (it.shame || it.boss) assert(!it.price && it.req, `${k} ${it.id}: prizes are won, not sold`);
+      else if (it.s) assert(it.price > 0, `${k} ${it.id} has no price`);
+      if (it.shop) assert(it.price > 0 && !it.req, `${k} ${it.id}: a shop exclusive is bought at the shop, not earned`);
+    }
+    assert(all.filter(i => i.shame).length >= 20, "not enough prizes for failing"); assert(all.filter(i => i.boss).length >= 15, "not enough boss prizes"); assert(all.filter(i => i.shop).length >= 15, "not enough shop exclusives");
+  });
+  test("Locked cosmetics can't be equipped; reaching the goal unlocks them", () => {
+    T.setStats(ZERO); T.start();
+    for (const kind of ["skull", "ring", "aim", "trail"]) {
+      const it = T.catalog()[kind].filter(i => i.req).pop();
+      assert(!T.equip(kind, it.id), `equipped a locked ${kind} (${it.id})`);
+      T.setStats({ [statFor[it.req[0]] || it.req[0]]: it.req[1] });
+      const got = T.checkUnlocks();
+      assert(got.includes(kind + ":" + it.id), `${kind} ${it.id} did not unlock at ${it.req[0]} ${it.req[1]}`);
+      assert(T.equip(kind, it.id) && T.cosmetics()[kind] === it.id, `could not equip ${kind} ${it.id} after unlocking`);
+      T.setStats(ZERO);
+    }
+    dressDefault();
+  });
+  test("Unlocks take real play: a strong 10-minute session opens only a handful", () => {
+    T.setStats({ ...ZERO, makes: 45, best: 11, perfects: 11, rims: 6, bestStreak: 7, bestPerfStreak: 2, peakLives: 4, games: 7, points: 70, throws: 80 });
+    const got = T.checkUnlocks();
+    const lockable = Object.values(T.catalog()).flat().filter(i => i.req).length;
+    assert(got.length <= 4, `too generous: ${got.length} unlocks (${got.join(", ")})`);
+    assert(lockable >= 30, `only ${lockable} things to unlock`);
+    const n = T.nextUnlock(); assert(n && n.have < n.need, "game over screen has nothing to chase");
+    T.setStats(ZERO);
+  });
+  test("Every Vault item renders in play and on its shelf", () => {
+    const cat = T.catalog(), all = Object.keys(cat).flatMap(k => cat[k].map(it => k + ":" + it.id));
+    T.setStats({ makes: 9999, best: 99, perfects: 999, rims: 999, bestStreak: 99, bestPerfStreak: 99, peakLives: 5, games: 999, points: 99999, unlocked: all });
+    for (const kind of Object.keys(cat)) for (const it of cat[kind]) {
+      assert(T.equip(kind, it.id), `could not equip ${kind} ${it.id}`);
+      fresh(); T.throwAt(0.2, C.RING_Y); T.step(0.4); T.step(1.6);
+    }
+    T.equip("aim", "rainbow"); T.freezeRing(0, C.RING_Y); T.previewInfo(0, C.RING_Y);
+    T.toTitle(); T.openSheet("customize");
+    for (const k of Object.keys(cat)) { $("catTabs").querySelector(`[data-cat="${k}"]`).click(); assert($("shopGrid").children.length === cat[k].length, `${k} grid shows ${$("shopGrid").children.length}`); }
+    T.closeSheet();
+    dressDefault(); T.setStats(ZERO);
+    assert(Object.entries(DEF).every(([k, v]) => T.cosmetics()[k] === v), "couldn't dress back to the defaults");
+  });
+
+  // ── Combo, bones, shop, challenges, results ───────────────
+  test("Combo meter climbs with the streak, names it, and breaks on a miss", () => {
+    fresh(); throwAndSettle(0, C.RING_Y); assert($("combo").hidden, "no combo on the first make");
+    throwAndSettle(0, C.RING_Y); throwAndSettle(0, C.RING_Y);
+    assert(!$("combo").hidden && $("comboN").textContent === "3" && $("comboWord").textContent === "Bones!", `meter shows ×${$("comboN").textContent} ${$("comboWord").textContent}`);
+    throwAndSettle(3, C.RING_Y); assert($("combo").hidden, "miss should break the combo");
+    assert(T.runStats().bestCombo === 3, "best combo not kept for the results");
+  });
+  test("Misses get OOF-style calls", () => {
+    fresh(); throwAndSettle(3, C.RING_Y); assert(/^whiff/.test($("sr").textContent), `wide miss called "${$("sr").textContent}"`);
+    fresh(); throwAndSettle(0, -2); assert(/^oof/.test($("sr").textContent), `short miss called "${$("sr").textContent}"`);
+  });
+  test("Every run pays bones, more for a better run", () => {
+    T.setStats(ZERO); fresh();
+    throwAndSettle(0, C.RING_Y); throwAndSettle(0, C.RING_Y);
+    for (let i = 0; i < 3; i++) throwAndSettle(3, C.RING_Y);
+    const r = T.runStats(), got = T.bones();
+    assert(r.perfects === 2 && r.misses === 3 && r.bones > 0, `run stats ${JSON.stringify(r)}`);
+    assert(got === r.bones, `balance ${got}, run paid ${r.bones}`);
+    assert(T.runBones({ perfects: 6, bestCombo: 9 }, 15, true) > T.runBones({ perfects: 0, bestCombo: 1 }, 2, false), "a better run should pay more");
+  });
+  test("Results: a headstone carved with the round, a grade, a ribbon and the bones earned", () => {
+    T.setStats(ZERO); fresh(); throwAndSettle(0, C.RING_Y);
+    for (let i = 0; i < 3; i++) throwAndSettle(3, C.RING_Y);
+    T.step(2); const s = T.state();   // (GAME OVER holds the picture for a moment first)
+    assert(s.screen === "over" && !$("over").hidden && $("hud").hidden, "results not showing");
+    assert($("final").textContent === s.score.toLocaleString("en-US"), "final score wrong");
+    const dts = [...$("resStats").querySelectorAll("dt")].map(d => d.textContent);
+    assert(dts.length >= 6, "stats rows missing");
+    for (const k of ["Score", "Time", "Hits", "Skill level"]) assert(dts.includes(k), `${k} not carved on the stone (${dts.join(", ")})`);
+    assert(/^(S|[ABCD][+-]?|F)$/.test($("resGrade").textContent), `grade reads "${$("resGrade").textContent}"`);
+    assert(!$("newBest").hidden && $("resTitle").textContent === "", "a first run is a new record, so the ribbon should say so");
+    assert(Number($("resBones").textContent) === T.runStats().bones, "bones earned not shown");
+    const pb = $("nextUnlock").getBoundingClientRect(), bb = $("resBonesBox").getBoundingClientRect();
+    assert(bb.top >= pb.top - 4 && bb.top < pb.top + 20 && bb.right <= pb.right + 6 && bb.right > pb.right - 30, "the bones box should sit in the top-right corner of the progress panel");
+    assert($("sleeper").width > 0, "the knocked-out skull isn't drawn");
+    assert(document.querySelector(".grave .cross") && document.querySelector(".ribbon"), "the stone is missing its cross or ribbon");
+  });
+  test("Bones buy locked cosmetics, with no overspending", () => {
+    T.setStats(ZERO); T.toTitle(); T.setBones(100);
+    assert(!T.buy("skull", "tin"), "bought with too few bones"); assert(!T.equip("skull", "tin"), "equipped before buying");
+    T.setBones(1000); assert(T.buy("skull", "tin"), "purchase refused");
+    assert(T.bones() === 500, `balance after buying ${T.bones()}`);
+    assert(T.equip("skull", "tin"), "bought item won't equip");
+    assert(!T.buy("skull", "tin") && T.bones() === 500, "charged twice");
+    assert(!T.buy("title", "flinger"), "titles can't be bought");
+    assert(!T.buy("skull", "bone"), "starter items are free, not for sale");
+    T.equip("skull", "bone"); T.setStats(ZERO);
+  });
+  test("Shop: tapping a locked item shows the price bar; Buy equips it", () => {
+    T.setStats(ZERO); T.toTitle(); T.setBones(500); T.openSheet("customize");
+    $("catTabs").querySelector('[data-cat="aim"]').click();
+    $("shopGrid").querySelector('[data-id="blood"]').click();
+    assert(!$("buybar").hidden && !$("buyBtn").disabled, "price bar missing or disabled");
+    $("buyBtn").click();
+    assert(T.cosmetics().aim === "blood" && T.bones() === 200 && $("buybar").hidden, "buy did not equip or charge");
+    $("shopGrid").querySelector('[data-id="frost"]').click();
+    assert($("buyBtn").disabled && /Need 400/.test($("buyBtn").textContent), `short of bones should say so (${$("buyBtn").textContent})`);
+    T.closeSheet(); T.equip("aim", "toxic"); T.setStats(ZERO);
+  });
+  test("Daily challenges: three a day, progress counts, claiming pays once", () => {
+    T.setStats(ZERO); T.setDaily(null);
+    const d = T.daily(); assert(d.items.length === 3 && new Set(d.items.map(i => i.id)).size === 3, "need three different challenges");
+    assert(JSON.stringify(T.daily().items.map(i => [i.id, i.n])) === JSON.stringify(d.items.map(i => [i.id, i.n])), "the day's set changed");
+    const it = d.items[0];
+    assert(!T.claim(0), "claimed an unfinished challenge");
+    T.challenge(it.id, it.n); assert(T.daily().items[0].have >= it.n, "progress not counted");
+    const b0 = T.bones(); assert(T.claim(0) && T.bones() === b0 + it.reward, "claim did not pay");
+    assert(!T.claim(0) && T.bones() === b0 + it.reward, "paid twice");
+    T.openSheet("challenges"); assert($("chalList").querySelectorAll(".chal").length === 3, "challenge cards missing"); T.closeSheet();
+    T.setDaily(null); T.setStats(ZERO);
+  });
+
+  // ── The skull is the character ───────────────────────────
+  const sample = (sec, fn) => { const out = []; for (let t = 0; t < sec; t += 1 / 60) { T.step(1 / 60); out.push(fn()); } return out; };
+  test("Launch: squash, then smear, then fly", () => {
+    fresh(); T.throwAt(0, C.RING_Y); const a = sample(0.35, () => T.rig().a);
+    assert(Math.min(...a) < 0.8, `never squashed (min ${Math.min(...a).toFixed(2)})`);
+    assert(Math.max(...a) > 1.12, `never smeared (max ${Math.max(...a).toFixed(2)})`);
+  });
+  test("The skull is drawn from the layered SVG art", () => {
+    const A = T.skullArt();
+    for (const k of ["cranium", "jaw", "nose", "socket-left", "socket-right", "teeth-upper", "teeth-lower"]) assert(A.layers[k] >= 1, `missing layer ${k}`);
+    assert(A.bottom > 0.9 && A.bottom < 1.3, `skull bottom ${A.bottom}`);
+    const [L, R] = A.sockets; assert(L.x < 0 && R.x > 0 && Math.abs(L.x + R.x) < 0.05 && L.rx > 0.1, "sockets not found in the art");
+  });
+  // ── The rostrum camera ───────────────────────────────────
+  test("Camera: pulling leans toward the pull and dollies back (anticipation)", () => {
+    T.setCamera("full"); fresh(); T.step(1);
+    assert(T.aimAt(-0.8, 0.9), "could not aim"); T.step(0.8);
+    const c = T.camera(); assert(c.on, "camera off");
+    assert(c.x < -0.03, `no lean toward the pull (x ${c.x.toFixed(3)})`); assert(c.z < -0.15, `no dolly back (z ${c.z.toFixed(3)})`);
+    T.releaseAim(); T.step(0.12); const s = T.camera();
+    assert(s.live.z > c.z + 0.2, `no snap forward on release (${c.z.toFixed(2)} → ${s.live.z.toFixed(2)})`);
+    T.step(0.35); const f = T.camera();
+    assert(f.z > 0.15, `no push-in while following the throw (z ${f.z.toFixed(2)})`); assert(Math.abs(f.x) > 0.02, "the camera did not pan after the skull");
+    T.step(3); assert(Math.abs(T.camera().z) < 0.12, "the camera did not settle back after the throw");
+  });
+  test("Camera: near planes slide further than far ones (parallax)", () => {
+    T.setCamera("full"); fresh(); T.aimAt(0.9, 0.9); T.step(0.8);
+    const d = [3, 9, 30, 70, 400].map(zc => Math.abs(T.parallax(zc).dx));
+    for (let i = 1; i < d.length; i++) assert(d[i] < d[i - 1], `plane at ${[3, 9, 30, 70, 400][i]} m moved ${d[i].toFixed(2)}px, not less than ${d[i - 1].toFixed(2)}px`);
+    assert(d[0] > 8 && d[4] < 3, `parallax range ${d[0].toFixed(1)}px → ${d[4].toFixed(1)}px`);
+    T.releaseAim(); T.step(3);
+  });
+  test("Camera: it exposes in steps, like a rostrum camera (24 fps)", () => {
+    T.setCamera("full"); fresh(); T.aimAt(-0.8, 0.9);
+    const seen = new Set(); for (let i = 0; i < 60; i++) { T.step(1 / 120); seen.add(T.camera().x.toFixed(6)); }
+    assert(seen.size >= 9 && seen.size <= 15, `${seen.size} exposures in 0.5 s`);
+    T.releaseAim(); T.step(3);
+  });
+  test("Camera: impacts knock the planes; Still locks the camera off", () => {
+    T.setCamera("full"); fresh(); T.throwAt(C.RC_START + C.RING_TUBE, C.RING_Y);
+    let slip = 0; for (let i = 0; i < 30; i++) { T.step(1 / 30); slip = Math.max(slip, T.camera().slip); }
+    assert(slip > 1, `no jolt on a BONK (${slip.toFixed(2)}px)`); T.step(2);
+    T.setCamera("still"); fresh(); T.aimAt(-0.8, 0.9); T.step(0.8);
+    const c = T.camera(); assert(!c.on && c.x === 0 && c.z === 0, "Still did not lock the camera");
+    T.releaseAim(); T.step(3); T.setCamera("full");
+  });
+  test("Pulling the slingshot keeps the skull's shape and leans it toward the shot", () => {
+    fresh(); assert(T.aimAt(-0.8, 0.9), "could not aim"); T.step(0.4);
+    const r = T.rig(); assert(r.mood === "aim", `mood ${r.mood}`); assert(Math.abs(r.a - 1) < 0.03, `skull deformed while pulled (${r.a.toFixed(2)})`); assert(r.tilt > 0.1, `lean ${r.tilt.toFixed(2)}`);
+    T.releaseAim(); assert(T.state().state === "flying", "release did not throw"); T.step(3);
+  });
+  test("Moods follow the story: fear in flight, grin, spin, puzzled, dizzy", () => {
+    fresh(); T.throwAt(0, C.RING_Y); T.step(0.3); assert(T.rig().mood === "fear", `in flight: ${T.rig().mood}`);
+    T.step(0.6); assert(T.rig().mood === "perfect", `perfect: ${T.rig().mood}`); T.step(2);
+    fresh(); throwAndSettle(holeClear(C.RC_START) * 0.75, C.RING_Y); 
+    fresh(); T.throwAt(holeClear(C.RC_START) * 0.75, C.RING_Y); T.step(0.9); assert(T.rig().mood === "excited", `swish: ${T.rig().mood}`); T.step(2);
+    fresh(); T.throwAt(C.RC_START - C.RING_TUBE - C.SKULL_R * 0.4, C.RING_Y); T.step(0.9); assert(T.rig().mood === "confused", `rim-in: ${T.rig().mood}`); T.step(2);
+    fresh(); T.throwAt(C.RC_START + C.RING_TUBE, C.RING_Y); T.step(0.9); assert(T.rig().mood === "dizzy", `clank: ${T.rig().mood}`); T.step(2);
+    fresh(); assert(T.rig().mood === "idle", `back on the slingshot: ${T.rig().mood}`);
+  });
+  test("A clean miss: it looks at you, thinks \"...\", then BONK", () => {
+    fresh(); T.throwAt(0.2, C.RING_Y + C.RC_START + 0.7); T.step(0.86);
+    assert(T.rig().mood === "deadpan", `after missing: ${T.rig().mood}`);
+    T.step(0.4); assert(T.rig().dots > 0.5, "no thought bubble");
+    let bonk = false, flat = 9; for (let i = 0; i < 40 && !bonk; i++) { T.step(0.05); flat = Math.min(flat, T.rig().a); bonk = T.bursts().includes("BONK!"); }
+    assert(bonk, `never said BONK (bursts: ${T.bursts().join("|") || "none"})`); assert(flat < 0.7, `didn't flatten on the ground (${flat.toFixed(2)})`); T.step(2);
+  });
+  test("Impact cosmetics change the bonk", () => {
+    T.setStats({ ...ZERO, unlocked: ["impact:cartoon"] }); assert(T.equip("impact", "cartoon"), "couldn't equip WHAM");
+    fresh(); T.throwAt(C.RC_START + C.RING_TUBE, C.RING_Y); T.step(0.86);
+    assert(T.bursts().includes("WHAM!"), `bursts: ${T.bursts().join(", ")}`); T.step(2);
+    T.equip("impact", "classic"); T.setStats(ZERO);
+  });
+  test("Titles are earned by playing", () => {
+    T.setStats(ZERO); assert(!T.equip("title", "flinger"), "equipped an unearned title");
+    T.setStats({ makes: 50 }); assert(T.checkUnlocks().includes("title:flinger"), "50 makes didn't earn Skull Flinger");
+    assert(T.equip("title", "flinger"), "couldn't wear it"); T.equip("title", "rookie"); T.setStats(ZERO);
+  });
+  test("Film look and reels: grain can be turned down, reels re-grade the picture", () => {
+    T.setSetting("film", "off"); assert(T.film().level === "off", "film setting ignored"); T.setSetting("film", "full");
+    T.setStats({ ...ZERO, unlocked: ["reel:silent"] }); assert(T.equip("reel", "silent"), "couldn't equip Silent Era");
+    assert(T.film().reel === "silent", `reel is ${T.film().reel}`); T.equip("reel", "standard"); T.setStats(ZERO);
+  });
+  test("Old saves keep their unlocks under the new names", () => {
+    const json = JSON.stringify({ v: 1, p: { unlocked: ["skull:gilded", "trail:embers"], makes: 5 }, c: { skull: "gilded", trail: "embers" } });
+    T.setStats(ZERO); assert(T.importCode("SKULL1." + btoa(json).replace(/=+$/, "")), "code refused");
+    const p = T.profile(), c = T.cosmetics();
+    assert(p.unlocked.includes("skull:gold") && p.unlocked.includes("trail:fire"), `unlocked: ${p.unlocked.join(", ")}`);
+    assert(c.skull === "gold" && c.trail === "fire", `equipped ${c.skull} / ${c.trail}`);
+    T.equip("skull", "bone"); T.equip("trail", "dust"); T.setStats(ZERO);
+  });
+
+  // ── Saving ────────────────────────────────────────────────
+  test("Save codes carry progress to another device, merging rather than overwriting", () => {
+    T.setStats({ ...ZERO, makes: 120, best: 14, perfects: 30, unlocked: ["skull:tin"] }); T.setName("Blake");
+    const code = T.exportCode(); assert(/^SKULL1\./.test(code), "bad code format");
+    T.setStats({ ...ZERO, makes: 10, best: 20, unlocked: ["ring:iron"] }); T.setName("");
+    assert(T.importCode(code), "valid code rejected");
+    const p = T.profile();
+    assert(p.makes === 120 && p.best === 20 && p.perfects === 30, `merge lost progress (${p.makes}, ${p.best}, ${p.perfects})`);
+    assert(p.unlocked.includes("skull:tin") && p.unlocked.includes("ring:iron"), "unlocks not merged");
+    assert(p.name === "Blake", "name not restored");
+    assert(!T.importCode("SKULL1.not-a-real-code!!") && !T.importCode("hello"), "garbage code accepted");
+    T.setStats(ZERO); T.setName("");
+  });
+  test("Cloud merge keeps the higher of every counter", () => {
+    const m = T.merge({ makes: 5, best: 30, games: 2, unlocked: ["a"], updatedAt: 1, name: "Old" }, { makes: 50, best: 3, games: 9, unlocked: ["b"], updatedAt: 2, name: "New" });
+    assert(m.makes === 50 && m.best === 30 && m.games === 9, "counters went backwards");
+    assert(m.unlocked.length === 2 && m.name === "New", "unlocks or newest name lost");
+  });
+
+  // ── Living graveyard ──────────────────────────────────────
+  test("The graveyard is alive: clouds drift, creatures wander across and leave", () => {
+    T.start(); const w0 = T.world();
+    T.step(20); const w1 = T.world();
+    assert(w1.clouds.some((x, i) => Math.abs(x - w0.clouds[i]) > 1), "clouds are static");
+    let saw = w1.walkers.length;                       // they come and go on their own clock, so wait for one
+    for (let i = 0; i < 10 && !saw; i++) { T.step(5); saw = T.world().walkers.length; }
+    assert(saw > 0, "no wanderers after over a minute");
+    const seen = new Set();
+    for (let i = 0; i < 12; i++) { T.step(10); T.world().walkers.forEach(k => seen.add(k.type)); }
+    assert(seen.size >= 3, `only saw ${[...seen].join(", ")}`);
+    assert(T.world().walkers.length <= 3, "too many wanderers at once");
+  });
+  test("Bats, the witch, lightning and every wanderer draw without errors", () => {
+    T.start(); for (const k of ["bats", "witch", "bolt", "zombie", "skeleton", "werewolf", "ghost"]) T.forceSpawn(k);
+    const w = T.world(); assert(w.bats > 0 && w.witch && w.bolt, "sky spawns missing");
+    for (let i = 0; i < 30; i++) T.step(0.25);
+  });
+
+
+  // ── v11: score, progress, stages and bosses ───────────────
+  const toHit = n => { T.setHits(n - 1); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); T.unfreezeRing(); };
+  const beatCrow = () => { fresh(); toHit(25); T.step(2.6); T.hurtBoss(99); T.endThrow(); T.step(3.2); };
+  test("HUD: the score centred, the hits under it, the best under that, all in the game's numerals; small skulls and combo", () => {
+    fresh(); throwAndSettle(0, C.RING_Y);
+    assert($("score").dataset.v === "250" && $("hits").textContent === "1", `score ${$("score").dataset.v}, hits ${$("hits").textContent}`);
+    const s = $("score").getBoundingClientRect(), h = $("hits").parentElement.getBoundingClientRect(), b = $("best").getBoundingClientRect(), mid = r => (r.left + r.right) / 2;
+    assert(Math.abs(mid(s) - innerWidth / 2) < 3, `the score should be centred (${mid(s).toFixed(1)} of ${innerWidth})`);
+    assert(h.top >= s.bottom - 4 && b.top >= h.bottom - 2 && Math.abs(mid(h) - mid(s)) < 3, "the hits should sit under the score, and the best under the hits");
+    for (const id of ["score", "hits", "best"]) assert(/Bebas Neue/.test(getComputedStyle($(id)).fontFamily), `${id} should use the game's numerals`);
+    const skull = $("lives").querySelector("svg").getBoundingClientRect();
+    assert(skull.width <= 18, `the skulls should be small (${skull.width}px)`);
+  });
+  test("Skulls top left, score top centre, a small progress bar at the bottom counting down to each boss", () => {
+    fresh(); const pr = $("prog").getBoundingClientRect(), lv = $("lives").getBoundingClientRect(), sc = $("score").getBoundingClientRect();
+    const W = innerWidth, H = innerHeight, mid = r => (r.left + r.right) / 2;
+    assert(lv.top < 60 && lv.left < W * 0.25, `skulls at ${Math.round(lv.left)},${Math.round(lv.top)}`);
+    assert(sc.top < 60 && Math.abs(mid(sc) - W / 2) < W * 0.2, `score at ${Math.round(mid(sc))} of ${W}`);
+    assert(pr.height < 60 && pr.top > H * 0.6 && Math.abs(mid(pr) - W / 2) < 24, `progress bar ${Math.round(pr.height)}px tall at ${Math.round(mid(pr))},${Math.round(pr.top)} of ${W}×${H}`);
+    T.setHits(12); assert(/13 to the Crow King/.test($("progLabel").textContent), $("progLabel").textContent);
+  });
+  test("25 hits bring on the Crow King: he carries the ring near and far, and no power-ups appear", () => {
+    fresh(); toHit(25); let s = T.state();
+    assert(s.phase === "mini" && s.state === "cine" && T.boss().kind === "crow", `phase ${s.phase}, state ${s.state}`);
+    T.step(2.6); s = T.state(); assert(s.state === "ready" && s.ring.mode === "boss", "the fight didn't start");
+    let zmin = 99, zmax = 0; for (let i = 0; i < 480; i++) { T.step(1 / 60); const z = T.state().ring.z; zmin = Math.min(zmin, z); zmax = Math.max(zmax, z); }
+    assert(zmax - zmin > 1.5, `the ring should move in depth (z ${zmin.toFixed(2)}–${zmax.toFixed(2)})`);
+    assert(!T.pickup() && !Object.keys(T.powers()).length, "no power-ups during the mini-boss");
+    assert(/Crow King/.test($("progLabel").textContent) && $("prog").classList.contains("fight"), "the bar should show his health");
+  });
+  test("A ring off its usual plane is still exact: the skull crosses at the ring's own depth", () => {
+    fresh(); T.freezeRing(0.4, 2.1, 7.4); assert(T.throwThrough(0.4, 2.1, 7.4), "throw refused"); T.step(2.5);
+    const s = T.state(); assert(s.lastResult.kind === "perfect", `got ${s.lastResult.kind}`); near(s.lastCross.ringZ, 7.4, 1e-6, "crossing depth");
+  });
+  test("Beating the Crow King turns the ring 3D: a repeating triangle through left, right, up, down, near and far", () => {
+    fresh(); toHit(25); T.step(2.6); T.hurtBoss(99); T.endThrow(); let s = T.state();
+    assert(s.cine === "mini-out" && s.ring.mode === "tri", `cine ${s.cine}, ring ${s.ring.mode}`);
+    T.step(3.2); s = T.state(); assert(s.phase === "B" && s.state === "ready", `phase ${s.phase}`);
+    const V = T.triVerts(), span = k => Math.max(...V.map(v => v[k])) - Math.min(...V.map(v => v[k]));
+    assert(span("x") > 2 && span("y") > 0.8 && span("z") > 2, `triangle spans x ${span("x").toFixed(1)}, y ${span("y").toFixed(1)}, z ${span("z").toFixed(1)}`);
+    const q = T.ringMode().seq; assert(q.length >= 6 && q.slice(0, 3).join() === q.slice(3, 6).join(), "each pattern should repeat (learnable, not random)");
+  });
+  test("Leading the flying ring through depth scores", () => {
+    beatCrow(); T.setHits(30);
+    const VZ = C.RING_Z / C.FLIGHT_T; let tau = T.state().ring.z / VZ, p;
+    for (let i = 0; i < 30; i++) { p = T.ringAhead(tau); tau = p.z / VZ; }
+    assert(T.throwThrough(p.x, p.y, p.z), "throw refused"); T.step(2.5);
+    const s = T.state(); assert(s.lastResult.make, `leading the 3D ring should score (got ${s.lastResult.kind}; cross z ${s.lastCross && s.lastCross.ringZ})`);
+  });
+  test("50 hits bring on the Pumpkin King; a seed knocks the skull out of the air, Ghost Toss slips through", () => {
+    beatCrow(); toHit(50); let s = T.state(); assert(s.phase === "boss" && T.boss().kind === "pumpkin", `phase ${s.phase}`);
+    T.step(2.9); T.freezeRing(0, C.RING_Y);
+    const lives = T.state().lives, a = { AX: 0, AY: C.RING_Y }, q = T.skullPathAt(a.AX, a.AY, 3 / (C.RING_Z / C.FLIGHT_T));
+    T.plantSeed(q.x, q.y, q.z); T.throwAt(a.AX, a.AY); T.step(2.5); s = T.state();
+    assert(s.lastResult.kind === "seed" && s.lives === lives - 1, `got ${s.lastResult.kind}, lives ${s.lives}`);
+    T.givePower("ghost"); T.freezeRing(0, C.RING_Y); T.plantSeed(q.x, q.y, q.z); T.throwAt(a.AX, a.AY); T.step(2.5);
+    assert(T.state().lastResult.make, `Ghost Toss should phase through the seed (got ${T.state().lastResult.kind})`);
+  });
+  test("Beating the Pumpkin King clears the stage: a big bonus, bones, a skull back, and stage 2", () => {
+    beatCrow(); toHit(50); T.step(2.9); const s0 = T.state(), bones = T.bones();
+    T.hurtBoss(99); T.endThrow(); T.step(3.4); const s = T.state();
+    assert(s.stage === 2 && s.phase === "A" && s.stageHits === 0, `stage ${s.stage}, phase ${s.phase}`);
+    assert(s.score >= s0.score + 10000 && T.bones() > bones, "no bonus");
+    assert(s.lives === Math.min(C.MAX_LIVES, s0.lives + 1), "no skull back"); assert(T.profile().bossKills >= 1 && T.profile().bestStage >= 2, "boss not recorded");
+  });
+  test("Stages are data: each one names its speed, triangle and patterns", () => { const st = T.stages(); assert(st.length >= 4 && st[0] === "Moonshine Cemetery", st.join()); });
+
+  // ── v11: power-ups ────────────────────────────────────────
+  test("Power-ups float in the middle of the ring on a fixed schedule; only a toss through the middle grabs one", () => {
+    fresh(); toHit(6); assert(T.pickup(), "no power-up at 6 hits");
+    T.freezeRing(0, C.RING_Y); const rc = T.state().ring.rc; throwAndSettle(holeClear(rc) * 0.92, C.RING_Y);
+    assert(T.state().lastResult.make && T.pickup() && !Object.keys(T.powers()).length, "an edge-of-the-hole make shouldn't grab it");
+    T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); assert(Object.keys(T.powers()).length === 1, "a dead-centre toss should grab it");
+  });
+  test("Skull Rush makes flights quicker; Deadeye doubles the perfect window", () => {
+    const crossT = () => { let t = 0; while (!T.state().lastCross && t < 2) { T.step(0.005); t += 0.005; } return t; };
+    fresh(); T.throwAt(0, C.RING_Y); const t0 = crossT(); T.step(2.5);
+    fresh(); T.givePower("rush"); T.throwAt(0, C.RING_Y); const t1 = crossT(); T.step(2.5);
+    assert(t1 < t0 * 0.75, `rush flight ${t1.toFixed(2)}s vs ${t0.toFixed(2)}s`);
+    const off = holeClear(C.RC_START) * 0.38 * 1.5;
+    fresh(); T.clearPowers(); throwAndSettle(off, C.RING_Y); assert(T.state().lastResult.kind === "swish", "should be a swish without Deadeye");
+    fresh(); T.givePower("deadeye"); throwAndSettle(off, C.RING_Y); assert(T.state().lastResult.kind === "perfect", "Deadeye should make it a perfect"); T.clearPowers();
+  });
+  test("Second Chance saves a skull; Cursed Skull and BONK Blast triple the score", () => {
+    fresh(); T.givePower("second"); throwAndSettle(3, C.RING_Y); assert(T.state().lives === C.START_LIVES && !T.powers().second, "Second Chance didn't save the skull");
+    fresh(); T.givePower("cursed"); throwAndSettle(0, C.RING_Y); assert(T.state().score === 750, `cursed perfect scored ${T.state().score}`);
+    fresh(); T.givePower("blast"); throwAndSettle(0, C.RING_Y); assert(T.state().score === 750 && !T.powers().blast, `blast perfect scored ${T.state().score}`);
+    T.clearPowers();
+  });
+
+  // ── v11: the Vault, the Curio Cart, the board, the profile ──
+  test("Curio Cart: exclusives are only sold there, deals are marked down, the coffin gives something new", () => {
+    T.setStats(ZERO); T.setBones(20000); const ex = T.catalog().hat.find(i => i.shop);
+    assert(!T.buy("hat", ex.id), "an exclusive was sold in the Vault");
+    assert(T.cartBuy("hat", ex.id) && T.equip("hat", ex.id), "couldn't buy an exclusive at the cart");
+    const deals = T.deals(); assert(deals.length === 4 && deals.every(d => d.price < d.full) && deals.some(d => d.shop), JSON.stringify(deals));
+    const n = T.profile().unlocked.length, got = T.coffin(); assert(got && !got.shop && T.profile().unlocked.length === n + 1, "the coffin should unlock one new thing");
+    const p = T.profile(); assert(p.shopBuys === 1 && p.coffins === 1 && p.bonesSpent >= 750 + ex.price, `shop stats ${p.shopBuys}/${p.coffins}/${p.bonesSpent}`);
+    T.equip("hat", "none"); T.setStats(ZERO);
+  });
+  test("Failing in style and beating bosses earn their own prizes", () => {
+    T.setStats({ ...ZERO, misses: 300, zeroRuns: 8, posts: 40 }); const a = T.checkUnlocks();
+    for (const k of ["hat:dunce", "hat:bag", "pole:plunger", "aura:raincloud", "title:postoffice"]) assert(a.includes(k), `${k} not won (${a.join(", ")})`);
+    T.setStats({ ...ZERO, miniKills: 1, bossKills: 1, bossFlawless: 1 }); const b = T.checkUnlocks();
+    for (const k of ["hat:crowcrown", "hat:pumpkinhelm", "hat:goldcrown", "ring:vine", "title:smasher"]) assert(b.includes(k), `${k} not won`);
+    T.setStats(ZERO);
+  });
+  test("Hats pop off the head when the skull is launched, then settle back", () => {
+    T.setStats({ ...ZERO, unlocked: ["hat:tophat"] }); T.equip("hat", "tophat"); fresh();
+    T.throwAt(0, C.RING_Y); T.step(0.08); assert(T.hat().lift > 0.05, `lift ${T.hat().lift}`);
+    T.step(3); assert(T.hat().lift < 0.01, "hat didn't settle"); T.equip("hat", "none"); T.setStats(ZERO);
+  });
+  test("Leaderboard: opt-in, only your headstone name, and other names shown as plain text", () => {
+    const fk = T.fakeBoard([{ id: "a", name: "<img src=x onerror=alert(1)>", score: 9000, hits: 20, stage: 2 }, { id: "b", name: "Mort", score: 12000, hits: 30, stage: 3 }]);
+    T.setName("Blake"); T.setStats({ ...ZERO, bestScore: 5000, best: 12, board: false }); T.openSheet("board");
+    let rows = $("boardList").querySelectorAll("li");
+    assert(rows.length === 2 && rows[0].textContent.includes("Mort"), `rows ${rows.length}`); assert(!$("boardList").querySelector("img"), "a name was rendered as HTML");
+    assert(fk.writes.length === 0, "posted without opting in");
+    $("set-board").click();
+    assert(fk.writes.length === 1 && fk.writes[0].path === "leaderboard/me1" && fk.writes[0].d.name === "Blake" && fk.writes[0].d.score === 5000, JSON.stringify(fk.writes));
+    assert(Object.keys(fk.writes[0].d).every(k => ["name", "score", "hits", "stage", "title", "look", "at"].includes(k)), "posted more than name, score and looks");
+    assert($("boardList").querySelector("li.me"), "your row isn't marked");
+    $("set-board").click(); assert(!$("boardList").querySelector("li.me") && !T.profile().board, "opting out should take the score down");
+    T.closeSheet(); T.unfakeBoard(); T.setName(""); T.setStats(ZERO);
+  });
+  test("Profile: grouped stats, from bosses to the Hall of Shame", () => {
+    fresh(); throwAndSettle(3, C.RING_Y); assert(T.profile().wides >= 1, "wide misses aren't counted");
+    T.openSheet("profile"); const hs = [...$("stats").querySelectorAll(".stat-h")].map(h => h.textContent);
+    assert(hs.length >= 6 && hs.includes("Hall of Shame") && hs.includes("Bosses"), hs.join()); assert($("stats").querySelectorAll(".stat").length >= 35, "too few stats");
+    T.closeSheet();
+  });
+  test("The skull talks when grabbed: a stock of lines and a voice setting", () => {
+    const L = T.voiceLines(); assert(L.grab.length >= 20 && L.grab.includes("Hey! What do you think you're doing?!"), "missing lines");
+    assert(typeof T.say() === "string" && $("set-voice").querySelectorAll("button").length === 3, "voice setting missing");
+  });
+  test("The graveyard at work: a gravedigger digs and a black cat crosses between you and the ring", () => {
+    T.start(); const d0 = T.digger() ? T.digger().t : 0; T.step(5); assert(T.digger() && T.digger().t > d0 + 4, "no gravedigger");
+    T.catNow(); const c0 = T.cat(); assert(c0 && c0.z > 2 && c0.z < 4, "the cat should walk between the slingshot and the ring");
+    T.step(1.5); assert(T.cat() && T.cat().x !== c0.x, "the cat should move");
+  });
+  test("The slingshot stays after the shot: its bands snap through the rest point, overshoot and settle", () => {
+    fresh(); T.step(1);
+    assert(T.throwThrough(0, C.RING_Y, T.state().ring.z), "throw refused");
+    const y0 = T.sling().y; let lo = Infinity;
+    for (let i = 0; i < 40; i++) { T.step(0.01); lo = Math.min(lo, T.sling().y); }
+    assert(y0 > 0 && lo < -y0 * 0.2, `the pouch should fly past its rest point (pulled ${y0.toFixed(1)}px, reached ${lo.toFixed(1)}px)`);
+    T.step(0.4); const s = T.sling();
+    assert(Math.hypot(s.x, s.y) < 1 && Math.abs(s.fy) < 1, `the bands should be still again (${s.x.toFixed(2)}, ${s.y.toFixed(2)})`);
+  });
+  test("The visual debug overlay draws the shapes the game plays with, in the right order", () => {
+    fresh(); const V = T.visuals;
+    ["showFPS", "showCollisionRadius", "showPivots", "showParallax", "showCamera", "showAnimationFrame", "forceAnimationFPS"].forEach(k => assert(k in V, `visuals.${k} is missing`));
+    const R = T.visualShapes().ring;
+    assert(R.perfect < R.clean && R.clean < R.tubeIn && R.tubeIn < R.tubeOut && R.tubeOut < R.miss, "the ring's circles are out of order");
+    const flags = Object.keys(V).filter(k => k.startsWith("show"));
+    flags.forEach(k => { V[k] = true; });
+    try { T.step(0.1); } finally { flags.forEach(k => { V[k] = false; }); }
+  });
+  // ── Visual Foundation v1 ─────────────────────────────────────
+  test("The Visual System: one place for the picture's clock, states, art and events", () => {
+    const VS = T.VisualSystem;
+    ["update", "render", "setStage", "setSkullState", "setTargetState", "triggerImpact", "triggerCameraJolt", "setCamera", "emit"].forEach(k => assert(typeof VS[k] === "function", `VisualSystem.${k} is missing`));
+    const v = T.visualSystem();
+    assert(v.clock.fps === 24, `the drawings should run at 24 fps, not ${v.clock.fps}`);
+    ["skull", "target", "launcher", "camera"].forEach(k => assert(typeof v.state[k] === "string", `no ${k} state`));
+  });
+  test("The art comes from SVG assets: skull, launcher and target, with named layers, anchors and versions", () => {
+    const A = T.visualSystem().assets;
+    assert(A.skull && A.skull.layers.length === 7 && A.skull.layers.includes("jaw"), "the skull should have its seven layers");
+    assert(A.launcher && ["frame", "tips", "pouch"].every(l => A.launcher.layers.includes(l)), "the launcher needs frame, tips and pouch layers");
+    assert(["seat", "bandL", "bandR", "pouchL", "pouchR"].every(k => A.launcher.anchors && A.launcher.anchors[k]), "the launcher needs its band and pouch anchors");
+    assert(A.target && A.target.layers.includes("post"), "the target needs its post");
+    for (const [id, a] of Object.entries(A)) assert(/^\d+\.\d+\.\d+$/.test(a.version) && a.shapes > 0, `${id} needs a version and some shapes`);
+  });
+  test("Drawings change on 24s while the flight stays smooth", () => {
+    fresh(); T.step(1);
+    assert(T.throwThrough(0, C.RING_Y, T.state().ring.z), "throw refused");
+    let poses = 0, moves = 0, lastPose = null, lastPos = null;
+    for (let i = 0; i < 60; i++) {   // half a second in 120ths
+      T.step(1 / 120);
+      const h = T.visualSystem().held, pose = `${h.a.toFixed(4)}|${h.angle.toFixed(4)}`, pos = JSON.stringify(T.state().skull);
+      if (pose !== lastPose) poses++; if (pos !== lastPos) moves++;
+      lastPose = pose; lastPos = pos;
+    }
+    assert(poses <= 14, `the skull's drawing changed ${poses} times in half a second (24 fps allows 12 or 13)`);
+    assert(moves >= 58, `the skull should move every frame (${moves} of 60)`);
+  });
+  test("The visual states follow the throw: launch, flight, impact, recover, idle", () => {
+    fresh(); T.step(1);
+    T.throwThrough(0, C.RING_Y, T.state().ring.z);
+    for (let i = 0; i < 80 && T.visualSystem().state.skull !== "idle"; i++) T.step(0.05);
+    const log = T.visualSystem().state.log, want = ["launch", "flight", "impact", "recover", "idle"];
+    let at = -1; for (const s of want) { const i = log.indexOf(s, at + 1); assert(i > at, `expected ${want.join(" → ")}, got ${log.join(" → ")}`); at = i; }
+  });
+  test("One impact system, scaled by how hard it hits: Skull Rush clanks the rim harder", () => {
+    const rimHit = rush => {
+      fresh(); T.clearPowers(); if (rush) T.givePower("rush"); T.step(1);
+      const r = T.state().ring; T.throwThrough(r.x + r.rc - 0.02, r.y, r.z);
+      for (let i = 0; i < 240; i++) { T.step(1 / 120); const L = T.visualSystem().lastImpact; if (L && (L.kind === "rim" || L.kind === "clank")) return L; }
+      return null;
+    };
+    const slow = rimHit(false), fast = rimHit(true);
+    T.clearPowers();
+    assert(slow && fast, "both throws should meet the rim");
+    assert(fast.strength > slow.strength * 1.2, `a Skull Rush throw should arrive harder (${slow.strength} vs ${fast.strength})`);
+    assert(fast.a < slow.a, `and squash the skull further (${slow.a} vs ${fast.a})`);
+  });
+  test("The moon is the drawn one: its face in front of the clouds, the vignette cleared around it", () => {
+    const m = T.moon();
+    assert(m.art === "loaded" && m.layer, `the moon artwork should be hung (it is ${m.art})`);
+    assert(m.disc > 130 && m.disc > m.sky + 50, `the disc should shine against the sky (disc ${m.disc}, sky ${m.sky})`);
+    const v = getComputedStyle($("vig")), mask = v.maskImage || v.webkitMaskImage || "";
+    assert(/radial-gradient/.test(mask), "the vignette should leave a clearing where the moon hangs");
+  });
+  // ── Visual Foundation v2: poses, the shot director, FX and sound direction ──
+  test("Full draw is the anticipation: the skull squints and shivers but keeps its shape", () => {
+    fresh(); T.step(1);
+    assert(T.holdAim(0, 0.5), "aim refused"); T.step(0.3);
+    let v = T.visualSystem();
+    assert(v.state.skull === "aim" && v.pose === "aim", `a half pull should be plain aim (${v.state.skull} / ${v.pose})`);
+    T.holdAim(0, 1); T.step(0.3); v = T.visualSystem();
+    assert(v.state.skull === "anticipation" && v.state.launcher === "anticipation", `a full draw should be the anticipation (skull ${v.state.skull}, launcher ${v.state.launcher})`);
+    assert(v.held.pose === "anticipation" && v.held.mood === "strain" && v.held.tremble, "the drawing should strain and shiver");
+    assert(Math.abs(v.rig.a - 1) < 0.02 && Math.abs(v.held.a - 1) < 0.02, `the skull must keep its shape in the pouch (a = ${v.rig.a.toFixed(3)})`);
+    assert(v.director.cues.filter(c => c.name === "creak").length === 1, "the band should creak once at full draw");
+    T.letGo(); T.step(3);
+  });
+  test("The poses follow the throw: launch, a smear that thins, flight, then the make's own drawing", () => {
+    fresh(); T.step(1);
+    T.throwThrough(0, C.RING_Y, T.state().ring.z);
+    const smears = [];
+    for (let i = 0; i < 240; i++) { T.step(1 / 120); const h = T.visualSystem().held; if (h.pose === "smear" && smears[smears.length - 1] !== h.smear) smears.push(h.smear); }
+    const log = T.visualSystem().poseLog, want = ["launch", "smear", "flight", "perfect"];
+    let at = -1; for (const s of want) { const i = log.indexOf(s, at + 1); assert(i > at, `expected ${want.join(" → ")}, got ${log.join(" → ")}`); at = i; }
+    assert(smears.length >= 2 && smears[0] === 1 && smears[1] < smears[0], `the smear should be two drawings, thinning (${smears.join(", ")})`);
+    const states = T.visualSystem().state.log;
+    assert(states.indexOf("smear") > states.indexOf("launch") && states.indexOf("rebound") > states.indexOf("impact"), `states ${states.join(" → ")}`);
+  });
+  test("A bonk lands on its own drawing: eyes screwed shut, then the rebound and the dizzy look", () => {
+    fresh(); T.step(1);
+    const r = T.state().ring, cuts = T.visualSystem().cuts; T.throwThrough(r.x + r.rc + 0.05, r.y, r.z);
+    let L = null; for (let i = 0; i < 240 && !L; i++) { T.step(1 / 120); const I = T.visualSystem().lastImpact; if (I && (I.kind === "clank" || I.kind === "rim")) L = I; }
+    assert(L && L.kind === "clank", `the throw should clank off the rim (${L && L.kind})`);
+    T.step(1 / 120); let v = T.visualSystem();
+    assert(v.cuts >= cuts + 2, "the release and the contact should each start a drawing on the frame they happen");
+    assert(v.held.pose === "impact" && v.held.glyph === "squeeze", `the contact drawing should screw its eyes shut (${v.held.pose}, ${v.held.glyph})`);
+    const star = v.director.stars.find(s => s.style === "bonk"); assert(star && star.drawing === 0, "the bonk should throw a contact star");
+    T.step(0.25); v = T.visualSystem();
+    assert(v.state.log.includes("rebound") && v.held.pose === "dizzy", `then the rebound, seeing stars (${v.held.pose})`);
+    assert(v.director.stars.length === 0, "the contact star is three drawings long, then gone");
+  });
+  test("One shot, one timeline: snap → whoosh on the smear → contact → transient → sting three drawings on, each once", () => {
+    fresh(); T.step(1);
+    T.throwThrough(0, C.RING_Y, T.state().ring.z); T.step(2);
+    const d = T.visualSystem().director, at = n => (d.cues.find(c => c.name === n) || {}).t;
+    const names = d.cues.filter(c => c.t <= at("swish") + 0.2).map(c => c.name);   // the shot up to its sting (the skull lands later, with its own thud)
+    ["snap", "whoosh", "swish", "transient", "sting"].forEach(n => assert(names.filter(x => x === n).length === 1, `${n} should play exactly once (${names.join(", ")})`));
+    assert(at("snap") < 0.01 && Math.abs(at("whoosh") - 1 / 24) < 0.02, `the whoosh should land on the smear, a drawing after the snap (${at("whoosh")})`);
+    const c = at("swish");
+    assert(Math.abs(at("transient") - c) < 0.01 && Math.abs(at("sting") - c - 0.125) < 0.02, `the sting should land three drawings after the contact (${c} → ${at("sting")})`);
+    assert(d.outcome === "perfect" && d.intensity === 1, `a perfect is the throw's moment, even after the skull lands (${d.outcome})`);
+    ["flash", "dust", "sting", "settle"].forEach(n => assert(!d.pending.some(b => b.name === n), `the ${n} beat should have played`));
+  });
+  test("Every hit is heard once: a rim clank, a bonk, then the thud and the boing on the rebound", () => {
+    fresh(); T.step(1);
+    const r = T.state().ring; T.throwThrough(r.x + r.rc + 0.05, r.y, r.z); T.step(3);
+    const d = T.visualSystem().director, n = k => d.cues.filter(c => c.name === k).length, at = k => (d.cues.find(c => c.name === k) || {}).t;
+    assert(n("clank") === 1 && n("bonk") === 1, `one clank and one bonk (${d.cues.map(c => c.name).join(", ")})`);
+    assert(n("thud") >= 1 && n("boing") === 1 && at("boing") > at("thud") + 0.05, `the boing should come on the rebound, after the thud (${at("thud")} → ${at("boing")})`);
+    assert(d.outcome === "miss", `a bonk is a miss (${d.outcome})`);
+  });
+  test("Bigger moments read bigger: FX recipes ranked from launch to boss defeat, all on one timeline", () => {
+    const A = T.visualAnimation, order = ["launch", "miss", "hit", "perfect", "bossHit", "bossDefeat"];
+    assert(order.map(k => A.fxIntensity(k)).join() === "0.42,0.58,0.72,1,1.05,1.35", `intensities ${order.map(k => A.fxIntensity(k)).join()}`);
+    const tl = A.fxTimeline("perfect");
+    assert(tl.burst === 0 && tl.flash === 0.08 && tl.dust === 0.14 && Math.abs(tl.settle - 0.63) < 1e-6, `timeline ${JSON.stringify(tl)}`);
+    fresh(); const p = { x: 200, y: 200, s: 20 };
+    T.VisualSystem.triggerImpact("rim", { at: p, hit: p, strength: 1 }); T.VisualSystem.triggerImpact("ko", { at: p, strength: 1 });
+    const st = T.visualSystem().director.stars, rim = st.find(s => s.style === "rim"), ko = st.find(s => s.style === "ko");
+    assert(rim && ko && ko.r > rim.r * 2, `a knockout's star should dwarf a rim's (${rim && rim.r} vs ${ko && ko.r})`);
+    const L = A.poseLibrary();
+    ["idle", "aim", "anticipation", "launch", "smear", "flight", "impact", "perfect", "miss", "bossHit", "bossDefeat", "dizzy", "confused", "death"].forEach(k => assert(L.includes(k), `the pose library needs ${k}`));
+    assert(A.samplePose("death").glyph === "x" && A.samplePose("impact").glyph === "squeeze", "death has X eyes, the contact screws them shut");
+    T.start();
+  });
+  test("The bosses have visual states: in, open, winding up, hurt, down", () => {
+    fresh(); toHit(25); const seen = new Set();
+    for (let i = 0; i < 90; i++) { T.step(0.05); seen.add(T.visualSystem().boss); }
+    T.hurtBoss(1); T.step(1 / 60); seen.add(T.visualSystem().boss);
+    T.hurtBoss(99); T.step(0.3); seen.add(T.visualSystem().boss);   // (past the knockout's hold)
+    assert(["enter", "hit", "defeat"].every(s => seen.has(s)) && (seen.has("vulnerable") || seen.has("attack")), `boss states seen: ${[...seen].join(", ")}`);
+    T.endThrow(); T.step(3.2);
+  });
+  test("Busy devices lose effects before pixels, and never below half", () => {
+    const A = T.visualAnimation;
+    try {
+      assert(A.setQuality(0.2) === 0.5 && A.quality().particles === 0.5 && A.quality().grain === 0.5, "quality should stop at half");
+      assert(A.setQuality(0.75) === 0.75, "quality should step");
+    } finally { A.setQuality(1); }
+  });
+
+  // ── v12: two modes, GAME OVER, weekly and monthly challenges, achievements, new music and sounds ──
+  test("PLAY asks Story or Arcade; Arcade lists every map with its best, and a map starts there", () => {
+    T.toTitle(); $("play").click();
+    assert(T.state().sheet === "play" && !$("modePick").hidden, "PLAY should open the mode picker");
+    assert(document.querySelectorAll("#modePick [data-mode]").length === 2, "two modes to pick from");
+    document.querySelector('#modePick [data-mode="arcade"]').click();
+    const maps = [...document.querySelectorAll("#mapList [data-map]")];
+    assert(!$("mapPick").hidden && maps.length === T.stages().length, `every map should be listed (${maps.length})`);
+    assert(maps.every((b, i) => b.textContent.includes(T.stages()[i])), "maps should be named after the stages");
+    $("sheet-play").querySelector("[data-back]").click();
+    assert(T.state().sheet === "play" && !$("modePick").hidden, "Back from the maps should return to the modes");
+    document.querySelector('#modePick [data-mode="arcade"]').click(); document.querySelector('#mapList [data-map="2"]').click();
+    const a = T.arcade(), s = T.state();
+    assert(!T.state().sheet && s.state === "ready" && a.mode === "arcade" && a.map === 2 && s.stage === 3, `arcade on map 3 (${JSON.stringify(a)}, stage ${s.stage})`);
+    assert(a.tint, "a map other than the first has its own colour grade");
+    T.toTitle(); $("play").click(); document.querySelector('#modePick [data-mode="story"]').click();
+    assert(T.arcade().mode === "story" && T.state().stage === 1 && T.state().state === "ready", "Story starts at stage 1");
+  });
+  test("Arcade: no bosses, the ring goes 3D at 25 hits and keeps speeding up; bests are kept map by map", () => {
+    T.setStats(ZERO); T.startArcade(1); T.freezeRing(0, C.RING_Y);
+    T.setHits(24); throwAndSettle(0, C.RING_Y); T.step(2.6);
+    assert(!T.boss() && T.ringMode().mode === "tri", `25 hits in Arcade: no Crow King, the ring goes 3D (${T.ringMode().mode}, boss ${JSON.stringify(T.boss())})`);
+    T.setHits(49); assert(T.arcade().ramp === 1, "no extra speed yet"); T.setHits(80); assert(T.arcade().ramp > 1.1, `the ring should keep winding up (${T.arcade().ramp})`);
+    T.setHits(24); T.freezeRing(0, C.RING_Y);
+    const story = T.profile().bestScore;
+    for (let i = 0; i < 3; i++) throwAndSettle(3, C.RING_Y);
+    T.step(2);
+    const s = T.state(), rec = T.arcade().rec;
+    assert(s.screen === "over" && rec.runs === 1 && rec.score === s.score && rec.secs > 0, `the map's record should keep the run (${JSON.stringify(rec)})`);
+    assert(T.profile().bestScore === story, "an Arcade run must not touch the Story best (or the leaderboard)");
+    const dts = [...$("resStats").querySelectorAll("dt")].map(d => d.textContent);
+    assert(dts.includes("Survived") && /Map best/.test($("bestLine").textContent), `the stone should read like an Arcade run (${dts.join(", ")} / ${$("bestLine").textContent})`);
+    const secs = T.runStats().secs, sv = $("resStats").querySelectorAll("dd")[1].textContent;
+    assert(sv === T.mmss(secs), `Survived should read the run's time (${sv} for ${secs.toFixed(2)} s)`);
+    assert(T.mmss(59.85) === "00:59" && T.mmss(119.5) === "01:59" && T.mmss(60) === "01:00", `times are floored, never rounded into 00:00 (${T.mmss(59.85)}, ${T.mmss(119.5)})`);
+    $("again").click(); assert(T.arcade().mode === "arcade" && T.arcade().map === 1, "Toss again should replay the same map");
+    T.setStats({ arcade: { "1": { score: 99999, secs: 3, hits: 1, runs: 1 } } }); T.startArcade(1); T.step(1);
+    assert(/best 0:03/.test($("progLabel").textContent) && !$("prog").classList.contains("beat"), `the clock races the map's best time (${$("progLabel").textContent})`);
+    T.step(4); T.step(1);
+    assert(/new best!/.test($("progLabel").textContent) && $("prog").classList.contains("beat"), `outlasting it turns the bar gold (${$("progLabel").textContent})`);
+    T.start();
+  });
+  test("GAME OVER pops up when the last skull goes, then the headstone; ending the run skips it", () => {
+    fresh(); for (let i = 0; i < 2; i++) throwAndSettle(3, C.RING_Y);
+    assert(T.throwAt(3, C.RING_Y), "throw refused");
+    for (let i = 0; i < 600 && T.state().state !== "over"; i++) T.step(1 / 120);
+    T.step(0.3);
+    assert(T.gameOverShowing() && T.state().screen === "play", "GAME OVER should be up over the picture first");
+    assert(/GAME/.test($("gameOver").textContent) && /OVER/.test($("gameOver").textContent), "it should say GAME OVER");
+    T.step(1.6);
+    assert(T.state().screen === "over" && !T.gameOverShowing(), "then the headstone, and the words gone");
+    fresh(); T.pauseRun(); $("quitBtn").click(); $("quitBtn").click(); T.step(0.2);
+    assert(!T.gameOverShowing() && T.state().screen === "over", "ending the run from the pause menu goes straight to the stone");
+  });
+  test("Challenges come daily, weekly and monthly: three of each, and progress counts into all three", () => {
+    T.setStats(ZERO);
+    const w = T.weekly(), m = T.monthly();
+    assert(w.items.length === 3 && m.items.length === 3, "three weekly and three monthly challenges");
+    assert(T.periodKey("weekly", new Date(2026, 8, 21)) === T.periodKey("weekly", new Date(2026, 8, 27)) && T.periodKey("weekly", new Date(2026, 8, 27)) !== T.periodKey("weekly", new Date(2026, 8, 28)), "a week runs Monday to Sunday");
+    assert(T.periodKey("monthly", new Date(2026, 8, 1)) === T.periodKey("monthly", new Date(2026, 8, 30)) && T.periodKey("monthly", new Date(2026, 8, 30)) !== T.periodKey("monthly", new Date(2026, 9, 1)), "a month runs from the 1st");
+    const pools = T.challengePools();   // [least, most] a goal of each kind can pay
+    for (const [id, [wLo, wHi]] of Object.entries(pools.weekly)) {
+      const d = pools.daily[id], mo = pools.monthly[id];
+      assert(!d || wLo > d[1], `a weekly ${id} should always pay more than a daily one (${wLo} vs ${d && d[1]})`);
+      assert(mo && mo[0] > wHi, `a monthly ${id} should always pay more than a weekly one (${mo && mo[0]} vs ${wHi})`);
+    }
+    const item = { id: "throws", n: 2, reward: 400, have: 0, claimed: false }, filler = id => ({ id, n: 9999, reward: 5, have: 0, claimed: false });
+    T.setPeriod("weekly", { day: T.periodKey("weekly"), items: [item, filler("rims"), filler("bosses")] });
+    T.setPeriod("monthly", { day: T.periodKey("monthly"), items: [{ ...item, reward: 900 }, filler("rims"), filler("bosses")] });
+    fresh(); throwAndSettle(0, C.RING_Y); throwAndSettle(0, C.RING_Y);
+    assert(T.weekly().items[0].have >= 2 && T.monthly().items[0].have >= 2, "a throw should count toward the weekly and the monthly challenge");
+    const b0 = T.bones(); assert(T.claim(0, "weekly") && T.bones() === b0 + 400 && !T.claim(0, "weekly"), "a weekly claim pays once");
+    assert(T.claim(0, "monthly") && T.bones() === b0 + 1300, "a monthly claim pays");
+    T.openSheet("challenges"); const tabs = [...$("chalTabs").querySelectorAll("button")].map(b => b.textContent.trim());
+    assert(tabs.join() === "Daily,Weekly,Monthly", `the sheet should have Daily, Weekly and Monthly tabs (${tabs})`);
+    $("chalTabs").querySelector('[data-per="monthly"]').click();
+    assert(/monthly/.test($("chalWhat").textContent) && $("chalList").querySelectorAll(".chal.monthly").length === 3, "the Monthly tab shows the monthly three");
+    T.closeSheet();
+  });
+  test("Achievements: a milestone pays out once, a medal drops in, and the sheet lists them all", () => {
+    const all = T.achievements();
+    assert(all.length >= 30 && new Set(all.map(a => a.id)).size === all.length, `a good set of achievements (${all.length})`);
+    T.toTitle(); T.setStats({ ...ZERO, achievements: [], bones: 0, bonesTotal: 0, makes: 0 });
+    assert(!T.checkAchievements().includes("first-toss"), "nothing reached yet");
+    T.setStats({ makes: 1 }); const got = T.checkAchievements();
+    assert(got.includes("first-toss") && T.bones() === 25, `First Toss should unlock and pay 25 bones (${got}, ${T.bones()})`);
+    assert(!$("achPop").hidden && /First Toss/.test($("achPop").textContent), "a medal should drop in");
+    assert(!$("achPop").classList.contains("play"), "on the menus it drops in at the top");
+    assert(!T.checkAchievements().length && T.bones() === 25, "and only once");
+    assert(!$("achPip").hidden, "the Achievements button should flag something new");
+    T.toTitle(); T.openSheet("achievements");
+    assert($("achList").querySelectorAll(".ach").length === all.length && $("achList").querySelectorAll(".ach.got").length === 1, "the sheet lists every achievement, one done");
+    assert(/1 of/.test($("achCount").textContent) && $("achPip").hidden, "the count reads 1, and the flag clears once seen");
+    T.closeSheet();
+    fresh(); T.setStats({ achievements: [], perfects: 1 }); assert(T.checkAchievements().includes("bullseye"), "Bullseye should unlock mid-run");
+    const pop = $("achPop").getBoundingClientRect(), under = $("best").getBoundingClientRect().bottom;
+    assert($("achPop").classList.contains("play") && parseFloat($("achPop").style.top) >= under, `mid-run the medal sits under the score, not over it (top ${$("achPop").style.top}, best ends ${under.toFixed(0)})`);
+    T.toTitle(); T.setStats(ZERO);
+  });
+  test("The pause menu and the Curio Cart have their own music, and hand back to the act", () => {
+    fresh(); assert(T.music().want === "A", `a run plays act A (${T.music().want})`);
+    T.pauseRun(); assert(T.music().want === "pause", `paused should play the pause track (${T.music().want})`);
+    T.resumeRun(); assert(T.music().want === "A", "resuming hands back to the act");
+    T.toTitle(); T.openSheet("store"); assert(T.music().want === "shop", `the Curio Cart should play the shop track (${T.music().want})`);
+    T.closeSheet(); assert(T.music().want === "menu", "closing the Cart hands back to the menu tune");
+    assert(T.sfx().join() === "achievement,powerup,purchase", `the three recorded sounds ride inside the page (${T.sfx()})`);
+  });
+  test("A toss that clips the drawn power-up grabs it; one that misses the drawing doesn't", () => {
+    fresh(); toHit(6); assert(T.pickup(), "no power-up at 6 hits");
+    const rc = T.state().ring.rc, icon = rc * 0.42;
+    const clip = icon + C.SKULL_R * 0.45, wide = icon + C.SKULL_R * 0.8;
+    assert(!T.pickupHit({ x: wide, y: C.RING_Y, ringX: 0, ringY: C.RING_Y }), "a toss that only grazes the glow shouldn't grab it");
+    T.freezeRing(0, C.RING_Y); throwAndSettle(clip, C.RING_Y);
+    assert(T.state().lastResult.make && Object.keys(T.powers()).length === 1, `a toss whose skull overlaps the drawn power-up should grab it (off by ${clip.toFixed(3)}, old window ${(rc * 0.45).toFixed(3)})`);
+  });
+  test("The title skull's canvases spill past its letter, so an aura is never cut off", () => {
+    T.toTitle(); T.step(0.2);
+    const slot = $("mascot").getBoundingClientRect(), back = $("mascotBack").getBoundingClientRect(), front = $("mascotFront").getBoundingClientRect(), em = parseFloat(getComputedStyle($("mascot")).fontSize);
+    assert(front.width >= slot.width + em && back.width === front.width && front.bottom > slot.bottom, "the canvases should be wider and deeper than the letter slot");
+    assert(+getComputedStyle($("mascotBack")).zIndex < 0 && +getComputedStyle($("mascotFront")).zIndex > 0, "the back layer goes behind the lettering, the front one over it");
+    assert(/A lost cartoon from 1933/.test(document.querySelector(".tagline").textContent) && !/One skull/.test(document.querySelector(".tagline").textContent), "the tagline is just the one line");
+  });
+  test("The score follows the acts: menu, A, B and the boss, with the synth as the understudy", () => {
+    T.toTitle(); assert(T.music().want === "menu", `title plays ${T.music().want}`);
+    fresh(); assert(T.music().want === "A", `a run opens on ${T.music().want}`);
+    toHit(25); assert(T.music().want === "boss", `the mini-boss plays ${T.music().want}`);
+    T.step(2.6); T.hurtBoss(99); T.endThrow(); T.step(3.2);
+    assert(T.music().want === "B", `after the Crow King it should be act B, not ${T.music().want}`);
+    assert(!T.music().on, "the recorded reel should stay out of the way in sandbox");
+  });
+  test("The picture keeps moving: a busy frame stays well inside the budget", () => {
+    // a canary, not a benchmark: it only fires if a frame starts costing many times what it should
+    T.start(); ["zombie", "skeleton", "werewolf", "ghost"].forEach(w => T.forceSpawn(w));
+    for (let i = 0; i < 20; i++) T.step(0.1);
+    for (let i = 0; i < 40; i++) T.step(1 / 60);          // warm the cels and sprites first
+    const t0 = performance.now(); for (let i = 0; i < 120; i++) T.step(1 / 60);
+    const ms = (performance.now() - t0) / 120;
+    assert(ms < 60, `${ms.toFixed(1)} ms a frame with four wanderers on screen`);
+  });
+
+  T.sandbox(false); T.start(); T.pause(false);  // leave the game playable, player's saved data untouched
+  window.__skullTossResults = results;
+  const passed = results.filter(r => r.pass).length;
+  console.table(results);
+  const panel = document.createElement("pre");
+  panel.style.cssText = "position:fixed;left:12px;right:12px;bottom:12px;z-index:9;max-height:55vh;overflow:auto;margin:0;padding:12px 14px;background:rgba(7,8,11,.92);color:#EDE6D6;font:12px/1.5 ui-monospace,Menlo,monospace;border:1px solid rgba(237,230,214,.2);border-radius:6px;white-space:pre-wrap";
+  panel.textContent = `SKULL TOSS SPEC — ${passed}/${results.length} passed\n\n` +
+    results.map(r => `${r.pass ? "✓" : "✗"} ${r.name}${r.pass ? "" : "\n    " + r.error}`).join("\n");
+  document.body.appendChild(panel);
+})();

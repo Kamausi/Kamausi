@@ -1,0 +1,157 @@
+  // ───────────────────────── sheets (full-screen on phones, a panel on desktop) ─────────────────────────
+  let sheetOpener = null;
+  function openSheet(name) {
+    if (!$("sheet-" + name) || sheet === name) return;
+    if (sheet) closeSheet(false, true);
+    sheet = name; cancelAim();
+    if (!sheetOpener || !sheetOpener.isConnected) sheetOpener = document.activeElement;
+    $("sheet-" + name).hidden = false; $("sheetScrim").hidden = false;
+    renderSheet(name); Sound.ui("open");
+    if (name === "store") Sound.musicScene("shop", true);   // the Curio Cart has its own tune
+    $("sheet-" + name).querySelector("[data-back]").focus({ preventScroll: true });
+  }
+  function closeSheet(sound = true, swap = false) {
+    if (!sheet) return;
+    const was = sheet;
+    $("sheet-" + was).hidden = true; sheet = null;
+    if (!swap) $("sheetScrim").hidden = true;
+    disarm(); $("codeBox").hidden = true;
+    const n = $("prof-name"); if (document.activeElement === n) n.blur();
+    if (was === "customize") { markSeen(); shop.sel = null; }
+    if (was === "board") Board.unwatch();
+    if (was === "store") { cart.sel = null; Sound.musicScene("shop", false); }
+    if (sound) Sound.ui("close");
+    if (!swap) { const o = sheetOpener; sheetOpener = null; if (o && o.isConnected && o.focus) o.focus({ preventScroll: true }); }
+  }
+  function renderSheet(name) {
+    if (name === "settings") renderSettings();
+    else if (name === "profile") { renderProfile(); renderSave(); }
+    else if (name === "customize") renderShop();
+    else if (name === "challenges") renderChallenges();
+    else if (name === "play") renderPlay();
+    else if (name === "achievements") renderAchievements();
+    else if (name === "board") renderBoard();
+    else if (name === "store") renderStore();
+  }
+  document.addEventListener("click", e => {
+    const open = e.target.closest("[data-sheet]"); if (open) { sheetOpener = open; openSheet(open.dataset.sheet); return; }
+    if (e.target.closest("[data-back]")) closeSheet();
+  });
+  $("sheetScrim").addEventListener("click", () => closeSheet());
+
+  // ───────────────────────── settings ─────────────────────────
+  const GUIDE_NOTE = { full: "Full path and crosshair", short: "Only the start of the arc", off: "No guide. Pure instinct." };
+  const SLIDERS = ["music", "sfx", "amb"];
+  function renderSettings() {
+    const set = (id, v) => $(id).setAttribute("aria-checked", String(!!v));
+    set("set-sound", settings.sound); set("set-shake", settings.shake);
+    const canVibe = typeof navigator.vibrate === "function";
+    $("set-vibe").disabled = !canVibe; set("set-vibe", canVibe && settings.vibe);
+    $("vibeNote").textContent = canVibe ? "Buzz on hits and misses" : "Not supported on this device";
+    for (const k of SLIDERS) {
+      $("set-" + k).value = settings[k]; $("out-" + k).textContent = settings[k];
+      $("row-" + k).classList.toggle("off", !settings.sound); $("set-" + k).disabled = !settings.sound;
+    }
+    for (const b of $("set-guide").querySelectorAll("button")) b.setAttribute("aria-checked", String(b.dataset.v === settings.guide));
+    $("guideNote").textContent = GUIDE_NOTE[settings.guide];
+    for (const b of $("set-film").querySelectorAll("button")) b.setAttribute("aria-checked", String(b.dataset.v === settings.film));
+    $("filmNote").textContent = FILM_NOTE[settings.film];
+    for (const b of $("set-camera").querySelectorAll("button")) b.setAttribute("aria-checked", String(b.dataset.v === settings.camera));
+    $("cameraNote").textContent = CAMERA_NOTE[settings.camera];
+    $("set-shake").disabled = settings.camera === "still";   // a locked-off camera doesn't jolt either
+    for (const b of $("set-voice").querySelectorAll("button")) b.setAttribute("aria-checked", String(b.dataset.v === settings.voice));
+    $("voiceNote").textContent = VOICE_NOTE[settings.voice];
+  }
+  const FILM_NOTE = { full: "Grain, dust, scratches and a wobbly gate", light: "Just a little grain", off: "A clean print" };
+  const CAMERA_NOTE = { full: "Leans with your aim, follows the throw", gentle: "The same moves, smaller", still: "A locked-off camera" };
+  const VOICE_NOTE = { babble: "Cartoon mumbles when you grab him", spoken: "Your device reads his lines out loud", off: "A strong, silent skull" };
+  $("set-voice").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    settings.voice = b.dataset.v; persist(); renderSettings(); Sound.ui("tick");
+    if (settings.voice !== "off") { const was = voice.said; voice.said = 0; voice.last = -99; const test = voice.test; voice.test = true; sayLine("grab"); voice.test = test; voice.said = was; }
+  });
+  $("set-camera").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    settings.camera = b.dataset.v; persist(); renderSettings(); Sound.ui("tick");
+  });
+  $("set-film").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    settings.film = b.dataset.v; persist(); renderSettings(); Sound.ui("tick");
+  });
+  function toggleSetting(key) { settings[key] = !settings[key]; persist(); Sound.apply(); renderSettings(); Sound.ui("toggle"); if (key === "vibe" && settings.vibe) buzz(20); }
+  $("set-sound").addEventListener("click", () => toggleSetting("sound"));
+  $("set-vibe").addEventListener("click", () => toggleSetting("vibe"));
+  $("set-shake").addEventListener("click", () => toggleSetting("shake"));
+  for (const key of SLIDERS) {
+    const el = $("set-" + key);
+    el.addEventListener("input", () => { settings[key] = Number(el.value); $("out-" + key).textContent = el.value; Sound.apply(); if (paused) Sound.setPaused(true); });
+    el.addEventListener("change", () => { persist(); if (key === "sfx") Sound.ui("equip"); });
+  }
+  $("set-guide").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    settings.guide = b.dataset.v; persist(); renderSettings(); Sound.ui("tick");
+  });
+  $("resetBtn").addEventListener("click", e => arm(e.currentTarget, "Tap to confirm", () => {
+    profile = cleanProfile({ name: profile.name, gift: 1 }); cos = { ...DEFAULT_COS, updatedAt: Date.now() };
+    ensureDaily(); persist(300); applyCosmetics(); updateHud(); renderSettings(); toast("Progress reset"); Sound.ui("deny");
+  }));
+
+  // ───────────────────────── profile ─────────────────────────
+  function renderProfile() {
+    const n = $("prof-name"); if (document.activeElement !== n) n.value = profile.name;
+    const r = rankFor(profile.makes);
+    $("rankName").textContent = r.name;
+    $("profTitle").textContent = titleName();
+    $("rankBar").style.width = r.next ? `${Math.round(((profile.makes - r.from) / (r.next[0] - r.from)) * 100)}%` : "100%";
+    $("rankNext").textContent = r.next ? `${r.next[0] - profile.makes} more makes to ${r.next[1]}` : "Highest rank. The graveyard is yours.";
+    const P = profile, N = fmtN, pct = (a, b) => (b ? Math.round((a / b) * 100) + "%" : "—");
+    const mins = s => s < 3600 ? `${Math.round(s / 60)}m` : `${Math.floor(s / 3600)}h ${String(Math.round((s % 3600) / 60)).padStart(2, "0")}m`;
+    const groups = [
+      ["Career", "", [["Best score", N(P.bestScore)], ["Most hits in a run", P.best], ["Highest stage", P.bestStage || 1], ["Runs", N(P.games)], ["Points, all time", N(P.scoreTotal)], ["Time played", mins(P.playTime)]]],
+      ["Tossing", "", [["Throws", N(P.throws)], ["Hits", N(P.makes)], ["Accuracy", pct(P.makes, P.throws)], ["Perfects", N(P.perfects)], ["Perfect rate", pct(P.perfects, P.makes)], ["Rim-ins", N(P.rims)],
+        ["Best combo", `×${P.bestStreak}`], ["Perfects in a row", P.bestPerfStreak], ["Most skulls held", P.peakLives], ["Last-skull hits", N(P.clutch)], ["Times you grabbed Morty", N(P.grabs)]]],
+      ["Bosses", "", [["Crow King beaten", P.miniKills], ["…without a miss", P.miniFlawless], ["Pumpkin King beaten", P.bossKills], ["…without a miss", P.bossFlawless]]],
+      ["Power-ups", "", [["Grabbed", N(P.powerups)], ["Cursed skulls taken", P.cursed], ["Second chances used", P.saves]]],
+      ["Hall of Shame", "shame", [["Misses", N(P.misses)], ["Bonks", N(P.bonks)], ["Wide", N(P.wides)], ["Too high", N(P.overs)], ["Too low", N(P.lows)], ["Fell short", N(P.shorts)],
+        ["Hit the post", N(P.posts)], ["Clanked off the rim", N(P.clanks)], ["Seeds to the face", N(P.seeds)], ["Runs without a hit", N(P.zeroRuns)], ["Out in 5 throws", N(P.quickDeaths)]]],
+      ["Bones & the Vault", "", [["Bones earned", N(P.bonesTotal)], ["Bones spent", N(P.bonesSpent)], ["Curio Cart buys", N(P.shopBuys)], ["Coffins opened", N(P.coffins)], ["Vault", `${countUnlocked()}/${countAll()}`], ["Prizes for failing", `${countWon("shame")}/${countKind("shame")}`], ["Boss prizes", `${countWon("boss")}/${countKind("boss")}`]]]
+    ];
+    $("stats").innerHTML = groups.map(([h, cls, rows]) => `<h3 class="stat-h ${cls}">${h}</h3><dl class="stats">${rows.map(([k, v]) => `<div class="stat"><dt>${k}</dt><dd>${v}</dd></div>`).join("")}</dl>`).join("");
+  }
+  const countKind = flag => KINDS.reduce((s, k) => s + CATALOG[k].filter(it => it[flag]).length, 0);
+  const countWon = flag => KINDS.reduce((s, k) => s + CATALOG[k].filter(it => it[flag] && canUse(k, it)).length, 0);
+  const countAll = () => KINDS.reduce((s, k) => s + CATALOG[k].length, 0);
+  const countUnlocked = () => KINDS.reduce((s, k) => s + CATALOG[k].filter(it => canUse(k, it)).length, 0);
+  function ago(ms) { const s = Math.round((Date.now() - ms) / 1000); return s < 10 ? "just now" : s < 60 ? `${s}s ago` : `${Math.round(s / 60)} min ago`; }
+  function renderSave() {
+    const title = $("saveTitle"), status = $("saveStatus"), av = $("saveAvatar"), icon = $("saveIcon");
+    const me = Cloud.me;
+    if (me && Cloud.ref) {
+      title.textContent = me.name ? `Signed in as ${me.name}` : "Signed in";
+      av.hidden = !me.avatarUrl; icon.hidden = !!me.avatarUrl; if (me.avatarUrl) av.src = me.avatarUrl;
+      const s = { ok: ["ok", `Synced to your account ${ago(Cloud.lastSync)}`], busy: ["busy", "Syncing…"], error: ["err", "Can't reach your account. Saved on this device"], connecting: ["busy", "Connecting…"] }[Cloud.state] || ["ok", "Synced"];
+      status.className = "status " + s[0]; status.textContent = s[1];
+    } else {
+      av.hidden = true; icon.hidden = false;
+      title.textContent = Cloud.state === "connecting" ? "Checking your account…" : "Saved on this device";
+      status.className = "status"; status.textContent = "Use a save code to move progress to another device";
+    }
+  }
+  $("copyCodeBtn").addEventListener("click", () => {
+    const code = exportCode(), box = $("codeBox"), ta = $("codeText");
+    const showManual = () => { box.hidden = false; ta.value = code; ta.readOnly = true; $("codeApply").hidden = true; ta.focus(); ta.select(); toast("Save code ready. Copy it"); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(code).then(() => { box.hidden = true; toast("<b>Save code copied</b> · paste it on your other device"); Sound.ui("equip"); }, showManual);
+    else showManual();
+  });
+  $("loadCodeBtn").addEventListener("click", () => {
+    const box = $("codeBox"), ta = $("codeText");
+    box.hidden = false; ta.readOnly = false; ta.value = ""; ta.placeholder = "Paste a save code (starts with SKULL1.)"; $("codeApply").hidden = false; ta.focus();
+  });
+  $("codeCancel").addEventListener("click", () => { $("codeBox").hidden = true; });
+  $("codeApply").addEventListener("click", () => {
+    if (importCode($("codeText").value)) {
+      $("codeBox").hidden = true; persist(300); applyCosmetics(); updateHud(); renderProfile(); toast("<b>Progress loaded</b> · merged with this device"); Sound.unlock();
+    } else { toast("That code didn't work. Check it was copied in full"); Sound.ui("deny"); }
+  });
+  $("prof-name").addEventListener("input", e => { profile.name = e.target.value.replace(/\s+/g, " ").trimStart().slice(0, 16); persist(2500); });
+  $("prof-name").addEventListener("change", e => { profile.name = profile.name.trim(); e.target.value = profile.name; persist(800); });

@@ -1,0 +1,199 @@
+  // ───────────────────────── the Vault, tripled ─────────────────────────
+  // Three new shelves (hats, auras, and poles for the ring) and a lot more on the old ones. Some things can
+  // only be won: failing in style (the Hall of Shame), beating the bosses, or bought from the Curio Cart
+  // (shop: true — never sold in the Vault). Still looks only: nothing here changes how the skull flies.
+  const MORE = {
+    skull: [
+      { id: "cookie", name: "Choc-Chip Cookie", s: 1, price: 550 },           { id: "cow", name: "Moo Skull", s: 1, price: 600 },
+      { id: "marble", name: "Marble Bust", s: 2, price: 1100 },                { id: "chocolate", name: "Chocolate", s: 2, price: 1200 },
+      { id: "jawbreaker", name: "Jawbreaker", s: 2, price: 1300 },             { id: "watermelon", name: "Watermelon", s: 2, price: 1300 },
+      { id: "tiger", name: "Tiger", s: 2, price: 1500 },                       { id: "zombie", name: "Zombie", s: 2, price: 1500, req: ["games", 60] },
+      { id: "snowman", name: "Snowman", s: 2, price: 1600 },                   { id: "moon", name: "Moon Rock", s: 3, price: 2600 },
+      { id: "glow", name: "Glow-in-the-Dark", s: 3, price: 2900 },             { id: "robot", name: "Robo-Skull", s: 3, price: 3200 },
+      { id: "mummy", name: "Mummy", s: 3, price: 3300 },                        { id: "blueprint", name: "Blueprint", s: 3, price: 3400 },
+      { id: "neon", name: "Neon Sign", s: 3, price: 3600, req: ["bestScore", 40000] }, { id: "ghostly", name: "See-Through", s: 3, price: 3800 },
+      { id: "onyx", name: "Onyx", s: 4, price: 6000 },                          { id: "lava", name: "Molten", s: 4, price: 7500 },
+      { id: "cracked", name: "Cracked & Taped", s: 2, req: ["bonks", 200], shame: true },
+      { id: "harvest", name: "Harvest Gold", s: 4, req: ["bossKills", 3], boss: true },
+      { id: "disco", name: "Disco Ball", s: 4, price: 9000, shop: true },      { id: "bubblegum", name: "Bubblegum", s: 3, price: 4200, shop: true },
+      { id: "stained", name: "Stained Glass", s: 4, price: 9500, shop: true }
+    ],
+    eyes: [
+      { id: "googly", name: "Googly Eyes", s: 1, price: 450 },     { id: "cat", name: "Cat's Eyes", s: 2, price: 900 },
+      { id: "shifty", name: "Shifty", s: 1, price: 500 },          { id: "moons", name: "Crescent Moons", s: 2, price: 1100 },
+      { id: "clover", name: "Lucky Clovers", s: 2, price: 1300 },  { id: "led", name: "Red LEDs", s: 3, price: 2600 },
+      { id: "bloodshot", name: "Bloodshot", s: 2, price: 1000 },   { id: "fire", name: "Eye Fires", s: 3, price: 3100 },
+      { id: "sparkle", name: "Sparkly", s: 3, price: 2900 },
+      { id: "tears", name: "Waterworks", s: 2, req: ["misses", 250], shame: true },
+      { id: "question", name: "Question Marks", s: 2, req: ["wides", 60], shame: true },
+      { id: "target", name: "Crosshairs", s: 3, req: ["miniFlawless", 1], boss: true },
+      { id: "diamond", name: "Diamonds", s: 4, price: 8000, shop: true }
+    ],
+    teeth: [
+      { id: "braces", name: "Braces", s: 1, price: 500 },         { id: "bucktooth", name: "Buck Teeth", s: 1, price: 550 },
+      { id: "gap", name: "Gap Tooth", s: 1, price: 400 },         { id: "piano", name: "Piano Keys", s: 2, price: 1400 },
+      { id: "shark", name: "Shark", s: 3, price: 2700 },          { id: "candycorn", name: "Candy Corn", s: 2, price: 1200 },
+      { id: "grill", name: "Gold Grill", s: 3, price: 3500, req: ["bestScore", 60000] },
+      { id: "rotten", name: "Rotten", s: 2, req: ["quickDeaths", 10], shame: true },
+      { id: "diamond", name: "Diamond Grill", s: 4, price: 9000, shop: true }
+    ],
+    paint: [
+      { id: "racing", name: "Racing Stripe", s: 1, price: 350 },  { id: "zebra", name: "Zebra", s: 1, price: 450 },
+      { id: "tartan", name: "Tartan", s: 2, price: 900 },         { id: "leopard", name: "Leopard", s: 2, price: 950 },
+      { id: "camo", name: "Camouflage", s: 2, price: 950 },       { id: "argyle", name: "Argyle", s: 2, price: 1000 },
+      { id: "barber", name: "Barber Pole", s: 2, price: 1100 },   { id: "harlequin", name: "Harlequin", s: 2, price: 1200 },
+      { id: "sprinkles", name: "Sprinkles", s: 2, price: 1250 },  { id: "bolt", name: "Lightning Bolt", s: 2, price: 1300 },
+      { id: "flames", name: "Hot-Rod Flames", s: 3, price: 2600 }, { id: "rainbow", name: "Rainbow", s: 3, price: 2800 },
+      { id: "circuit", name: "Circuit Board", s: 3, price: 3000 }, { id: "marigold", name: "Marigolds", s: 3, price: 3200 },
+      { id: "galaxy", name: "Galaxy", s: 4, price: 6500 },
+      { id: "tiretracks", name: "Tire Tracks", s: 2, req: ["shorts", 40], shame: true },
+      { id: "eightball", name: "Eight Ball", s: 3, price: 4400, shop: true }
+    ],
+    trail: [
+      { id: "hearts", name: "Hearts", s: 1, price: 500 },         { id: "leaves", name: "Autumn Leaves", s: 1, price: 500 },
+      { id: "snow", name: "Snowfall", s: 2, price: 900 },         { id: "eyeballs", name: "Eyeballs", s: 2, price: 1300 },
+      { id: "teeth", name: "Loose Teeth", s: 2, price: 1100 },    { id: "candy", name: "Wrapped Candy", s: 2, price: 1200 },
+      { id: "rainbow", name: "Rainbow", s: 3, price: 3200 },       { id: "slime", name: "Slime", s: 3, price: 2800 },
+      { id: "pixels", name: "Pixel Dust", s: 3, price: 2600 },     { id: "rings", name: "Smoke Rings", s: 2, price: 1400 },
+      { id: "zzz", name: "Snore Trail", s: 2, req: ["zeroRuns", 5], shame: true },
+      { id: "tp", name: "Toilet Paper", s: 2, req: ["clanks", 50], shame: true },
+      { id: "feathers", name: "Crow Feathers", s: 3, req: ["miniKills", 3], boss: true },
+      { id: "seeds", name: "Pumpkin Seeds", s: 3, req: ["bossKills", 1], boss: true },
+      { id: "coins", name: "Gold Coins", s: 4, price: 7000, shop: true }, { id: "cards", name: "Playing Cards", s: 3, price: 4000, shop: true }
+    ],
+    impact: [
+      { id: "pow", name: "POW!", s: 1, price: 450 },             { id: "zonk", name: "ZONK!", s: 1, price: 450 },
+      { id: "boing", name: "BOING!", s: 2, price: 900 },         { id: "thwack", name: "THWACK!", s: 2, price: 1000 },
+      { id: "sploosh", name: "SPLOOSH!", s: 2, price: 1300 },    { id: "zap", name: "ZAP!", s: 3, price: 2600 },
+      { id: "blammo", name: "BLAMMO!", s: 3, price: 3000 },
+      { id: "whoops", name: "WHOOPS!", s: 2, req: ["misses", 200], shame: true },
+      { id: "caw", name: "CAW!", s: 3, req: ["miniKills", 1], boss: true },
+      { id: "squash", name: "SQUASH!", s: 3, req: ["bossKills", 2], boss: true },
+      { id: "kapow", name: "KA-POW!", s: 4, price: 7000, shop: true }
+    ],
+    ring: [
+      { id: "rope", name: "Braided Rope", s: 1, price: 600 },    { id: "tire", name: "Old Tire", s: 1, price: 650 },
+      { id: "donut", name: "Frosted Donut", s: 2, price: 1300 }, { id: "wreath", name: "Holly Wreath", s: 2, price: 1400 },
+      { id: "hula", name: "Hula Hoop", s: 2, price: 1500 },      { id: "snake", name: "Ouroboros", s: 3, price: 3000 },
+      { id: "neon", name: "Neon Tube", s: 3, price: 3200 },      { id: "rainbow", name: "Rainbow", s: 3, price: 3500 },
+      { id: "halo", name: "Halo", s: 4, price: 7000, req: ["bossFlawless", 1] },
+      { id: "toilet", name: "Toilet Seat", s: 2, req: ["posts", 30], shame: true },
+      { id: "vine", name: "Pumpkin Vine", s: 3, req: ["bossKills", 1], boss: true },
+      { id: "nest", name: "Crow's Nest", s: 3, req: ["miniKills", 2], boss: true },
+      { id: "lifebuoy", name: "Lifebuoy", s: 3, price: 4500, shop: true }, { id: "saturn", name: "Saturn", s: 4, price: 9000, shop: true }
+    ],
+    aim: [
+      { id: "pink", name: "Bubblegum Pink", s: 1, price: 350 },  { id: "mint", name: "Mint", s: 1, price: 350 },
+      { id: "ocean", name: "Deep Ocean", s: 2, price: 800 },     { id: "sunset", name: "Sunset", s: 2, price: 1200 },
+      { id: "candy", name: "Candy Stripe", s: 2, price: 1300 },  { id: "ghost", name: "Ghostly", s: 3, price: 2400 },
+      { id: "bones", name: "Tiny Bones", s: 3, req: ["miniKills", 1], boss: true },
+      { id: "starry", name: "Starry", s: 4, price: 6000, shop: true }
+    ],
+    reel: [
+      { id: "noir", name: "Film Noir", s: 2, price: 1100 },     { id: "cyan", name: "Cyanotype", s: 3, price: 2400 },
+      { id: "infra", name: "Infrared", s: 3, price: 2800 },    { id: "twostrip", name: "Two-Strip Color", s: 3, price: 3200 },
+      { id: "bootleg", name: "Bootleg Copy", s: 4, price: 6000, shop: true }
+    ],
+    title: [
+      { id: "airball", name: "Airball Artist", s: 1, req: ["wides", 100], shame: true },       { id: "sky", name: "Sky Botherer", s: 1, req: ["overs", 60], shame: true },
+      { id: "worm", name: "Worm Food", s: 1, req: ["lows", 60], shame: true },                { id: "postoffice", name: "Post Office", s: 2, req: ["posts", 25], shame: true },
+      { id: "regret", name: "Rim Shot Regret", s: 2, req: ["clanks", 60], shame: true },       { id: "pro", name: "Professional Misser", s: 3, req: ["misses", 500], shame: true },
+      { id: "gravity", name: "Gravity's Favourite", s: 2, req: ["shorts", 60], shame: true },  { id: "nap", name: "Nap Champion", s: 2, req: ["zeroRuns", 10], shame: true },
+      { id: "speedrun", name: "Speedrun to Nowhere", s: 2, req: ["quickDeaths", 15], shame: true }, { id: "seedmagnet", name: "Seed Magnet", s: 2, req: ["seeds", 20], shame: true },
+      { id: "crowcrusher", name: "Crow Crusher", s: 2, req: ["miniKills", 1], boss: true },     { id: "birdbrain", name: "Birdbrain Breaker", s: 3, req: ["miniKills", 10], boss: true },
+      { id: "featherweight", name: "Featherweight Champ", s: 3, req: ["miniFlawless", 1], boss: true },
+      { id: "smasher", name: "Pumpkin Smasher", s: 3, req: ["bossKills", 1], boss: true },     { id: "gourdlord", name: "Gourd Lord", s: 4, req: ["bossKills", 5], boss: true },
+      { id: "harvest", name: "Flawless Harvest", s: 4, req: ["bossFlawless", 1], boss: true }, { id: "tripper", name: "Stage Tripper", s: 3, req: ["bestStage", 3], boss: true },
+      { id: "phantom", name: "Five-Stage Phantom", s: 4, req: ["bestStage", 5], boss: true },
+      { id: "roller", name: "High Roller", s: 3, req: ["bestScore", 50000] },               { id: "sixfig", name: "Six-Figure Skull", s: 4, req: ["bestScore", 100000] },
+      { id: "hungry", name: "Power Hungry", s: 2, req: ["powerups", 50] },                    { id: "cursedproud", name: "Cursed & Proud", s: 2, req: ["cursed", 10] },
+      { id: "spender", name: "Big Spender", s: 3, req: ["bonesSpent", 20000] },               { id: "raider", name: "Coffin Raider", s: 2, req: ["coffins", 10] },
+      { id: "nightowl", name: "Night Owl", s: 2, req: ["playTime", 3600] },                   { id: "grabby", name: "Skull Grabber", s: 1, req: ["grabs", 500] },           { id: "customer", name: "Esteemed Customer", s: 3, req: ["shopBuys", 10] }
+    ],
+    hat: [
+      { id: "none", name: "Bare Head" },
+      { id: "bowler", name: "Bowler", s: 1, price: 400 },            { id: "fez", name: "Fez", s: 1, price: 450 },
+      { id: "party", name: "Party Hat", s: 1, price: 350 },          { id: "paper", name: "Paper Crown", s: 1, price: 300 },
+      { id: "chef", name: "Chef's Toque", s: 1, price: 500 },        { id: "boater", name: "Straw Boater", s: 1, price: 500 },
+      { id: "beret", name: "Beret", s: 1, price: 450 },              { id: "bellhop", name: "Bellhop Cap", s: 1, price: 550 },
+      { id: "cone", name: "Traffic Cone", s: 1, price: 400 },        { id: "tophat", name: "Top Hat", s: 2, price: 1200 },
+      { id: "propeller", name: "Propeller Beanie", s: 2, price: 1100 }, { id: "witch", name: "Witch Hat", s: 2, price: 1300 },
+      { id: "tricorn", name: "Pirate Tricorn", s: 2, price: 1400 },  { id: "viking", name: "Viking Helmet", s: 2, price: 1500 },
+      { id: "cowboy", name: "Ten-Gallon", s: 2, price: 1300 },       { id: "grad", name: "Mortarboard", s: 2, price: 1200, req: ["makes", 500] },
+      { id: "devil", name: "Devil Horns", s: 2, price: 1200 },       { id: "bunny", name: "Bunny Ears", s: 2, price: 1100 },
+      { id: "antlers", name: "Antlers", s: 2, price: 1300 },         { id: "candle", name: "Candle", s: 2, price: 1000 },
+      { id: "arrow", name: "Arrow Through", s: 2, price: 1000 },     { id: "lampshade", name: "Lampshade", s: 2, price: 900 },
+      { id: "mushroom", name: "Toadstool", s: 2, price: 1200 },      { id: "cheese", name: "Cheese Wedge", s: 2, price: 1100 },
+      { id: "foil", name: "Tin Foil Hat", s: 2, price: 1000 },       { id: "snail", name: "Snail Friend", s: 2, price: 1300 },
+      { id: "headphones", name: "Headphones", s: 2, price: 1400 },   { id: "jester", name: "Jester Cap", s: 3, price: 2800 },
+      { id: "halo", name: "Halo", s: 3, price: 3000, req: ["perfects", 150] }, { id: "nest", name: "Bird's Nest", s: 3, price: 3200 },
+      { id: "fishbowl", name: "Fishbowl", s: 3, price: 3400 },       { id: "pancakes", name: "Pancake Stack", s: 3, price: 3000 },
+      { id: "teapot", name: "Teapot", s: 3, price: 2900 },           { id: "plume", name: "Plumed Helmet", s: 3, price: 3600 },
+      { id: "ufo", name: "Tiny UFO", s: 4, price: 7500 },            { id: "brain", name: "Big Brain Jar", s: 4, price: 8000 },
+      { id: "dunce", name: "Dunce Cap", s: 2, req: ["misses", 300], shame: true },
+      { id: "plunger", name: "Plunger", s: 2, req: ["posts", 20], shame: true },
+      { id: "bandage", name: "Bandaged Noggin", s: 2, req: ["bonks", 150], shame: true },
+      { id: "bag", name: "Paper Bag of Shame", s: 3, req: ["zeroRuns", 8], shame: true },
+      { id: "crowcrown", name: "The Crow King's Crown", s: 3, req: ["miniKills", 1], boss: true },
+      { id: "crowkid", name: "Crow Chick", s: 4, req: ["miniFlawless", 1], boss: true },
+      { id: "pumpkinhelm", name: "Pumpkin Helm", s: 3, req: ["bossKills", 1], boss: true },
+      { id: "goldcrown", name: "Golden Gourd Crown", s: 4, req: ["bossFlawless", 1], boss: true },
+      { id: "laurel", name: "Stage Five Laurels", s: 4, req: ["bestStage", 5], boss: true },
+      { id: "cake", name: "Birthday Cake", s: 3, price: 4500, shop: true }, { id: "chicken", name: "Rubber Chicken", s: 3, price: 4000, shop: true },
+      { id: "icecream", name: "Dropped Ice Cream", s: 3, price: 4200, shop: true }, { id: "windup", name: "Wind-Up Key", s: 3, price: 4800, shop: true },
+      { id: "lighthouse", name: "Lighthouse", s: 4, price: 9500, shop: true }, { id: "chandelier", name: "Chandelier", s: 4, price: 12000, shop: true }
+    ],
+    aura: [
+      { id: "none", name: "No Aura" },
+      { id: "smoke", name: "Smoke Signals", s: 1, price: 500 },      { id: "bubbles", name: "Bubble Bath", s: 1, price: 500 },
+      { id: "leaves", name: "Autumn Swirl", s: 1, price: 550 },      { id: "moths", name: "Moth Magnet", s: 1, price: 600 },
+      { id: "stars", name: "Starstruck", s: 2, price: 1200 },        { id: "hearts", name: "Lovestruck", s: 2, price: 1200 },
+      { id: "notes", name: "Jukebox", s: 2, price: 1300 },           { id: "glitter", name: "Glitter", s: 2, price: 1400 },
+      { id: "snow", name: "Blizzard", s: 2, price: 1400 },           { id: "toxic", name: "Toxic Fumes", s: 2, price: 1500 },
+      { id: "candy", name: "Sweet Tooth", s: 2, price: 1500 },       { id: "fireflies", name: "Fireflies", s: 2, price: 1600 },
+      { id: "steam", name: "Hot Head", s: 2, price: 1300 },          { id: "fire", name: "Hellfire", s: 3, price: 3000 },
+      { id: "bats", name: "Bat Swarm", s: 3, price: 3200 },          { id: "ghosts", name: "Poltergeists", s: 3, price: 3400 },
+      { id: "eyes", name: "The Watchers", s: 3, price: 3500 },       { id: "static", name: "Static Shock", s: 3, price: 3300 },
+      { id: "holy", name: "Holy Glow", s: 3, price: 3600, req: ["perfStreak", 5] }, { id: "rainbow", name: "Rainbow Arc", s: 4, price: 7000 },
+      { id: "flies", name: "Stinker", s: 1, req: ["zeroRuns", 3], shame: true },
+      { id: "raincloud", name: "Personal Raincloud", s: 2, req: ["misses", 150], shame: true },
+      { id: "zzz", name: "Snoozefest", s: 2, req: ["quickDeaths", 5], shame: true },
+      { id: "question", name: "Befuddled", s: 2, req: ["wides", 40], shame: true },
+      { id: "feathers", name: "Crow's Court", s: 3, req: ["miniKills", 2], boss: true },
+      { id: "seeds", name: "Seed Storm", s: 3, req: ["bossKills", 2], boss: true },
+      { id: "royal", name: "Royal Aura", s: 4, req: ["bossFlawless", 1], boss: true },
+      { id: "coins", name: "Money Bags", s: 4, price: 8000, shop: true }, { id: "cards", name: "House of Cards", s: 3, price: 4500, shop: true },
+      { id: "void", name: "Black Hole", s: 4, price: 10000, shop: true }
+    ],
+    pole: [
+      { id: "wood", name: "Wooden Post" },
+      { id: "birch", name: "Birch Branch", s: 1, price: 400 },       { id: "bamboo", name: "Bamboo", s: 1, price: 400 },
+      { id: "candy", name: "Candy Cane", s: 1, price: 500 },         { id: "rake", name: "Garden Rake", s: 1, price: 450 },
+      { id: "barber", name: "Barber Pole", s: 2, price: 1100 },      { id: "bones", name: "Bone Stack", s: 2, price: 1300 },
+      { id: "lamp", name: "Gas Lamp", s: 2, price: 1400 },           { id: "pitchfork", name: "Pitchfork", s: 2, price: 1200 },
+      { id: "broom", name: "Witch's Broom", s: 2, price: 1300 },     { id: "neon", name: "Neon Tube", s: 3, price: 2800 },
+      { id: "column", name: "Marble Column", s: 3, price: 3000 },    { id: "skulls", name: "Skull Totem", s: 3, price: 3400 },
+      { id: "chain", name: "Hanging Chain", s: 3, price: 3200 },     { id: "balloons", name: "Balloons", s: 3, price: 3600 },
+      { id: "tentacle", name: "Tentacle", s: 4, price: 7000 },
+      { id: "plunger", name: "Giant Plunger", s: 2, req: ["posts", 40], shame: true },
+      { id: "vine", name: "Beanstalk", s: 3, req: ["bossKills", 1], boss: true },
+      { id: "perch", name: "Crow's Perch", s: 3, req: ["miniKills", 3], boss: true },
+      { id: "gold", name: "Solid Gold Post", s: 4, price: 8500, shop: true }, { id: "rocket", name: "Rocket", s: 4, price: 11000, shop: true }
+    ]
+  };
+  for (const [k, list] of Object.entries(MORE)) (CATALOG[k] = CATALOG[k] || []).push(...list);
+  KINDS.push("hat", "aura", "pole");
+  Object.assign(KIND_LABEL, { hat: "hat", aura: "aura", pole: "ring pole" });
+  Object.assign(DEFAULT_COS, { hat: "none", aura: "none", pole: "wood" });
+  Object.assign(REQ_TEXT, {
+    bestScore: n => `Score ${fmtN(n)} in one run`, scoreTotal: n => `${fmtN(n)} points in all`, bestStage: n => `Reach stage ${n}`,
+    miniKills: n => n > 1 ? `Beat the Crow King ${n} times` : "Beat the Crow King", miniFlawless: n => "Beat the Crow King without a miss",
+    bossKills: n => n > 1 ? `Beat the Pumpkin King ${n} times` : "Beat the Pumpkin King", bossFlawless: n => "Beat the Pumpkin King without a miss",
+    wides: n => `Miss wide ${n} times`, overs: n => `Throw too high ${n} times`, lows: n => `Throw too low ${n} times`, posts: n => `Hit the post ${n} times`,
+    shorts: n => `Fall short ${n} times`, clanks: n => `Clank off the rim ${n} times`, seeds: n => `Eat ${n} pumpkin seeds`,
+    zeroRuns: n => `End ${n} runs without a hit`, quickDeaths: n => `Lose a run in 5 throws, ${n} times`, powerups: n => `Grab ${n} power-ups`,
+    cursed: n => `Take ${n} Cursed Skulls`, bonesSpent: n => `Spend ${fmtN(n)} bones`, coffins: n => `Open ${n} mystery coffins`,
+    playTime: n => `Play for ${Math.round(n / 60)} minutes`, grabs: n => `Grab Morty ${n} times`, saves: n => `Get saved ${n} times`,
+    shopBuys: n => `Buy ${n} things at the Curio Cart`
+  });
+  const isShame = it => !!it.shame, isBossPrize = it => !!it.boss, shopOnly = it => !!it.shop;

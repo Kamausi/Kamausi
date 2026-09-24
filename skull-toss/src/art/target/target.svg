@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 1000" data-asset="target" data-version="1.0.0">
+  <!-- Skull Toss target: the post the ring stands on. 40 units = the post's width. The game stretches the
+       post layer from y=100 (under the ring) to y=900 (the ground) and draws post-cap and post-foot unstretched. -->
+  <g id="post">
+    <rect x="177" y="100" width="46" height="800" fill="ink"/>
+    <rect x="182" y="100" width="36" height="800" fill="wood"/>
+    <rect x="185" y="100" width="9" height="800" fill="wood-l" opacity=".75"/>
+    <path d="M206 140 C209 260 203 380 207 500 C210 620 204 740 207 860" fill="none" stroke="wood-d" stroke-width="3" opacity=".8"/>
+  </g>
+  <g id="post-cap">
+    <!-- an iron collar holding the ring -->
+    <rect x="168" y="84" width="64" height="30" rx="7" fill="#3A3F46" stroke="ink" stroke-width="6"/>
+    <circle cx="184" cy="99" r="4.5" fill="#8C939C"/>
+    <circle cx="216" cy="99" r="4.5" fill="#8C939C"/>
+  </g>
+  <g id="post-foot">
+    <!-- a squat wooden block, strapped with iron, standing on the ground at y=900 -->
+    <rect x="128" y="852" width="144" height="52" rx="14" fill="wood-d" stroke="ink" stroke-width="6"/>
+    <rect x="128" y="866" width="144" height="10" fill="#3A3F46"/>
+    <circle cx="150" cy="871" r="4" fill="#8C939C"/>
+    <circle cx="250" cy="871" r="4" fill="#8C939C"/>
+    <path d="M140 860 L260 860" stroke="wood-l" stroke-width="4" stroke-linecap="round" opacity=".6"/>
+  </g>
+</svg>

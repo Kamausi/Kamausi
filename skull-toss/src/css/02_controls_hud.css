@@ -1,0 +1,139 @@
+/* ── Buttons: painted wooden signs, nailed on, inked. Hover: a skull pops up over the top edge and the
+   sign swells a touch. Press: it drops into its shadow and a crack flashes across it. ─────────────── */
+.btn{position:relative;display:flex;align-items:center;justify-content:center;gap:12px;width:100%;min-height:60px;padding:0 24px;border-radius:12px;
+  background:linear-gradient(180deg,#5B3B20,#44291A);border:3px solid var(--ink);color:var(--cream);
+  font:24px/1 var(--display);letter-spacing:.04em;text-transform:uppercase;text-shadow:0 3px 0 var(--ink);cursor:pointer;
+  box-shadow:inset 0 0 0 2px #8C6239,inset 0 4px 0 rgba(255,225,170,.18),0 6px 0 var(--ink),0 12px 22px rgba(0,0,0,.4);
+  transition:transform .14s var(--snap),box-shadow .14s,filter .14s}
+.btn::before{content:"";position:absolute;inset:3px;border-radius:8px;pointer-events:none;opacity:.5;
+  background:repeating-linear-gradient(176deg,rgba(0,0,0,.14) 0 2px,transparent 2px 11px),
+    radial-gradient(circle at 12px 50%,#C8A77A 0 2.5px,var(--ink) 3px 4px,transparent 4.5px),radial-gradient(circle at calc(100% - 12px) 50%,#C8A77A 0 2.5px,var(--ink) 3px 4px,transparent 4.5px)}
+.btn .icon{width:24px;height:24px;filter:drop-shadow(0 2px 0 var(--ink))}
+.btn .toss{position:absolute;left:50%;top:-6px;width:30px;height:30px;margin-left:-15px;color:var(--cream);opacity:0;transform:translateY(14px) scale(.4) rotate(-30deg);
+  filter:drop-shadow(0 2px 0 var(--ink)) drop-shadow(0 -1px 0 var(--ink)) drop-shadow(1px 0 0 var(--ink)) drop-shadow(-1px 0 0 var(--ink));transition:transform .22s var(--snap),opacity .12s;pointer-events:none;z-index:1}
+.btn:hover,.btn:focus-visible{transform:translateY(-2px) scale(1.025);filter:brightness(1.08);outline:none}
+.btn:hover .toss,.btn:focus-visible .toss{opacity:1;transform:translateY(-20px) scale(1) rotate(-8deg)}
+.btn:active{transform:translateY(5px);box-shadow:inset 0 0 0 2px #8C6239,0 1px 0 var(--ink),0 3px 8px rgba(0,0,0,.4)}
+.btn.primary{background:linear-gradient(180deg,var(--mustard-l),var(--mustard));color:var(--ink);text-shadow:0 2px 0 rgba(255,240,200,.5);
+  box-shadow:inset 0 0 0 2px #F0D08A,inset 0 4px 0 rgba(255,250,230,.4),0 6px 0 var(--ink),0 0 34px rgba(196,154,66,.28),0 12px 22px rgba(0,0,0,.4)}
+.btn.primary::before{opacity:.35}
+.btn.primary .icon{filter:none}
+.btn.danger{background:linear-gradient(180deg,#8E3A2C,var(--red-d))}
+.btn.confirm{background:linear-gradient(180deg,#C0513E,var(--red));color:var(--cream)}
+.btn.sm{min-height:48px;font-size:18px;padding:0 16px}
+.btn .pip{position:absolute;top:-7px;right:-7px;width:18px;height:18px;border-radius:50%;background:var(--red);border:3px solid var(--ink);box-shadow:0 2px 0 var(--ink)}
+.btn[disabled]{opacity:.5;cursor:not-allowed;transform:none;filter:grayscale(.4)}
+.btn::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 60' preserveAspectRatio='none'%3E%3Cpath d='M92 0l6 14-9 9 12 11-7 10 5 16M98 14l18 6 6 12M101 34l-17 7' fill='none' stroke='%2317130F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% 100% no-repeat}
+.btn.cracked::after{animation:crack .34s ease-out}
+@keyframes crack{0%{opacity:.95}100%{opacity:0}}
+.btn.deny{animation:deny .3s}
+@keyframes deny{20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
+
+/* paper-tag chips and round wooden knobs */
+.chip-btn{position:relative;display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:8px;background:var(--paper);border:2px solid var(--ink);box-shadow:0 4px 0 var(--ink);
+  font:18px/1 var(--display);letter-spacing:.04em;text-transform:uppercase;color:var(--ink);cursor:pointer;transition:transform .14s var(--snap)}
+.chip-btn:nth-child(odd){transform:rotate(-1.5deg)}.chip-btn:nth-child(even){transform:rotate(1.5deg)}
+.chip-btn:hover,.chip-btn:focus-visible{transform:rotate(0) scale(1.05);outline:none}
+.chip-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.chip-btn .icon{width:20px;height:20px}
+.icon-btn{position:relative;width:48px;height:48px;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle at 40% 35%,#7A5230,var(--wood-d));border:3px solid var(--ink);box-shadow:inset 0 0 0 2px #8C6239,0 4px 0 var(--ink);color:var(--cream);cursor:pointer;padding:0;transition:transform .14s var(--snap)}
+.icon-btn .icon{filter:drop-shadow(0 2px 0 var(--ink))}
+.icon-btn:hover,.icon-btn:focus-visible{transform:scale(1.08) rotate(-4deg);outline:none}
+.icon-btn:active{transform:translateY(3px);box-shadow:inset 0 0 0 2px #8C6239,0 1px 0 var(--ink)}
+.icon-btn .badge,.chip-btn .badge{position:absolute;top:-4px;right:-4px;width:15px;height:15px;border-radius:50%;background:var(--red);border:2.5px solid var(--ink)}
+
+/* ── HUD: big inked numbers floating over the picture ─────────────────── */
+.hud{position:fixed;top:0;left:0;right:0;z-index:2;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);grid-template-areas:"left score right";align-items:start;gap:0 8px;padding:calc(8px + env(safe-area-inset-top,0px)) 12px 0;pointer-events:none}
+@media (min-width:720px){.hud{gap:0 16px;padding-left:16px;padding-right:16px}}
+.hud-score{grid-area:score;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0}
+.hud-left{grid-area:left;display:flex;flex-direction:column;align-items:flex-start;gap:7px;padding-top:5px}.hud-right{grid-area:right}
+/* the score: centred, in the same inked numerals as every other number in the game (the points that fly into it,
+   the bones, the combo), with the hits under it and the best under that */
+.num{position:relative;display:inline-block;font-family:var(--num);font-weight:400;line-height:.92;letter-spacing:.03em;white-space:nowrap;color:var(--mustard-l);text-shadow:var(--outline),0 4px 0 var(--ink)}
+#score{font-size:clamp(40px,11vw,60px)}
+@media (min-width:720px){#score{font-size:clamp(46px,5.6vw,66px)}}
+#score.bump{animation:sbump .36s var(--snap)}
+@keyframes sbump{0%{transform:scale(1)}40%{transform:scale(1.16) rotate(-3deg)}100%{transform:scale(1)}}
+.hits{margin-top:1px;font:15px/1 var(--num);color:var(--cream);text-shadow:var(--outline),0 2px 0 var(--ink);text-transform:uppercase;letter-spacing:.1em}
+.hits b{font-weight:400;color:var(--mustard-l)}
+#best{margin:2px 0 0;font:12px/1 var(--num);letter-spacing:.1em;color:var(--cream-dim);text-shadow:var(--outline)}
+#lives{display:flex;gap:2px}
+#lives svg{width:17px;height:17px;color:var(--cream);filter:drop-shadow(1.5px 0 0 var(--ink)) drop-shadow(-1.5px 0 0 var(--ink)) drop-shadow(0 1.5px 0 var(--ink)) drop-shadow(0 -1.5px 0 var(--ink)) drop-shadow(0 3px 0 var(--ink));transition:opacity .3s,transform .3s var(--snap),color .3s}
+#lives svg.lost{opacity:.25;transform:scale(.7) rotate(-18deg);filter:grayscale(1) brightness(.5)}
+#lives svg.bonus{color:var(--gold)}
+#lives svg.gain{animation:gain .55s var(--snap)}
+@keyframes gain{0%{transform:scale(2) rotate(25deg)}100%{transform:none}}
+.hud-right{display:flex;flex-direction:column;align-items:flex-end;gap:10px;pointer-events:auto}
+.lives-row{display:flex;flex-direction:column;align-items:flex-start;gap:5px}
+
+/* GAME OVER: the words pop up over the picture when the last skull goes, before the headstone */
+.gameover{position:fixed;inset:0;z-index:8;display:grid;place-items:center;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,rgba(10,8,6,.2),rgba(10,8,6,.62))}
+.gameover[hidden]{display:none}
+.go-card{display:flex;flex-direction:column;align-items:center;gap:.02em;font:clamp(70px,21vw,150px)/.86 var(--display);text-transform:uppercase;color:var(--cream);transform:rotate(-4deg);animation:gocard .5s var(--snap) both}
+.go-w{display:flex}
+.go-w+.go-w{color:#FF9A7E}
+.go-card i{font-style:normal;display:inline-block;text-shadow:var(--outline),0 5px 0 var(--ink),0 9px 0 var(--ink);animation:goletter .42s var(--snap) both;animation-delay:calc(var(--i) * .05s)}
+@keyframes gocard{0%{transform:scale(.35) rotate(-14deg);opacity:0}60%{transform:scale(1.1) rotate(1deg);opacity:1}100%{transform:scale(1) rotate(-4deg)}}
+@keyframes goletter{0%{transform:translateY(-.7em) scale(.4);opacity:0}70%{transform:translateY(.06em) scale(1.08);opacity:1}100%{transform:none}}
+@media (prefers-reduced-motion:reduce){.go-card,.go-card i{animation:none}}
+
+/* progress: a small bar above the skulls, with the two bosses waiting on it (their health during a fight) */
+.prog{position:fixed;left:50%;bottom:calc(10px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:grid;grid-template-columns:auto 1fr;align-items:center;gap:3px 6px;width:clamp(180px,52vw,260px);margin:0}
+.prog .lbl{order:-1}
+.prog .st{font:10px/1 var(--display);letter-spacing:.05em;text-transform:uppercase;color:var(--cream);text-shadow:var(--outline)}
+.prog .st b{font-weight:400;color:#FFD94E}
+.prog .track{position:relative;height:9px;margin-right:8px;border:2px solid var(--ink);border-radius:6px;background:rgba(23,19,15,.6);box-shadow:0 2px 0 var(--ink)}
+.prog .track i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:4px;background:linear-gradient(180deg,#FFE04E,#FF9A3A);transition:width .35s var(--snap)}
+.prog .mark{position:absolute;top:50%;width:19px;height:19px;margin:-9.5px 0 0 -9.5px;padding:2px;border-radius:50%;background:var(--paper);border:2px solid var(--ink);box-shadow:0 2px 0 var(--ink);transition:transform .3s var(--snap),opacity .3s}
+.prog .mark svg{display:block;width:100%;height:100%}
+.prog .mini{left:50%}.prog .boss{left:100%}
+/* Arcade: a clock where the stage number was, racing your best time on the map */
+.prog .arc{display:none;font-size:13px;color:#FFD94E}
+.prog.arcade .arc{display:block}
+.prog.arcade .st:not(.arc),.prog.arcade .mark{display:none}
+.prog.arcade.beat .track i{background:repeating-linear-gradient(-45deg,#FFE9A0 0 6px,#FFC93C 6px 12px)}
+.prog.arcade.beat .lbl{color:#FFD94E}
+.prog .mini.done{opacity:.45;transform:scale(.8) rotate(-20deg)}
+.prog .lbl{grid-column:1/-1;text-align:center;white-space:nowrap;font:800 9.5px/1.15 var(--ui);letter-spacing:.1em;text-transform:uppercase;color:var(--cream-dim);text-shadow:var(--outline)}
+.prog.fight .track i{background:linear-gradient(180deg,#E8745A,#A94332)}
+.prog.fight .mark{display:none}
+.prog.fight .lbl{color:#FFB39E}
+.prog.fight .track{animation:fightpulse 1s ease-in-out infinite}
+@keyframes fightpulse{50%{box-shadow:0 2px 0 var(--ink),0 0 10px rgba(232,116,90,.6)}}
+/* power-ups you're carrying */
+.powers{display:flex;flex-direction:column;gap:8px;margin-right:6px}
+.pw{position:relative;display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:rgba(23,19,15,.6);border:2px solid var(--ink);box-shadow:0 0 0 2px var(--c),0 3px 0 var(--ink);animation:gain .45s var(--snap)}
+.pw canvas{width:30px;height:30px}
+.pw b{position:absolute;right:-6px;bottom:-5px;min-width:16px;height:16px;padding:0 3px;border-radius:8px;background:var(--c);border:2px solid var(--ink);font:12px/12px var(--num);color:var(--ink);text-align:center}
+
+/* the stage card: an intertitle between the acts */
+.stagecard{position:fixed;left:50%;top:58%;z-index:9;min-width:min(300px,86vw);max-width:92vw;padding:16px 26px 18px;text-align:center;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 40%,#2A3245,#141925);border:3px solid var(--ink);border-radius:14px;
+  box-shadow:inset 0 0 0 3px #C49A42,inset 0 0 0 5px var(--ink),0 8px 0 var(--ink),0 18px 40px rgba(0,0,0,.55);transform:translate(-50%,-50%) scale(.6);opacity:0}
+.stagecard.in{animation:cardin .5s var(--snap) forwards}
+.stagecard.out{animation:cardout .35s ease-in forwards}
+@keyframes cardin{0%{opacity:0;transform:translate(-50%,-50%) scale(.4) rotate(-6deg)}100%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(-1.5deg)}}
+@keyframes cardout{0%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(-1.5deg)}100%{opacity:0;transform:translate(-50%,-50%) scale(.85) rotate(3deg)}}
+.stagecard .k{display:block;margin-bottom:6px;color:var(--mustard-l)}
+.stagecard b{display:block;font:clamp(28px,8vw,44px)/1 var(--display);letter-spacing:.02em;color:var(--cream);text-shadow:0 3px 0 var(--ink),var(--outline)}
+.stagecard .s{display:block;margin-top:8px;font:800 12px/1.35 var(--ui);letter-spacing:.06em;color:var(--cream-dim)}
+.stagecard.boss{background:radial-gradient(ellipse at 50% 40%,#4A2020,#1C0C0C)}
+.stagecard.boss b{color:#FFB39E}
+.stagecard.gold b{color:#FFE04E}
+
+/* combo: a small mustard tag hanging under the skulls */
+.combo{margin-top:0;display:flex;align-items:center;gap:4px;white-space:nowrap;transform:rotate(-3deg);
+  padding:2px 6px 1px;background:var(--mustard);border:2px solid var(--ink);border-radius:5px;box-shadow:0 2px 0 var(--ink);color:var(--ink)}
+.combo .x{font:15px/1 var(--num);letter-spacing:.02em}
+.combo .word{font:10px/1 var(--display);letter-spacing:.03em;text-transform:uppercase}
+.combo svg{width:10px;height:10px;margin-top:-2px;color:var(--red)}
+.combo.pop{animation:cpop .26s var(--snap)}
+.combo.hot{background:var(--red);color:var(--cream)}
+.combo.hot svg{color:var(--mustard-l)}
+@keyframes cpop{0%{transform:rotate(-3deg) scale(1)}45%{transform:rotate(2deg) scale(1.2)}100%{transform:rotate(-3deg) scale(1)}}
+
+#hint{position:fixed;left:16px;right:16px;bottom:calc(42px + env(safe-area-inset-bottom,0px));z-index:2;margin:0;text-align:center;font:900 13px/1.5 var(--ui);letter-spacing:.12em;text-transform:uppercase;color:var(--cream);text-shadow:var(--outline);pointer-events:none}
+#hint.warn{color:#F0A08E}
+
+/* points that fly into the score */
+.fly{position:fixed;left:0;top:0;z-index:6;pointer-events:none;font:36px/1 var(--num);color:var(--mustard-l);text-shadow:var(--outline),0 4px 0 var(--ink);will-change:transform,opacity}

@@ -1,0 +1,8 @@
+{
+  "id": "skull",
+  "name": "ST_MOON_CEM_SKULL_HERO",
+  "version": "1.0.0",
+  "canvas": [1000, 1000],
+  "layers": ["cranium", "jaw", "nose", "socket-left", "socket-right", "teeth-upper", "teeth-lower"],
+  "notes": "One SVG per layer, all on the same 1000x1000 canvas. The rig moves the layers: the jaw drops, the sockets swell; pupils, lids and brows are drawn inside the sockets in code."
+}

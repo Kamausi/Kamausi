@@ -1,0 +1,5 @@
+# build outputs (python3 src/build.py)
+/index.html
+/index-dev.html
+/skull-toss-with-music.html
+/skull-toss-with-music-dev.html

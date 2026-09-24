@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" data-asset="launcher" data-version="1.0.0">
+  <!-- Skull Toss launcher. The skull sits in the pouch at (500, 400); 150 units = one skull radius.
+       The bands are drawn by the game, from bandL/bandR (the prong tips) to pouchL/pouchR (see asset.json),
+       because they stretch. Everything else is here, in four layers. Colours can be palette names. -->
+  <g id="frame">
+    <!-- ink first: one wide stroke under the wood is the outline -->
+    <path d="M500 826 L500 612 M500 612 C440 560 300 470 268 384 M500 612 C560 560 700 470 732 384" fill="none" stroke="ink" stroke-width="56" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M500 826 L500 612 M500 612 C440 560 300 470 268 384 M500 612 C560 560 700 470 732 384" fill="none" stroke="#7A5230" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- moonlight down the left of each limb -->
+    <path d="M490 810 L490 618 M486 604 C428 556 298 474 262 398" fill="none" stroke="wood-l" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M722 400 C694 474 590 546 532 590" fill="none" stroke="wood-l" stroke-width="6" stroke-linecap="round" opacity=".55"/>
+    <!-- grain and a knot -->
+    <path d="M509 806 C514 776 505 752 510 722 M364 508 C344 492 326 474 314 454 M636 508 C656 492 674 474 686 454" fill="none" stroke="wood-d" stroke-width="4.5" stroke-linecap="round"/>
+    <ellipse cx="610" cy="522" rx="11" ry="7" fill="wood-d" transform="rotate(-38 610 522)"/>
+    <ellipse cx="610" cy="522" rx="4.5" ry="2.8" fill="ink" transform="rotate(-38 610 522)"/>
+    <!-- the grip: a leather wrap round the handle -->
+    <rect x="475" y="670" width="50" height="122" rx="11" fill="#3F2A1A" stroke="ink" stroke-width="8"/>
+    <path d="M481 700 L519 687 M481 727 L519 714 M481 754 L519 741 M481 781 L519 768" fill="none" stroke="#6B4A2E" stroke-width="7" stroke-linecap="round"/>
+  </g>
+  <g id="tips">
+    <!-- cream cord wrapped round the prong tips, where the bands are tied on -->
+    <circle cx="268" cy="384" r="21" fill="cream" stroke="ink" stroke-width="9"/>
+    <circle cx="732" cy="384" r="21" fill="cream" stroke="ink" stroke-width="9"/>
+    <path d="M254 380 L282 392 M258 370 L279 379 M722 392 L746 380 M722 380 L742 371" fill="none" stroke="#B8A57C" stroke-width="4" stroke-linecap="round"/>
+  </g>
+  <g id="pouch">
+    <!-- a leather pouch, drawn behind the skull; the bands tie on at its two top corners -->
+    <path d="M376 452 C404 468 440 476 500 478 C560 476 596 468 624 452 C626 500 574 548 500 552 C426 548 374 500 376 452 Z" fill="#5A3A22" stroke="ink" stroke-width="10" stroke-linejoin="round"/>
+    <path d="M398 472 C440 487 560 487 602 472" fill="none" stroke="#7E5232" stroke-width="9" stroke-linecap="round"/>
+    <path d="M404 500 L413 508 M432 522 L443 528 M466 536 L478 539 M522 539 L534 536 M557 528 L568 522 M587 508 L596 500" fill="none" stroke="#C9A878" stroke-width="4" stroke-linecap="round"/>
+  </g>
+</svg>

@@ -1,0 +1,11 @@
+{
+  "id": "target",
+  "name": "ST_MOON_CEM_TARGET_POST",
+  "version": "1.0.0",
+  "canvas": [400, 1000],
+  "file": "target.svg",
+  "layers": ["post"],
+  "optional": ["post-cap", "post-foot"],
+  "post": { "x": 200, "width": 40, "top": 100, "bottom": 900 },
+  "notes": "The ring's mount. width canvas units = the post's width in play. post is stretched from top (under the ring) to bottom (the ground); post-cap is drawn with its y=top line under the ring, post-foot with its y=bottom line on the ground. The ring itself is ring art (src/art/rings) or a coded ring."
+}

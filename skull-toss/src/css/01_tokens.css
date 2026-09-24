@@ -1,0 +1,69 @@
+/* ── Skull Toss · a lost 1930s cartoon reel ───────────────────────────────
+   Palette from the lookbook: ink, aged paper, bone, old cream + dusty red, vintage teal,
+   mustard, midnight blue and muted purple. Everything gets an ink outline. */
+:root{
+  --ink:#17130F; --paper:#E8D8B4; --bone:#D9C9A5; --cream:#F2E7C9;
+  --red:#A94332; --red-d:#7E2A22; --teal:#356B68; --mustard:#C49A42; --mustard-l:#E0B85C; --midnight:#26364A; --purple:#66506B; --gold:#E3B64B;
+  --wood:#6B4526; --wood-d:#4A2F19; --wood-l:#8C6239;
+  --panel:#1A2130; --panel-2:#222B3B; --panel-3:#2C3748;
+  --cream-dim:rgba(242,231,201,.72); --cream-faint:rgba(242,231,201,.45); --line:rgba(242,231,201,.14); --line-2:rgba(242,231,201,.26);
+  --display:"Luckiest Guy","Arial Black",Impact,sans-serif;
+  --comic:"Bangers","Luckiest Guy",Impact,sans-serif;
+  --num:"Bebas Neue","Arial Narrow",Impact,sans-serif;
+  --ui:"Nunito Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:12px; --r-lg:18px;
+  --snap:cubic-bezier(.2,.9,.25,1.3); --ease:cubic-bezier(.25,.8,.3,1);
+  --outline:2px 0 0 var(--ink),-2px 0 0 var(--ink),0 2px 0 var(--ink),0 -2px 0 var(--ink),2px 2px 0 var(--ink),-2px 2px 0 var(--ink),2px -2px 0 var(--ink),-2px -2px 0 var(--ink);
+  --noise:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .1 0 0 0 0 .08 0 0 0 0 .05 0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --ring:#A94332;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--ink);color:var(--cream)}
+body{font-family:var(--ui);font-size:14px;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+button{font-family:inherit;color:inherit}
+#stage{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none}
+#stage.aiming{cursor:grabbing}
+#vig{position:fixed;inset:0;z-index:1;pointer-events:none}
+#film{position:fixed;inset:0;width:100%;height:100%;z-index:30;pointer-events:none}
+[hidden]{display:none!important}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* film reels (cosmetic): only the play field is filtered, never the menus */
+body[data-reel="silent"] #stage,[data-reel="silent"] > #previewCv{filter:grayscale(1) sepia(.18) contrast(1.12)}
+body[data-reel="techni"] #stage,[data-reel="techni"] > #previewCv{filter:saturate(1.35) contrast(1.06)}
+body[data-reel="lost"] #stage,[data-reel="lost"] > #previewCv{filter:sepia(.28) contrast(1.05)}
+body[data-reel="damaged"] #stage,[data-reel="damaged"] > #previewCv{filter:sepia(.15) contrast(1.15) brightness(1.03)}
+body[data-reel="noir"] #stage,[data-reel="noir"] > #previewCv{filter:grayscale(1) contrast(1.45) brightness(.95)}
+body[data-reel="cyan"] #stage,[data-reel="cyan"] > #previewCv{filter:grayscale(1) sepia(1) hue-rotate(175deg) saturate(1.6) contrast(1.05)}
+body[data-reel="infra"] #stage,[data-reel="infra"] > #previewCv{filter:hue-rotate(290deg) saturate(1.4) contrast(1.08)}
+body[data-reel="twostrip"] #stage,[data-reel="twostrip"] > #previewCv{filter:saturate(.75) sepia(.25) hue-rotate(-12deg) contrast(1.12)}
+body[data-reel="bootleg"] #stage,[data-reel="bootleg"] > #previewCv{filter:saturate(1.6) contrast(1.25) blur(.35px) hue-rotate(12deg)}
+
+/* type roles */
+.k{font:800 10px/1 var(--ui);letter-spacing:.2em;text-transform:uppercase;color:var(--cream-faint)}
+.icon{width:20px;height:20px;flex:none}
+
+/* bones: a little paper tag */
+.bones{display:inline-flex;align-items:center;gap:7px;padding:7px 13px 7px 10px;border-radius:8px;background:var(--paper);border:2px solid var(--ink);box-shadow:0 3px 0 var(--ink);font:26px/1 var(--num);letter-spacing:.03em;color:var(--ink);transform:rotate(-2deg)}
+.bones svg{width:18px;height:18px;color:var(--ink)}
+.bones.bump{animation:bump .4s var(--snap)}
+@keyframes bump{0%{transform:rotate(-2deg) scale(1)}40%{transform:rotate(3deg) scale(1.2)}100%{transform:rotate(-2deg) scale(1)}}
+
+/* a camera-flash for perfects */
+.flash{position:fixed;inset:0;z-index:20;pointer-events:none;background:var(--cream);opacity:0}
+.flash.perfect{animation:perfect .22s ease-out}
+@keyframes perfect{0%{opacity:.3}100%{opacity:0}}
+/* bigger moments flash harder (the shot director's intensity): a boss hit, then a knockout */
+.flash.boss{animation:flashboss .26s ease-out}
+@keyframes flashboss{0%{opacity:.36}100%{opacity:0}}
+.flash.ko{animation:flashko .5s ease-out}
+@keyframes flashko{0%{opacity:.55}25%{opacity:.18}40%{opacity:.3}100%{opacity:0}}
+
+/* toast: a paper slip */
+.toast{position:fixed;left:50%;bottom:calc(108px + env(safe-area-inset-bottom,0px));z-index:12;max-width:calc(100% - 32px);padding:10px 16px;border-radius:6px;background:var(--paper);border:2px solid var(--ink);box-shadow:0 4px 0 var(--ink);font:800 13px/1.2 var(--ui);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;animation:toast 3s var(--ease) forwards}
+.toast b{color:var(--red);font-weight:900}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,-10px) rotate(-1deg)}8%,86%{opacity:1;transform:translate(-50%,0) rotate(-1deg)}100%{opacity:0;transform:translate(-50%,0)}}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:1ms!important;animation-iteration-count:1!important;transition-duration:1ms!important}
+}

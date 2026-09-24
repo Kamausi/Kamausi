@@ -1,0 +1,55 @@
+  // ───────────────────────── cloud save ─────────────────────────
+  // When the game is opened as a published page while signed in, progress is kept in a private
+  // per-player document (data/users/<id>/save) and merged with this device's copy. Anywhere else
+  // (a downloaded file, no sign-in) everything simply stays in this browser.
+  const Cloud = {
+    state: "off",      // off | connecting | ok | busy | error
+    ref: null, me: null, writing: false, dirty: false, timer: 0, lastSync: 0,
+    async init() {
+      const host = window.claude;
+      if (!host || typeof host.use !== "function") { this.state = "off"; renderSave(); return; }
+      this.state = "connecting"; renderSave();
+      try {
+        const [user, db] = await Promise.all([host.use("user"), host.use("db")]);
+        const me = user ? await user.me() : null;
+        if (!db || !me || !me.id) { this.state = "off"; renderSave(); return; }
+        this.me = me; this.ref = db.doc("data/users/" + me.id + "/save");
+        Board.init(db, me);
+        await this.pull();
+      } catch (e) { this.state = "error"; renderSave(); }
+    },
+    async pull() {
+      if (!this.ref || sandbox) return;
+      this.state = "busy"; renderSave();
+      try {
+        const snap = await this.ref.get();
+        if (snap.exists) {
+          const d = snap.data() || {};
+          if (d.profile) profile = mergeProfiles(profile, d.profile);
+          if (d.cos && (Number(d.cos.updatedAt) || 0) > (cos.updatedAt || 0)) cos = cleanCos(d.cos);
+          ensureDaily(); applyCosmetics(); updateHud(); if (sheet) renderSheet(sheet);
+          const p = JSON.stringify(profile); store.set(KEYS.profile, p); store.set(KEYS.cos, JSON.stringify(cos)); store.set(KEYS.best, profile.best);
+        }
+        this.state = "ok"; this.lastSync = Date.now(); renderSave();
+        await this.push();
+      } catch (e) { this.state = "error"; renderSave(); }
+    },
+    schedule(delay) {
+      if (!this.ref || sandbox) return;
+      clearTimeout(this.timer); this.timer = setTimeout(() => this.push(), delay);
+    },
+    async push() {
+      if (!this.ref || sandbox) return;
+      if (this.writing) { this.dirty = true; return; }
+      this.writing = true; this.state = "busy"; renderSave();
+      try {
+        await this.ref.set({ v: 1, profile: JSON.parse(JSON.stringify(profile)), cos: { ...cos }, savedAt: Date.now() });
+        this.state = "ok"; this.lastSync = Date.now();
+      } catch (e) {
+        this.state = "error";
+        if (e && e.code === "unavailable") setTimeout(() => this.schedule(0), 1500 + Math.random() * 1500);
+      }
+      this.writing = false; renderSave();
+      if (this.dirty) { this.dirty = false; this.schedule(1500); }
+    }
+  };
