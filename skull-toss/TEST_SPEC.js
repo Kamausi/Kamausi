@@ -781,7 +781,7 @@
   test("PLAY asks Story or Arcade; Arcade lists every map with its best, and a map starts there", () => {
     T.setStats({ ...ZERO, bestStage: 9 }); T.toTitle(); $("play").click();
     assert(T.state().sheet === "play" && !$("modePick").hidden, "PLAY should open the mode picker");
-    assert(document.querySelectorAll("#modePick [data-mode]").length === 2, "two modes to pick from");
+    assert(document.querySelectorAll("#modePick .mode-card[data-mode]").length === 2 && document.querySelectorAll("#moreModes [data-mode]").length === 5, "Story and Arcade, and five more ways to play (v26)");
     document.querySelector('#modePick [data-mode="arcade"]').click();
     const maps = [...document.querySelectorAll("#mapList [data-map]")];
     assert(!$("mapPick").hidden && maps.length === T.stages().length, `every map should be listed (${maps.length})`);
@@ -1455,6 +1455,79 @@
     T.closeSheet(); T.setStats(ZERO); T.toTitle();
   });
   T.shots(false);
+
+  // ── v26: more ways to play ──
+  const OPENED = { ...ZERO, bossKills: 1, bestStage: 3, bossLog: { crow: 1, undertaker: 1 } };
+  test("Practice: any map you've reached, misses are free, and nothing counts", () => {
+    T.setStats({ ...ZERO, makes: 5, bones: 100, bestStage: 2 }); T.setPractice({ ring: "full", half: "A", hazards: true }); T.startMode("practice", 1);
+    assert(T.inPractice() && T.state().stage === 2 && T.modeState().mode === "practice", JSON.stringify(T.modeState()));
+    T.calm(); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); T.freezeRing(0, C.RING_Y); throwAndSettle(2.5, C.RING_Y);
+    assert(T.state().lives === 3 && T.state().hits === 1, `a miss costs nothing (${T.state().lives} skulls)`);
+    T.endRun(); T.step(1);
+    const P = T.realProfile(); assert(!T.inPractice() && P.makes === 5 && P.bones === 100 && P.throws === 0 && P.modes.practice.runs === 1, `nothing counted but the practice run itself (${JSON.stringify({ m: P.makes, b: P.bones, t: P.throws, p: P.modes.practice })})`);
+    assert(/Practice/.test($("resTitle").textContent) && $("resBones").textContent === "0", "the stone says Practice and pays nothing");
+    T.setPractice({ ring: "still" }); T.startMode("practice", 0); T.step(3); const r = T.state().ring;
+    assert(Math.abs(r.x) < 1e-6 && T.modeState().frozen, `a still ring stands still (${r.x})`);
+    T.setPractice({ ring: "slow" }); T.startMode("practice", 0); T.unfreezeRing(); T.step(0.1); const slow = T.state().ring.omega;
+    T.setPractice({ ring: "full" }); T.startMode("practice", 0); T.unfreezeRing(); T.step(0.1);
+    assert(slow < T.state().ring.omega * 0.6, `a slow ring runs at half speed (${slow} vs ${T.state().ring.omega})`);
+    T.setPractice({ half: "B" }); T.startMode("practice", 0); assert(T.state().phase === "B", "and the 3D path can be practised");
+    T.setPractice({ ring: "full", half: "A", hazards: true }); T.toTitle(); T.setStats(ZERO);
+  });
+  test("Boss Rush: every boss you've beaten, back to back, a skull back after each end boss", () => {
+    T.setStats(ZERO); T.startMode("rush"); assert(T.modeState().mode === "story", "locked until an end boss is down");
+    T.setStats(OPENED); T.startMode("rush"); T.step(2.5);
+    assert(T.modeState().rush.join() === "crow,undertaker" && T.boss() && T.boss().kind === "crow", JSON.stringify(T.modeState()));
+    T.hurtBoss(99); T.endThrow(); T.step(3.4); assert(T.boss() && T.boss().kind === "undertaker", `then the Undertaker (${T.boss() && T.boss().kind})`);
+    T.step(2.6); const l = T.state().lives; T.hurtBoss(99); T.endThrow(); assert(T.state().lives === Math.min(5, l + 1), `a skull back after an end boss (${l} → ${T.state().lives})`);
+    T.step(3); assert(T.state().state === "over" && T.profile().modes.rush.best === 2, `the list done, the run is won (${T.state().state}, ${JSON.stringify(T.profile().modes.rush)})`);
+    T.setStats(ZERO); T.toTitle();
+  });
+  test("Curtain Call: twenty seconds, misses are free, and the clock ends it", () => {
+    T.setStats(OPENED); T.startMode("curtain"); assert(T.modeState().mode === "curtain" && T.modeState().clock === 20, JSON.stringify(T.modeState()));
+    T.calm(); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); T.freezeRing(0, C.RING_Y); throwAndSettle(2.5, C.RING_Y);
+    assert(T.state().lives === 3 && T.state().hits === 1, "a make counts; a miss is free");
+    T.step(15); assert(T.state().state === "over" && T.profile().modes.curtain.best === 1, `the clock ends it (${T.state().state}, ${JSON.stringify(T.profile().modes.curtain)})`);
+    T.setStats(ZERO); T.toTitle();
+  });
+  test("Longshot: the ring backs off after every make; a miss costs a skull; the record is the farthest make", () => {
+    T.setStats(OPENED); T.startMode("longshot"); let F = T.modeState().frozen; assert(F && F.z === 4.6, JSON.stringify(F));
+    T.calm(); assert(T.throwThrough(F.x, F.y, F.z), "throw refused"); T.step(2.5);
+    F = T.modeState().frozen; assert(T.state().lastResult.make && Math.abs(F.z - 5.0) < 1e-6, `0.4 m farther after a make (${F.z})`);
+    T.step(1); assert(T.throwThrough(F.x, F.y, F.z), "throw refused"); T.step(2.5);
+    T.freezeRing(F.x, F.y, 5.4); throwAndSettle(2.5, C.RING_Y); assert(T.state().lives === 2, "a miss costs a skull");
+    T.endRun(); T.step(1); assert(T.profile().modes.longshot.best === 50, `the farthest make, in tenths of a metre (${JSON.stringify(T.profile().modes.longshot)})`);
+    T.setStats(ZERO); T.toTitle();
+  });
+  test("Target Gallery: ten throws through a still ring at the targets hanging behind it", () => {
+    T.setStats(OPENED); T.startMode("gallery"); const Ts = T.targetsFull();
+    assert(Ts.length === 5 && Ts.every(q => q.z > C.RING_Z && q.via), `five targets behind the ring (${Ts.length})`);
+    T.calm(); T.throwThrough(Ts[0].via.x, Ts[0].via.y, C.RING_Z); T.step(2.5);
+    assert(T.state().lastResult.make && T.runStats().targets >= 1 && T.targetsFull()[0].pop > 0, `through the hole and on into the first target (${T.state().lastResult.kind}, ${T.runStats().targets})`);
+    for (let i = 1; i < 10 && T.state().state === "ready"; i++) { T.calm(); T.throwThrough(0, C.RING_Y, C.RING_Z); T.step(2.5); }
+    assert(T.state().state === "over" && T.profile().modes.gallery.best >= 1, `ten throws and it's over (${T.state().state}, ${JSON.stringify(T.profile().modes.gallery)})`);
+    T.setStats(ZERO); T.toTitle();
+  });
+  test("Story's encore: after an end boss, ten seconds where misses are free and every make pays bones, then the next reel", () => {
+    T.encore(true); T.setStats(ZERO); fresh(); toHit(25); T.step(2.6); T.hurtBoss(99); T.endThrow(); T.step(3.2); toHit(50); T.step(2.9); T.hurtBoss(99); T.endThrow(); T.step(3.7);
+    assert(T.modeState().phase === "encore", `the encore after Reel One's end boss (${T.modeState().phase})`);
+    const lives = T.state().lives, b0 = T.bones(); T.step(1.9);
+    T.calm(); T.freezeRing(0, C.RING_Y); throwAndSettle(2.5, C.RING_Y); assert(T.state().lives === lives, "a miss is free");
+    T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); assert(T.bones() === b0 + 5, `a make pays five bones (${T.bones() - b0})`);
+    T.unfreezeRing(); T.step(8); T.step(2); assert(T.state().stage === 2 && T.state().phase === "A", `then Reel Two (${T.state().stage}, ${T.state().phase})`);
+    T.encore(false); T.setStats(ZERO); T.toTitle();
+  });
+  test("The Play sheet: five more ways to play, locked until an end boss falls; Practice picks a map and its options", () => {
+    T.setStats(ZERO); T.toTitle(); $("play").click();
+    let tiles = [...document.querySelectorAll("#moreModes [data-mode]")];
+    assert(tiles.length === 5 && tiles.filter(b => b.classList.contains("locked")).length === 4, "only Practice is open at first");
+    T.closeSheet(); T.setStats(OPENED); T.toTitle(); $("play").click();
+    tiles = [...document.querySelectorAll("#moreModes [data-mode]")]; assert(!tiles.some(b => b.classList.contains("locked")), "all open after an end boss");
+    document.querySelector('#moreModes [data-mode="practice"]').click();
+    assert(!$("mapPick").hidden && !$("practiceOpts").hidden && /Practice/.test($("mapPickK").textContent), "Practice goes to the map list, with its options");
+    document.querySelector('#mapList [data-map="1"]').click(); assert(T.inPractice() && T.state().stage === 2, "and starts there");
+    T.toTitle(); T.setStats(ZERO);
+  });
 
   T.sandbox(false); T.start(); T.pause(false);  // leave the game playable, player's saved data untouched
   window.__skullTossResults = results;

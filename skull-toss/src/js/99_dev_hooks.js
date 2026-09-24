@@ -18,7 +18,10 @@
     fakeAds(on) { Ads = on ? { available: () => true, show: () => ({ then: f => f(true) }) } : { available: () => false, show: () => Promise.resolve(false) }; },   // (a synchronous reel, for the spec)
     continues(on = true) { if (sandbox) sandbox.contOn = on; },
     cards(on = true) { if (sandbox) sandbox.cardsOn = on; reelSt.leaderShown = false; reelSt.shown = []; reelSt.cues = []; },
-    skipReel: () => skipReelCard(), shots(on = true) { if (sandbox) sandbox.shotsOn = on; }, lastShots: () => (skull.shots || []).slice(), shotList: () => SHOTS.map(S => ({ id: S.id, rare: S.rare, cam: S.cam })),
+    skipReel: () => skipReelCard(), encore(on = true) { if (sandbox) sandbox.encoreOn = on; }, startMode(mode, map = 0) { startGame({ mode, map }); }, setPractice(o) { Object.assign(practice, o); },
+    realProfile: () => JSON.parse(JSON.stringify(realProfile())), inPractice: () => inPractice(),
+    modeState: () => ({ mode: game.mode, phase: game.phase, clock: modeSt.clock, far: modeSt.far, rush: modeSt.rush.map(b => b.id), rushI: modeSt.rushI, encoreEnd: game.run.encoreEnd, frozen: ring.frozen && { ...ring.frozen } }),
+    targetsFull: () => targets.map(T => ({ ...T })), shots(on = true) { if (sandbox) sandbox.shotsOn = on; }, lastShots: () => (skull.shots || []).slice(), shotList: () => SHOTS.map(S => ({ id: S.id, rare: S.rare, cam: S.cam })),
     camfx: () => (updateCamFx(), { kind: camfx.kind, log: camfx.log.slice(), css: cvs.style.transform, spot: !!film.spot }), clearCamLog() { camfx.log = []; }, setStreak(n) { game.streak = n; }, bossInfo: () => Object.fromEntries(BOSS_IDS.map(id => [id, { ...BOSS_INFO[id] }])),
     tr: (id, vars) => t(id, vars), lineIds: prefix => lineIds(prefix).slice(),
     reel: () => ({ card: reelSt.card ? reelSt.card.kind : null, n: reelSt.card ? reelSt.card.n || 0 : 0, shown: reelSt.shown.slice(), cues: reelSt.cues.length, title: $("rcTitle").textContent, reel: $("rcReel").textContent, hidden: reelEl.hidden, cine: game.cine ? game.cine.kind : null, dur: game.cine ? game.cine.dur : 0 }),
@@ -44,7 +47,7 @@
     setScore(n) { game.stageHits = n; game.hits = n; snapRing(); updateHud(); },   // (in hits: how far into the stage)
     setHits(n) { game.stageHits = n; game.hits = Math.max(game.hits, n); snapRing(); updateHud(); },
     setStage(n) { game.stage = n; hazardsReset(); snapRing(); updateHud(); },
-    stageCheck() { return stageCheck(); }, endThrow() { if (game.state === "ready") { powersAfterThrow(); if (boss && boss.after) boss.after(); stageCheck() || pickupSchedule(); } },
+    stageCheck() { return modeCheck() || stageCheck(); }, endThrow() { if (game.state === "ready") { powersAfterThrow(); if (boss && boss.after) boss.after(); modeCheck() || stageCheck() || pickupSchedule(); } },
     boss: () => boss && { kind: boss.kind, hp: boss.hp, max: boss.max, dead: boss.dead, flawless: boss.flawless, t: boss.t },
     hurtBoss(n = 1) { if (boss) { for (let i = 0; i < n && !boss.dead; i++) boss.hit("swish", null); } },
     seeds: () => seeds.filter(s => s.live).map(s => ({ x: s.x, y: s.y, z: s.z })),

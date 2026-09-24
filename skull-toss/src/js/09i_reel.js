@@ -11,8 +11,10 @@
   const reelSt = { card: null, t0: 0, shown: [], cues: [], leaderShown: false };
   const cardsMode = () => (sandbox && !sandbox.cardsOn ? "off" : settings.cards);   // (older tests expect play to start at once)
   // the cards themselves: kind, the four lines of type, and what the Off setting shows instead (the map's own words come from its data)
-  function titleCard(n, arcade = false) {
-    const M = mapData(n);
+  function titleCard(n, mode = "story") {   // mode: Story's reels, or the map an Arcade or Practice run opens on
+    const M = mapData(n), prac = mode === "practice", arcade = mode === "arcade";
+    if (prac) return { kind: "title", n, k: t("mode.practice.name"), reel: t("reel.practice", { reel: M.reel }), title: M.name, sub: M.premise, note: M.blurb,
+      fallback: () => stageCard(t("mode.practice.name"), M.name, t("mode.practice.rule"), 2) };
     return { kind: "title", n, k: arcade ? t("card.arcade.k") : t("reel.k"), reel: arcade ? t("reel.arcade", { reel: M.reel }) : t("reel.of", { reel: M.reel, total: t(`num.${MAP_COUNT}`) }), title: M.name, sub: M.premise, note: M.blurb,
       fallback: arcade ? () => stageCard(t("card.arcade.k"), M.name, t("card.arcade.s"), 2) : n > 1 ? () => stageCard(M.reel, M.name, M.identity.mechanic.split(":")[0], 2.2) : null };
   }
@@ -105,10 +107,10 @@
   }
 
   // ── where the reel's cards come in
-  function introReel(mode, map) {   // a run starts: the leader (once a session) and Reel One's card (Story), or the map's card (Arcade)
-    const leader = mode !== "arcade" && !reelSt.leaderShown && cardsMode() === "full";
+  function introReel(mode, map) {   // a run starts: the leader (once a session) and Reel One's card (Story), or the map's card (Arcade, Practice)
+    const leader = mode === "story" && !reelSt.leaderShown && cardsMode() === "full";
     if (leader) reelSt.leaderShown = true;
-    const list = mode === "arcade" ? [titleCard(map + 1, true)] : (leader ? [{ kind: "leader" }] : []).concat(titleCard(1));
+    const list = mode !== "story" ? [titleCard(map + 1, mode)] : (leader ? [{ kind: "leader" }] : []).concat(titleCard(1));
     reelCards(list, () => { setHint(t("hint.start")); mortySays(`map.${game.stage}`, { priority: true }); });
   }
   function nextReel() {   // a map is clear and the next one is set: its card (after the intermission, halfway)

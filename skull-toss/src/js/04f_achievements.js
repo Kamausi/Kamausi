@@ -59,6 +59,7 @@
   const achHas = id => profile.achievements.includes(id);
   // unlock whatever has been reached (twice round, in case the bones just paid out reach Bone Baron)
   function checkAchievements() {
+    if (inPractice()) return [];
     const fresh = [];
     for (let pass = 0; pass < 2; pass++) {
       const now = ACHIEVEMENTS.filter(A => !achHas(A.id) && achValue(A) >= A.n);

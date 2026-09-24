@@ -1,8 +1,22 @@
-# SKULL TOSS v25
+# SKULL TOSS v26
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)), with a synthesised waltz standing in wherever they can't load.
+
+## New in v26: more ways to play
+
+**Play** now offers five more ways to play under Story and Arcade:
+
+- **Practice.** Any map you've reached, as long as you like. Misses are free and nothing counts: the run plays on a copy of your profile, so no stat, bone, challenge or medal moves (the Vault is closed from its pause menu for the same reason). Pick the ring (Still, Slow or Full), its path (Flat or the 3D half), and hazards on or off.
+- **Boss Rush.** Every boss you've beaten, back to back: three skulls, one more after each end boss. The record is bosses beaten.
+- **Curtain Call** (mini-game). Twenty seconds on the clock and a quick ring: as many makes as you can. Misses are free.
+- **Longshot** (mini-game). A still ring that backs off 0.4 m (and drifts sideways) after every make. Misses cost skulls. The record is the farthest make.
+- **Target Gallery** (mini-game). Ten throws through a still ring at five targets hanging behind it, each on a line you can throw through the hole.
+
+Boss Rush and the mini-games open once you've put an end boss down. Each keeps its own record, shown on its tile and on its headstone. The leaderboard, continues and resuming a run stay Story's and Arcade's. The mini-games have no hazards: no wind, bats or bones.
+
+**Story's encore.** After every end boss but the last, Story plays ten seconds of Curtain Call before the next reel. Misses are free and every make pays 5 bones.
 
 ## New in v25: signature shots and the cartoon camera
 
@@ -704,7 +718,7 @@ From the console, `SkullToss.debug.visualAnimation` lists the pose library (`pos
 
 ## Tests
 
-Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **151 checks**, covering:
+Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **158 checks**, covering:
 
 - **Layout, scoring and aiming.**
   - Everything is centred and every result is classified correctly.
@@ -807,3 +821,11 @@ Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to
   - A Hat Trick, a Buzzer Beater and a Knockout Blow hold the reel, and the rarest shot takes the card.
   - A crash zoom scales the frame, a whip pan slides it, and a boss walks on to a Dutch tilt. Each comes back to rest. Camera Still counts the shot and leaves the frame alone.
   - The Profile lists the twelve shots, what each takes and how often you've made it.
+- **v26.**
+  - Practice: misses are free and nothing counts on the real profile. The ring stands still or runs at half speed, and the 3D path can be practised.
+  - Boss Rush is locked until an end boss falls. It then runs the beaten bosses back to back, gives a skull back after each end boss, and keeps its record.
+  - Curtain Call: misses are free and the twenty-second clock ends the run.
+  - Longshot: the ring backs off 0.4 m after each make, misses cost skulls, and the record is the farthest make.
+  - Target Gallery: five targets hang behind a still ring, a throw through the hole reaches them, and ten throws end the run.
+  - Story's encore after an end boss: misses are free, makes pay 5 bones, then the next reel.
+  - The Play sheet lists five more modes, locked until an end boss falls. Practice picks a map and its options.

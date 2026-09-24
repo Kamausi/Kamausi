@@ -191,3 +191,21 @@
 #stats .stat.shot dt small{display:block;margin-top:3px;font:700 10px/1.25 var(--ui);letter-spacing:0;text-transform:none;color:var(--ink);opacity:.7}
 #stats .stat.shot.unseen{opacity:.55}
 .stat-h .n{font:16px/1 var(--num);color:var(--cream-dim)}
+/* more ways to play (07i_modes.js): smaller tiles, two to a row, the mini-games tinted like fairground tickets */
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+.mode-tile{display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-width:0;padding:12px 12px 11px;border-radius:12px;border:3px solid var(--ink);box-shadow:0 4px 0 var(--ink);
+  background:var(--panel-2);color:var(--cream);text-align:left;cursor:pointer;transition:transform .14s var(--snap)}
+.mode-tile:nth-child(odd){transform:rotate(-.6deg)}.mode-tile:nth-child(even){transform:rotate(.6deg)}
+.mode-tile:hover,.mode-tile:focus-visible{transform:rotate(0) scale(1.03);outline:none}
+.mode-tile:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.mode-tile b{font:19px/1 var(--display);letter-spacing:.03em;text-transform:uppercase;overflow-wrap:anywhere}
+.mode-tile .d{font:700 11.5px/1.35 var(--ui);color:var(--cream-dim)}
+.mode-tile .rec{margin-top:auto;font:15px/1 var(--num);letter-spacing:.06em;color:var(--mustard-l)}
+.mode-tile.m-practice{background:var(--teal)}
+.mode-tile.m-rush{background:linear-gradient(180deg,#5A2A22,#3A1A16)}
+.mode-tile.m-mini{background:linear-gradient(180deg,#66506B,#4A3A50)}
+.mode-tile.locked{filter:grayscale(.8) brightness(.75);cursor:not-allowed}
+.mode-tile.locked .rec{color:var(--cream-faint)}
+.practice-opts{display:grid;gap:8px;margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--panel-2);border:2px solid var(--line-2)}
+.practice-opts .row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0;border:0}
+.practice-opts .lbl{font:800 12px var(--ui);letter-spacing:.08em;text-transform:uppercase;color:var(--cream-dim)}

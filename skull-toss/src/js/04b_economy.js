@@ -18,6 +18,7 @@
     return !!it.req && statNow(it.req[0]) >= it.req[1];
   }
   function checkUnlocks() {
+    if (inPractice()) return;   // (Practice plays on a copy: 07i_modes.js)
     const fresh = [];
     for (const kind of KINDS) for (const it of CATALOG[kind]) {
       const key = kind + ":" + it.id;
@@ -97,6 +98,7 @@
   const chalDef = id => CHALLENGES.find(c => c.id === id);   // (the weekly and monthly goals share the daily ones' wording)
   const chalDone = it => it.have >= it.n;
   function challenge(id, value) { // progress hook: "add" counts up, "max" keeps the best
+    if (inPractice()) return;
     for (const per of PERIOD_IDS) {
       for (const it of ensurePeriod(per).items) {
         if (it.id !== id || it.claimed) continue;

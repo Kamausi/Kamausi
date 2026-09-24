@@ -180,6 +180,7 @@
       if (pickup && d != null && pickupHit(game.lastCross)) collectPickup(at);
       if (boss && !boss.dead) boss.hit(kind, at);
       judgeShots(kind, x, y);   // a signature shot? (07h_shots.js)
+      encoreMake();             // the encore pays bones for every make (07i_modes.js)
       showCombo(game.streak);
       if (game.streak % 5 === 0 && game.lives < MAX_LIVES) { // every 5 in a row earns a skull, stacking up to five
         game.lives++; game.slots = Math.max(game.slots, game.lives); game.peakLives = Math.max(game.peakLives, game.lives);
@@ -192,7 +193,7 @@
     } else {
       const saved = powerOn("second");   // Second Chance: this miss is on the house
       if (saved) { usePower("second"); profile.saves++; impact(t("result.saved"), W / 2, H * 0.3, { fill: TEAL, text: CREAM, scale: 0.7, delay: 0.25, bits: false }); Sound.life(); }
-      else game.lives--;
+      else if (!freeMiss()) game.lives--;   // (Practice, Curtain Call and the encore: misses are free)
       game.streak = 0; game.perfStreak = 0; run.misses++; profile.misses++;
       if (MISS_STAT[kind]) profile[MISS_STAT[kind]]++;
       if (boss) boss.flawless = false;
@@ -231,7 +232,7 @@
     game.state = "ready"; resetSkull();
     powersAfterThrow();
     if (boss && boss.after) boss.after();
-    if (!stageCheck()) {
+    if (!modeCheck() && !stageCheck()) {
       pickupSchedule(); directorsAfterThrow();
       if (game.throws < 2 && !hintEl.textContent) setHint(t("hint.start"));
     }
@@ -247,7 +248,9 @@
   // two ways to play. Story: the stages in order, each with its two bosses. Arcade: one map (any stage), no bosses
   // and no end: the ring keeps getting quicker, and the run lasts as long as your skulls do.
   function startGame(opts = {}) {
-    const mode = opts.mode === "arcade" ? "arcade" : "story", pick = clamp(opts.map | 0, 0, STAGES.length - 1), map = mode === "arcade" && mapUnlocked(pick) ? pick : 0;
+    const mode = MODES[opts.mode] && MODES[opts.mode].open ? (MODES[opts.mode].open() ? opts.mode : "story") : MODES[opts.mode] ? opts.mode : "story";
+    modeStart(mode);   // (Practice swaps in a copy of the profile here: 07i_modes.js)
+    const pick = clamp(opts.map | 0, 0, STAGES.length - 1), map = MODES[mode].maps ? (mapUnlocked(pick) ? pick : 0) : MODES[mode].mini ? miniMap(mode) : 0;
     Object.assign(game, { state: "ready", score: 0, hits: 0, lives: START_LIVES, slots: START_LIVES, streak: 0, perfStreak: 0, peakLives: START_LIVES, throws: 0,
       result: null, lastCross: null, newBest: false, shake: 0, slowmo: 0, run: freshRun(), mode, map });
     game.run.t0 = game.time; Object.assign(voice, { said: 0, text: "", quiet: game.time, idleSaid: false });
@@ -255,7 +258,7 @@
     setScene(map);   // Story starts on map 1; Arcade on the map picked
     ring.frozen = null; ring.flash = 0; ring.wobble = 0; ring.morph = 0;
     stageReset(); clearPowers(); clearPickups(); powerDirectorReset();
-    if (mode === "arcade") { game.stage = map + 1; VisualSystem.setStage(game.stage); }
+    if (mode !== "story") { game.stage = map + 1; VisualSystem.setStage(game.stage); }
     snapRing();
     VisualSystem.emit("start");
     const r0 = ringAt(0); ring.x = r0.x; ring.y = r0.y; ring.z = r0.z;
@@ -265,7 +268,8 @@
     paused = false; Sound.setPaused(false); showCombo(0); gameOverCard(false); contEl.hidden = true; game.cont = null;
     showScreen("play");
     hazardsReset(); refillTargets();
-    if (opts.quiet) setHint(t("hint.start")); else introReel(mode, map);   // the leader and the reel's title card (09i_reel.js)
+    modeBegin();   // each mode's own opening (07i_modes.js)
+    if (opts.quiet || (mode !== "story" && mode !== "arcade" && mode !== "practice")) setHint(game.mode === "rush" ? "" : t("hint.start")); else introReel(mode, map);   // the leader and the reel's title card (09i_reel.js)
     updateHud();
     Telemetry.emit("run_start", { mode, map, stage: game.stage, career: profile.games });   // career: runs finished before this one
   }
@@ -282,7 +286,8 @@
       game.newBest = game.score > A.score; game.run.newTime = Math.floor(game.run.secs) > A.secs;
       A.runs++; A.score = Math.max(A.score, game.score); A.secs = Math.max(A.secs, Math.floor(game.run.secs)); A.hits = Math.max(A.hits, game.hits);
       profile.arcadeRuns++; challenge("arcadeSecs", Math.floor(game.run.secs));
-    } else {
+    } else if (game.mode !== "story") modeRecords();   // Practice, Boss Rush and the mini-games keep their own (07i_modes.js)
+    else {
       game.newBest = game.score > profile.bestScore;
       if (game.newBest) profile.bestScore = game.score;
       profile.bestStage = Math.max(profile.bestStage, game.stage);
@@ -294,12 +299,13 @@
     if (game.throws <= 5) profile.quickDeaths++;
     profile.playTime += Math.round(game.run.secs);
     challenge("runs", 1); challenge("best", game.hits); challenge("score", game.score);
-    game.run.bones = runBones(game.run, game.hits, game.newBest, game.score);
+    game.run.bones = inPractice() ? 0 : runBones(game.run, game.hits, game.newBest, game.score);
     profile.bones += game.run.bones; profile.bonesTotal += game.run.bones;
     checkUnlocks(); persist(300);
     showCombo(0); setHint(""); Sound.over(); Sound.setAct("menu"); VisualSystem.emit("death"); updateHud();
-    renderResults(); if (game.mode !== "arcade") Board.post();
+    renderResults(); if (game.mode === "story") Board.post();
     Telemetry.emit("run_end", { mode: game.mode, map: game.map, score: game.score, hits: game.hits, stage: game.stage, secs: Math.round(game.run.secs), throws: game.throws, quit: !card });
+    leavePractice();   // (the copy goes; the real profile comes back, one practice run the richer)
   }
   function endRun() { if (inRun()) { aim.active = false; Sound.pullEnd(); gameOver(false); game.overAt = game.time - 0.6; } }
 
@@ -355,6 +361,7 @@
     if (game.state === "flying") updateFlight(dt, phase0);
     else if (game.state === "cine") { updateCine(dt); skull.spawn = Math.min(1, skull.spawn + dt / 0.3); }
     else if (game.state === "ready" || game.state === "title") skull.spawn = Math.min(1, skull.spawn + dt / 0.3);
+    updateModes(dt);   // Curtain Call's clock, the encore's end (07i_modes.js)
     if (game.state === "continue") updateContinue(dt);
     else if (game.state === "ready") mortyIdle();
     if (game.state === "over" && screen === "play" && game.time - game.overAt > (game.overHold || 0.6)) showScreen("over");

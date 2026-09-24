@@ -25,10 +25,10 @@
         const snap = await this.ref.get();
         if (snap.exists) {
           const d = snap.data() || {};
-          if (d.profile) profile = mergeProfiles(profile, d.profile);
+          if (d.profile) { if (modeSt.real) modeSt.real = mergeProfiles(modeSt.real, d.profile); else profile = mergeProfiles(profile, d.profile); }
           if (d.cos && (Number(d.cos.updatedAt) || 0) > (cos.updatedAt || 0)) cos = cleanCos(d.cos);
           ensureDaily(); applyCosmetics(); updateHud(); if (sheet) renderSheet(sheet);
-          const p = JSON.stringify(profile); store.set(KEYS.profile, p); store.set(KEYS.cos, JSON.stringify(cos)); store.set(KEYS.best, profile.best);
+          const p = JSON.stringify(realProfile()); store.set(KEYS.profile, p); store.set(KEYS.cos, JSON.stringify(cos)); store.set(KEYS.best, realProfile().best);
         }
         this.state = "ok"; this.lastSync = Date.now(); renderSave();
         await this.push();
@@ -43,7 +43,7 @@
       if (this.writing) { this.dirty = true; return; }
       this.writing = true; this.state = "busy"; renderSave();
       try {
-        await this.ref.set({ v: 1, profile: JSON.parse(JSON.stringify(profile)), cos: { ...cos }, savedAt: Date.now() });
+        await this.ref.set({ v: 1, profile: JSON.parse(JSON.stringify(realProfile())), cos: { ...cos }, savedAt: Date.now() });
         this.state = "ok"; this.lastSync = Date.now();
       } catch (e) {
         this.state = "error";

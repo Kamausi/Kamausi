@@ -141,9 +141,16 @@
     <div class="modes" id="modePick">
       <button class="mode-card story" type="button" data-mode="story"><span class="mode-ic"><svg><use href="#i-crow"/></svg></span><span class="mode-t"><span class="k" data-t="ui.story-mode">Story mode</span><b data-t="ui.story">Story</b><span class="mode-s" data-t="ui.eight-maps-a-mini-boss">Eight maps, a mini-boss and an end boss on each. Every end boss holds one of Morty's missing pieces: win them all back to end the reel.</span><span class="mode-best" id="storyBest"></span></span></button>
       <button class="mode-card arcade" type="button" data-mode="arcade"><span class="mode-ic"><svg><use href="#i-retry"/></svg></span><span class="mode-t"><span class="k" data-t="ui.arcade-mode">Arcade mode</span><b data-t="ui.arcade">Arcade</b><span class="mode-s" data-t="ui.any-map-you-ve-reached">Any map you've reached in Story. No bosses, no end: the ring keeps speeding up. Survive as long as you can and beat your best.</span><span class="mode-best" id="arcadeBest"></span></span></button>
+      <p class="map-k" data-t="ui.more-ways-to-play">More ways to play</p>
+      <div class="mode-grid" id="moreModes"></div>
     </div>
     <div class="maps" id="mapPick" hidden>
-      <p class="map-k" data-t="ui.arcade-pick-a-map">Arcade · pick a map</p>
+      <p class="map-k" id="mapPickK"></p>
+      <div class="practice-opts" id="practiceOpts" hidden>
+        <div class="row"><span class="lbl" data-t="ui.ring">Ring</span><div class="seg" role="radiogroup" aria-label="Ring" data-t-aria="ui.ring" id="prac-ring"><button type="button" role="radio" data-v="still" aria-checked="false" data-t="ui.still">Still</button><button type="button" role="radio" data-v="slow" aria-checked="false" data-t="ui.slow">Slow</button><button type="button" role="radio" data-v="full" aria-checked="true" data-t="ui.full">Full</button></div></div>
+        <div class="row"><span class="lbl" data-t="ui.path">Path</span><div class="seg" role="radiogroup" aria-label="Path" data-t-aria="ui.path" id="prac-half"><button type="button" role="radio" data-v="A" aria-checked="true" data-t="ui.flat">Flat</button><button type="button" role="radio" data-v="B" aria-checked="false" data-t="ui.3d">3D</button></div></div>
+        <div class="row"><span class="lbl" data-t="ui.hazards">Hazards</span><div class="seg" role="radiogroup" aria-label="Hazards" data-t-aria="ui.hazards" id="prac-hz"><button type="button" role="radio" data-v="on" aria-checked="true" data-t="ui.on">On</button><button type="button" role="radio" data-v="off" aria-checked="false" data-t="ui.off">Off</button></div></div>
+      </div>
       <div id="mapList"></div>
     </div>
   </div>

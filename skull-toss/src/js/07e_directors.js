@@ -76,14 +76,16 @@
   // hides the ring; bats, falling bones, balloons and the pendulum can knock the skull out of the air. Every hazard
   // gives a tell first (a screech, a shadow, a tick) and none of them run during a boss fight except the wind.
   const HZ = { kind: "none", wind: 0, fog: 0, fogT: 0, list: [], since: 0, pendT: 0, lastTick: 0 };
-  const hazardsLive = () => !boss && game.state !== "title" && game.state !== "cine" && game.mode !== "free";
+  // the map's hazards (wind included) sit out the mini-games, the encore, and Practice with them switched off
+  const hazardsAllowed = () => !MODES[game.mode].mini && game.phase !== "encore" && !(game.mode === "practice" && !practice.hazards);
+  const hazardsLive = () => !boss && game.state !== "title" && game.state !== "cine" && hazardsAllowed();
   function hazardsReset() {
     HZ.kind = mapData(game.stage || 1).mechanic.kind; HZ.wind = 0; HZ.fog = 0; HZ.fogT = 0; HZ.list = []; HZ.since = 0; HZ.pendT = 0; HZ.lastTick = 0;
     if (HZ.kind === "balloons") for (let i = 0; i < 2; i++) HZ.list.push(newBalloon(rrIn(0.3, 3.8)));
     renderWind();
   }
   const newBalloon = y => ({ kind: "balloon", x: rrIn(-2.2, 2.2), y, z: rrIn(2.4, 4.8), vy: rrIn(0.28, 0.42), col: ["#A94332", "#C49A42", "#356B68", "#F2E7C9"][(runRand() * 4) | 0], r: 0.24 });
-  const windNow = () => (HZ.kind === "wind" ? HZ.wind : 0);   // m/s² across the throw (positive pushes right)
+  const windNow = () => (HZ.kind === "wind" && hazardsAllowed() ? HZ.wind : 0);   // m/s² across the throw (positive pushes right)
   // the pendulum: a pivot high over the lane, swinging across it; its bob is what hits
   const PEND = { x: 0, y: 5.4, z: 3.1, L: 3.1, A: 0.86, r: 0.32 };
   function pendPeriod() { return 2.7 / tierNow().speed; }
@@ -91,7 +93,7 @@
   // after every throw: the wind turns, and the scheduled hazards (bats, bones, fog) come round every so many throws
   function hazardsAfterThrow() {
     const T = tierNow(), M = mapData(game.stage || 1).mechanic;
-    if (HZ.kind === "wind") { HZ.wind = Math.round(rrIn(-1, 1) * (M.max || 1.5) * (0.4 + 0.6 * T.hazard) * 10) / 10; renderWind(); if (Math.abs(HZ.wind) > 0.6) Sound.toon("gust"); }
+    if (HZ.kind === "wind" && hazardsAllowed()) { HZ.wind = Math.round(rrIn(-1, 1) * (M.max || 1.5) * (0.4 + 0.6 * T.hazard) * 10) / 10; renderWind(); if (Math.abs(HZ.wind) > 0.6) Sound.toon("gust"); }
     if (!hazardsLive() || !T.hazardEvery) return;
     if (++HZ.since < T.hazardEvery) return;
     HZ.since = 0;
@@ -171,7 +173,7 @@
   // the wind's HUD sign: which way and how hard (shown only where the wind blows)
   function renderWind() {
     const el = $("wind"); if (!el) return;
-    const on = HZ.kind === "wind" && game.state !== "title"; el.hidden = !on; if (!on) return;
+    const on = HZ.kind === "wind" && game.state !== "title" && hazardsAllowed(); el.hidden = !on; if (!on) return;
     const w = HZ.wind, n = Math.min(3, Math.ceil(Math.abs(w) / 0.6));
     el.querySelector(".arr").textContent = w === 0 ? "·" : (w > 0 ? "→" : "←").repeat(Math.max(1, n));
     el.querySelector("b").textContent = Math.abs(w).toFixed(1);

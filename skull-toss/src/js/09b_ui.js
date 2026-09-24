@@ -28,7 +28,7 @@
   function pauseRun() {
     if (!inRun() || paused) return;
     paused = true; cancelAim(); Sound.setPaused(true);
-    $("pauseScore").textContent = fmtN(game.score);
+    $("pauseScore").textContent = fmtN(game.score); pauseEl.querySelector('[data-sheet="customize"]').hidden = inPractice();
     showScreen("pause"); Sound.ui("open");
   }
   function resumeRun() {
@@ -37,39 +37,59 @@
     showScreen("play"); Sound.ui("close");
   }
   function toTitle() {
-    closeSheet(false); paused = false; Sound.setPaused(false); cancelAim(); Sound.flightStop(true);
+    closeSheet(false); paused = false; Sound.setPaused(false); cancelAim(); Sound.flightStop(true); leavePractice();
     game.state = "title"; game.score = 0; game.hits = 0; game.lives = START_LIVES; game.slots = START_LIVES; game.streak = 0;
     stageReset(); clearPowers(); clearPickups(); setScene(0); snapRing(); Sound.setAct("menu");
     particles = []; bursts = []; waves = []; clearFlies(); resetSkull(); showCombo(0); setHint("");
     showScreen("title"); updateHud();
   }
   $("play").addEventListener("click", () => openSheet("play"));   // Story or Arcade?
-  $("again").addEventListener("click", () => startGame({ mode: game.mode, map: game.map }));   // the same again (the same map, in Arcade)
+  $("again").addEventListener("click", () => startGame({ mode: game.mode, map: game.map }));   // the same again (the same map, in Arcade and Practice)
 
   // ───────────────────────── Play: Story or Arcade, and Arcade's map ─────────────────────────
   const clockStr = s => `${Math.floor(s / 60)}:${String(Math.floor(s) % 60).padStart(2, "0")}`;
-  function renderPlay(maps = false) {
+  function renderPlay(maps = false, pickFor = ui.pickFor || "arcade") {
+    ui.pickFor = pickFor;
     $("modePick").hidden = maps; $("mapPick").hidden = !maps;
-    $("h-play").textContent = maps ? "Arcade" : "Play";
+    $("h-play").textContent = !maps ? t("ui.play") : pickFor === "practice" ? t("mode.practice.name") : t("card.arcade.k");
+    $("mapPickK").textContent = pickFor === "practice" ? t("play.pickPractice") : t("play.pickArcade");
+    $("practiceOpts").hidden = pickFor !== "practice";
+    segValue($("prac-ring"), practice.ring); segValue($("prac-half"), practice.half); segValue($("prac-hz"), practice.hazards ? "on" : "off");
+    renderMoreModes();
     const reached = Math.min(profile.bestStage, MAP_COUNT), done = profile.storyClears > 0;
     $("storyBest").textContent = profile.bestScore > 0 ? `Best ${fmtN(profile.bestScore)} · ${done ? `finished ${profile.storyClears > 1 ? profile.storyClears + " times" : ""}` : `reached map ${reached}`} · ${profile.fragments.length}/8 pieces` : "";
     const played = STAGES.map((S, i) => arcadeRec(i)).filter(a => a.runs), longest = played.length ? Math.max(...played.map(a => a.secs)) : 0;
     $("arcadeBest").textContent = played.length ? `Longest run ${clockStr(longest)}` : "";
     $("mapList").innerHTML = STAGES.map((S, i) => {
-      const A = arcadeRec(i), open = mapUnlocked(i);
+      const A = arcadeRec(i), open = mapUnlocked(i), prac = pickFor === "practice";
       if (!open) return `<button class="map-card locked" type="button" data-map="${i}" aria-disabled="true" style="--tint:${S.map.look.sky[1]}"><span class="n">Map ${i + 1}</span><b>${S.name}</b><span class="d">Reach it in Story to play it here</span><span class="rec"><span><i>Locked</i></span></span></button>`;
       return `<button class="map-card" type="button" data-map="${i}" style="--tint:${S.map.look.sky[1]}"><span class="n">Map ${i + 1}</span><b>${S.name}</b><span class="d">${S.blurb}</span>`
-        + `<span class="rec">${A.runs ? `<span><i>Best</i> ${fmtN(A.score)}</span><span><i>Longest</i> ${clockStr(A.secs)}</span>` : "<span><i>Not played yet</i></span>"}</span></button>`;
+        + `<span class="rec">${prac ? "" : A.runs ? `<span><i>Best</i> ${fmtN(A.score)}</span><span><i>Longest</i> ${clockStr(A.secs)}</span>` : "<span><i>Not played yet</i></span>"}</span></button>`;
     }).join("");
   }
   $("modePick").addEventListener("click", e => {
     const b = e.target.closest("[data-mode]"); if (!b) return;
-    if (b.dataset.mode === "story") { closeSheet(false); startGame({ mode: "story" }); }
-    else { Sound.ui("flick"); renderPlay(true); const f = $("mapList").querySelector("button"); if (f && ui.kbd) f.focus({ preventScroll: true }); }
+    const m = b.dataset.mode, M = MODES[m];
+    if (M.open && !M.open()) { Sound.ui("deny"); toast(t("mode.locked")); return; }
+    if (M.maps) { Sound.ui("flick"); renderPlay(true, m); const f = $("mapList").querySelector("button"); if (f && ui.kbd) f.focus({ preventScroll: true }); }
+    else { closeSheet(false); startGame({ mode: m }); }
   });
-  $("mapList").addEventListener("click", e => { const b = e.target.closest("[data-map]"); if (!b) return; if (!mapUnlocked(+b.dataset.map)) { Sound.ui("deny"); return; } closeSheet(false); startGame({ mode: "arcade", map: +b.dataset.map }); });
+  $("mapList").addEventListener("click", e => { const b = e.target.closest("[data-map]"); if (!b) return; if (!mapUnlocked(+b.dataset.map)) { Sound.ui("deny"); return; } closeSheet(false); startGame({ mode: ui.pickFor || "arcade", map: +b.dataset.map }); });
+  bindSeg("prac-ring", v => { practice.ring = v; segValue($("prac-ring"), v); Sound.ui("tick"); });
+  bindSeg("prac-half", v => { practice.half = v; segValue($("prac-half"), v); Sound.ui("tick"); });
+  bindSeg("prac-hz", v => { practice.hazards = v === "on"; segValue($("prac-hz"), v); Sound.ui("tick"); });
+  // the other ways to play: a tile each, with its record, or what opens it
+  function renderMoreModes() {
+    const box = $("moreModes"); box.textContent = "";
+    for (const m of ["practice", "rush", ...MINI_IDS]) {
+      const M = MODES[m], open = !M.open || M.open(), R = modeRec(m);
+      const rec = !open ? t("mode.locked") : m === "practice" ? (R.runs ? t("mode.practiced", { n: R.runs }) : t("mode.none")) : R.runs ? t("mode.best", { v: modeValueText(m, R.best) }) : t("mode.none");
+      box.append(h("button", { class: `mode-tile m-${m}${open ? "" : " locked"}${M.mini ? " m-mini" : ""}`, type: "button", data: { mode: m }, "aria-disabled": open ? null : "true" },
+        h("b", {}, t(`mode.${m}.name`)), h("span", { class: "d" }, t(`mode.${m}.rule`)), h("span", { class: "rec" }, rec)));
+    }
+  }
   // in the map list, Back steps back to the two modes rather than closing
-  $("sheet-play").querySelector("[data-back]").addEventListener("click", e => { if (!$("mapPick").hidden) { e.stopImmediatePropagation(); renderPlay(false); Sound.ui("close"); } }, true);
+  $("sheet-play").querySelector("[data-back]").addEventListener("click", e => { if (!$("mapPick").hidden) { e.stopImmediatePropagation(); renderPlay(false); Sound.ui("close"); } }, true);   // (and back to the modes from Practice's too)
   $("toMenu").addEventListener("click", toTitle);
   $("pauseBtn").addEventListener("click", pauseRun);
   $("resumeBtn").addEventListener("click", resumeRun);
@@ -144,6 +164,10 @@
     if (r.powerups) rows.push(["Power-ups", r.powerups]);
     if (r.fragments && r.fragments.length) rows.push(["Morty's pieces", r.fragments.map(f => FRAGMENTS[f].name).join(", ")]);
     rows.push(["Skill level", g.stars ? `<span class="stars">${"★".repeat(g.stars)}</span>` : "—"]);
+    const mode = game.mode, M = MODES[mode] || {};
+    if (mode === "practice") rows.splice(0, rows.length, [t("res.throws"), game.throws], [t("res.hits"), game.hits], [t("res.perfect"), `${r.perfects}/${game.throws}`], [t("res.accuracy"), game.throws ? Math.round((100 * game.hits) / game.throws) + "%" : "—"]);
+    else if (mode === "rush") rows.splice(0, rows.length, ["Score", `<b id="final">${fmtN(game.score)}</b>`], [t("res.bosses"), `${r.bosses}/${modeSt.rush.length}`], ["Time", mmss(r.secs || 0)], ["Perfect", `${r.perfects}/${game.throws}`]);
+    else if (M.mini) rows.splice(0, rows.length, [t(`res.${mode}`), `<b id="final">${modeValueText(mode, r.modeValue || 0)}</b>`], ["Score", fmtN(game.score)], ["Perfect", `${r.perfects}/${game.throws}`], ["Best combo", `×${r.bestCombo}`]);
     $("resStats").innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
     $("resGrade").textContent = g.grade;
     $("resGrade").parentElement.classList.toggle("top", g.v >= 0.69);
@@ -152,6 +176,12 @@
     $("newBest").textContent = r.story && !best ? "Morty is whole again!" : !arcade ? "A brand new record!" : best ? `New best on ${STAGES[game.map].name}!` : "Your longest run on this map!";
     $("resTitle").textContent = best || longer ? "" : arcade ? `Arcade · ${STAGES[game.map].name}` : titleName();
     $("resBones").textContent = r.bones;
+    if (mode !== "story" && mode !== "arcade") {   // the other modes: their own record on the ribbon and the line below
+      const R = modeRec(mode), fresh = game.newBest && (r.modeValue || 0) > 0;
+      $("newBest").hidden = !fresh; $("newBest").textContent = t("res.newRecord", { mode: t(`mode.${mode}.name`) });
+      $("resTitle").textContent = fresh ? "" : mode === "practice" ? t("res.practiceRibbon", { map: STAGES[game.map].name }) : t(`mode.${mode}.name`);
+      $("bestLine").innerHTML = mode === "practice" ? t("res.practiceLine") : t("res.bestLine", { v: modeValueText(mode, R.best) });
+    }
     const A = arcade ? arcadeRec() : null;
     $("bestLine").innerHTML = arcade ? `Map best <b>${fmtN(A.score)}</b> · longest <b>${mmss(A.secs)}</b>` : `Best <b>${fmtN(profile.bestScore)}</b> · ${rankFor(profile.makes).name}`;
     // the progress panel: what's next in the Vault, with the bones this run earned sitting in its top-right corner

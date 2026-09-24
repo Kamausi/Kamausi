@@ -48,6 +48,7 @@
   }
   // how hard the ring is right now (targets; update() eases toward them)
   function ringTargets() {
+    const MR = modeRing(); if (MR && game.state !== "title") return MR;   // Curtain Call, the encore, a slow Practice ring
     const st = game.stage || 1, S = stageDef(st), h = game.stageHits || 0, cursed = powerOn("cursed") ? 1.5 : 1, T = tierNow();
     if (game.state === "title") { const L = level(0); return { mode: "line", ...L }; }
     if (ringFlies()) {   // the second half: the map's path, legs per second (the carousel's circle runs in radians: three legs a lap)
@@ -101,6 +102,7 @@
   // called once a throw has settled: has the player just earned the next act?
   function stageCheck() {
     if (game.lives <= 0) return false;
+    if (game.mode !== "story" && game.mode !== "arcade") return false;   // (the other modes move on in modeCheck: 07i_modes.js)
     if (game.mode === "arcade") {   // no bosses: at 25 hits the ring simply shakes loose and goes 3D, for good
       if (game.phase === "A" && game.stageHits >= STAGE_MINI) { arcadeGo3D(); return true; }
       return false;
@@ -158,13 +160,15 @@
     const bones = 150 + game.stage * 50; addBones(bones); game.run.bossBones = (game.run.bossBones || 0) + bones;
     stageCard(t("card.clear.k", { map: mapData(game.stage).name }), t("card.clear.t", { piece: FRAGMENTS[frag].name }), `${t("card.clear.s", { bones })}${boss.flawless ? " · " + t("card.flawless") : ""}`, 2.8, "gold");
     Sound.toon("fanfare"); changeoverCues(2.8);
-    cine("boss-out", 2.8, () => {
-      boss = null; seeds.length = 0; game.stage++; game.stageHits = 0; game.phase = "A"; VisualSystem.setStage(game.stage); setScene(game.stage - 1);
+    const nextMap = () => {
+      game.stage++; game.stageHits = 0; game.phase = "A"; VisualSystem.setStage(game.stage); setScene(game.stage - 1);
       if (game.lives < MAX_LIVES) { game.lives++; game.slots = Math.max(game.slots, game.lives); }
       setRingMode("line"); snapRing(); Sound.setAct("A"); hazardsReset(); refillTargets();
       nextReel();   // the next reel's title card (and the intermission, halfway): 09i_reel.js
       updateHud();
-    }, 0.4);
+    };
+    // the boss goes down, then (Story) the encore: ten seconds of Curtain Call for bones (07i_modes.js), then the next map
+    cine("boss-out", 2.8, () => { boss = null; seeds.length = 0; if (encoreOn()) startEncore(nextMap); else nextMap(); }, 0.4);
     checkUnlocks(); persist(); updateHud();
     challenge("bosses", 1);
   }
@@ -185,6 +189,7 @@
   const progEl = $("prog"), progFill = $("progFill"), progSt = $("progStage"), progLbl = $("progLabel");
   function renderProgress() {
     if (!progEl) return;
+    if (modeProgress()) return;   // Practice, Boss Rush, the mini-games and the encore (07i_modes.js)
     progEl.classList.toggle("arcade", game.mode === "arcade" && game.state !== "title");
     if (game.mode === "arcade" && game.state !== "title") {   // Arcade: the clock, racing your best time on this map
       const secs = game.state === "over" ? game.run.secs || 0 : arcadeSecs(), best = arcadeRec().secs, clock = s => `${Math.floor(s / 60)}:${String(Math.floor(s) % 60).padStart(2, "0")}`;
