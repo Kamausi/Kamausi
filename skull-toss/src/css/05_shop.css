@@ -242,3 +242,18 @@
 .ribbon.soul{background:#7E5CC8;color:var(--cream)}
 .souls-packs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
 .soul-door{width:100%;margin-top:12px;background:linear-gradient(180deg,#5A447E,#3A2A5A)}
+
+/* mastery (v32): a row per shot, map or boss, with three tiers to claim */
+.m-list{display:grid;gap:10px;margin-top:10px}
+.m-row{padding:11px 12px;border-radius:12px;background:var(--panel-2);border:2px solid var(--line-2)}
+.m-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.m-head b{font:17px/1.1 var(--display);letter-spacing:.03em;text-transform:uppercase}
+.m-have{font:17px/1 var(--num);color:var(--mustard-l);white-space:nowrap}
+.m-row p{margin:4px 0 0;font:700 11.5px/1.35 var(--ui);color:var(--cream-dim)}
+.m-tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+.m-tier{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;border-radius:8px;border:2px solid var(--ink);background:#2A2F3A;color:var(--cream-faint);cursor:pointer}
+.m-tier .m-t{font:800 10px/1.2 var(--ui);letter-spacing:.06em;text-transform:uppercase;text-align:center}
+.m-tier .m-p{font:15px/1 var(--num)}
+.m-tier.bronze.got{background:#8C5A2E;color:var(--cream)}.m-tier.silver.got{background:#8E949F;color:var(--ink)}.m-tier.gold.got{background:var(--gold);color:var(--ink)}
+.m-tier.got:not(.claimed){box-shadow:0 0 0 2px var(--cream),0 3px 0 var(--ink);animation:gain .9s var(--snap) infinite alternate}
+.m-tier.claimed{opacity:.6;cursor:default}

@@ -220,12 +220,12 @@
   const ZERO = { bones: 0, bonks: 0, misses: 0, clutch: 0, bonesTotal: 0, makes: 0, best: 0, perfects: 0, rims: 0, bestStreak: 0, bestPerfStreak: 0, peakLives: 0, games: 0, points: 0, throws: 0, unlocked: [], boardBest: null, fragments: [], bossLog: {} };
   for (const [k, v] of Object.entries(T.profile())) if (typeof v === "number" && !(k in ZERO) && k !== "updatedAt" && k !== "schema") ZERO[k] = k === "bestStage" ? 1 : 0;   // every other counter too
   ZERO.achievements = T.achievements().map(a => a.id); ZERO.arcade = {};   // (all achievements in hand, so none pays out in the middle of a bones test)
-  ZERO.shots = {}; ZERO.modes = {}; ZERO.met = []; ZERO.secrets = []; ZERO.history = [];   // (v25–v27: signature shots, mode records, what the Codex has noted)
+  ZERO.shots = {}; ZERO.modes = {}; ZERO.met = []; ZERO.secrets = []; ZERO.history = []; ZERO.mastery = []; ZERO.flawless = {}; ZERO.mapMakes = {};   // (v25–v27: signature shots, mode records, what the Codex has noted)
   const statFor = { perfStreak: "bestPerfStreak" };
   const DEF = { skull: "bone", eyes: "pie", teeth: "grin", paint: "none", trail: "dust", impact: "classic", ring: "hoop", aim: "bone", reel: "standard", title: "rookie", hat: "none", aura: "none", pole: "wood" };
   const dressDefault = () => { for (const [k, v] of Object.entries(DEF)) T.equip(k, v); };
   test("Skull Vault: thirteen shelves (hats, auras and poles are new), over 350 things, titles earned not bought", () => {
-    const c = T.catalog(), want = { skull: 40, eyes: 24, teeth: 18, paint: 32, trail: 34, impact: 20, ring: 24, aim: 16, reel: 10, title: 48, hat: 52, aura: 31, pole: 21 };   // (titles: six career-level ones, v31)
+    const c = T.catalog(), want = { skull: 40, eyes: 24, teeth: 18, paint: 32, trail: 34, impact: 20, ring: 24, aim: 16, reel: 10, title: 49, hat: 52, aura: 31, pole: 21 };   // (titles: six career-level ones, v31, and the Shot Doctor, v32)
     for (const [k, n] of Object.entries(want)) { const L = (c[k] || []).filter(i => !i.souls); assert(L.length === n, `${k}: ${L.length} items, wanted ${n} (besides the Soul Shop's, v30)`); }
     const all = Object.values(c).flat(); assert(all.length >= 351, `only ${all.length} cosmetics (117 × 3 = 351)`);
     for (const k of Object.keys(c)) for (const it of c[k]) {
@@ -1701,6 +1701,33 @@
     const card = $("careerCard").textContent;
     assert(new RegExp(`^${T.levelFor(T.profile().xp)}`).test(card) && /XP to level/.test(card) && /2\/8/.test(card) && /12,345/.test(card), card);
     assert(document.querySelectorAll("#history .runs li").length === 10, "the runs log");
+    T.closeSheet(); T.setStats(ZERO); T.toTitle();
+  });
+
+  // ── v32: the Shot Book and mastery ──
+  test("Shot mastery: Bronze, Silver and Gold at 1, 10 and 25; each tier pays once; gold on all twelve is the Shot Doctor", () => {
+    T.setStats({ ...ZERO, bones: 0, shots: { longbomb: 10 } });
+    assert(T.tierReached("shot", "longbomb", 1) && !T.tierReached("shot", "longbomb", 2) && T.masteryClaimable(), "Silver at 10, not Gold");
+    assert(T.claimMastery("shot", "longbomb", 0) === 100 && T.claimMastery("shot", "longbomb", 1) === 300 && T.bones() === 400, `Bronze 100 and Silver 300 (${T.bones()})`);
+    assert(T.claimMastery("shot", "longbomb", 1) === 0 && T.claimMastery("shot", "longbomb", 2) === 0 && T.bones() === 400, "once each; Gold not yet");
+    const all = {}; for (const s of T.shotList()) all[s.id] = 25; T.setStats({ ...ZERO, shots: all });
+    assert(T.equip("title", "shotdoctor"), "gold on all twelve: the Shot Doctor"); T.equip("title", "rookie"); T.setStats(ZERO);
+  });
+  test("Map mastery: a star for its end boss, one for beating it without a miss, one for 100 makes there", () => {
+    T.setStats({ ...ZERO, bones: 0 }); fresh(); toHit(25); T.step(2.6); T.hurtBoss(99); T.endThrow(); T.step(3.2); toHit(50); T.step(2.9); T.hurtBoss(99); T.endThrow(); T.step(4);
+    const P = T.profile(); assert(P.bossLog.undertaker === 1 && P.flawless.undertaker === 1, `the Undertaker down, without a miss (${JSON.stringify(P.flawless)})`);
+    assert(T.tierReached("map", "1", 0) && T.tierReached("map", "1", 1) && !T.tierReached("map", "1", 2), "two stars");
+    T.setStats({ mapMakes: { 1: 100 } }); assert(T.tierReached("map", "1", 2), "the third at 100 makes");
+    T.setStats(ZERO); T.toTitle();
+  });
+  test("Boss mastery, and the Mastery sheet: tiers light up when reached, and the title chip says when there's something to claim", () => {
+    T.setStats({ ...ZERO, bossLog: { crow: 5 } }); T.toTitle();
+    assert(T.tierReached("boss", "crow", 1) && !T.tierReached("boss", "crow", 2) && !$("masteryPip").hidden, "the Crow King ×5: two tiers, and the pip shows");
+    T.openSheet("mastery"); document.querySelector('#masteryTabs [data-cat="boss"]').click();
+    const row = document.querySelector('#masteryList [data-m="boss:crow"]'), live = row.querySelectorAll(".m-tier.got:not(.claimed)");
+    assert(document.querySelectorAll("#masteryList .m-row").length === 16 && live.length === 2, `16 bosses, two tiers to claim (${live.length})`);
+    live[0].click();
+    assert(T.profile().mastery.includes("boss:crow:0"), "claimed from the sheet");
     T.closeSheet(); T.setStats(ZERO); T.toTitle();
   });
 

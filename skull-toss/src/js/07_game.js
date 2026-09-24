@@ -162,7 +162,7 @@
       game.perfStreak = kind === "perfect" ? game.perfStreak + 1 : 0;
       run.bestCombo = Math.max(run.bestCombo, game.streak);
       if (kind === "perfect") run.perfects++; else if (kind === "rim") run.rims++; else run.swishes++;
-      profile.makes++; profile.points += R.pts;
+      profile.makes++; profile.points += R.pts; profile.mapMakes[game.stage] = (profile.mapMakes[game.stage] || 0) + 1;
       if (kind === "perfect") profile.perfects++;
       if (kind === "rim") profile.rims++;
       profile.bestStreak = Math.max(profile.bestStreak, game.streak);

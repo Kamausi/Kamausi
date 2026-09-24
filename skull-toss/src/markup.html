@@ -59,6 +59,7 @@
       <button class="chip-btn" data-sheet="profile" type="button"><svg class="icon"><use href="#i-profile"/></svg><span data-t="ui.profile">Profile</span></button>
       <button class="chip-btn" data-sheet="achievements" type="button"><svg class="icon"><use href="#i-star"/></svg><span data-t="ui.achievements">Achievements</span><span class="badge" id="achPip" hidden></span></button>
       <button class="chip-btn" data-sheet="codex" type="button"><svg class="icon"><use href="#i-book"/></svg><span data-t="ui.codex">Codex</span></button>
+      <button class="chip-btn" data-sheet="mastery" type="button"><svg class="icon"><use href="#i-star"/></svg><span data-t="ui.mastery">Mastery</span><span class="badge" id="masteryPip" hidden></span></button>
     </div>
     <p class="meta" id="titleBest"></p>
   </div>
@@ -203,6 +204,16 @@
     <div class="section-k"><span class="k" data-t="ui.soul-packs">Soul packs</span><b id="soulsPacksNote"></b></div>
     <div class="souls-packs" id="soulsPacks"></div>
     <div class="tip" data-t="ui.souls-live-on-the-server">Souls live on the server. They're never in a save code, and only the server can change them. <b>Bones</b> still buy everything else.</div>
+  </div>
+</section>
+
+<section class="sheet" id="sheet-mastery" role="dialog" aria-modal="true" aria-labelledby="h-mastery" hidden>
+  <div class="sheet-head"><button class="icon-btn" data-back type="button" aria-label="Back" data-t-aria="ui.back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="h-mastery" data-t="ui.mastery">Mastery</h2><span class="bones" id="bonesMastery"><svg><use href="#i-bone"/></svg><span>0</span></span></div>
+  <div class="sheet-body">
+    <div class="cat-tabs" id="masteryTabs" role="tablist"></div>
+    <p class="codex-count" id="masteryCount"></p>
+    <div class="m-list" id="masteryList"></div>
+    <div class="tip" data-t="ui.every-tier-pays-its-bones">Every tier pays its <b>bones</b> once. Tap it when it lights up.</div>
   </div>
 </section>
 

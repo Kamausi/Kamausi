@@ -9,6 +9,7 @@
       case "perfStreak": return Math.max(profile.bestPerfStreak, run ? game.perfStreak : 0);
       case "peakLives": return Math.max(profile.peakLives, run ? game.peakLives : 0);
       case "careerLevel": return levelFor(profile.xp);   // (04h_career.js)
+      case "goldShots": return goldShots();              // (09n_mastery.js)
       default: return profile[k] || 0;
     }
   }
@@ -130,4 +131,5 @@
     const cosm = unseen().length > 0, deals = profile.dealSeen !== dayKey();
     $("challengePip").hidden = !chal; $("customizePip").hidden = !cosm; $("storePip").hidden = !deals; $("menuBadge").hidden = !(chal || cosm);
     $("achPip").hidden = !(profile.achievements.length > (profile.achSeen || 0));
+    $("masteryPip").hidden = !masteryClaimable();
   }

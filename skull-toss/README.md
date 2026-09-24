@@ -1,8 +1,20 @@
-# SKULL TOSS v31
+# SKULL TOSS v32
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)), with a synthesised waltz standing in wherever they can't load.
+
+## New in v32: the Shot Book and mastery
+
+A **Mastery** chip on the title screen shows what there is to get good at, and what getting good pays. Each tier pays its bones once, claimed by hand. The chip shows a pip when something is waiting.
+
+| Tab | Tiers | Pays |
+|---|---|---|
+| **Shots** (the Shot Book) | each signature shot: Bronze (made once), Silver (10) and Gold (25) | 100, 300 and 750 bones |
+| **Maps** | three stars a map: its end boss down, its end boss down without a miss, and 100 makes there | 150 bones a star |
+| **Bosses** | each of the sixteen: beaten once, 5 times and 20 times | 100, 250 and 500 bones |
+
+Gold on all twelve shots earns the **Shot Doctor** title. The profile now also records makes per map and which end bosses fell without a miss.
 
 ## New in v31: career levels, the profile card and a log of runs
 
@@ -798,7 +810,7 @@ From the console, `SkullToss.debug.visualAnimation` lists the pose library (`pos
 
 ## Tests
 
-Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **173 checks**, covering:
+Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **176 checks**, covering:
 
 - **Layout, scoring and aiming.**
   - Everything is centred and every result is classified correctly.
@@ -931,3 +943,7 @@ Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to
   - A real run earns experience on a rising 50-level curve; Practice earns none.
   - A level up pays 25 bones × the level, once, and level 5 unlocks its title.
   - The career card shows level, experience to the next, pieces and best score, and the log keeps the last ten runs.
+- **v32.**
+  - Shot tiers come at 1, 10 and 25 and each pays once. Gold on all twelve is the Shot Doctor.
+  - Map stars: its end boss down, down without a miss, and 100 makes there.
+  - Boss tiers light up in the sheet, the title chip shows a pip, and a tier is claimed from the sheet.

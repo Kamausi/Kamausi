@@ -146,7 +146,7 @@
     updateHud();
   }
   function mainBossDown() {
-    profile.bossKills++; if (boss.flawless) profile.bossFlawless++; game.run.bosses++;
+    profile.bossKills++; if (boss.flawless) { profile.bossFlawless++; profile.flawless[boss.kind] = 1; } game.run.bosses++;
     profile.bossLog[boss.kind] = (profile.bossLog[boss.kind] || 0) + 1;
     profile.bestStage = Math.max(profile.bestStage, game.stage + 1);
     // the end boss was holding one of Morty's pieces
