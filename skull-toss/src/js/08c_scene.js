@@ -1,5 +1,5 @@
   // ───────────────────────── drawing: the play field ─────────────────────────
-  // the ring's shadow on the ground (and, off the flat rail, a plumb line down to it so you can read its depth).
+  // the ring's shadow on the ground, which is what says how deep the ring is (no line joins them: the shadow alone reads).
   // No rail, no chalked triangle, no marker for the next corner: where the ring goes next is yours to read.
   function drawTrackAndShadow() {
     const R = RINGS[cos.ring];
@@ -12,10 +12,6 @@
       const r = ring.rc * p.s, wob = Math.sin(game.time * 3.1) * 0.06;
       ctx.save(); ctx.globalAlpha = 0.38; ctx.translate(p.x, p.y + r * 0.18); ctx.scale(1 + wob, -0.26); drawRingShape(ctx, 0, 0, r, RING_TUBE * 2 * p.s, cos.ring, game.time, 0); ctx.restore();
     } else { ctx.fillStyle = "rgba(0,0,0,.45)"; ctx.beginPath(); ctx.ellipse(p.x, p.y, ring.rc * p.s * 0.95, 0.07 * p.s, 0, 0, TAU); ctx.fill(); }
-    if (ring.mode !== "line") {        // a plumb line from the ring to its shadow: where it is now, never where it's going
-      const top = project(ring.x, ring.y - ring.rc - 0.05, ring.z);
-      ctx.strokeStyle = "rgba(232,216,180,.22)"; ctx.lineWidth = 1; ctx.setLineDash([2, 5]); ctx.beginPath(); ctx.moveTo(top.x, top.y); ctx.lineTo(p.x, p.y); ctx.stroke(); ctx.setLineDash([]);
-    }
   }
   // cartoon wings: the ring has shaken loose and flies the triangle on its own
   function drawRingWings(x, y, r, lw) {

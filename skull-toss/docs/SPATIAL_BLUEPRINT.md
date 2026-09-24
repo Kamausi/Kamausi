@@ -10,6 +10,7 @@ One set of world numbers, in `src/maps/blueprint.json`, is read by the build (to
 | Boss space | z 9–16, x ±4.5 | Where end bosses stand and throw from. |
 | Parallax planes | sky 400, far 70, world 30, near 3.6, foreground 2.4 (camera distance) | Nearer planes slide further when the camera moves. |
 | HUD safe area | top 12%, bottom 10% of the screen | Nothing that matters to a throw rests there. The picture-house screen hangs below it. |
+| Shadows | the ring's and the skull's, on the ground under them | They're how depth is read. Nothing joins a floating ring to its shadow: no dotted line, no plumb line. |
 
 ## How a map is built
 
