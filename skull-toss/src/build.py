@@ -68,7 +68,7 @@ HEX = re.compile(r"^#[0-9A-Fa-f]{6}$"); COLOR = re.compile(r"^(#[0-9A-Fa-f]{6}|r
 def map_problems(m, fname):
     bad = []
     need = lambda k, d=m: k in d or bad.append(f"missing \"{k}\"")
-    for k in ["id", "n", "name", "reel", "premise", "identity", "look", "ring", "tiers", "mechanic", "bosses", "fragment", "music", "blurb"]: need(k)
+    for k in ["id", "n", "name", "reel", "premise", "identity", "look", "ring", "tiers", "mechanic", "bosses", "fragment", "target", "music", "blurb"]: need(k)
     if bad: return bad
     if fname != f"{m['n']:02d}-{m['id']}.json": bad.append(f"file should be named {m['n']:02d}-{m['id']}.json")
     for k in ["mechanic", "throw", "targets", "hazards", "camera", "ambient", "music", "sfx", "transition", "reward"]:
@@ -101,6 +101,7 @@ def map_problems(m, fname):
     if m["mechanic"].get("kind") not in REG["mechanic"]: bad.append(f"mechanic \"{m['mechanic'].get('kind')}\" isn't implemented")
     if m["bosses"].get("mini") not in REG["mini"] or m["bosses"].get("end") not in REG["end"]: bad.append("bosses must name a registered mini-boss and end boss")
     if m["fragment"] not in REG["fragment"]: bad.append(f"fragment \"{m['fragment']}\" isn't registered")
+    if m.get("target") not in REG["target"]: bad.append(f"target \"{m.get('target')}\" isn't one the code draws ({', '.join(REG['target'])})")
     if not 0.85 <= m["music"].get("rate", 0) <= 1.15: bad.append("music.rate must be 0.85–1.15")
     return bad
 MAP_DATA, problems = [], []

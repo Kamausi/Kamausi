@@ -113,5 +113,6 @@
     "rate": 0.97,
     "key": -1
   },
-  "blurb": "A quicker ring that bobs as it slides, and a lopsided triangle"
+  "blurb": "A quicker ring that bobs as it slides, and a lopsided triangle",
+  "target": "brazier"
 }

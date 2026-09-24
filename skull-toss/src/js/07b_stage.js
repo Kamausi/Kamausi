@@ -32,14 +32,9 @@
   function ringAt(p) {
     if (ring.frozen) return { x: ring.frozen.x, y: ring.frozen.y, z: ring.frozen.z == null ? RING_Z : ring.frozen.z };
     if (ring.mode === "boss" && boss) return boss.ringAt(p);
-    if (ring.mode === "tri") {
-      const seq = ring.tri.seq, n = seq.length, i = Math.floor(p), f = smooth(p - i), V = triVerts();
-      const A = V[seq[((i % n) + n) % n]], B = V[seq[(((i + 1) % n) + n) % n]];
-      return { x: A.x + (B.x - A.x) * f, y: A.y + (B.y - A.y) * f, z: A.z + (B.z - A.z) * f };
-    }
-    return { x: ring.amp * Math.sin(p), y: RING_Y + ring.bob * Math.sin(p * 1.7), z: RING_Z };
+    return (RING_PATHS[ring.mode] || RING_PATHS.line).at(p);   // the Ring Path Director (07e_directors.js)
   }
-  const ringFlat = () => !!ring.frozen || ring.mode === "line" || (ring.mode === "boss" && !!boss && !!boss.flat);
+  const ringFlat = () => !!ring.frozen || !!(RING_PATHS[ring.mode] && RING_PATHS[ring.mode].flat) || (ring.mode === "boss" && !!boss && !!boss.flat);
   // when does the skull reach the ring's depth? s: the skull, sampled between s.t and s.t + span; phaseAt(τ) gives
   // the ring's phase at skull time τ. The ring never moves in depth as fast as the skull, so there is one crossing.
   function crossTime(s, span, phaseAt) {
@@ -53,15 +48,15 @@
   }
   // how hard the ring is right now (targets; update() eases toward them)
   function ringTargets() {
-    const st = game.stage || 1, S = stageDef(st), h = game.stageHits || 0, cursed = powerOn("cursed") ? 1.5 : 1;
+    const st = game.stage || 1, S = stageDef(st), h = game.stageHits || 0, cursed = powerOn("cursed") ? 1.5 : 1, T = tierNow();
     if (game.state === "title") { const L = level(0); return { mode: "line", ...L }; }
-    if (ring.mode === "tri") {
-      const L = level(16 + (h - STAGE_MINI) * 0.25 + (st - 1) * 4);
-      return { rc: L.rc - (hasMod("shrink") ? 0.05 : 0), omega: cursed * S.speed * arcadeRamp() / Math.max(0.72, 1.9 - (h - STAGE_MINI) * 0.042), amp: 0, bob: 0 };
+    if (ringFlies()) {   // the second half: the map's path, legs per second (the carousel's circle runs in radians: three legs a lap)
+      const L = level(16 + (h - STAGE_MINI) * 0.25 + (st - 1) * 4), lap = RING_PATHS[ring.mode].lap || 1;
+      return { rc: L.rc - (hasMod("shrink") ? 0.05 : 0) + T.rc, omega: lap * cursed * S.speed * T.speed * arcadeRamp() / Math.max(0.72, 1.9 - (h - STAGE_MINI) * 0.042), amp: 0, bob: 0 };
     }
     if (ring.mode === "boss") return { rc: boss ? boss.rc : ring.rc, omega: 1, amp: 0, bob: 0 };
     const L = level(Math.min(h, STAGE_MINI) * 0.65 + (st - 1) * 3);
-    return { amp: L.amp, omega: L.omega * cursed * S.speed, rc: L.rc - (hasMod("shrink") ? 0.05 : 0), bob: Math.max(L.bob, hasMod("bob") ? 0.16 : 0) };
+    return { amp: L.amp, omega: L.omega * cursed * S.speed * T.speed, rc: L.rc - (hasMod("shrink") ? 0.05 : 0) + T.rc, bob: Math.max(L.bob, hasMod("bob") ? 0.16 : 0) };
   }
   // Arcade never ends, so past the story's top speed its ring keeps winding up: 6% quicker every 10 hits, to 1.6×
   const arcadeRamp = () => (game.mode === "arcade" ? Math.min(1.6, 1 + 0.06 * Math.floor(Math.max(0, (game.stageHits || 0) - STAGE_BOSS) / 10)) : 1);
@@ -69,7 +64,7 @@
   function setRingMode(mode, keepPos = true) {
     const here = { x: ring.x, y: ring.y, z: ring.z };
     ring.mode = mode; ring.phase = 0;
-    if (mode === "tri") { ring.tri = { ...stageDef().tri, seq: triSequence(game.stage || 1) }; }
+    if (RING_PATHS[mode] && !RING_PATHS[mode].flat) { ring.tri = { ...stageDef().tri, seq: triSequence(game.stage || 1) }; }
     const p = ringAt(0); ring.x = p.x; ring.y = p.y; ring.z = p.z;
     ring.glide = keepPos ? { from: here, t: 0, dur: 0.7 } : null;
   }
@@ -101,7 +96,7 @@
   // ── the acts
   function stageReset() {
     Object.assign(game, { stage: 1, stageHits: 0, hits: 0, phase: "A", cine: null, freeze: 0 });
-    boss = null; seeds.length = 0; setRingMode("line", false); hideStageCard();
+    boss = null; seeds.length = 0; setRingMode("line", false); hideStageCard(); clearDirectors();
   }
   // called once a throw has settled: has the player just earned the next act?
   function stageCheck() {
@@ -119,12 +114,12 @@
     game.phase = "B"; clearPickups(); Sound.toon("brass");
     stageCard("The ring goes 3D", "Left, right, up, down, near and far", "It only gets quicker from here", 2.2, "gold");
     cine("mini-out", 2.2, () => { snapRing(); setHint("Watch the ring: its flight repeats"); updateHud(); }, 0.45);
-    setRingMode("tri"); snapRing(); ring.morph = 1; Sound.setAct("B");
+    setRingMode(bMode()); snapRing(); ring.morph = 1; Sound.setAct("B");
     updateHud();
   }
   const bossIds = (n = game.stage) => mapData(n).bosses;
   function startMiniBoss() {
-    game.phase = "mini"; clearPickups(); clearPowers(); Sound.toon("brass"); Sound.setAct("boss");
+    game.phase = "mini"; clearPickups(); clearPowers(); clearDirectors(); Sound.toon("brass"); Sound.setAct("boss");
     boss = makeBoss(bossIds().mini, game.stage); setRingMode("boss"); snapRing(); Telemetry.emit("boss_start", { kind: boss.kind, stage: game.stage });
     stageCard("Mini-boss", BOSS_INFO[boss.kind].name, `Toss through his ring ${boss.max} times`, 2.3, "boss");
     cine("mini-in", 2.3, () => setHint("He swoops near and far: lead the ring"));
@@ -137,12 +132,12 @@
     stageCard("Mini-boss defeated!", "The ring goes 3D", `Left, right, up, down, near and far${boss.flawless ? " · flawless!" : ""}`, 2.6, "gold");
     // the rules change: the camera pulls back, the ring shakes loose and grows wings, the band changes key
     cine("mini-out", 2.6, () => { boss = null; game.phase = "B"; snapRing(); setHint("Watch the ring: its flight repeats"); updateHud(); }, 0.55);
-    setRingMode("tri"); snapRing(); ring.morph = 1; Sound.setAct("B");
+    setRingMode(bMode()); snapRing(); ring.morph = 1; Sound.setAct("B");
     checkUnlocks(); persist(); updateHud();
     challenge("bosses", 1);
   }
   function startMainBoss() {
-    game.phase = "boss"; clearPickups(); clearPowers(); Sound.toon("brass"); Sound.setAct("boss");
+    game.phase = "boss"; clearPickups(); clearPowers(); clearDirectors(); Sound.toon("brass"); Sound.setAct("boss");
     boss = makeBoss(bossIds().end, game.stage); setRingMode("boss"); snapRing(); Telemetry.emit("boss_start", { kind: boss.kind, stage: game.stage });
     stageCard("End boss", BOSS_INFO[boss.kind].name, BOSS_INFO[boss.kind].tell, 2.6, "boss");
     cine("boss-in", 2.6, () => setHint("Throw between his seed volleys"), 0.35);
@@ -166,7 +161,7 @@
     cine("boss-out", 2.8, () => {
       boss = null; seeds.length = 0; game.stage++; game.stageHits = 0; game.phase = "A"; VisualSystem.setStage(game.stage); setScene(game.stage - 1);
       if (game.lives < MAX_LIVES) { game.lives++; game.slots = Math.max(game.slots, game.lives); }
-      setRingMode("line"); snapRing(); Sound.setAct("A");
+      setRingMode("line"); snapRing(); Sound.setAct("A"); hazardsReset(); refillTargets();
       const S = stageDef();
       stageCard(S.map.reel, S.name, S.map.identity.mechanic.split(":")[0], 2.2);
       updateHud();

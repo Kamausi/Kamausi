@@ -222,6 +222,12 @@
       else if (kind === "ko") { tone(98, "sine", 0.9, 0.35, 0, 45); noise(0.9, 0.25, "lowpass", 600, 60, 0, 0.8, { brown: true }); if (sfxOn()) bell(0.05, 0, 0.12, 392, sfxBus); }
       else if (kind === "meow") { tone(620, "sine", 0.34, 0.05, 0, 820, { ...o, vib: [7, 30], att: 0.06 }); tone(1240, "sine", 0.3, 0.012, 0.05, 1600, o); }
       else if (kind === "hiss") noise(0.45, 0.08, "highpass", 3500, 5000, 0, 1, o);
+      else if (kind === "screech") { tone(2300, "sawtooth", 0.28, 0.025, 0, 3400, { ...o, vib: [31, 140], lp: 5000 }); noise(0.2, 0.04, "highpass", 4200, null, 0, 1, o); }
+      else if (kind === "tick") { tone(2600, "square", 0.02, 0.02, 0, null, { ...o, lp: 4000 }); noise(0.015, 0.05, "bandpass", 3000, null, 0, 6, o); }
+      else if (kind === "gust") noise(0.9, 0.05, "bandpass", 420, 1300, 0, 0.8, { att: 0.3 });
+      else if (kind === "clang") [330, 495, 742].forEach((f, i) => tone(f, "triangle", 0.7 - i * 0.15, 0.08, 0, null, o));
+      else if (kind === "ribbit") { tone(190, "square", 0.07, 0.05, 0, 150, { ...o, lp: 900 }); tone(210, "square", 0.08, 0.05, 0.1, 160, { ...o, lp: 900 }); }
+      else if (kind === "quack") { tone(520, "sawtooth", 0.12, 0.05, 0, 380, { ...o, lp: 1500, vib: [25, 40] }); }
       else if (kind === "shovel") { if (!ambOn()) return; noise(0.09, 0.07, "bandpass", 1300, 500, 0, 2, { ...o, bus: ambBus, low: true }); tone(210, "triangle", 0.05, 0.02, 0, 150, { ...o, bus: ambBus, low: true }); }
     },
     // the shot director's own foley (04e_director.js): short sounds that land on the animation's beats

@@ -67,6 +67,9 @@
 .lives-row{display:flex;flex-direction:column;align-items:flex-start;gap:5px}
 
 /* GAME OVER: the words pop up over the picture when the last skull goes, before the headstone */
+.wind{position:fixed;top:calc(env(safe-area-inset-top,0px) + 96px);left:50%;transform:translateX(-50%);z-index:6;display:flex;align-items:baseline;gap:5px;padding:2px 10px;border-radius:999px;background:rgba(23,19,15,.55);font:15px/1.2 var(--num);letter-spacing:.06em;color:var(--cream);pointer-events:none}
+.wind .arr{font:16px/1 var(--ui);font-weight:900;color:var(--mustard-l)}.wind .k{font:10px var(--ui);font-weight:800;text-transform:uppercase;color:var(--cream-dim)}
+.map-card.locked{opacity:.55;filter:grayscale(.65)}.gameover.won .go-card{color:var(--gold)}
 .gameover{position:fixed;inset:0;z-index:8;display:grid;place-items:center;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,rgba(10,8,6,.2),rgba(10,8,6,.62))}
 .gameover[hidden]{display:none}
 .go-card{display:flex;flex-direction:column;align-items:center;gap:.02em;font:clamp(70px,21vw,150px)/.86 var(--display);text-transform:uppercase;color:var(--cream);transform:rotate(-4deg);animation:gocard .5s var(--snap) both}

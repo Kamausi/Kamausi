@@ -112,5 +112,6 @@
     "rate": 1.0,
     "key": 0
   },
-  "blurb": "The last reel: the fastest ring, and it cuts between frames"
+  "blurb": "The last reel: the fastest ring, and it cuts between frames",
+  "target": "filmcan"
 }

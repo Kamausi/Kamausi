@@ -105,5 +105,6 @@
     "rate": 1.06,
     "key": 3
   },
-  "blurb": "A shrinking ring that rides the carousel round and round"
+  "blurb": "A shrinking ring that rides the carousel round and round",
+  "target": "duck"
 }

@@ -1100,6 +1100,81 @@
     assert(m.bestStage === 5 && m.achievements.includes("half-reel") && !m.achievements.includes("whole-reel") && m.achievements.includes("first-toss"), JSON.stringify(m));
   });
 
+  // ── v19: the Tier and Ring Path Directors, bonus targets, and each map's hazards ──
+  const BP = { xMax: 2.3, yMin: 1.25, yMax: 3.7, zMin: 4.4, zMax: 8.6 };
+  test("The Tier Director: each map runs its two tiers, and Arcade climbs past 50 hits", () => {
+    fresh(); assert(T.tier().id === "I", `map 1 opens on tier I (${T.tier().id})`);
+    beatCrow(1); assert(T.tier().id === "II", `and runs tier II after the mini-boss (${T.tier().id})`);
+    beatCrow(8); assert(T.tier().id === "VI", `the Final Reel's second half is tier VI (${T.tier().id})`);
+    T.setStats({ ...ZERO, bestStage: 9 }); T.startArcade(0); T.setHits(100); assert(T.tier().id === "III", `Arcade on map 1 at 100 hits has climbed two tiers (${T.tier().id})`);
+    T.setStats(ZERO); T.toTitle();
+  });
+  test("The Ring Path Director: every path stays in the ring's space; the carousel circles; the jump cut holds, flickers, then cuts", () => {
+    fresh(); T.setStage(8); T.unfreezeRing();
+    const ph = Array.from({ length: 121 }, (_, i) => i * 0.1);
+    for (const mode of T.ringPaths()) for (const q of T.ringPath(mode, ph)) assert(Math.abs(q.x) <= BP.xMax && q.y >= BP.yMin && q.y <= BP.yMax && q.z >= BP.zMin && q.z <= BP.zMax, `${mode} leaves the ring's space at ${JSON.stringify(q)}`);
+    const c = T.ringPath("circle", ph), xs = c.map(q => q.x), zs = c.map(q => q.z);
+    assert(Math.max(...xs) - Math.min(...xs) > 2.5 && Math.max(...zs) - Math.min(...zs) > 2.2, "the carousel should ride a wide circle through depth");
+    const j = T.ringPath("jumpcut", [0.1, 0.4, 0.6, 0.8, 0.95, 1.1]);
+    assert(Math.abs(j[0].x - j[2].x) < 1e-9 && Math.abs(j[0].z - j[2].z) < 1e-9 && j[1].tell === 0, "a jump cut holds its corner");
+    assert(j[4].tell > 0 && Math.abs(j[5].x - j[3].x) > 0.5, "then flickers, then cuts to the next corner");
+    beatCrow(6); assert(T.ringMode().mode === "circle", `the carnival's second half rides the carousel (${T.ringMode().mode})`);
+    beatCrow(8); assert(T.ringMode().mode === "jumpcut", `the Final Reel cuts (${T.ringMode().mode})`);
+    T.toTitle();
+  });
+  test("Wind pushes the throw sideways in Pumpkin Patch Hollow, and the guide bends with it", () => {
+    fresh(); T.setStage(3); T.freezeRing(0.8, C.RING_Y);
+    T.setWind(0); throwAndSettle(0, C.RING_Y); assert(!T.state().lastResult.make, `no wind: aimed at the middle, a ring 0.8 m off is missed (${T.state().lastResult.kind})`);
+    fresh(); T.setStage(3); T.freezeRing(0.8, C.RING_Y); T.setWind(2.4);
+    const pc = T.predictCrossing(0, C.RING_Y), drift = 0.5 * 2.4 * C.FLIGHT_T * C.FLIGHT_T;
+    near(pc.x, drift, 0.02, "the guide's crossing should drift with the wind");
+    assert(!$("wind").hidden && /2\.4/.test($("wind").textContent), `the HUD shows the wind (${$("wind").textContent})`);
+    throwAndSettle(0, C.RING_Y); const s = T.state();
+    assert(s.lastResult.make && Math.abs(s.lastCross.x - drift) < 0.03, `the wind should carry it into the ring (${s.lastResult.kind}, crossed at ${s.lastCross.x.toFixed(3)})`);
+    assert(!$("wind").hidden && T.hz().wind !== 2.4, "and it turns after the throw");
+    T.setWind(0); T.toTitle(); assert($("wind").hidden, "no wind sign off the patch");
+  });
+  test("Bats, falling bones, balloons and the pendulum knock the skull out of the air; Ghost Toss slips through", () => {
+    for (const [stage, kind] of [[2, "bat"], [4, "bone"], [6, "balloon"]]) {
+      fresh(); T.setStage(stage); T.freezeRing(0, C.RING_Y); const a = T.aimFor(0, C.RING_Y, C.RING_Z), q = T.skullPathAt(a.AX, a.AY, 3.6 / (C.RING_Z / C.FLIGHT_T));
+      T.plantHazard(kind, q.x, q.y, q.z); const lives = T.state().lives; T.throwAt(a.AX, a.AY); T.step(2.5);
+      assert(T.state().lastResult.kind === kind && T.state().lives === lives - 1, `${kind}: got ${T.state().lastResult.kind}`);
+      T.givePower("ghost"); T.plantHazard(kind, q.x, q.y, q.z); T.throwAt(a.AX, a.AY); T.step(2.5);
+      assert(T.state().lastResult.make, `Ghost Toss should slip past the ${kind} (${T.state().lastResult.kind})`);
+    }
+    fresh(); T.setStage(7); T.freezeRing(0, C.RING_Y); const P = T.pend(), tc = P.z / (C.RING_Z / C.FLIGHT_T), a = T.aimFor(0, P.y - P.L, P.z);
+    T.setPendT(-tc); T.throwAt(a.AX, a.AY); T.step(2.5);
+    assert(T.state().lastResult.kind === "pendulum", `the pendulum's bob, at the bottom of its swing as the skull passes, should clang it (${T.state().lastResult.kind})`);
+    T.setPendT(-tc + T.pend().period / 4); T.freezeRing(0, C.RING_Y); const b = T.aimFor(0, C.RING_Y, C.RING_Z); T.throwAt(b.AX, b.AY); T.step(2.5);
+    assert(T.state().lastResult.make, `a quarter swing later the lane is clear (${T.state().lastResult.kind})`);
+    T.toTitle();
+  });
+  test("Hazards come round on the tier's schedule and rest during boss fights", () => {
+    fresh(); T.setStage(2); for (let i = 0; i < 6; i++) T.hazardsAfterThrow();
+    assert(T.hz().list.some(h => h.kind === "bat"), "the Crypts send a bat every few throws");
+    fresh(); T.setStage(5); T.fogIn(); T.step(1.2); assert(T.hz().fog > 0.5, `the Bayou's fog rolls in (${T.hz().fog.toFixed(2)})`);
+    T.step(4); assert(T.hz().fog < 0.05, "and rolls out again");
+    beatCrow(7); toHit(50); T.step(2.9); T.freezeRing(0, C.RING_Y); const P = T.pend(), tc = P.z / (C.RING_Z / C.FLIGHT_T), a = T.aimFor(0, P.y - P.L, P.z);
+    T.setPendT(-tc); T.throwAt(a.AX, a.AY); T.step(2.5);
+    assert(T.state().lastResult.kind !== "pendulum", "no pendulum during the end boss");
+    T.toTitle();
+  });
+  test("Bonus targets hang behind the ring: a make that flies on through one pays points and bones", () => {
+    fresh(); T.setStage(2); T.freezeRing(0, C.RING_Y); const a = T.aimFor(0, C.RING_Y, C.RING_Z), t2 = (C.RING_Z + 2) / (C.RING_Z / C.FLIGHT_T), q = T.skullPathAt(a.AX, a.AY, t2);
+    T.plantTarget(q.x, q.y, q.z); const bones = T.bones(), hits = T.profile().targetHits || 0;
+    T.throwAt(a.AX, a.AY); T.step(1.3); const s = T.state();   // (the skull reaches it about 1.1 s after the throw)
+    assert(s.lastResult.make && T.targets()[0].pop > 0, `the make should carry on into the target (${s.lastResult.kind}, ${JSON.stringify(T.targets())})`);
+    assert(T.bones() >= bones + 3 && T.profile().targetHits === hits + 1, "a target pays bones and counts");
+    fresh(); assert(T.targets().length === 0, "map 1's first tier hangs no targets");
+    T.setStage(4); T.refillTargets(); assert(T.targets().length === 1 && T.targets()[0].kind === "bonefruit", `the orchard hangs a bone-fruit (${JSON.stringify(T.targets())})`);
+    T.toTitle();
+  });
+  test("A run's play comes from one seeded stream: the same seed lays out the same targets and hazards", () => {
+    const lay = seed => { fresh(); T.setStage(6); T.seedRun(seed); T.refillTargets(); for (let i = 0; i < 4; i++) T.hazardsAfterThrow(); return JSON.stringify(T.targets()); };
+    assert(lay(77) === lay(77) && lay(77) !== lay(78), "same seed, same run; another seed, another run");
+    T.toTitle();
+  });
+
   T.sandbox(false); T.start(); T.pause(false);  // leave the game playable, player's saved data untouched
   window.__skullTossResults = results;
   const passed = results.filter(r => r.pass).length;

@@ -111,5 +111,6 @@
     "rate": 1.02,
     "key": -3
   },
-  "blurb": "A small, quick ring behind a sweeping pendulum"
+  "blurb": "A small, quick ring behind a sweeping pendulum",
+  "target": "bell"
 }

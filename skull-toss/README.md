@@ -1,8 +1,29 @@
-# SKULL TOSS v18
+# SKULL TOSS v19
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)), with a synthesised waltz standing in wherever they can't load.
+
+## New in v19: every map plays differently
+
+- **Map = environment, Tier = intensity.** Six tiers (`src/maps/tiers.json`) set the ring's speed and size, how often a hazard comes, how many bonus targets hang behind the ring, and how generous the perfect window is. Each map runs one tier before its mini-boss and another after. Map 1 runs tiers I and II, so it plays exactly as before. Arcade climbs a tier every 25 hits past 50.
+- **The Ring Path Director.** The first half of a map slides. After the mini-boss, the map's own path takes over:
+  - most maps: a triangle through depth
+  - the Carnival: the carousel, a wide circle through depth
+  - the Final Reel: jump cuts. The ring holds on a corner, the film flickers, and it cuts to the next.
+  
+  Static, vertical, diagonal and figure-8 paths are ready for modes and challenges. The spec keeps every path inside the ring's playable space.
+- **Each map's mechanic:**
+  - **Pumpkin Patch Hollow: wind.** It changes every throw and pushes the skull sideways in flight. The HUD shows its strength and direction, and the guide bends with it.
+  - **The Crooked Crypts: bats.** Every few throws a bat screeches, then crosses the lane.
+  - **The Bone Orchard: falling bones.** A shadow grows, then a bone drops.
+  - **The Drowned Bayou: fog.** Fog banks roll over the ring, but its reflection on the water still shows where it is.
+  - **The Carnival: balloons** drift up through the lane.
+  - **The Clockwork Belfry: the pendulum.** It swings across the lane and ticks at each end.
+  
+  Anything solid knocks the skull out of the air, and Ghost Toss slips through it. Only the wind keeps blowing during a boss fight.
+- **Bonus targets.** From tier II on, one to three targets hang behind the ring: a wisp, a brazier, a jack-o'-lantern, a bone-fruit, a frog on a lily pad, a gallery duck, a bell or a film can. A make that flies on through one pays 200 points × the stage, plus 3 bones.
+- **One seeded stream** decides everything random in a run's play. The same seed and the same throws make the same run, which replays and score checks will rely on.
 
 ## New in v16–v18: eight maps, and a story with an ending
 
@@ -579,7 +600,7 @@ From the console, `SkullToss.debug.visualAnimation` lists the pose library (`pos
 
 ## Tests
 
-Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **120 checks**, covering:
+Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **127 checks**, covering:
 
 - **Layout, scoring and aiming.**
   - Everything is centred and every result is classified correctly.
@@ -643,3 +664,11 @@ Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to
   - Map 1's end boss gives Morty's Top Hat, and only the first time counts.
   - The story ends after map 8: THE END, the results say *The end*, and The Whole Reel is earned.
   - A v12 save migrates: stages past four mean map 5, and The Whole Reel becomes Half the Reel.
+- **v19.**
+  - The Tier Director: each map's two tiers, and Arcade climbing past 50 hits.
+  - The Ring Path Director: every path stays in the ring's space, the carousel circles, and a jump cut holds, flickers and cuts. The Carnival rides the carousel and the Final Reel cuts.
+  - Wind: the guide's crossing drifts by ½·w·t², a throw aimed at the middle is carried into a ring 0.8 m off, the HUD shows the wind, and the wind turns after each throw.
+  - Bats, falling bones, balloons and the pendulum each knock the skull down, Ghost Toss slips past each, and a quarter swing later the pendulum's lane is clear.
+  - Hazards come round on the tier's schedule, fog rolls in and out, and no pendulum swings during the end boss.
+  - A make that flies on into a bonus target pays and counts, map 1 opens with none, and the orchard hangs a bone-fruit.
+  - The same seed lays out the same targets and hazards.

@@ -72,7 +72,7 @@
     const tb = $("titleBest");
     tb.innerHTML = profile.bestScore > 0 ? `Best <b>${fmtN(profile.bestScore)}</b> · ${rankFor(profile.makes).name}`
       : profile.best > 0 ? `Best <b>${profile.best}</b> hits · ${rankFor(profile.makes).name}` : "Pull down · aim · let go";
-    renderBones(); renderProgress(); renderPowers();
+    renderBones(); renderProgress(); renderPowers(); renderWind();
     Sound.setTension(inRun() && game.lives === 1);
     updatePips();
   }

@@ -117,5 +117,6 @@
     "rate": 1.0,
     "key": 2
   },
-  "blurb": "The fastest ring yet, on a lopsided triangle, with bones falling through it"
+  "blurb": "The fastest ring yet, on a lopsided triangle, with bones falling through it",
+  "target": "bonefruit"
 }

@@ -1,6 +1,7 @@
   // ───────────────────────── flight physics (exact, event-driven) ─────────────────────────
-  function posAt(s, t) { const g = s.resting ? 0 : G; return { x: s.p0.x + s.v0.x * t, y: s.p0.y + s.v0.y * t - 0.5 * g * t * t, z: s.p0.z + s.v0.z * t }; }
-  function velAt(s, t) { return { x: s.v0.x, y: s.v0.y - (s.resting ? 0 : G) * t, z: s.v0.z }; }
+  // (ax: the wind, pushing across the throw on the maps that have it)
+  function posAt(s, t) { const g = s.resting ? 0 : G, ax = s.resting ? 0 : s.ax || 0; return { x: s.p0.x + s.v0.x * t + 0.5 * ax * t * t, y: s.p0.y + s.v0.y * t - 0.5 * g * t * t, z: s.p0.z + s.v0.z * t }; }
+  function velAt(s, t) { return { x: s.v0.x + (s.resting ? 0 : s.ax || 0) * t, y: s.v0.y - (s.resting ? 0 : G) * t, z: s.v0.z }; }
   function rebase(s, t) { s.p0 = posAt(s, t); s.v0 = velAt(s, t); s.t = 0; }
   function groundTime(s) { const c = s.p0.y - SKULL_R, b = s.v0.y, disc = b * b + 2 * G * c; return disc < 0 ? Infinity : (b + Math.sqrt(disc)) / G; }
   const panOf = x => clamp(x / 2.4, -1, 1);
@@ -8,7 +9,7 @@
 
   function launch(AX, AY) {
     const v = aimVelocity(AX, AY);
-    Object.assign(skull, { p0: { x: 0, y: START_Y, z: 0 }, v0: v, t: 0, crossed: false, resting: false, bounces: 0,
+    Object.assign(skull, { p0: { x: 0, y: START_Y, z: 0 }, v0: v, t: 0, crossed: false, resting: false, bounces: 0, ax: windNow(),
       spin: (1.3 + Math.abs(v.x) * 0.5) * (v.x < 0 ? -1 : 1), hang: 0, take: 0, alpha: 1, flightTime: 0, trail: [], spawn: 1, emit: 0, missed: false });
     skull.pos = { ...skull.p0 };
     game.state = "flying"; game.result = null; game.endTimer = 0; game.throws++;
@@ -66,6 +67,8 @@
     }
     const prevPos = s.pos; s.pos = posAt(s, s.t);
     if (!game.result && !s.crossed && seeds.length) seedCheck(s, prevPos);
+    if (!game.result && !s.crossed) hazardCheck(s, prevPos);
+    if (targets.length) targetCheck(s, prevPos);
     if (s.pos.z < -CAM_BACK + 0.9 || s.pos.z > 48) s.alpha = 0;
     const fade = game.result ? clamp(game.endTimer / 0.3, 0, 1) : 1;
     const v = velAt(s, s.t);
@@ -119,7 +122,7 @@
       game.endTimer = clamp(game.endTimer, 0.45, 0.6);
     }
     s.v0 = { x: s.v0.x * 0.55, y: -s.v0.y * 0.36, z: s.v0.z * 0.55 }; s.spin *= 0.5;
-    if (s.v0.y < 0.9 || s.bounces >= 3) { s.resting = true; s.v0 = { x: 0, y: 0, z: 0 }; s.p0.y = SKULL_R; s.spin = 0; }
+    if (s.v0.y < 0.9 || s.bounces >= 3) { s.resting = true; s.ax = 0; s.v0 = { x: 0, y: 0, z: 0 }; s.p0.y = SKULL_R; s.spin = 0; }
   }
   const bonkWord = () => (IMPACTS[cos.impact] || IMPACTS.classic).word;
 
@@ -133,12 +136,17 @@
     over:    { call: "OOF", sub: "too high", make: false },
     low:     { call: "OOF", sub: "too low", make: false },
     short:   { call: "OOF", sub: "short", make: false, hit: true },
-    seed:    { call: "BONK", sub: "seed to the face", make: false, hit: true }
+    seed:    { call: "BONK", sub: "seed to the face", make: false, hit: true },
+    bat:     { call: "BONK", sub: "bat to the face", make: false, hit: true },
+    bone:    { call: "BONK", sub: "hit by a falling bone", make: false, hit: true },
+    balloon: { call: "POP", sub: "a balloon got in the way", make: false, hit: true },
+    pendulum: { call: "CLANG", sub: "the pendulum", make: false, hit: true }
   };
   const MISS_STAT = { wide: "wides", over: "overs", low: "lows", post: "posts", short: "shorts", clank: "clanks", seed: "seeds" };
   const COACH = { short: "Pull further for more height", low: "Pull further for more height", over: "Ease off — less pull",
     wide: "Lead it: aim where the ring is going", clank: "Close. Aim for the middle of the ring", post: "Too low. Pull a little further",
-    seed: "Wait for the seeds to pass, then toss" };
+    seed: "Wait for the seeds to pass, then toss", bat: "Wait for the bat to pass", bone: "Watch the shadows: a bone is falling",
+    balloon: "Throw around the balloons", pendulum: "Count the ticks: throw between swings" };
 
   function resolve(kind, at, hitAt, d = null, ghosted = false) {
     const R = RESULT[kind], run = game.run;
@@ -220,7 +228,7 @@
     powersAfterThrow();
     if (boss && boss.after) boss.after();
     if (stageCheck()) return;
-    pickupSchedule();
+    pickupSchedule(); directorsAfterThrow();
     if (game.throws < 2 && !hintEl.textContent) setHint("Pull down · aim · let go");
   }
   function resetSkull() {
@@ -237,6 +245,7 @@
     Object.assign(game, { state: "ready", score: 0, hits: 0, lives: START_LIVES, slots: START_LIVES, streak: 0, perfStreak: 0, peakLives: START_LIVES, throws: 0,
       result: null, lastCross: null, newBest: false, shake: 0, slowmo: 0, run: freshRun(), mode, map });
     game.run.t0 = game.time; voice.said = 0; voice.text = "";
+    seedRun(opts.seed != null ? opts.seed : sandbox ? 1933 : (Date.now() ^ (Math.random() * 0x7fffffff)) >>> 0);   // the run's dice (07e_directors.js)
     setScene(map);   // Story starts on map 1; Arcade on the map picked
     ring.frozen = null; ring.flash = 0; ring.wobble = 0; ring.morph = 0;
     stageReset(); clearPowers(); clearPickups();
@@ -251,6 +260,7 @@
     showScreen("play");
     setHint("Pull down · aim · let go");
     if (mode === "arcade") stageCard("Arcade", STAGES[map].name, "No bosses, no end: survive as long as you can", 2);
+    hazardsReset(); refillTargets();
     updateHud();
     Telemetry.emit("run_start", { mode, map, stage: game.stage, career: profile.games });   // career: runs finished before this one
   }
@@ -335,7 +345,7 @@
     }
     ring.x = rp.x; ring.y = rp.y; ring.z = rp.z;
     if (boss) updateBoss(dt);
-    updateSeeds(dt); updatePickup(dt); updatePowers(dt);
+    updateSeeds(dt); updatePickup(dt); updatePowers(dt); updateTargets(dt); updateHazards(dt);
 
     if (game.state === "flying") updateFlight(dt, phase0);
     else if (game.state === "cine") { updateCine(dt); skull.spawn = Math.min(1, skull.spawn + dt / 0.3); }

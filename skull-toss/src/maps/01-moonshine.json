@@ -106,5 +106,6 @@
     "rate": 1.0,
     "key": 0
   },
-  "blurb": "The gentlest ring: it slides side to side, then flies a small triangle"
+  "blurb": "The gentlest ring: it slides side to side, then flies a small triangle",
+  "target": "wisp"
 }

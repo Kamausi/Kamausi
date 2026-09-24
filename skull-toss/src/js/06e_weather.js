@@ -28,7 +28,7 @@
   }
   function updateWeather(dt) {
     if (WX.kind === "none" || WX.kind === "mist") return;
-    WX.t += dt; const wind = typeof windNow === "function" ? windNow() : 0;
+    WX.t += dt; const wind = windNow();
     for (let i = 0; i < WX.bits.length; i++) {
       const b = WX.bits[i], k = WX.kind;
       if (k === "leaves") { b.x += (b.vx + wind * U * 0.25) * dt + Math.sin(WX.t * 2 + b.ph) * U * 0.03 * dt; b.y += b.vy * dt; b.rot += b.vr * dt; if (b.y > H + 20 || b.x > W + 30 || b.x < -30) WX.bits[i] = weatherBit(false); }

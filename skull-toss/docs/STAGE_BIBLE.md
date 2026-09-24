@@ -205,9 +205,9 @@ Map = environment, Tier = mechanical intensity.
 
 | Tier | Ring speed | Ring size | A hazard every | Targets | Power-up rate | Precision |
 |---|---|---|---|---|---|---|
-| I | ×0.9 | +0.00 m | — throws | 0 | ×1.0 | ×1.0 |
-| II | ×1.0 | +0.00 m | 9 throws | 1 | ×1.0 | ×1.0 |
-| III | ×1.08 | -0.02 m | 7 throws | 1 | ×0.95 | ×0.97 |
-| IV | ×1.16 | -0.03 m | 6 throws | 2 | ×0.9 | ×0.94 |
-| V | ×1.24 | -0.04 m | 5 throws | 2 | ×0.85 | ×0.92 |
-| VI | ×1.32 | -0.05 m | 4 throws | 3 | ×0.8 | ×0.9 |
+| I | ×1.0 | +0.00 m | — throws | 0 | ×1.0 | ×1.0 |
+| II | ×1.0 | +0.00 m | 6 throws | 1 | ×1.0 | ×1.0 |
+| III | ×1.04 | -0.01 m | 5 throws | 1 | ×0.95 | ×0.97 |
+| IV | ×1.08 | -0.02 m | 4 throws | 2 | ×0.9 | ×0.94 |
+| V | ×1.12 | -0.03 m | 4 throws | 2 | ×0.85 | ×0.92 |
+| VI | ×1.16 | -0.04 m | 3 throws | 3 | ×0.8 | ×0.9 |

@@ -114,5 +114,6 @@
     "rate": 0.94,
     "key": -2
   },
-  "blurb": "A bobbing ring over the water, hidden now and then by the fog"
+  "blurb": "A bobbing ring over the water, hidden now and then by the fog",
+  "target": "frog"
 }

@@ -13,6 +13,13 @@
     maps: () => JSON.parse(JSON.stringify(MAP_DATA)),
     implemented: () => ({ skyline: Object.keys(SKYLINES), lane: Object.keys(LANES), props: Object.keys(PROPSETS), foreground: Object.keys(FOREGROUNDS), near: Object.keys(NEAR_SETS),
       weather: ["none", "mist", ...Object.keys(WX_COUNT)], moon: ["art", "none", "crescent", "harvest", "full", "screen"], registry: MAP_REGISTRY }),
+    tier: () => ({ ...tierNow() }), setWind(w) { HZ.wind = w; renderWind(); }, hz: () => ({ kind: HZ.kind, wind: HZ.wind, fog: HZ.fog, list: HZ.list.map(h => ({ kind: h.kind, fixed: !!h.fixed })), bob: pendBob() }),
+    fogIn() { HZ.fogT = 3.6; }, hazardsAfterThrow: () => hazardsAfterThrow(), setPendT(t) { HZ.pendT = t; }, pend: () => ({ ...PEND, period: pendPeriod() }),
+    plantHazard(kind, x, y, z, r = 0.28) { HZ.list = HZ.list.filter(h => h.kind !== kind); HZ.list.push({ kind, x, y, z, ox: x, oy: y, oz: z, r, fixed: true, t: 0, at: 0, dir: 1 }); },
+    targets: () => targets.map(T => ({ kind: T.kind, ...targetPos(T), pop: T.pop, left: T.left })), refillTargets: () => refillTargets(),
+    plantTarget(x, y, z) { targets.length = 0; targets.push({ kind: mapData(game.stage || 1).target, x, y, z, t: 0, left: 6, pop: 0, ph: 0 }); },
+    ringPath(mode, phases) { const was = ring.mode; setRingMode(mode, false); const out = phases.map(p => ({ ...ringAt(p), tell: RING_PATHS[mode].tell ? RING_PATHS[mode].tell(p) : 0 })); setRingMode(was, false); return out; },
+    ringPaths: () => Object.keys(RING_PATHS), seedRun: s => seedRun(s), runSeed: () => game.seed,
     pollPad: () => pollPad(), aim: () => ({ active: aim.active, source: aim.source, valid: aim.valid, tension: aim.tension, AX: aim.AX, AY: aim.AY }),
     telemetry: () => Telemetry.events.map(e => ({ ...e })), migrateProfile: p => migrateProfile(JSON.parse(JSON.stringify(p))), saveSchema: SAVE_SCHEMA,
     readSaved: (k, st) => readSaved(k, st), boardEntry: () => Board.entry(), endRun: () => endRun(),
@@ -22,7 +29,7 @@
     setRingPhase(p) { ring.phase = p; const q = ringAt(p); ring.x = q.x; ring.y = q.y; ring.z = q.z; },
     setScore(n) { game.stageHits = n; game.hits = n; snapRing(); updateHud(); },   // (in hits: how far into the stage)
     setHits(n) { game.stageHits = n; game.hits = Math.max(game.hits, n); snapRing(); updateHud(); },
-    setStage(n) { game.stage = n; snapRing(); updateHud(); },
+    setStage(n) { game.stage = n; hazardsReset(); snapRing(); updateHud(); },
     stageCheck() { return stageCheck(); }, endThrow() { if (game.state === "ready") { powersAfterThrow(); if (boss && boss.after) boss.after(); stageCheck() || pickupSchedule(); } },
     boss: () => boss && { kind: boss.kind, hp: boss.hp, max: boss.max, dead: boss.dead, flawless: boss.flawless, t: boss.t },
     hurtBoss(n = 1) { if (boss) { for (let i = 0; i < n && !boss.dead; i++) boss.hit("swish", null); } },
@@ -37,7 +44,7 @@
     aimFor(x, y, z = RING_Z) { const T = flightT(), tc = z * T / RING_Z, vy = (y - START_Y + 0.5 * G * tc * tc) / tc; return { AX: x * RING_Z / z, AY: START_Y + vy * T - 0.5 * G * T * T }; },
     throwThrough(x, y, z) { const a = this.aimFor(x, y, z); return this.throwAt(a.AX, a.AY); },
     aimFromDrag(dx, dy) { const m = mapDrag(dx, dy); return { ...m, ...aimPoint(m.nx, m.ny) }; },
-    predictCrossing(AX, AY) { const v = aimVelocity(AX, AY), tc = ring.z / v.z; return { x: v.x * tc, y: START_Y + v.y * tc - 0.5 * G * tc * tc, z: ring.z }; },
+    predictCrossing(AX, AY) { const v = aimVelocity(AX, AY), tc = ring.z / v.z; return { x: v.x * tc + 0.5 * windNow() * tc * tc, y: START_Y + v.y * tc - 0.5 * G * tc * tc, z: ring.z }; },
     previewInfo(AX, AY) { const p = buildPreview(AX, AY, settings.guide); return { dots: p.front.length + p.back.length, crosshair: !!p.cross }; },
     ringAhead(sec) { return ringAt(ring.phase + ring.omega * sec); },
     state() {
@@ -58,7 +65,7 @@
     cartBuy: (kind, id) => cartBuy(kind, id), deals: () => dailyDeals().map(d => ({ kind: d.kind, id: d.it.id, price: d.price, full: d.it.price, shop: !!d.it.shop })),
     coffin() { const g = openCoffin(mulberry32(7)); return g && { kind: g.kind, id: g.it.id, shop: !!g.it.shop }; },
     plantSeed(x, y, z) { seeds.length = 0; seeds.push({ live: true, fixed: true, x, y, z, ox: x, oy: y, oz: z, vx: 0, vy: 0, vz: 0, rot: 0, at: 0 }); },
-    skullPathAt(AX, AY, t) { const v = aimVelocity(AX, AY); return { x: v.x * t, y: START_Y + v.y * t - 0.5 * G * t * t, z: v.z * t }; }, say(pool = "grab") { voice.test = true; const t = sayLine(pool); voice.test = false; return t; }, voiceLines: () => JSON.parse(JSON.stringify(VOICE_LINES)), grab() { return skullGrabbed(); }, hat: () => ({ ...hatSpring }), digger: () => GY.digger && { t: GY.digger.t, dirt: GY.digger.dirt.length }, cat: () => GY.cat && { x: GY.cat.x, z: GY.cat.z, state: GY.cat.state },
+    skullPathAt(AX, AY, t) { const v = aimVelocity(AX, AY); return { x: v.x * t + 0.5 * windNow() * t * t, y: START_Y + v.y * t - 0.5 * G * t * t, z: v.z * t }; }, say(pool = "grab") { voice.test = true; const t = sayLine(pool); voice.test = false; return t; }, voiceLines: () => JSON.parse(JSON.stringify(VOICE_LINES)), grab() { return skullGrabbed(); }, hat: () => ({ ...hatSpring }), digger: () => GY.digger && { t: GY.digger.t, dirt: GY.digger.dirt.length }, cat: () => GY.cat && { x: GY.cat.x, z: GY.cat.z, state: GY.cat.state },
     music() {
       const out = { want: reel.want, on: reel.on, synth: !!mus, tracks: {} };
       for (const [k, t] of Object.entries(reel.tracks)) out.tracks[k] = { live: t.live, paused: t.el ? t.el.paused : null, at: t.el ? +t.el.currentTime.toFixed(2) : null, gain: t.gain ? +t.gain.gain.value.toFixed(3) : null };

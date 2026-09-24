@@ -112,5 +112,25 @@
     "whistle",
     "watch",
     "shadow"
+  ],
+  "target": [
+    "wisp",
+    "brazier",
+    "jack",
+    "bonefruit",
+    "frog",
+    "duck",
+    "bell",
+    "filmcan"
+  ],
+  "ringModes": [
+    "line",
+    "static",
+    "vertical",
+    "diagonal",
+    "figure8",
+    "tri",
+    "circle",
+    "jumpcut"
   ]
 }

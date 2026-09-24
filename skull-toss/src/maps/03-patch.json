@@ -116,5 +116,6 @@
     "rate": 1.03,
     "key": 1
   },
-  "blurb": "Bobbing and smaller, over a wider triangle, with the wind in it"
+  "blurb": "Bobbing and smaller, over a wider triangle, with the wind in it",
+  "target": "jack"
 }

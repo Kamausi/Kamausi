@@ -38,7 +38,9 @@
     const r = ring.rc * p.s * (1 + wob + morph * 0.25 * Math.sin(morph * 18)), lw = RING_TUBE * 2 * p.s;
     const base = project(ring.x, 0, ring.z), pw = POST_HALF * 2 * p.s, top = p.y + r + lw * 0.35;
     if (hasPost()) { const PL = POLES[cos.pole]; if ((PL && PL.hang) || base.y > top) drawPole(p.x, top, base.y, pw, p.s, cos.pole, ctx, game.time, p.y - r - lw * 0.4); }
-    if (ring.mode === "tri") drawRingWings(p.x, p.y, r, lw);
+    if (ringFlies()) drawRingWings(p.x, p.y, r, lw);
+    const cut = ring.mode === "jumpcut" ? RING_PATHS.jumpcut.tell(ring.phase) : 0;   // the Final Reel: the film flickers a beat before it cuts
+    if (cut > 0 && Math.floor(game.time * 24) % 2) { ctx.save(); ctx.strokeStyle = `rgba(242,231,201,${0.7 * Math.max(0.3, flashK())})`; ctx.lineWidth = 2; ctx.setLineDash([6, 4]); ctx.strokeRect(p.x - r * 1.5, p.y - r * 1.5, r * 3, r * 3); ctx.restore(); }
     if (powerOn("cursed")) { const g = ctx.createRadialGradient(p.x, p.y, r * 0.6, p.x, p.y, r * 1.6); g.addColorStop(0, "rgba(154,107,192,.5)"); g.addColorStop(1, "rgba(154,107,192,0)"); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, r * 1.6, 0, TAU); ctx.fill(); }
     const squashed = Math.abs(T.sq) > 0.003;   // a contact squashes the ring along the line of the hit, then it springs back
     if (squashed) { ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(T.dir); ctx.scale(1 - T.sq, 1 + T.sq * 0.6); ctx.rotate(-T.dir); ctx.translate(-p.x, -p.y); }
@@ -72,7 +74,7 @@
   }
 
   function buildPreview(AX, AY, guide) {
-    const v = aimVelocity(AX, AY), front = [], back = [], zr = ring.z, tc = zr / v.z;
+    const v = aimVelocity(AX, AY), front = [], back = [], zr = ring.z, tc = zr / v.z, wx = 0.5 * windNow();   // (the guide bends with the wind)
     const tg = (v.y + Math.sqrt(v.y * v.y + 2 * G * (START_Y - SKULL_R))) / G;
     const reaches = tg >= tc;
     if (guide === "off") return { front, back, cross: null, land: null };
@@ -80,7 +82,7 @@
     const rest = project(0, START_Y, 0), off = pullOffset(), kx = rest.x + off.x, ky = rest.y + off.y, kr = SKULL_R * rest.s * 1.35;
     let lx = null, ly = null, i = 0;
     for (let t = 0.004; t < tEnd; t += 0.004) {
-      const q = { x: v.x * t, y: START_Y + v.y * t - 0.5 * G * t * t, z: v.z * t, t, tc }, p = project(q.x, q.y, q.z);
+      const q = { x: v.x * t + wx * t * t, y: START_Y + v.y * t - 0.5 * G * t * t, z: v.z * t, t, tc }, p = project(q.x, q.y, q.z);
       if (Math.hypot(p.x - kx, p.y - ky) < kr) continue;
       const r = clamp(SKULL_R * 0.2 * p.s, 1.4, 4.6);
       if (lx !== null && Math.hypot(p.x - lx, p.y - ly) < Math.max(9, r * 3.4)) continue;
@@ -89,8 +91,8 @@
     }
     if (guide === "short") return { front, back, cross: null, land: null };
     return { front, back,
-      cross: reaches ? { x: v.x * tc, y: START_Y + v.y * tc - 0.5 * G * tc * tc, z: zr } : null,
-      land: reaches ? null : { x: v.x * tg, z: v.z * tg } };
+      cross: reaches ? { x: v.x * tc + wx * tc * tc, y: START_Y + v.y * tc - 0.5 * G * tc * tc, z: zr } : null,
+      land: reaches ? null : { x: v.x * tg + wx * tg * tg, z: v.z * tg } };
   }
   function aimColorOf(A, i, t) {
     if (A.rainbow) return `hsl(${(i * 24 + t * 140) % 360},80%,66%)`;
@@ -272,7 +274,7 @@
     const tint = game.state !== "title" && stageDef().tint;   // each map's colour grade, washed over the graveyard (not the ring or the skull)
     if (tint) { ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalCompositeOperation = "soft-light"; ctx.globalAlpha = 0.55; ctx.fillStyle = tint; ctx.fillRect(-20, -20, W + 40, H + 40); ctx.restore(); }
     if (boss) boss.draw(false);
-    drawSeeds(false);
+    drawSeeds(false); drawTargets(false); drawHazards(false);
     const onStage = game.state !== "title";
     if (onStage) drawTrackAndShadow();
     drawPlayWorld();
@@ -285,7 +287,7 @@
     if (flying && behind) drawFlyingSkull();
     if (onStage) { drawRing(); drawPickup(); }
     if (boss) boss.draw(true);
-    drawSeeds(true);
+    drawSeeds(true); drawTargets(true); drawHazards(true);
     drawImpactStars(ctx, false);   // contact stars: over the ring they hit, behind the skull that hit it
     if (pv) { drawDots(pv.front, false); drawReticle(pv); }
     if (game.state === "ready" || game.state === "cine") {
