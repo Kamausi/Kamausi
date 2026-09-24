@@ -9,7 +9,7 @@
   "measurementId": "G-36H6K36F8J",
   "functionsRegion": "us-central1",
   "services": {
-    "firestore": false,
+    "firestore": true,
     "functions": false
   }
 }

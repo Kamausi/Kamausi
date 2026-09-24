@@ -2165,6 +2165,8 @@
     T.toTitle(); T.openSheet("souls"); assert(!$("soulsStatus").hidden && /opens when the game's server does/.test($("soulsStatus").textContent) && !/README/.test($("soulsStatus").textContent), `the Soul Shop waits politely (${$("soulsStatus").textContent})`); T.closeSheet();
     r = await T.useFirebaseWith(cfg, stub(false));
     assert(r.kind === "firebase" && !r.me && !r.db && !r.call && r.ga && /sign-in/.test(r.error), `sign-in off: no server parts, but analytics can run (${JSON.stringify(r)})`);
+    r = await T.useFirebaseWith({ ...cfg, services: { firestore: true, functions: false } }, stub(true));
+    T.boardInit(); assert(r.db && !r.call && T.boardState() === "local", `a database but no functions: the board stays on the device (${T.boardState()})`);
     r = await T.useFirebaseWith(cfg, stub(true));
     assert(r.me === "u1" && r.db && r.call && r.souls, `everything up (${JSON.stringify(r)})`);
     delete window.firebase; T.noServer(); T.toTitle();

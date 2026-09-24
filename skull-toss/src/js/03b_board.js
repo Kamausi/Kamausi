@@ -12,6 +12,7 @@
     saveLocal(list) { if (!sandbox) store.set(BOARD_LOCAL, JSON.stringify(list.slice(0, 20))); },
     init(db, me) {
       if (!db || !me || !me.id) return;
+      if (Backend.kind === "firebase" && !Backend.hasFunctions()) return;   // (on Firebase only the server's functions write the board: till they're up, it stays on the device)
       this.db = db; this.me = me; this.state = "loading";
       this.db.doc("leaderboard/" + me.id).get().then(snap => { this.mine = snap.exists ? snap.data() : null; this.state = "live"; if (sheet === "board") renderBoard(); }, () => { this.state = "error"; });
     },

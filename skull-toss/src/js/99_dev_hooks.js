@@ -263,7 +263,7 @@
       return { writes, docs };
     },
     unfakeBoard() { Board.unwatch(); Object.assign(Board, { db: null, me: null, state: "local", rows: [], mine: null, fake: false }); },
-    boardPush: () => Board.push(true), boardState: () => Board.state,
+    boardPush: () => Board.push(true), boardState: () => Board.state, boardInit() { Board.state = "local"; Board.db = null; Board.init(Backend.db, Backend.me); },
     sandbox(on) {
       if (on) { sandbox = {}; Sound.apply(); }
       else { sandbox = null; loadAll(); ensureDaily(); applyCosmetics(); updateHud(); Sound.apply(); }
