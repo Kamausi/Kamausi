@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "skull-toss-c7099-48bd7",
     "public": "../dist/web",
     "ignore": [
       "**/.*"
