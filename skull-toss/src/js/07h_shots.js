@@ -57,7 +57,7 @@
     impact(t(`shot.${top}.name`).toUpperCase() + "!", W / 2, H * 0.58, { fill: GOLD, text: INK, scale: 0.72, delay: 0.45, bits: true,
       sub: more ? t("shot.bonusMore", { pts: fmtN(pts), n: more }) : t("shot.bonus", { pts: fmtN(pts) }) });
     flyPoints(`+${fmtN(pts)}`, W / 2, H * 0.62, true);
-    camMove(SHOT_BY[top].cam, { x, y });
+    camMove(SHOT_BY[top].cam, { x, y }); Sound.sting(SHOT_BY[top].rare);
     mortySays("sig", { priority: SHOT_BY[top].rare >= 4, chance: 0.6 });
     challenge("shots", ids.length);
     srEl.textContent = `${t("shot.sr")}: ${ids.map(id => t(`shot.${id}.name`)).join(", ")}. +${pts}`;

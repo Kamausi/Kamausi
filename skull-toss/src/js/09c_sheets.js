@@ -68,6 +68,7 @@
     const langs = LOCALE_IDS().filter(l => l !== "pseudo"); $("row-lang").hidden = langs.length < 2;   // (a picker once there's a translation)
     if (langs.length > 1 && !$("set-lang").children.length) for (const l of langs) $("set-lang").append(h("button", { type: "button", role: "radio", data: { v: l } }, (STRINGS[l] && STRINGS[l]["lang.name"]) || l));
     segValue($("set-lang"), LANG); $("langNote").textContent = t("lang.name");
+    segValue($("set-soundset"), settings.soundSet); $("soundSetNote").textContent = t(`settings.soundset.${settings.soundSet}`);
     segValue($("set-cards"), settings.cards); $("cardsNote").textContent = t(`settings.cards.${settings.cards}`);
   }
   $("set-voice").addEventListener("click", e => {
@@ -91,6 +92,7 @@
   $("set-contrast").addEventListener("click", () => { toggleSetting("contrast"); applyAccess(); });
   bindSeg("set-flashes", v => { settings.flashes = v; persist(); applyAccess(); renderSettings(); Sound.ui("tick"); });
   bindSeg("set-lang", v => { settings.lang = setLang(v); persist(); renderSettings(); Sound.ui("tick"); });
+  bindSeg("set-soundset", v => { settings.soundSet = v; persist(); Sound.apply(); renderSettings(); Sound.toon("boing"); });   // (a sample in the new set)
   bindSeg("set-cards", v => { settings.cards = v; persist(); renderSettings(); Sound.ui("tick"); });
   bindSeg("set-text", v => { settings.text = v; persist(); applyAccess(); renderSettings(); Sound.ui("tick"); });
   for (const key of SLIDERS) {

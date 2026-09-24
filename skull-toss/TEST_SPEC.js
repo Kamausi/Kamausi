@@ -1731,6 +1731,30 @@
     T.closeSheet(); T.setStats(ZERO); T.toTitle();
   });
 
+  // ── v33: sound sets, motifs and stings ──
+  test("Five sound sets reshape every sound effect as it's made; Classic leaves them as they were", () => {
+    assert(T.soundSets().join() === "classic,vintage,spooky,chiptune,kazoo", T.soundSets().join());
+    const shape = set => { T.setSetting("soundSet", set); return T.shape(440, "sine", 0.2, 0.1, 880, { lp: 4000 }); };
+    let S = shape("classic"); assert(S.f === 440 && S.type === "sine" && S.dur === 0.2 && S.o.lp === 4000 && !S.o.vib, JSON.stringify(S));
+    S = shape("vintage"); assert(S.o.lp === 2800 && S.o.vib && Math.abs(S.f - 426.8) < 0.01, `vintage: dulled and wavering (${JSON.stringify(S)})`);
+    S = shape("spooky"); assert(Math.abs(S.f - 352) < 1e-9 && S.type === "triangle" && Math.abs(S.dur - 0.25) < 1e-9 && S.slide === 704 && T.soundRoom() === 3, `spooky: lower, longer, a bigger room (${JSON.stringify(S)})`);
+    S = shape("chiptune"); assert(S.type === "square" && S.o.lp === undefined && S.dur < 0.2, `chiptune: square, unfiltered (${JSON.stringify(S)})`);
+    S = shape("kazoo"); assert(S.type === "sawtooth" && S.o.lp === 1900 && S.f > 440, `kazoo (${JSON.stringify(S)})`);
+    T.setSetting("soundSet", "classic"); T.toTitle(); T.openSheet("settings");
+    assert(document.querySelectorAll("#set-soundset button").length === 5 && /as it was/.test($("soundSetNote").textContent), "the Settings row");
+    T.closeSheet();
+  });
+  test("Every boss walks on to its own motif, every reel's card has one, and a signature shot's sting rises with its rarity", () => {
+    const ids = Object.keys(T.bossInfo()).concat([1, 2, 3, 4, 5, 6, 7, 8].map(n => "map" + n));
+    for (const id of ids) {
+      const P = T.motifPlan(id), end = P.length ? P[P.length - 1].at + P[P.length - 1].dur : 0;
+      assert(P.length >= 3 && end < 3 && P.every(N => N.f > 60 && N.f < 1400), `${id}: ${P.length} notes, ${end.toFixed(2)} s`);
+    }
+    const plans = new Set(ids.map(id => JSON.stringify(T.motifPlan(id).map(N => Math.round(N.f)))));
+    assert(plans.size === ids.length, `no two alike (${plans.size}/${ids.length})`);
+    assert(T.sting(2) === 3 && T.sting(5) === 6, "a rarity-2 shot's sting has three notes, a rarity-5 shot's six");
+  });
+
   (async () => {
     for (const q of queue) {
       if (q.step) { q.fn(); continue; }

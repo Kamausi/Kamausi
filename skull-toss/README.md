@@ -1,8 +1,19 @@
-# SKULL TOSS v32
+# SKULL TOSS v33
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)), with a synthesised waltz standing in wherever they can't load.
+
+## New in v33: sound sets, motifs and stings
+
+- **Sound sets** (Settings → Sound set) reshape every synthesised sound effect as it's made. The music and the graveyard's ambience stay as they are.
+  - **Classic:** the cartoon foley as it was.
+  - **Vintage:** a worn optical soundtrack, dulled and wavering.
+  - **Spooky:** a haunted organ, lower and longer, in a bigger room.
+  - **Chiptune:** everything a square wave, and quicker.
+  - **Kazoo:** a kazoo band, buzzing through paper.
+- **Motifs.** Each of the sixteen bosses walks on to its own short phrase, and each reel's title card has one, all played in your sound set.
+- **Stings.** A signature shot's flourish rises with its rarity: one more note for each step.
 
 ## New in v32: the Shot Book and mastery
 
@@ -810,7 +821,7 @@ From the console, `SkullToss.debug.visualAnimation` lists the pose library (`pos
 
 ## Tests
 
-Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **176 checks**, covering:
+Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **178 checks**, covering:
 
 - **Layout, scoring and aiming.**
   - Everything is centred and every result is classified correctly.
@@ -947,3 +958,6 @@ Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to
   - Shot tiers come at 1, 10 and 25 and each pays once. Gold on all twelve is the Shot Doctor.
   - Map stars: its end boss down, down without a miss, and 100 makes there.
   - Boss tiers light up in the sheet, the title chip shows a pip, and a tier is claimed from the sheet.
+- **v33.**
+  - Each sound set reshapes a sound as it's made (pitch, voice, length, filter, room), and Classic leaves it alone.
+  - All 16 bosses and 8 reels have a motif, all different and under three seconds, and a sting has one more note per step of rarity.

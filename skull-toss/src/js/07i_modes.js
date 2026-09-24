@@ -99,7 +99,7 @@
     game.phase = B.end ? "boss" : "mini"; clearPickups(); clearDirectors(); Sound.toon("brass"); Sound.setAct("boss");
     boss = makeBoss(B.id, B.stage); setRingMode("boss"); snapRing();
     stageCard(t("mode.rush.card", { n: modeSt.rushI + 1, total: modeSt.rush.length }), BOSS_INFO[B.id].name, BOSS_INFO[B.id].tell, 2.4, "boss");
-    mortySays("boss." + B.id, { priority: true }); camMove("dutch");
+    mortySays("boss." + B.id, { priority: true }); camMove("dutch"); Sound.motif(B.id);
     cine(B.end ? "boss-in" : "mini-in", 2.4, () => setHint(BOSS_INFO[boss ? boss.kind : B.id].hint), B.end ? 0.35 : 0);
     updateHud();
   }

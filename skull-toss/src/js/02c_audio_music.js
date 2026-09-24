@@ -104,7 +104,7 @@
     pullStart, pull, pullEnd, release: snapRelease, slack,
     flightStart, flightUpdate, flightStop,
     ...SFX, voice: VOICE,
-    setTension(on) { tension = !!on; }, setAct, musicScene, sample: samplePlay,
+    setTension(on) { tension = !!on; }, setAct, musicScene, sample: samplePlay, motif: playMotif, sting: playSting,
     speak(text) {   // "Spoken" voice setting: the browser's own speech, pitched up into a cartoon
       try { if (!window.speechSynthesis || sandbox || !settings.sound) return; const u = new SpeechSynthesisUtterance(text); u.pitch = 1.7; u.rate = 1.12; u.volume = clamp(settings.sfx / 100, 0, 1); speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) {}
     },

@@ -62,7 +62,7 @@
         d.delayTime.value = time; f.type = "lowpass"; f.frequency.value = 2400; g.gain.value = fb;
         verbIn.connect(d); d.connect(f); f.connect(g); g.connect(d); f.connect(verbOut);
       }
-      const bus = send => { const b = ac.createGain(); b.gain.value = 0; b.connect(master); const s = ac.createGain(); s.gain.value = send; b.connect(s); s.connect(verbIn); return b; };
+      const bus = send => { const b = ac.createGain(); b.gain.value = 0; b.connect(master); const s = ac.createGain(); s.gain.value = send; b.connect(s); s.connect(verbIn); b.send = s; return b; };
       sfxBus = bus(0.1); ambBus = bus(0.25); musicBus = bus(0.35);
       const sr = ac.sampleRate;
       noiseBuf = ac.createBuffer(1, sr * 2, sr);
@@ -78,7 +78,7 @@
   function audioApply() { // settings → bus levels; loops only run while audible
     if (!ac) return;
     const t = ac.currentTime, on = settings.sound && !sandbox;
-    sfxBus.gain.setTargetAtTime(on ? settings.sfx / 100 : 0, t, 0.04);
+    sfxBus.gain.setTargetAtTime(on ? settings.sfx / 100 : 0, t, 0.04); sfxBus.send.gain.setTargetAtTime(0.1 * soundRoom(), t, 0.1);   // (a sound set can want a bigger room)
     ambBus.gain.setTargetAtTime(on ? (settings.amb / 100) * 0.6 : 0, t, 0.25);
     musicBus.gain.setTargetAtTime(on ? (settings.music / 100) * 1.1 * (audioPaused && !reel.on ? 0.5 : 1) : 0, t, 0.3);   // the synth ducks under the pause menu; the reel has a pause track of its own
     if (on && settings.amb > 0) ambStart(); else ambStop();
@@ -97,6 +97,7 @@
   // one-shot oscillator. o: {pan, bus, att, vib:[hz,depth], lp, at (absolute start time), low (background priority)}
   function tone(f, type, dur, peak, when = 0, slide, o = {}) {
     if (!ac || (!o.bus && !sfxOn()) || !room(o.low)) return;
+    if (!o.bus || o.bus === sfxBus) ({ f, type, dur, peak, slide, o } = soundShape(f, type, dur, peak, slide, o));   // the sound set (02e_audio_sets.js)
     const t = Math.max(o.at != null ? o.at : 0, ac.currentTime + SAFE + when), osc = track(ac.createOscillator()), g = ac.createGain();
     osc.type = type; osc.frequency.setValueAtTime(f, t);
     if (slide) osc.frequency.exponentialRampToValueAtTime(slide, t + (o.att || 0.006) + dur);
@@ -108,6 +109,7 @@
   }
   function noise(dur, peak, type, f0, f1, when = 0, q = 1, o = {}) {
     if (!ac || (!o.bus && !sfxOn()) || !room(o.low)) return;
+    if (!o.bus || o.bus === sfxBus) { const S = soundShape(f0, "sine", dur, peak, f1, o); f0 = S.f; f1 = S.slide; dur = S.dur; peak = S.peak; if (S.o.lp && type === "lowpass") f0 = Math.min(f0, S.o.lp); }
     const t = Math.max(o.at != null ? o.at : 0, ac.currentTime + SAFE + when), s = track(ac.createBufferSource()), f = ac.createBiquadFilter(), g = ac.createGain();
     s.buffer = o.brown ? brownBuf : noiseBuf; f.type = type; f.Q.value = q;
     f.frequency.setValueAtTime(f0, t); if (f1) f.frequency.exponentialRampToValueAtTime(f1, t + dur);
