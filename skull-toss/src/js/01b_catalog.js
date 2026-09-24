@@ -211,4 +211,3 @@
     playTime: n => `Play for ${Math.round(n / 60)} minutes`, grabs: n => `Grab Morty ${n} times`, saves: n => `Get saved ${n} times`,
     shopBuys: n => `Buy ${n} things at the Curio Cart`
   });
-  const isShame = it => !!it.shame, isBossPrize = it => !!it.boss, shopOnly = it => !!it.shop;

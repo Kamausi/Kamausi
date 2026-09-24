@@ -1,8 +1,26 @@
-# SKULL TOSS v40
+# SKULL TOSS v41
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)), with a synthesised waltz standing in wherever they can't load.
+
+## New in v41: the full QA pass, and a launch candidate
+
+- **A static check of the whole game** (`node tools/lint.mjs`). It lints all 66 parts as one script, against the browser's own globals. It found the arcade clock's `progArc` used but never declared (it worked only because browsers make element ids global), a duplicate test hook, and dead code, now gone.
+- **A device matrix** (`node tools/matrix.mjs`). It runs eleven sizes, from a 320-px phone through tablets, a phone on its side, the Steam Deck and a laptop to an ultrawide screen. Every sheet and a run in play are checked for:
+  - sideways scrolling, clipped text, and anything off the screen;
+  - touch targets under 40 px, and controls with no name;
+  - a HUD or play field that doesn't fit.
+
+  It found the Vault running off a 320-px phone, and switches, tabs and outfit slots small for fingers. All eleven sizes pass now ([docs/QA-MATRIX.md](docs/QA-MATRIX.md)).
+- **A soak test** (`node tools/soak.mjs`). A bot plays every mode, with continues, title cards and mischief on:
+  - after every throw, nothing may be NaN and lives stay in range;
+  - after every run, the save survives a save code, and a replay must reach the same score.
+
+  It found **replays on the balloon map drifting**: the balloons swayed on the absolute clock, so a replay watched later saw them elsewhere. They sway on the run's own time now, and a new check holds it there.
+- **A content audit** (`T.contentAudit()` in the dev build). Every map's bosses exist and appear once, and each end boss has one piece. Every boss, power-up, hazard, target, shot, mode, secret, document, twist and note has its words. Achievements count stats the game keeps, and every challenge has wording and pay.
+- **CI runs all of it** on every push: build, lint, spec, server tests, matrix, soak and the web package.
+- **The QA plan** ([docs/QA.md](docs/QA.md)): the automated layers, a manual pass by device, browser and area, severities, and what makes a launch candidate. **The debug tools** ([docs/DEBUG.md](docs/DEBUG.md)): every item on the roadmap's list, and where to find it.
 
 ## New in v40: ready for the web, the app stores and Steam
 
@@ -912,7 +930,7 @@ From the console, `SkullToss.debug.visualAnimation` lists the pose library (`pos
 
 ## Tests
 
-Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **206 checks**, covering:
+Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **208 checks**, covering:
 
 - **Layout, scoring and aiming.**
   - Everything is centred and every result is classified correctly.
@@ -1089,3 +1107,6 @@ Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to
   - Soul packs through a store: credited and then finished, a left-over one credited at the next launch and never twice, and the store's price on the pack.
   - Rewarded reels: offered once loaded, watched, loaded again, and switched off by the live config.
   - The desktop shell: full screen, Quit, and Steam achievements by API name.
+- **v41.**
+  - The content audit finds nothing.
+  - A replay on the balloon map sees the same balloons, however much later it's watched.

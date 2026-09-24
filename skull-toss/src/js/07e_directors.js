@@ -115,7 +115,8 @@
     for (const h of HZ.list) {
       h.ox = h.x; h.oy = h.y; h.oz = h.z;
       if (h.fixed) continue;   // (the spec plants hazards that hold still)
-      if (h.kind === "balloon") { if (!live) continue; h.y += h.vy * dt; h.x += Math.sin(game.time * 0.9 + h.z) * 0.1 * dt; if (h.y > 4.6) Object.assign(h, newBalloon(0.2)); continue; }
+      // (a balloon drifts on the run's time, not the clock's: a replay starts at another hour)
+      if (h.kind === "balloon") { if (!live) continue; h.y += h.vy * dt; h.x += Math.sin((game.time - (game.run.t0 || 0)) * 0.9 + h.z) * 0.1 * dt; if (h.y > 4.6) Object.assign(h, newBalloon(0.2)); continue; }
       h.t += dt;
       if (h.kind === "bat") {   // it screeches off to the side first, then crosses the lane in about 1.3 s
         if (h.t < h.at) continue;

@@ -7,7 +7,7 @@ on:
 jobs:
   spec:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 40
     defaults:
       run:
         working-directory: skull-toss
@@ -27,10 +27,26 @@ jobs:
           ! grep -q "setBones" index.html
       - name: The server's rules (firebase/functions, no install needed)
         run: node --test firebase/functions/test/*.test.js
-      - name: Install Playwright
+      - name: The shells parse
+        run: |
+          node --check platforms/electron/main.js
+          node --check platforms/electron/preload.js
+          node --check firebase/functions/index.js
+          node --check firebase/functions/tools/admin.js
+      - name: Install Playwright and ESLint
         working-directory: skull-toss/tools
         run: |
-          npm install --no-save --no-package-lock playwright@1.56.1
+          npm install --no-save --no-package-lock playwright@1.56.1 eslint@9
           npx playwright install --with-deps chromium
+      - name: Lint the assembled game
+        run: node tools/lint.mjs
       - name: Run the spec
         run: node tools/run-spec.mjs
+      - name: The device matrix
+        run: node tools/matrix.mjs
+      - name: The soak test
+        run: node tools/soak.mjs 4
+      - name: Package the web build
+        run: |
+          python3 tools/package.py web
+          test -f dist/web/sw.js && test -f dist/web/manifest.webmanifest && grep -q 'rel="manifest"' dist/web/index.html

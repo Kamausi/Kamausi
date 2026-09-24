@@ -2051,6 +2051,19 @@
     T.platformReset(); assert($("quitBtnTitle").hidden, "and back on the web, no Quit");
   });
 
+  // ── v41: found by the soak test (tools/soak.mjs) ──
+  test("The content audit: every map, boss, piece, power-up, shot, achievement, challenge, mode, secret and document is whole", () => {
+    const P = T.contentAudit(); assert(P.length === 0, P.join("; "));
+  });
+  test("A replay on the balloon map sees the same balloons, whenever it's watched", () => {
+    T.setStats({ ...ZERO, bestStage: 9 }); T.setPractice({ hazards: true }); T.startMode("practice", 5);
+    const at = () => T.hz().list.filter(h => h.kind === "balloon").map(h => [h.x.toFixed(5), h.y.toFixed(5)]).join(" ");
+    T.step(4); const was = at(); assert(T.hz().kind === "balloons" && was, "balloons up");
+    T.endRun(); T.step(7.25);   // (the clock moves on before it's watched)
+    T.watchReplay(); T.step(4); assert(at() === was, `the same balloons (${at()} vs ${was})`);
+    T.stopReplay(); T.setPractice({ hazards: true }); T.setStats(ZERO); T.toTitle();
+  });
+
   (async () => {
     for (const q of queue) {
       if (q.step) { q.fn(); continue; }

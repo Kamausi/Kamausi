@@ -9,8 +9,9 @@
 .cat-tabs::-webkit-scrollbar{display:none}
 .cat-tabs button{flex:none;border:3px solid var(--ink);border-radius:8px;background:var(--paper);color:var(--ink);font:17px/1 var(--display);letter-spacing:.04em;text-transform:uppercase;padding:9px 12px 7px;cursor:pointer;box-shadow:0 3px 0 var(--ink)}
 .cat-tabs button[aria-selected="true"]{background:var(--mustard);transform:translateY(-2px) rotate(-2deg)}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
-@media (min-width:440px){.grid{grid-template-columns:repeat(4,1fr)}}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}
+@media (min-width:440px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.grid .item > span{max-width:100%;overflow-wrap:anywhere}   /* (a long name wraps rather than pushing the grid off a small phone: v41) */
 .grid.rows{grid-template-columns:1fr}
 .item{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:18px 4px 8px;border-radius:12px;border:3px solid var(--ink);background:var(--panel-2);cursor:pointer;
   font:15px/1.1 var(--display);letter-spacing:.02em;text-transform:uppercase;color:var(--cream);text-align:center;box-shadow:0 4px 0 var(--ink);transition:transform .14s var(--snap)}
@@ -305,3 +306,5 @@ details.row.sent{display:block}details.row.sent summary{cursor:pointer;font:700 
 .director-card .notes li em{margin-left:auto;font-style:normal;font:14px/1 var(--num);color:#7E2A22}
 .director-card .meta{margin:6px 0 8px;font:700 11.5px/1.2 "Courier New",monospace;letter-spacing:0;color:#6B4526;text-shadow:none}
 .director-card .btn{width:100%}
+/* finger-sized targets on touch screens (v41: tools/matrix.mjs checks them) */
+@media (pointer:coarse){.cat-tabs button{min-height:44px}.outfits .slot{width:44px;height:44px}.outfits .ghost-btn{min-height:44px}}

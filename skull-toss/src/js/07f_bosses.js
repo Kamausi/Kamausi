@@ -442,7 +442,7 @@
   }
   function drawReaper(B, front) {
     if (front) return;
-    const q = B.pathAt(B.t), P = bossBody(B), V = B.volley, glint = V ? V.tell : 0;
+    const P = bossBody(B), V = B.volley, glint = V ? V.tell : 0;
     withBody(B, P, c => {
       c.beginPath(); c.moveTo(-1.1, 0); c.quadraticCurveTo(-1.0, -2.5, -0.55, -3.8); c.quadraticCurveTo(0, -4.6, 0.55, -3.8); c.quadraticCurveTo(1.0, -2.5, 1.1, 0); c.closePath(); inkF(c, "#141414");
       c.fillStyle = "#3A3A3A"; for (let y = -3.5; y < 0; y += 0.3) for (const sd of [-1, 1]) { c.beginPath(); rr(c, sd * (0.72 + y * 0.08) - 0.06, y, 0.12, 0.16, 0.03); c.fill(); }   // the cloak is film stock, sprocket holes and all

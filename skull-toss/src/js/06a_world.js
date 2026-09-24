@@ -1,11 +1,6 @@
   // ───────────────────────── the living graveyard ─────────────────────────
   // Everything here is background: it never touches scoring. A small "director" spawns clouds, bats,
   // a witch, lightning and wanderers (zombies, skeletons, a werewolf, ghosts) on relaxed timers.
-  const HEADSTONES = (() => {
-    const rnd = mulberry32(4242);
-    return [[-4.4, 3.5], [4.7, 5.2], [-5.3, 8.5], [5.4, 10.5], [-6.2, 14], [6.6, 17], [-4.1, 21], [4.6, 25], [-7.5, 29], [7.8, 33], [-9.5, 19], [10, 24]]
-      .map(([x, z]) => ({ kind: "stone", x, z, w: 0.55 + rnd() * 0.25, h: 0.78 + rnd() * 0.35, cross: rnd() < 0.3, tilt: (rnd() - 0.5) * 0.12 }));
-  })();
   const WALKERS = {
     zombie:   { h: 1.72, v: [0.35, 0.55], step: 3.2, voice: "groan",  every: [5, 9] },
     skeleton: { h: 1.78, v: [0.75, 1.0],  step: 6.2, voice: "rattle", every: [2.5, 5] },

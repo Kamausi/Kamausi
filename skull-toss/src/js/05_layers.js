@@ -10,10 +10,6 @@
     const g = c.getContext("2d"); g.setTransform(DPR, 0, 0, DPR, -x0 * DPR, -y0 * DPR);
     return { c, g, x0, y0, w, h };
   }
-  function layer() {               // screen-sized (used for the vignette)
-    const c = document.createElement("canvas"); c.width = Math.round(W * DPR); c.height = Math.round(H * DPR);
-    const g = c.getContext("2d"); g.setTransform(DPR, 0, 0, DPR, 0, 0); return [c, g];
-  }
   function rr(g, x, y, w, h, r) {
     if (w <= 0 || h <= 0) return;
     r = Math.max(0, Math.min(r, w / 2, h / 2));

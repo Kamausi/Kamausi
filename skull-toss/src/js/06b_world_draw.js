@@ -4,14 +4,6 @@
     const kx = x + Math.sin(a1) * l1, ky = y + Math.cos(a1) * l1, fx = kx + Math.sin(a2) * l2, fy = ky + Math.cos(a2) * l2;
     c.strokeStyle = col; c.lineWidth = w; c.beginPath(); c.moveTo(x, y); c.lineTo(kx, ky); c.lineTo(fx, fy); c.stroke();
   }
-  function eyes(c, pts, r, col) {
-    c.save(); c.globalCompositeOperation = "lighter";
-    for (const [x, y] of pts) {
-      c.fillStyle = col; c.globalAlpha *= 0.35; c.beginPath(); c.arc(x, y, r * 2.6, 0, TAU); c.fill(); c.globalAlpha /= 0.35;
-      c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill();
-    }
-    c.restore();
-  }
   // the wanderers, rubber-hose style: inked limbs, white gloves, pie-cut eyes
   const segI = (c, x1, y1, x2, y2, w, col) => { seg(c, x1, y1, x2, y2, w + 0.03, INK); seg(c, x1, y1, x2, y2, w, col); };
   const limbI = (c, x, y, a1, l1, a2, l2, w, col) => { limb(c, x, y, a1, l1, a2, l2, w + 0.03, INK); limb(c, x, y, a1, l1, a2, l2, w, col); return [x + Math.sin(a1) * l1 + Math.sin(a2) * l2, y + Math.cos(a1) * l1 + Math.cos(a2) * l2]; };
@@ -115,15 +107,6 @@
     c.beginPath(); c.moveTo(-0.08, -0.6); c.lineTo(0.14, -0.62); c.quadraticCurveTo(0.02, -0.8, -0.14, -0.95 + fl * 0.5); c.quadraticCurveTo(-0.06, -0.78, -0.08, -0.6); c.fill();
     c.beginPath(); c.moveTo(-0.02, -0.55); c.quadraticCurveTo(-0.2, -0.45 + fl, -0.25, -0.3 + fl); c.lineTo(-0.02, -0.45); c.fill();
     c.restore();
-  }
-  function drawStone(k) {
-    const p = project(k.x, 0, k.z), w = k.w * p.s, h = k.h * p.s;
-    if (p.x < -w * 2 || p.x > W + w * 2) return;
-    ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.beginPath(); ctx.ellipse(p.x, p.y, w * 0.75, w * 0.14, 0, 0, TAU); ctx.fill();
-    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(k.tilt); ctx.fillStyle = "#28303C"; ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1, w * 0.06);
-    if (k.cross) { const t = w * 0.26; ctx.fillRect(-t / 2, -h * 1.15, t, h * 1.15); ctx.fillRect(-w / 2, -h * 0.86, w, t); ctx.strokeRect(-t / 2, -h * 1.15, t, h * 1.15); }
-    else { ctx.beginPath(); rr(ctx, -w / 2, -h, w, h, w / 2); ctx.fill(); ctx.stroke(); ctx.fillStyle = "rgba(232,216,180,.1)"; ctx.fillRect(-w / 2, -h + w / 2, Math.max(1, w * 0.08), h - w / 2); }
-    ctx.restore();
   }
   // ── cels: a wanderer's pose is painted once into a little cel and then photographed every frame,
   // the way a 1930s studio shot one drawing at a time. Twelve poses to a cycle, so they step on twos.

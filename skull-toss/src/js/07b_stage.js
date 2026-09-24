@@ -186,7 +186,7 @@
   function freezeFrame(sec) { if (!reduceMotion) game.freeze = Math.max(game.freeze || 0, sec); }
 
   // ── the HUD: a small progress bar above the skulls (the boss's health during a fight)
-  const progEl = $("prog"), progFill = $("progFill"), progSt = $("progStage"), progLbl = $("progLabel");
+  const progEl = $("prog"), progFill = $("progFill"), progSt = $("progStage"), progLbl = $("progLabel"), progArc = $("progArc");
   function renderProgress() {
     if (!progEl) return;
     if (modeProgress()) return;   // Practice, Boss Rush, the mini-games and the encore (07i_modes.js)

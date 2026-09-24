@@ -17,7 +17,7 @@
     serverAdmin: (op, data) => Backend.fakeH.admin[op]({ db: { tx: Backend.fakeDB }, data, now: Date.now() + (Backend.fakeClock || 0) }), flag: (k, now) => Flags.get(k, now), eventLive: now => Flags.eventLive(now),
     submitBoard: () => Board.submit(), lastSubmit: () => Board.lastSubmit, serverDoc: p => (Backend.fakeDocs && Backend.fakeDocs.has(p) ? JSON.parse(JSON.stringify(Backend.fakeDocs.get(p))) : null),
     advanceServerClock(ms) { Backend.fakeClock = (Backend.fakeClock || 0) + ms; }, weekOf: ms => Runs.weekOf(ms), checkRun: r => Runs.check(r),
-    wallet: () => Souls.wallet && JSON.parse(JSON.stringify(Souls.wallet)), soulsApi: () => Souls, callServer: (name, data) => Backend.call(name, data), exportCode: () => exportCode(), economy: () => Economy,
+    wallet: () => Souls.wallet && JSON.parse(JSON.stringify(Souls.wallet)), soulsApi: () => Souls, callServer: (name, data) => Backend.call(name, data), economy: () => Economy,
     start() { startGame(); },
     pause(on = true) { manual = on; },
     simStep: SIM_STEP, simAdvance: dt => advance(dt), simReset() { simAcc = 0; },   // the live loop's fixed step
@@ -80,6 +80,42 @@
     platformReset() { delete window.Capacitor; delete window.CdvPurchase; delete window.skullTossDesktop; Platform.ready = false; Payments = WEB_PAYMENTS; Ads = WEB_ADS; Platform.init(); $("quitBtnTitle").hidden = true; bgHidden = false; },
     platform: () => ({ id: Platform.id, shell: Platform.shell, caps: { ...Platform.caps } }), haptic: ms => Platform.haptic(ms), backButton: () => backButton(), swRegistered: () => registerServiceWorker(),
     payments: () => Payments, ads: () => Ads, steamAchievement: id => Platform.achievement(id),
+    // the content audit (v41): everything that refers to something else points at something real, and has its words
+    contentAudit() {
+      const P = [], str = id => { if (!(STRINGS.en && STRINGS.en[id] != null) && !(STRINGS[LANG] && STRINGS[LANG][id] != null)) P.push(`no string ${id}`); };
+      const onMaps = id => MAP_DATA.filter(M => M.bosses.mini === id || M.bosses.end === id).length;
+      MAP_DATA.forEach((M, i) => {
+        if (M.n !== i + 1) P.push(`map ${i + 1} is numbered ${M.n}`);
+        for (const k of ["mini", "end"]) if (!BOSS_IDS.includes(M.bosses[k])) P.push(`map ${M.n}: its ${k} boss "${M.bosses[k]}" doesn't exist`);
+        if (!MOTIFS["map" + M.n]) P.push(`map ${M.n} has no motif`);
+        if (!CODEX.target.ids().includes(M.target)) P.push(`map ${M.n}: target "${M.target}" isn't in the Codex`);
+      });
+      for (const id of BOSS_IDS) { if (onMaps(id) !== 1) P.push(`boss ${id} is on ${onMaps(id)} maps`); for (const f of ["name", "short", "tell", "hint"]) str(`boss.${id}.${f}`); str(`codex.boss.${id}`); if (!MOTIFS[id]) P.push(`boss ${id} has no motif`); }
+      if (Object.keys(FRAGMENTS).length !== MAP_COUNT) P.push(`${Object.keys(FRAGMENTS).length} pieces for ${MAP_COUNT} maps`);
+      for (const [id, F] of Object.entries(FRAGMENTS)) { if (!MAP_DATA.some(M => M.bosses.end === F.from)) P.push(`piece ${id} comes from ${F.from}, who isn't an end boss`); str(`fragment.${id}.name`); str(`fragment.${id}.line`); }
+      if (new Set(Object.values(FRAGMENTS).map(F => F.from)).size !== Object.keys(FRAGMENTS).length) P.push("two pieces come from one boss");
+      for (const id of POWER_IDS) { if (!POWERS[id].name || !POWERS[id].tip) P.push(`power-up ${id} has no name or tip`); str(`codex.power.${id}`); }
+      for (const id of CODEX.hazard.ids()) { str(`codex.hazard.${id}.name`); str(`codex.hazard.${id}.body`); }
+      for (const id of CODEX.target.ids()) { str(`codex.target.${id}.name`); str(`codex.target.${id}.body`); }
+      for (const id of SHOT_IDS) { str(`shot.${id}.name`); str(`shot.${id}.desc`); }
+      const statKnown = k => STAT_KEYS.includes(k) || typeof DEFAULT_PROFILE[k] === "number";
+      const achIds = new Set();
+      for (const A of ACHIEVEMENTS) {
+        if (achIds.has(A.id)) P.push(`achievement ${A.id} twice`); achIds.add(A.id);
+        if (!A.get && !statKnown(A.stat)) P.push(`achievement ${A.id} counts "${A.stat}", which isn't kept`);
+        if (!(A.n > 0) || !(A.bones >= 0) || !A.name || !A.text) P.push(`achievement ${A.id} is incomplete`);
+      }
+      for (const per of PERIOD_IDS) for (const c of PERIODS[per].pool) {
+        if (!chalDef(c.id)) P.push(`${per} challenge ${c.id} has no wording`);
+        if (!(c.range[0] > 0 && c.range[0] <= c.range[1]) || !(c.reward(c.range[0]) > 0)) P.push(`${per} challenge ${c.id}: range or reward`);
+      }
+      for (const m of Object.keys(MODES)) { str(`mode.${m}.name`); if (m === "practice" || m === "rush" || MODES[m].mini) str(`mode.${m}.rule`); }
+      for (const id of SECRETS) for (const f of ["name", "body", "hint"]) str(`secret.${id}.${f}`);
+      for (const A of ARCHIVE) for (const f of ["date", "title", "body", "how"]) str(`archive.${A.id}.${f}`);
+      for (const id of TWIST_IDS) { str(`director.twist.${id}.name`); str(`director.twist.${id}.line`); }
+      for (const N of NOTE_POOL) str(`director.note.${N.id}`);
+      return P;
+    },
     economyAudit: () => economyAudit(), analyticsOn(on = true) { if (sandbox) sandbox.analyticsOn = on; }, playData: () => ({ q: PlayData.q.map(e => ({ ...e })), sent: PlayData.sent, consent: PlayData.consent(), allowed: PlayData.allowed() }),
     flushPlayData: () => PlayData.flush(), setConsent: v => PlayData.set(v), resetConsent() { settings.analytics = "ask"; PlayData.q = []; PlayData.sent = 0; PlayData.errorsSent = 0; }, firsts: () => realProfile().firsts.slice(),
     reportError: (m, s) => PlayData.error(m, s), errors: () => Telemetry.errors.map(e => ({ ...e })), renderConsent() { renderConsent(); return !$("consentCard").hidden; },
@@ -89,7 +125,7 @@
     // the Power-Up Director alone: n makes in a row from the start of the first half, noting the hits where a prop turned up
     powerRolls(n, phase = "A") { const out = [], was = game.result; game.phase = phase; game.stageHits = phase === "A" ? 0 : STAGE_MINI; powerDirectorReset();
       for (let i = 0; i < n; i++) { game.stageHits++; game.result = { make: true }; pickupSchedule(); if (pickup) { out.push({ hit: game.stageHits, id: pickup.id }); pickup = null; } }
-      game.result = was; return out; }, setWind(w) { HZ.wind = w; renderWind(); }, hz: () => ({ kind: HZ.kind, wind: HZ.wind, fog: HZ.fog, list: HZ.list.map(h => ({ kind: h.kind, fixed: !!h.fixed })), bob: pendBob() }),
+      game.result = was; return out; }, setWind(w) { HZ.wind = w; renderWind(); }, hz: () => ({ kind: HZ.kind, wind: HZ.wind, fog: HZ.fog, list: HZ.list.map(h => ({ kind: h.kind, fixed: !!h.fixed, x: h.x, y: h.y, z: h.z })), bob: pendBob() }),
     fogIn() { HZ.fogT = 3.6; }, hazardsAfterThrow: () => hazardsAfterThrow(), setPendT(t) { HZ.pendT = t; }, pend: () => ({ ...PEND, period: pendPeriod() }),
     plantHazard(kind, x, y, z, r = 0.28) { HZ.list = HZ.list.filter(h => h.kind !== kind); HZ.list.push({ kind, x, y, z, ox: x, oy: y, oz: z, r, fixed: true, t: 0, at: 0, dir: 1 }); },
     targets: () => targets.map(T => ({ kind: T.kind, ...targetPos(T), pop: T.pop, left: T.left })), refillTargets: () => refillTargets(),
