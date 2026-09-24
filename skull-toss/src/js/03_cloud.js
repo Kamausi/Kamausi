@@ -11,7 +11,7 @@
       this.state = "connecting"; renderSave();
       try {
         const B = await Backend.init();
-        Souls.connect(); Flags.watch();   // (Souls need the server's functions: 09m_souls.js; live flags: 03d_flags.js)
+        Souls.connect(); Flags.watch(); renderConsent(); PlayData.flush();   // (Souls need the server's functions: 09m_souls.js; live flags: 03d_flags.js; play data: 04g_telemetry.js)
         if (!B.db || !B.me) { this.state = "off"; renderSave(); return; }
         this.me = B.me; this.ref = B.db.doc("data/users/" + B.me.id + "/save");
         Board.init(B.db, B.me);

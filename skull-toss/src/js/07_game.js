@@ -253,7 +253,7 @@
   // and no end: the ring keeps getting quicker, and the run lasts as long as your skulls do.
   function startGame(opts = {}) {
     if (Replay.play && !opts.replay) Replay.stop(false);   // (a real run ends any replay: 07j_replay.js)
-    const mode = !MODES[opts.mode] ? "story" : opts.replay || !MODES[opts.mode].open || MODES[opts.mode].open() ? opts.mode : "story";
+    const mode = !MODES[opts.mode] ? "story" : opts.replay || (!Flags.modeOff(opts.mode) && (!MODES[opts.mode].open || MODES[opts.mode].open())) ? opts.mode : "story";   // (the live config can take a mode off: 03d_flags.js)
     modeStart(mode);   // (Practice swaps in a copy of the profile here: 07i_modes.js)
     const pick = clamp(opts.map | 0, 0, STAGES.length - 1), map = opts.replay ? pick : mode === "director" ? directorNow().map : MODES[mode].maps ? (mapUnlocked(pick) ? pick : 0) : MODES[mode].mini ? miniMap(mode) : 0;
     if (mode === "director" && opts.seed == null) opts = { ...opts, seed: directorNow().seed };   // (everyone plays the same run this week)
@@ -314,7 +314,9 @@
     checkUnlocks(); persist(300);
     showCombo(0); setHint(""); Sound.over(); Sound.setAct("menu"); VisualSystem.emit("death"); updateHud();
     renderResults(); if (game.mode === "story" && !Replay.play) Board.post();
-    Telemetry.emit("run_end", { mode: game.mode, map: game.map, score: game.score, hits: game.hits, stage: game.stage, secs: Math.round(game.run.secs), throws: game.throws, quit: !card });
+    Telemetry.emit("run_end", { mode: game.mode, map: game.map, score: game.score, hits: game.hits, stage: game.stage, phase: game.phase, tier: tierNow().id, secs: Math.round(game.run.secs), throws: game.throws,
+      misses: game.run.misses, perfects: game.run.perfects, continues: game.run.continues, powerups: game.run.powerups, bosses: game.run.bosses, quit: !card });
+    if (!Replay.play) PlayData.runs++;
     Replay.finish(); renderResults();   // (the recording is kept for Watch replay and Share)
     leavePractice();   // (the copy goes; the real profile comes back, one practice run the richer)
   }

@@ -25,7 +25,10 @@ page, so the spec drives the real server logic.
 5. **Point this folder at your project:** copy `.firebaserc.example` to `.firebaserc` and put your project id in it.
 6. **Deploy the rules and functions:** `cd functions && npm install && cd .. && firebase deploy --only firestore,functions`.
    Cloud Functions needs the project on the Blaze (pay-as-you-go) plan.
-7. **Rebuild and host the game:** `python3 ../src/build.py`, then copy `../index.html` into `public/` and run
+7. **Let analytics expire (v39):** turn on Firestore's time-to-live for the `events` collection, so each batch is
+   deleted 30 days after it arrives:
+   `gcloud firestore fields ttls update expireAt --collection-group=events --enable-ttl --project=<your-project>`.
+8. **Rebuild and host the game:** `python3 ../src/build.py`, then copy `../index.html` into `public/` and run
    `firebase deploy --only hosting`. Or host `index.html` anywhere; the config inside it points at your project.
 
 To try everything locally: `firebase emulators:start`, then open the hosted page from the emulator. In the
@@ -38,14 +41,16 @@ end.
 |---|---|---|
 | `data/users/{uid}/save` | the player | profile and looks, merged with the device's copy. The rules refuse any `souls` or `wallet` field. |
 | `wallets/{uid}` | functions only | the Souls balance, what they bought, and the last daily claim |
-| `ledger/{id}` | functions only | every change to a balance: buys, daily claims, purchases |
+| `ledger/{id}` | functions only | every change to a balance: buys, daily claims, purchases, refunds, grants, reversals |
 | `receipts/{id}` | functions only | each store receipt, so none is ever credited twice |
 | `leaderboard/{uid}` | functions only (v34) | each player's best checked Story run |
 | `weekly/{week}_{uid}` | functions only (v34) | each player's best checked run this week |
 | `runs/{id}` | functions only (v34) | the runs submitted, for audit |
 | `meta/{uid}` | functions only | when the player last sent a run (the rate limit) |
 | `config/live` | you, from the console (v39) | remote config and feature flags |
-| `events/{id}` | functions only (v39) | analytics, with consent |
+| `events/{day}_{uid}_{time}_{n}` | functions only (v39) | a batch of analytics, sent with the player's consent, deleted after 30 days (step 7) |
+| `metrics/{day}_{shard}` | functions only (v39) | the day's analytics counts, split over ten documents; no player ids |
+| `ameta/{uid}` | functions only (v39) | the analytics rate limit |
 
 ## Remote config and feature flags (`config/live`)
 
@@ -62,8 +67,17 @@ they're cached in the browser for offline play. Anything left out keeps its defa
 | `kill.souls` | `false` | closes the Soul Shop |
 | `kill.board` | `false` | stops posting to the leaderboard |
 | `kill.replays` | `false` | hides Share on the headstone |
+| `event.from`, `event.until` | `""` | an event's window, as ISO times (e.g. `"2026-10-30T00:00:00Z"`). `event.banner`, `event.bones` and `challenges.bonus` apply only inside it, so an event can be set up ahead and ends on its own. Leave both empty for "now, until changed". |
+| `maintenance` | `""` | a line under the title, in place of the event banner, e.g. `"The leaderboard is resting until 6pm UTC"` |
+| `modes.off` | `[]` | modes taken off the Play sheet, e.g. `["director"]` if something's wrong with this week's challenge. Story can't be. |
+| `build.min` | `0` | the oldest build allowed to write. Anything older is asked to reload, and the server refuses its Soul and leaderboard writes. The build number is in `src/version.json`. |
+| `kill.analytics` | `false` | stops analytics, on the device and the server |
 | `season.id` | `""` | which season is running (v42) |
-| `analytics.sample` | `1` | the share of consenting players whose events are sent (v39) |
+| `analytics.sample` | `1` | the share of consenting players whose events are sent, 0 to 1 (v39). The same install is always in or always out. |
+
+The server enforces `kill.souls` (no buying, no daily Souls: a store purchase still goes through, since it's been
+paid for), `kill.board`, `kill.analytics` and `build.min` itself, so a kill switch holds even for a client that
+doesn't know about it.
 
 ## The functions
 
@@ -72,10 +86,12 @@ they're cached in the browser for offline play. Anything left out keeps its defa
 - `claimDailySouls`: the free daily Souls, once per UTC day.
 - `redeemPurchase {platform, receipt, product}`: credits a Soul pack after the store confirms the receipt.
 - `submitRun {run, log}` (v34): checks a finished Story run, keeps it for audit, and posts it to the all-time and weekly boards if it's the player's best. One every 15 seconds.
-- `logEvents {events}` (v39): stores a batch of analytics events, only from players who agreed.
+- `logEvents {session, build, events}` (v39): files a batch of analytics events, sent only by players who agreed. Only the events and fields listed in `functions/shared/analytics.js` are kept (the game filters with the same list before sending). Fifty events a batch, six batches a minute.
+- `support {op, …}` (v39): support's tools (below), for accounts with the `admin` claim only.
+- `playRefunds` (v39): Google Play's refund notices (Pub/Sub). `appleNotices` (v39): the App Store's (HTTPS). See [Refunds](#refunds).
 
 Each one refuses with a code the game understands: `unauthenticated`, `not-found`, `already-exists`,
-`failed-precondition`, `permission-denied` or `resource-exhausted`.
+`failed-precondition`, `permission-denied`, `resource-exhausted` or `unavailable` (switched off in `config/live`).
 
 ## Soul packs
 
@@ -84,7 +100,43 @@ until you fill it in every real receipt is refused. The Google Play, App Store a
 file. The prices players pay are set in each store's console. What a pack credits is `PACKS` in
 `functions/shared/economy.js`.
 
+## Refunds
+
+When a store refunds a Soul pack, the Souls come back off the wallet it credited. What's been spent stays spent. Any
+shortfall is **owed**: new Souls (daily or bought) pay it off first, nothing can be bought meanwhile, and the Soul
+Shop says so. It's all on the ledger (`kind: "refund"`).
+
+- **Google Play:** in the Play Console, turn on Real-time developer notifications to a Pub/Sub topic called
+  `play-rtdn` (or set `PLAY_RTDN_TOPIC`). `playRefunds` handles `voidedPurchaseNotification`. File each receipt under
+  the order id (`verifyReceipt` returns it as `id`).
+- **App Store:** set the App Store Server Notifications (v2) URL to the deployed `appleNotices` function. Put Apple's
+  root certificate in `functions/certs/AppleRootCA-G3.cer` (from apple.com/certificateauthority), and set
+  `APPLE_BUNDLE_ID`, `APPLE_APP_ID`, and `APPLE_ENV=sandbox` while testing. Until the certificate is there, the
+  function answers 503 and does nothing.
+- **Steam:** poll `ISteamMicroTxn/GetReport` for refunds and run `revoke-receipt` (below) for each.
+- **Restoring purchases.** Soul packs are consumable, so there's nothing for a store to restore. What Souls bought
+  belongs to the account. An anonymous account is one device: link it to Google or Apple sign-in (step 2) to carry
+  it to another.
+
+## Support's tools
+
+`functions/tools/admin.js` runs the same handlers from your machine, with a service account
+(`export GOOGLE_APPLICATION_CREDENTIALS=…`, then from `functions/`):
+
+```
+node tools/admin.js wallet <uid>                    # Souls, what they own, anything owed
+node tools/admin.js ledger <uid> [n]                # the last n changes to their balance
+node tools/admin.js grant <uid> 200 "ticket 1234"   # a make-good (a minus takes Souls back)
+node tools/admin.js revoke-receipt <order id>       # a refund, by hand
+node tools/admin.js reverse <ledger id>             # undo one entry: a purchase, a daily claim or a grant
+node tools/admin.js report 2026-10-01               # the day's analytics, with the new-player funnel
+node tools/admin.js set-admin <uid>                 # let that account call `support` from a signed-in page
+```
+
+Every one writes to the ledger, so nothing support does is invisible. That's the economy's rollback: a bad
+purchase, grant or claim is reversed entry by entry, and a bad event is ended by editing `config/live`.
+
 ## Tests
 
-- `cd functions && npm test` runs the handlers against an in-memory database. CI runs them too, with no install.
+- `cd functions && npm test` runs the handlers against an in-memory database: Souls, receipts, the run check, analytics, refunds, support's tools and the live switches. CI runs them too, with no install.
 - The game's spec (`node tools/run-spec.mjs`) drives the same handlers inside the page.

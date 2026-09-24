@@ -220,7 +220,7 @@
   const ZERO = { bones: 0, bonks: 0, misses: 0, clutch: 0, bonesTotal: 0, makes: 0, best: 0, perfects: 0, rims: 0, bestStreak: 0, bestPerfStreak: 0, peakLives: 0, games: 0, points: 0, throws: 0, unlocked: [], boardBest: null, fragments: [], bossLog: {} };
   for (const [k, v] of Object.entries(T.profile())) if (typeof v === "number" && !(k in ZERO) && k !== "updatedAt" && k !== "schema") ZERO[k] = k === "bestStage" ? 1 : 0;   // every other counter too
   ZERO.achievements = T.achievements().map(a => a.id); ZERO.arcade = {};   // (all achievements in hand, so none pays out in the middle of a bones test)
-  ZERO.shots = {}; ZERO.modes = {}; ZERO.met = []; ZERO.secrets = []; ZERO.history = []; ZERO.mastery = []; ZERO.flawless = {}; ZERO.mapMakes = {}; ZERO.arcadeTables = {}; ZERO.lastIni = ""; ZERO.streakLast = "";   // (v25–v27: signature shots, mode records, what the Codex has noted)
+  ZERO.shots = {}; ZERO.modes = {}; ZERO.met = []; ZERO.secrets = []; ZERO.history = []; ZERO.mastery = []; ZERO.flawless = {}; ZERO.mapMakes = {}; ZERO.arcadeTables = {}; ZERO.lastIni = ""; ZERO.streakLast = ""; ZERO.firsts = [];   // (v25–v27: signature shots, mode records, what the Codex has noted)
   const statFor = { perfStreak: "bestPerfStreak" };
   const DEF = { skull: "bone", eyes: "pie", teeth: "grin", paint: "none", trail: "dust", impact: "classic", ring: "hoop", aim: "bone", reel: "standard", title: "rookie", hat: "none", aura: "none", pole: "wood" };
   const dressDefault = () => { for (const [k, v] of Object.entries(DEF)) T.equip(k, v); };
@@ -1916,6 +1916,85 @@
     T.setStats({ director: { week: "1999-W01", best: 5, stars: [true, true, true], runs: 9 } }); T.toTitle(); $("play").click();
     assert(!/★/.test($("directorCard").querySelector(".notes").textContent), "last week's stars don't count this week");
     T.closeSheet(); T.setStats(ZERO); T.toTitle();
+  });
+
+  // ── v39: play analytics with consent, and the live-ops safety net ──
+  test("Play data waits for a yes: nothing is queued before, the question comes after the first run, and a privacy signal is a no", async () => {
+    await T.fakeServer(); T.analyticsOn(); T.resetConsent(); T.setStats({ ...ZERO, games: 0 });
+    assert(!T.renderConsent(), "not before the first run");
+    T.setStats({ ...ZERO, games: 1 }); assert(T.renderConsent(), "asked on the title after it");
+    T.start(); T.calm(); T.freezeRing(0.1, C.RING_Y); throwAndSettle(0.1, C.RING_Y); T.toTitle();
+    assert(T.playData().q.length === 0 && T.playData().consent === "ask", "nothing queued while unasked");
+    T.openSheet("settings"); assert($("set-analytics").getAttribute("aria-checked") === "false" && !$("set-analytics").disabled, "the switch starts off"); T.closeSheet();
+    T.setConsent("yes"); assert(!T.renderConsent(), "and not asked again");
+    for (let i = 0; i < 6 && T.playData().q.length; i++) await T.flushPlayData();   // (a batch at a time, fifty at most)
+    const docs = T.serverKeys("events/").sort().map(T.serverDoc), q = docs.flatMap(d => d.events).map(e => e.name);
+    assert(T.playData().q.length === 0 && docs.length && docs.every(d => d.build === T.gameBuild), "sent, and filed on the server");
+    assert(q[0] === "session_start" && q.includes("run_start") && q.includes("first") && q.includes("consent") && !q.includes("throw"), `the session so far, cut down (${q.join()})`);
+    const m = T.serverDoc(T.serverKeys("metrics/")[0]); assert(m && m.first_throw >= 1 && m.consent === 1 && !JSON.stringify(m).includes("tester"), `and counted, naming no one (${JSON.stringify(m)})`);
+    T.setConsent("no"); T.start(); T.calm(); T.freezeRing(0.1, C.RING_Y); throwAndSettle(0.1, C.RING_Y); T.endRun(); T.step(1);
+    assert(T.playData().q.length === 0, "a no stops everything at once");
+    T.resetConsent(); Object.defineProperty(navigator, "globalPrivacyControl", { value: true, configurable: true });
+    assert(T.playData().consent === "no" && !T.renderConsent(), "Global Privacy Control: no, without asking");
+    delete navigator.globalPrivacyControl; T.resetConsent(); T.analyticsOn(false); T.noServer(); T.toTitle();
+  });
+  test("The funnel: each first is noted once a player, in order, and a save merge keeps them all", () => {
+    T.setStats({ ...ZERO, games: 2 }); T.start(); T.calm(); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y);
+    T.calm(); T.freezeRing(0, C.RING_Y); throwAndSettle(2.5, 4.8);
+    const f = T.firsts(); assert(["retry", "throw", "hit", "miss"].every(k => f.includes(k)) && f.indexOf("throw") < f.indexOf("hit"), `first throw, hit, miss and retry (${f.join()})`);
+    T.calm(); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); assert(T.firsts().filter(k => k === "hit").length === 1, "once each");
+    const merged = T.merge({ ...T.profile(), firsts: ["throw", "boss"] }, { ...T.profile(), firsts: ["story", "hit"] });
+    assert(["throw", "story", "hit"].every(k => merged.firsts.includes(k)) && !merged.firsts.includes("boss") === false, `merged (${merged.firsts.join()})`);
+    T.setStats(ZERO); T.toTitle();
+  });
+  test("Only the listed events and fields leave the device; errors are kept, and five a session are sent", async () => {
+    await T.fakeServer(); T.analyticsOn(); T.resetConsent(); T.setStats({ ...ZERO, games: 1 }); T.setConsent("yes");
+    T.start(); T.calm(); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); T.endRun(); T.step(1);
+    const end = [...T.serverKeys("events/").map(T.serverDoc).flatMap(d => d.events), ...T.playData().q].filter(e => e.name === "run_end").pop();
+    assert(end && end.mode === "story" && end.tier && "misses" in end && !("name2" in end) && Object.keys(end).every(k => ["name", "t", "mode", "map", "score", "hits", "stage", "phase", "tier", "secs", "throws", "misses", "perfects", "continues", "powerups", "bosses", "quit"].includes(k)), JSON.stringify(end));
+    for (let i = 0; i < 7; i++) T.reportError("boom " + i, "https://example.com/path/index.html:12");
+    const errs = T.playData().q.filter(e => e.name === "error");
+    assert(T.errors().length === 7 && errs.length === 5 && errs[0].src === "index.html:12", `seven kept, five queued (${errs.length})`);
+    T.setFlags({ "kill.analytics": true }); T.reportError("after", "x"); assert(!T.playData().allowed, "a kill switch stops it");
+    T.setFlags({ "analytics.sample": 0 }); assert(!T.playData().allowed, "and a sample of 0 leaves everyone out");
+    T.setFlags({}); T.setConsent("no"); T.resetConsent(); T.analyticsOn(false); T.noServer(); T.setStats(ZERO); T.toTitle();
+  });
+  test("Live ops: a scheduled event runs only in its window, a mode can be taken off, an old build is asked to reload", () => {
+    const now = Date.now(), iso = ms => new Date(ms).toISOString();
+    T.setFlags({ "event.banner": "Double bones", "event.bones": 2, "event.from": iso(now + 3600e3) }); T.toTitle();
+    assert($("eventBanner").hidden && T.flag("event.bones") === 1, "not yet");
+    assert(T.flag("event.bones", now + 7200e3) === 2, "on once it starts");
+    T.setFlags({ "event.banner": "Double bones", "event.from": iso(now - 60e3), "event.until": iso(now + 60e3) }); assert(!$("eventBanner").hidden && /Double/.test($("eventBanner").textContent), "on in its window");
+    assert(!T.eventLive(now + 120e3), "and off when it ends");
+    T.setFlags({ maintenance: "The projector's being serviced" }); assert(/serviced/.test($("eventBanner").textContent) && $("eventBanner").classList.contains("warn"), "a maintenance line");
+    T.setFlags({ "build.min": T.gameBuild + 1, "event.banner": "x" }); assert(/newer print/.test($("eventBanner").textContent), "an old build is asked to reload");
+    T.setFlags({ "modes.off": ["director", "rush", "story"] }); T.setStats({ ...ZERO, bossKills: 1 });
+    T.startMode("director"); assert(T.modeState().mode === "story", "a mode taken off can't be started");
+    T.toTitle(); $("play").click(); assert($("directorCard").hidden && !document.querySelector("#moreModes .m-rush") && !document.querySelector('.mode-card[data-mode="story"]').hidden, "and leaves the Play sheet (Story can't be taken off)");
+    T.closeSheet(); T.setFlags({}); T.setStats(ZERO); T.toTitle();
+  });
+  test("A refunded pack's Souls owed show in the Soul Shop, and the shop waits until they're paid off", async () => {
+    await T.fakeServer(); const S = T.soulsApi();
+    await S.redeem({ platform: "test", receipt: "OK:rf1", product: "souls.550" }); await S.buy("skull:soul");
+    const r = await T.serverAdmin("revokeReceipt", { receipt: "rf1" }); assert(r.wallet.owed === 400 && r.wallet.souls === 0, JSON.stringify(r.wallet));
+    await S.connect(); T.toTitle(); T.openSheet("souls");
+    assert(!$("soulsStatus").hidden && /400 Souls owed/.test($("soulsStatus").textContent), $("soulsStatus").textContent);
+    await S.buy("band:soul"); assert(!T.wallet().owned.includes("band:soul"), "nothing more can be bought");
+    T.closeSheet(); T.noServer(); T.toTitle();
+  });
+  test("The economy audit: no duplicate ids, prices that climb with rarity, the Soul catalog the server's, and sane pacing", () => {
+    T.setStats(ZERO); const A = T.economyAudit();
+    assert(A.problems.length === 0, A.problems.join("; "));
+    assert(A.items > 50 && A.tiers.length === 4 && A.runsForAll > 0 && A.soulDays === 15, JSON.stringify({ ...A, problems: undefined }));
+  });
+  test("Restore points: one a day, the last three kept, and recovering one only adds", () => {
+    T.setStats({ ...ZERO, games: 3, bestStage: 4, bones: 50 });
+    for (const d of ["2026-09-20", "2026-09-20", "2026-09-21", "2026-09-22", "2026-09-23"]) T.makeRestorePoint(d);
+    assert(T.restorePoints().map(r => r.day).join() === "2026-09-21,2026-09-22,2026-09-23", JSON.stringify(T.restorePoints()));
+    T.setStats({ ...ZERO, games: 1, bestStage: 1, bones: 999 }); assert(T.restoreFrom("2026-09-22"), "recovered");
+    const P = T.profile(); assert(P.bestStage === 4 && P.games === 3 && P.bones === 999, `the best of both, today's balance kept (${P.bestStage}, ${P.games}, ${P.bones})`);
+    T.openSheet("settings"); assert(document.querySelectorAll("#restoreList [data-day]").length === 3, "listed in Settings"); T.closeSheet();
+    T.setStats(ZERO); T.toTitle();
   });
 
   (async () => {

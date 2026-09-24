@@ -33,11 +33,11 @@
     async ask(name, data, done) {
       if (this.busy || !this.available()) return false;
       this.busy = true; renderSoulsUI();
-      try { const w = await Backend.call(name, data); this.set(w); if (done) done(); return true; }
-      catch (e) { toast(t(`souls.err.${["failed-precondition", "already-exists", "unauthenticated", "permission-denied"].includes(e.code) ? e.code : "other"}`)); Sound.ui("deny"); return false; }
+      try { const w = await Backend.call(name, { ...(data || {}), build: GAME_BUILD }); this.set(w); if (done) done(); return true; }
+      catch (e) { const why = e.message === "update-required" ? "update" : ["failed-precondition", "already-exists", "unauthenticated", "permission-denied", "unavailable"].includes(e.code) ? e.code : "other"; toast(t(`souls.err.${why}`)); Sound.ui("deny"); return false; }
       finally { this.busy = false; renderSoulsUI(); }
     },
-    buy(key) { const [kind, id] = key.split(":"); return this.ask("buyWithSouls", { item: key }, () => { equip(kind, id); toast(t("souls.bought", { name: Economy.ITEMS[key].name })); Sound.ui("buy"); }); },
+    buy(key) { const [kind, id] = key.split(":"); return this.ask("buyWithSouls", { item: key }, () => { equip(kind, id); toast(t("souls.bought", { name: Economy.ITEMS[key].name })); Sound.ui("buy"); Telemetry.emit("shop_buy", { kind, id, price: Economy.ITEMS[key].souls, cur: "souls" }); }); },
     claimDaily() { return this.ask("claimDailySouls", {}, () => { toast(t("souls.dailyGot", { n: Economy.DAILY })); Sound.ui("claim"); }); },
     redeem(purchase) { return this.ask("redeemPurchase", purchase, () => { toast(t("souls.packGot", { n: Economy.PACKS[purchase.product] })); Sound.ui("claim"); }); },
     async buyPack(product) {
@@ -51,8 +51,8 @@
     for (const el of document.querySelectorAll(".souls-n")) el.textContent = Souls.wallet ? fmtN(Souls.wallet.souls) : "—";
     if (sheet !== "souls") return;
     const W = Souls.wallet, on = Souls.state === "ok";
-    $("soulsStatus").textContent = !Souls.available() ? t("souls.offline") : Souls.state === "loading" ? t("souls.loading") : Souls.state === "error" ? t("souls.error") : "";
-    $("soulsStatus").hidden = on;
+    $("soulsStatus").textContent = !Souls.available() ? t("souls.offline") : Souls.state === "loading" ? t("souls.loading") : Souls.state === "error" ? t("souls.error") : W && W.owed ? t("souls.owed", { n: fmtN(W.owed) }) : "";
+    $("soulsStatus").hidden = on && !(W && W.owed);
     const today = Economy.dayOf(Date.now()), dailyBtn = $("soulsDaily");
     dailyBtn.disabled = !on || Souls.busy || (W && W.daily === today);
     dailyBtn.textContent = W && W.daily === today ? t("souls.claimed") : t("souls.claim", { n: Economy.DAILY });

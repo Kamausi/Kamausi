@@ -12,7 +12,7 @@
   // big scene changes iris out and back in, like the end of an old cartoon; pausing is instant
   function showScreen(name, fx = true) {
     const prev = screen; screen = name;
-    if (name === "title") { renderResumeOffer(); renderSharedOffer(); renderEventBanner(); }
+    if (name === "title") { renderResumeOffer(); renderSharedOffer(); renderEventBanner(); renderConsent(); }
     if (fx && prev !== name && name !== "pause" && prev !== "pause") irisTo(() => applyScreen(name)); else applyScreen(name);
   }
   // GAME OVER pops up over the picture when the last skull is gone; the headstone follows it
@@ -55,7 +55,8 @@
     $("mapPickK").textContent = pickFor === "practice" ? t("play.pickPractice") : t("play.pickArcade");
     $("practiceOpts").hidden = pickFor !== "practice";
     segValue($("prac-ring"), practice.ring); segValue($("prac-half"), practice.half); segValue($("prac-hz"), practice.hazards ? "on" : "off");
-    renderMoreModes(); renderDirectorCard();
+    renderMoreModes(); renderDirectorCard(); $("directorCard").hidden = Flags.modeOff("director");
+    for (const b of $("modePick").querySelectorAll(".mode-card[data-mode]")) b.hidden = Flags.modeOff(b.dataset.mode);
     const reached = Math.min(profile.bestStage, MAP_COUNT), done = profile.storyClears > 0;
     $("storyBest").textContent = profile.bestScore > 0 ? `Best ${fmtN(profile.bestScore)} · ${done ? `finished ${profile.storyClears > 1 ? profile.storyClears + " times" : ""}` : `reached map ${reached}`} · ${profile.fragments.length}/8 pieces` : "";
     const played = STAGES.map((S, i) => arcadeRec(i)).filter(a => a.runs), longest = played.length ? Math.max(...played.map(a => a.secs)) : 0;
@@ -72,7 +73,7 @@
   $("modePick").addEventListener("click", e => {
     const b = e.target.closest("[data-mode]"); if (!b) return;
     const m = b.dataset.mode, M = MODES[m];
-    if (M.open && !M.open()) { Sound.ui("deny"); toast(t("mode.locked")); return; }
+    if ((M.open && !M.open()) || Flags.modeOff(m)) { Sound.ui("deny"); toast(t("mode.locked")); return; }
     if (M.maps) { Sound.ui("flick"); renderPlay(true, m); const f = $("mapList").querySelector("button"); if (f && ui.kbd) f.focus({ preventScroll: true }); }
     else { closeSheet(false); startGame({ mode: m }); }
   });
@@ -83,7 +84,7 @@
   // the other ways to play: a tile each, with its record, or what opens it
   function renderMoreModes() {
     const box = $("moreModes"); box.textContent = "";
-    for (const m of ["practice", "rush", ...MINI_IDS]) {
+    for (const m of ["practice", "rush", ...MINI_IDS].filter(m => !Flags.modeOff(m))) {
       const M = MODES[m], open = !M.open || M.open(), R = modeRec(m);
       const rec = !open ? t("mode.locked") : m === "practice" ? (R.runs ? t("mode.practiced", { n: R.runs }) : t("mode.none")) : R.runs ? t("mode.best", { v: modeValueText(m, R.best) }) : t("mode.none");
       box.append(h("button", { class: `mode-tile m-${m}${open ? "" : " locked"}${M.mini ? " m-mini" : ""}`, type: "button", data: { mode: m }, "aria-disabled": open ? null : "true" },

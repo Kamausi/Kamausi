@@ -55,7 +55,7 @@
     if (pay) addBones(pay);
     game.newBest = game.score > rec.best; rec.best = Math.max(rec.best, game.score); rec.runs++;
     game.run.director = { met, pay, stars: rec.stars.slice() };
-    Telemetry.emit("director_end", { week: D.week, twist: D.twist, met, score: game.score });
+    Telemetry.emit("director_end", { week: D.week, twist: D.twist, stars: met.filter(Boolean).length, score: game.score });
     return game.run.director;
   }
   const noteText = N => t(`director.note.${N.id}`, { n: fmtN(N.n) });

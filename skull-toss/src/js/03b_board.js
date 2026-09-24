@@ -33,11 +33,11 @@
     submit() {
       const R = profile.boardBest; if (!R || !profile.board || !Backend.hasFunctions()) return Promise.resolve(false);
       const run = { mode: "story", ...R, name: cleanName(profile.name) || "Nameless soul", title: cos.title, look: this.entry().look };
-      return Backend.call("submitRun", { run, log: Replay.last && Replay.last.mode === "story" ? Replay.encode(Replay.last) : "" }).then(r => { this.lastSubmit = r; return !!(r && r.accepted); },
+      return Backend.call("submitRun", { build: GAME_BUILD, run, log: Replay.last && Replay.last.mode === "story" ? Replay.encode(Replay.last) : "" }).then(r => { this.lastSubmit = r; return !!(r && r.accepted); },
         e => { this.lastSubmit = { accepted: false, why: e.message, code: e.code }; return false; });
     },
     push(force = false) {
-      if (Flags.on("kill.board")) return Promise.resolve(false);   // (03d_flags.js)
+      if (Flags.on("kill.board") || Flags.outdated()) return Promise.resolve(false);   // (03d_flags.js)
       if (Backend.hasFunctions()) return this.submit();   // (the server writes the board; the page can't)
       if (!this.db || !this.me || !profile.board || (sandbox && !this.fake)) return Promise.resolve(false);
       const e = this.entry();

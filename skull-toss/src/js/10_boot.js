@@ -29,6 +29,7 @@
   loadAll(); Flags.load();
   { const q = (location.search.match(/[?&]lang=([\w-]+)/) || [])[1]; if (q || settings.lang !== "en") setLang(q || settings.lang); }   // ?lang=pseudo tries the text-length locale
   welcomeGift(); ensureDaily(); applyCosmetics(); applyAccess(); layOutProps(); resize(); snapRing(); VisualSystem.init(); showScreen("title", false); updateHud();
+  firstTime("launch"); if (PlayData.consent() === "yes") PlayData.sessionStart();   // (play data: 04g_telemetry.js)
   requestAnimationFrame(frame);
   Cloud.init();
   // canvas-only fonts are never fetched unless asked for; once they're in, redraw anything painted once
@@ -47,5 +48,8 @@
         cues: () => Object.keys(CUES), quality: () => ({ ...QUALITY }), setQuality: q => setQuality(q)
       }
     },
-    telemetry: () => Telemetry.events.map(e => ({ ...e }))   // this session's play events (a copy; see 04g_telemetry.js)
+    telemetry: () => Telemetry.events.map(e => ({ ...e })),   // this session's play events (a copy; see 04g_telemetry.js)
+    errors: () => Telemetry.errors.map(e => ({ ...e })),       // uncaught errors this session
+    economy: () => economyAudit(),                              // the economy's rules, checked, and its pacing (04b_economy.js)
+    version: () => ({ build: GAME_BUILD, version: GAME_VERSION, schema: SAVE_SCHEMA, flags: Flags.source })
   };

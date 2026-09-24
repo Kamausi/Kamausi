@@ -122,7 +122,7 @@
   const bossIds = (n = game.stage) => mapData(n).bosses;
   function startMiniBoss() {
     game.phase = "mini"; clearPickups(); clearPowers(); clearDirectors(); Sound.toon("brass"); Sound.setAct("boss");
-    boss = makeBoss(bossIds().mini, game.stage); setRingMode("boss"); snapRing(); Telemetry.emit("boss_start", { kind: boss.kind, stage: game.stage });
+    boss = makeBoss(bossIds().mini, game.stage); setRingMode("boss"); snapRing(); Telemetry.emit("boss_start", { kind: boss.kind, stage: game.stage, tier: "mini" });
     stageCard(t("card.mini.k"), BOSS_INFO[boss.kind].name, t("card.mini.s", { n: boss.max }), 2.3, "boss"); mortySays("boss." + boss.kind, { priority: true }); camMove("dutch"); Sound.motif(boss.kind);
     cine("mini-in", 2.3, () => setHint(BOSS_INFO[boss ? boss.kind : "crow"].hint));
     updateHud();
@@ -140,7 +140,7 @@
   }
   function startMainBoss() {
     game.phase = "boss"; clearPickups(); clearPowers(); clearDirectors(); Sound.toon("brass"); Sound.setAct("boss");
-    boss = makeBoss(bossIds().end, game.stage); setRingMode("boss"); snapRing(); Telemetry.emit("boss_start", { kind: boss.kind, stage: game.stage });
+    boss = makeBoss(bossIds().end, game.stage); setRingMode("boss"); snapRing(); Telemetry.emit("boss_start", { kind: boss.kind, stage: game.stage, tier: "end" });
     stageCard(t("card.boss.k"), BOSS_INFO[boss.kind].name, BOSS_INFO[boss.kind].tell, 2.6, "boss"); mortySays("boss." + boss.kind, { priority: true }); camMove("dutch"); Sound.motif(boss.kind);
     cine("boss-in", 2.6, () => setHint(BOSS_INFO[boss ? boss.kind : "pumpkin"].hint), 0.35);
     updateHud();

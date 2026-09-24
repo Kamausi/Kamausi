@@ -23,5 +23,7 @@ service cloud.firestore {
     match /config/{doc} { allow read: if true; allow write: if false; }
     // analytics (v39) arrive through a function, only with the player's consent
     match /events/{id} { allow read, write: if false; }
+    match /metrics/{id} { allow read, write: if false; }
+    match /ameta/{id} { allow read, write: if false; }
   }
 }

@@ -61,8 +61,40 @@
     if (!it || !it.price || it.shop || canUse(kind, it) || profile.bones < it.price) return false;   // exclusives are only sold at the Curio Cart
     const key = kind + ":" + id;
     profile.bones -= it.price; profile.bonesSpent += it.price; profile.unlocked.push(key); profile.seen.push(key);
-    persist(800); renderBones(); updatePips(); checkAchievements();
+    persist(800); renderBones(); updatePips(); checkAchievements(); Telemetry.emit("shop_buy", { kind, id, price: it.price, cur: "bones" });
     return true;
+  }
+  // ── the economy audit (v39): the catalog's rules, checked. The spec requires no problems; SkullToss.economy() in
+  // the console prints the same report, with the pacing numbers docs/ECONOMY.md quotes.
+  function economyAudit() {
+    const problems = [], byStars = {}, soulKeys = new Set();
+    let vault = 0, count = 0;
+    for (const kind of KINDS) {
+      const ids = new Set();
+      for (const it of CATALOG[kind]) {
+        const key = `${kind}:${it.id}`;
+        if (ids.has(it.id)) problems.push(`${key}: the id is used twice`); ids.add(it.id);
+        if (it.souls) {
+          soulKeys.add(key);
+          if (!Economy.ITEMS[key] || Economy.ITEMS[key].souls !== it.souls) problems.push(`${key}: its Soul price isn't the server's`);
+          if (it.price) problems.push(`${key}: sold for bones and Souls both`);
+          continue;
+        }
+        if (it.price != null && !(it.price > 0 && it.price % 50 === 0)) problems.push(`${key}: a price of ${it.price}`);
+        if (it.req && (typeof statNow(it.req[0]) !== "number" || isNaN(statNow(it.req[0])) || !(it.req[1] > 0))) problems.push(`${key}: a goal of ${it.req.join(" ")}`);
+        if (it.price) { vault += it.price; count++; (byStars[it.s] = byStars[it.s] || []).push(it.price); if (!(it.s >= 1 && it.s <= 4)) problems.push(`${key}: a rarity of ${it.s}`); }
+      }
+    }
+    for (const key of Object.keys(Economy.ITEMS)) if (!soulKeys.has(key)) problems.push(`${key}: the server sells it but the Vault doesn't have it`);
+    const median = a => a.slice().sort((x, y) => x - y)[a.length >> 1];
+    const tiers = Object.keys(byStars).sort().map(s => ({ stars: +s, items: byStars[s].length, median: median(byStars[s]) }));
+    for (let i = 1; i < tiers.length; i++) if (tiers[i].median <= tiers[i - 1].median) problems.push(`${tiers[i].stars}-star looks are no dearer than ${tiers[i - 1].stars}-star ones`);
+    const packs = Object.values(Economy.PACKS); if (packs.some((n, i) => i && n <= packs[i - 1])) problems.push("the Soul packs don't grow");
+    const typicalRun = runBones({ perfects: 4, bestCombo: 6, powerups: 2 }, 20, false, 15000);   // a middling Story run: 20 hits, 15,000 points
+    const runsForAll = Math.round(vault / typicalRun), soulDays = Math.ceil(Math.min(...Object.values(Economy.ITEMS).map(i => i.souls)) / Economy.DAILY);
+    if (runsForAll < 150 || runsForAll > 3000) problems.push(`everything in the Vault takes ${runsForAll} middling runs (aim: 150 to 3,000)`);
+    if (soulDays < 7 || soulDays > 60) problems.push(`the cheapest Soul look takes ${soulDays} days of free Souls (aim: 7 to 60)`);
+    return { problems, items: count, vault, tiers, typicalRun, runsForAll, soulDays, packs: { ...Economy.PACKS }, daily: Economy.DAILY };
   }
   function welcomeGift() { // one-off starter purse so the shop is open on day one
     if (profile.gift) return;
@@ -118,6 +150,7 @@
     const d = ensurePeriod(per), it = d.items[i];
     if (!it || it.claimed || !chalDone(it)) return false;
     it.claimed = true; addBones(it.reward); profile.chalClaims++; persist(600); updatePips(); checkAchievements();
+    Telemetry.emit("chal_claim", { period: per, kind: it.id });
     return true;
   }
   const claimable = per => { const d = profile[per]; return !!d && d.day === PERIODS[per].key() && d.items.some(it => chalDone(it) && !it.claimed); };

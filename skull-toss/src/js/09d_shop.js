@@ -189,7 +189,7 @@
   function equip(kind, id) {
     const it = findItem(kind, id);
     if (!it || !canUse(kind, it)) return false;
-    cos[kind] = id; cos.updatedAt = Date.now(); persist(1500); applyCosmetics(); return true;
+    cos[kind] = id; cos.updatedAt = Date.now(); persist(1500); applyCosmetics(); Telemetry.emit("equip", { kind, id }); return true;
   }
   function celebrate() { const r = $("previewCv").getBoundingClientRect(); vaultHop(-520); vaultStars(r.width / 2, r.height * 0.45, r.height * 1.4); Sound.toon("boing"); }
   $("catTabs").addEventListener("click", e => {

@@ -1,8 +1,28 @@
-# SKULL TOSS v38
+# SKULL TOSS v39
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)), with a synthesised waltz standing in wherever they can't load.
+
+## New in v39: play analytics with consent, a checked economy, and live-ops safety
+
+- **Play analytics, only with a yes.**
+  - After your first run, the title asks once whether to share anonymous play data. Settings → **Share play data** changes it any time, and **What's sent** lists exactly what goes.
+  - A browser's Global Privacy Control or Do Not Track counts as a no, with no question. Without a server there's no question either.
+  - What's sent is a short, fixed list: how each run went, the first time you do each thing (a new-player funnel), bosses, power-ups, continues, looks bought and worn, challenges claimed, and errors. Never your name, your save or anything you type.
+  - The server keeps it 30 days, and adds up daily counts with no ids. The full list and the rules are in [docs/ANALYTICS.md](docs/ANALYTICS.md).
+- **Errors are caught.** Anything uncaught is kept for the session (`SkullToss.errors()` in the console) and, with consent, reported.
+- **The economy audit.** `SkullToss.economy()` checks the catalog: no duplicate ids, prices that climb with rarity, the Soul looks exactly the server's, and pacing in range. It found the career title Headliner sharing an id with the 40-hit Headliner; the level-10 title is now **Top of the Bill**. See [docs/ECONOMY.md](docs/ECONOMY.md).
+- **Refunds.** A refunded Soul pack takes its Souls back. What's already spent becomes **owed**, paid off by the next Souls, and the Soul Shop says so. Google Play and App Store refund notices are wired to the server.
+- **Support's tools.** `firebase/functions/tools/admin.js` can grant Souls with a reason, refund by hand, reverse any one ledger entry (the economy's rollback), and print the day's funnel.
+- **Live-ops safety,** all in `config/live`:
+  - Events can be **scheduled** (`event.from`, `event.until`), and start and end on their own.
+  - A **mode can be taken off** the Play sheet (`modes.off`).
+  - A **maintenance** line can be shown.
+  - Builds older than **`build.min`** are asked to reload; the server refuses their Soul and board writes.
+  - Kill switches for Souls, the board and analytics now **hold on the server too**.
+- **Recover progress.** Once a day the game keeps a copy of your progress, the last three days' worth. Settings → **Recover progress** merges one back in. It can only add: the best of both is kept, and your bones balance stays as it is now.
+- **A build number** (`src/version.json`, now 39) rides on every server call. `SkullToss.version()` shows it.
 
 ## New in v38: the Director's Challenge
 
@@ -95,7 +115,7 @@ Gold on all twelve shots earns the **Shot Doctor** title. The profile now also r
   | Every 5,000 points | 1 |
   | Finishing the story | 300 |
 
-- **Fifty career levels** on a curve that asks a little more each time. Each level pays 25 bones × the level. Levels 5, 10, 20, 30, 40 and 50 bring a title: Understudy, Headliner, Matinee Idol, Box Office Draw, Picture-Palace Legend, and Mortimer's Equal. The headstone shows the experience a run earned and any level gained. The rank (by makes) stays as it was: the level says how much you've played, the rank how well.
+- **Fifty career levels** on a curve that asks a little more each time. Each level pays 25 bones × the level. Levels 5, 10, 20, 30, 40 and 50 bring a title: Understudy, Top of the Bill, Matinee Idol, Box Office Draw, Picture-Palace Legend, and Mortimer's Equal. The headstone shows the experience a run earned and any level gained. The rank (by makes) stays as it was: the level says how much you've played, the rank how well.
 - **The Profile** opens on a career card: your level in a medallion, experience to the next level, your title, and the highlights (best score, story clears, Morty's pieces, signature shots, Codex entries and secrets). Under the stats are your **last ten runs**: mode, map, score, hits, the experience each earned, and when.
 
 ## New in v30: Souls, the Soul Shop, and a Firebase server
@@ -337,7 +357,7 @@ This is the first code pass on the V14 gate from the [roadmap audit](../docs/sku
 - **A save that won't read no longer starts you over.** The game keeps a copy of the last profile and cosmetics that loaded cleanly. If the main copy is ever cut off or garbled, it loads that copy instead and keeps the broken text aside.
 - **A fixed step.** The game now moves in fixed 1/240 s steps however fast the screen refreshes, the same step the spec uses. A throw lands the same way at 60, 90, 120 or 144 Hz. Replays and shot checks will need this later. Gameplay itself uses no randomness; only particles and camera jolts do.
 - **Gamepad.** Pull the left stick down to draw the band, then press A (or the right trigger) to let go. The stick works exactly like dragging with a finger: sideways steers, and left throws right. B lets the band go slack, and so does letting the stick spring back. Start pauses and resumes. The menus still need a pointer or the keyboard.
-- **A play log on the device.** For playtests, a small log records runs starting and ending, every throw's result, bosses and power-ups. Nothing is sent anywhere, and the log is gone on reload. Read it from the console with `SkullToss.telemetry()`.
+- **A play log on the device.** For playtests, a small log records runs starting and ending, every throw's result, bosses and power-ups. The log is gone on reload. Read it from the console with `SkullToss.telemetry()`. (From v39 a cut-down copy can be sent, with the player's consent: see [docs/ANALYTICS.md](docs/ANALYTICS.md).)
 
 Still open, waiting on decisions in the audit:
 - The Story card and two achievements still say "four stages". That's still true of this build.
@@ -819,7 +839,7 @@ Colours in any of these SVGs can be the game's palette names (`fill="ink"`, `str
   6. Boot, and the console handle every build carries (the overlay's switches, the animation inspectors, `telemetry()`)
   7. `99_dev_hooks.js`: the test hooks the spec drives. Only `--dev` builds include them.
 
-The play log is `04g_telemetry.js`, and the gamepad lives with the rest of the input in `09a_input.js`.
+The play log and the consented play analytics are `04g_telemetry.js`, and the gamepad lives with the rest of the input in `09a_input.js`.
 
 Run `python3 src/build.py` to rebuild the release `index.html`, or `python3 src/build.py --dev` for `index-dev.html` with the test hooks (add `--with-music` to either). The build refuses to run if two script parts define the same top-level name, and it won't put the test hooks in the published build.
 
@@ -874,7 +894,7 @@ From the console, `SkullToss.debug.visualAnimation` lists the pose library (`pos
 
 ## Tests
 
-Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **194 checks**, covering:
+Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **201 checks**, covering:
 
 - **Layout, scoring and aiming.**
   - Everything is centred and every result is classified correctly.
@@ -1036,3 +1056,12 @@ Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to
   - Each of the six twists does its thing.
   - A note met is a star paying its bones once a week, the week's best is kept, and last week's stars don't count.
   - A replay carries its note.
+- **v39.**
+  - Play data waits for a yes and is asked for once, after the first run. A yes sends the session so far, cut down, to the server, which files and counts it. A no stops everything, and Global Privacy Control is a no.
+  - Each first is noted once, in order, and survives a save merge.
+  - Only listed events and fields leave the device. Errors are kept, five a session are sent, and a kill switch or a sample of 0 stops it all.
+  - A scheduled event runs only in its window, maintenance and old-build lines show, and a mode taken off can't be started.
+  - A refunded pack's owed Souls show in the Soul Shop and block buying.
+  - The economy audit finds nothing.
+  - Restore points: one a day, the last three, and recovering only adds.
+  - Plus five server tests (analytics, rate limit, refunds, support's tools, server-side switches).

@@ -23,7 +23,7 @@
     const key = kind + ":" + id;
     profile.bones -= price; profile.bonesSpent += price; profile.shopBuys++;
     profile.unlocked.push(key); profile.seen.push(key);
-    checkUnlocks(); persist(800); renderBones(); updatePips();
+    checkUnlocks(); persist(800); renderBones(); updatePips(); Telemetry.emit("shop_buy", { kind, id, price, cur: "cart" });
     return true;
   }
   // the Mystery Coffin: something you don't own, mostly cheaper things, now and then a Special
@@ -36,7 +36,7 @@
     for (const e of pool) { r -= w(e); if (r <= 0) { pick = e; break; } }
     profile.bones -= COFFIN_PRICE; profile.bonesSpent += COFFIN_PRICE; profile.coffins++;
     const key = pick.kind + ":" + pick.it.id; profile.unlocked.push(key);
-    checkUnlocks(); persist(800); renderBones(); updatePips();
+    checkUnlocks(); persist(800); renderBones(); updatePips(); Telemetry.emit("shop_buy", { kind: pick.kind, id: pick.it.id, price: COFFIN_PRICE, cur: "coffin" });
     return pick;
   }
 

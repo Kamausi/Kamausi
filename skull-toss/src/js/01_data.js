@@ -248,7 +248,7 @@
     return p;
   }
   const DEFAULT_SETTINGS = { sound: true, music: 45, sfx: 80, amb: 50, vibe: true, shake: true, guide: "full", film: reduceMotion ? "light" : "full", camera: reduceMotion ? "still" : "full", voice: "babble",
-    flashes: reduceMotion ? "reduced" : "full", contrast: false, text: "normal", cards: "full", lang: "en", mischief: true, soundSet: "classic" };   // soundSet: 02e_audio_sets.js   // cards: the reel's title cards (09i_reel.js)   // accessibility: flash strength, high contrast, text size
+    flashes: reduceMotion ? "reduced" : "full", contrast: false, text: "normal", cards: "full", lang: "en", mischief: true, soundSet: "classic", analytics: "ask" };   // analytics: ask | yes | no (04g_telemetry.js)   // soundSet: 02e_audio_sets.js   // cards: the reel's title cards (09i_reel.js)   // accessibility: flash strength, high contrast, text size
   // "best" is the most hits in one run (what older saves called their best score); "bestScore" is the arcade score
   const STAT_KEYS = ["games", "throws", "makes", "perfects", "rims", "bestStreak", "bestPerfStreak", "peakLives", "points", "best", "bonesTotal", "bonks", "misses", "clutch",
     "bestScore", "scoreTotal", "bestStage", "miniKills", "miniFlawless", "bossKills", "bossFlawless",
@@ -256,7 +256,7 @@
     "powerups", "cursed", "saves", "bonesSpent", "shopBuys", "coffins", "playTime", "grabs", "arcadeRuns", "chalClaims", "achSeen", "storyClears", "targetHits", "hazardHits", "continues", "xp"];   // xp: career experience (04h_career.js)
   // arcade: the best on each map, keyed by map number ({ score, secs, hits, runs }); achievements: the ones unlocked
   const DEFAULT_PROFILE = { name: "", bones: 0, daily: null, weekly: null, monthly: null, unlocked: [], seen: [], achievements: [], arcade: {}, updatedAt: 0, board: false, bestStage: 1, boardBest: null,
-    fragments: [], bossLog: {}, shots: {}, modes: {}, met: [], secrets: [], history: [], mastery: [], flawless: {}, mapMakes: {}, arcadeTables: {}, lastIni: "", streakDays: 0, streakLast: "", director: null };   // director: this week's Director's Challenge stars and best (07k_director.js)   // streak: days played in a row (v37)   // arcadeTables: each cabinet's top five (09o_arcade.js)   // mastery: claimed tiers; flawless: end bosses beaten without a miss; mapMakes: makes per map (09n_mastery.js)   // history: the last ten runs (04h_career.js)   // met: what the Codex has noted ("boss:crow", "power:rush"…); secrets: the ones found (09l_mischief.js)   // modes: Boss Rush's and each mini-game's record (07i_modes.js)   // shots: each signature shot, how many times (07h_shots.js)   // fragments: Morty's pieces recovered (ids); bossLog: each boss beaten, how many times
+    fragments: [], bossLog: {}, shots: {}, modes: {}, met: [], secrets: [], history: [], mastery: [], flawless: {}, mapMakes: {}, arcadeTables: {}, lastIni: "", streakDays: 0, streakLast: "", director: null, firsts: [] };   // firsts: the funnel, the first time of each thing (04g_telemetry.js)   // director: this week's Director's Challenge stars and best (07k_director.js)   // streak: days played in a row (v37)   // arcadeTables: each cabinet's top five (09o_arcade.js)   // mastery: claimed tiers; flawless: end bosses beaten without a miss; mapMakes: makes per map (09n_mastery.js)   // history: the last ten runs (04h_career.js)   // met: what the Codex has noted ("boss:crow", "power:rush"…); secrets: the ones found (09l_mischief.js)   // modes: Boss Rush's and each mini-game's record (07i_modes.js)   // shots: each signature shot, how many times (07h_shots.js)   // fragments: Morty's pieces recovered (ids); bossLog: each boss beaten, how many times
   for (const k of STAT_KEYS) if (!(k in DEFAULT_PROFILE)) DEFAULT_PROFILE[k] = 0;
   const DEFAULT_COS = { skull: "bone", eyes: "pie", teeth: "grin", paint: "none", trail: "dust", impact: "classic", ring: "hoop", aim: "bone", reel: "standard", title: "rookie", updatedAt: 0 };
   let sandbox = null;   // while the spec runs, nothing is written to the player's storage or cloud
@@ -316,6 +316,7 @@
       score: Math.max(0, Math.floor(Number(h.score) || 0)), hits: Math.max(0, Math.floor(Number(h.hits) || 0)), won: !!h.won, xp: Math.max(0, Math.floor(Number(h.xp) || 0)), at: Number(h.at) || 0 })) : [];
     out.secrets = Array.isArray(out.secrets) ? [...new Set(out.secrets.filter(k => typeof k === "string" && /^[a-z]{2,16}$/.test(k)))].slice(0, 40) : [];
     out.met = Array.isArray(out.met) ? [...new Set(out.met.filter(k => typeof k === "string" && /^[a-z]{2,8}:[a-z0-9]{1,16}$/.test(k)))].slice(0, 400) : [];
+    out.firsts = Array.isArray(out.firsts) ? [...new Set(out.firsts.filter(k => typeof k === "string" && /^[a-z0-9]{2,12}$/.test(k)))].slice(0, 40) : [];
     return out;
   }
   function cleanArcade(a) {
@@ -338,7 +339,7 @@
       const seen = new Set(), all = [...(a.arcadeTables[k] || []), ...(b.arcadeTables[k] || [])].filter(e => !seen.has(e.at + e.ini) && seen.add(e.at + e.ini));
       out.arcadeTables[k] = all.sort((x, y) => y.score - x.score).slice(0, 5); }
     for (const f of ["flawless", "mapMakes"]) { out[f] = { ...a[f] }; for (const [k, v] of Object.entries(b[f])) out[f][k] = Math.max(out[f][k] || 0, v); }
-    out.met = [...new Set([...a.met, ...b.met])]; out.secrets = [...new Set([...a.secrets, ...b.secrets])];
+    out.met = [...new Set([...a.met, ...b.met])]; out.secrets = [...new Set([...a.secrets, ...b.secrets])]; out.firsts = [...new Set([...a.firsts, ...b.firsts])];
     const newer = b.updatedAt > a.updatedAt ? b : a, older = newer === a ? b : a;
     out.name = newer.name || older.name;
     out.bones = newer.bones;   // a spendable balance: the most recent save wins (max() would refund purchases)
@@ -387,6 +388,7 @@
     settings.mischief = settings.mischief !== false;
     if (!["classic", "vintage", "spooky", "chiptune", "kazoo"].includes(settings.soundSet)) settings.soundSet = "classic";
     settings.contrast = !!settings.contrast;
+    if (!["ask", "yes", "no"].includes(settings.analytics)) settings.analytics = "ask";
     profile = cleanProfile(readSaved(KEYS.profile));
     profile.best = Math.max(profile.best, Number(store.get(KEYS.best, 0)) || 0);
     cos = cleanCos(readSaved(KEYS.cos));
@@ -396,7 +398,23 @@
     const P = realProfile(); P.updatedAt = Date.now();   // (in Practice the run plays on a copy; the real one is what's kept)
     store.set(KEYS.settings, JSON.stringify(settings)); store.set(KEYS.profile, JSON.stringify(P));
     store.set(KEYS.cos, JSON.stringify(cos)); store.set(KEYS.best, P.best);
+    if (P.games > 0) { firstTime("save"); restorePoint(P); }
     Cloud.schedule(cloudDelay);
+  }
+  // Restore points (v39): once a day, a copy of the profile is put by (the last three days kept). Settings →
+  // Recover progress merges one back in, which can only add: the best of both is kept, as with the cloud save.
+  const RESTORE_KEY = "skullToss.restore.v1";
+  const restorePoints = () => { if (sandbox) return sandbox.restore || []; try { const v = JSON.parse(store.get(RESTORE_KEY, "[]")); return Array.isArray(v) ? v.filter(r => r && r.day && r.p) : []; } catch (e) { return []; } };
+  function restorePoint(P, day = new Date().toISOString().slice(0, 10)) {
+    const list = restorePoints();
+    if (list.length && list[list.length - 1].day === day) return;
+    const next = list.concat({ day, p: JSON.parse(JSON.stringify(P)) }).slice(-3);
+    if (sandbox) sandbox.restore = next; else store.set(RESTORE_KEY, JSON.stringify(next));
+  }
+  function restoreFrom(day) {
+    const R = restorePoints().find(r => r.day === day); if (!R) return false;
+    profile = mergeProfiles(realProfile(), { ...R.p, boardBest: null }); persist(300); updateHud(); updatePips();
+    return true;
   }
 
   // Save codes: a portable copy of progress + cosmetics (works anywhere, offline).

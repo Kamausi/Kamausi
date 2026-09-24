@@ -70,7 +70,15 @@
     segValue($("set-lang"), LANG); $("langNote").textContent = t("lang.name");
     segValue($("set-soundset"), settings.soundSet); $("soundSetNote").textContent = t(`settings.soundset.${settings.soundSet}`);
     segValue($("set-cards"), settings.cards); $("cardsNote").textContent = t(`settings.cards.${settings.cards}`);
+    const c = PlayData.consent(), srv = Backend.hasFunctions();   // play data (04g_telemetry.js)
+    set("set-analytics", c === "yes"); $("set-analytics").disabled = !srv && c !== "yes";
+    $("analyticsNote").textContent = !srv && c !== "yes" ? t("settings.analytics.none") : settings.analytics === "ask" && PlayData.privacySignal() ? t("settings.analytics.gpc") : t(`settings.analytics.${c}`);
+    const pts = restorePoints(), list = $("restoreList"); list.textContent = "";   // restore points (01_data.js)
+    if (!pts.length) list.append(h("span", { class: "sub" }, t("restore.none")));
+    for (const r of pts.slice().reverse()) list.append(h("button", { class: "ghost-btn", type: "button", data: { day: r.day } }, t("restore.btn", { day: r.day, stage: Math.min(MAP_COUNT, (r.p && r.p.bestStage) || 1) })));
   }
+  $("set-analytics").addEventListener("click", () => { PlayData.set(PlayData.consent() === "yes" ? "no" : "yes"); Sound.ui("toggle"); });
+  $("restoreList").addEventListener("click", e => { const b = e.target.closest("[data-day]"); if (b && restoreFrom(b.dataset.day)) { toast(t("restore.done", { day: b.dataset.day })); Sound.ui("claim"); renderSettings(); } });
   $("set-voice").addEventListener("click", e => {
     const b = e.target.closest("button"); if (!b) return;
     settings.voice = b.dataset.v; persist(); renderSettings(); Sound.ui("tick");

@@ -4,7 +4,7 @@
   // finishing the story. Fifty career levels sit on a curve that asks more each time; each level pays 25 bones ×
   // the level, and levels 5, 10, 20, 30, 40 and 50 bring a title. The rank (by makes) stays as it was: the career
   // level is how much you've played, the rank how well. The last ten runs are kept for the Profile.
-  const CAREER = { maxLevel: 50, k: 60, p: 1.6, bonesPer: 25, titles: { 5: "understudy", 10: "headliner", 20: "matinee", 30: "boxoffice", 40: "legend", 50: "equal" } };
+  const CAREER = { maxLevel: 50, k: 60, p: 1.6, bonesPer: 25, titles: { 5: "understudy", 10: "topbill", 20: "matinee", 30: "boxoffice", 40: "legend", 50: "equal" } };
   const xpForLevel = L => (L <= 1 ? 0 : Math.round((CAREER.k * Math.pow(L - 1, CAREER.p)) / 10) * 10);   // the experience that reaches level L
   function levelFor(xp) { let L = 1; while (L < CAREER.maxLevel && xp >= xpForLevel(L + 1)) L++; return L; }
   function runXp(r = game.run) {

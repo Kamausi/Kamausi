@@ -48,6 +48,11 @@
     <h1 class="logo" aria-label="Skull Toss"><span class="w1" aria-hidden="true"><i style="--i:0">S</i><i style="--i:1">K</i><i style="--i:2">U</i><i style="--i:3">L</i><i style="--i:4">L</i></span><span class="w2" aria-hidden="true"><i style="--i:5">T</i><span class="mascot" id="mascot" role="img" aria-label="Morty (poke him)" data-t-aria="ui.morty-poke-him"><canvas class="m-back" id="mascotBack"></canvas><canvas class="m-front" id="mascotFront"></canvas></span><i style="--i:7">S</i><i style="--i:8">S</i></span></h1>
     <p class="tagline" data-t="ui.a-lost-cartoon-from-1933">A lost cartoon from 1933</p>
     <p class="event-banner" id="eventBanner" hidden></p>
+    <div class="consent-card" id="consentCard" role="region" aria-label="Play data" data-t-aria="ui.play-data" hidden>
+      <p><b data-t="ui.help-fix-the-game">Help fix the game?</b></p>
+      <p class="cc-body" data-t="ui.consent-body">Share anonymous play data: where runs end and what's too hard. Never who you are, never for ads. Change it any time in Settings.</p>
+      <div class="cc-btns"><button class="chip-btn yes" id="consentYes" type="button" data-t="ui.share">Share</button><button class="chip-btn" id="consentNo" type="button" data-t="ui.no-thanks">No thanks</button></div>
+    </div>
     <nav class="menu-stack" aria-label="Main menu" data-t-aria="ui.main-menu">
       <button class="btn primary" id="play" type="button"><svg class="toss"><use href="#i-skull"/></svg><svg class="icon"><use href="#i-play"/></svg><span data-t="ui.play">Play</span></button>
       <button class="btn" id="sharedReplayBtn" type="button" hidden><svg class="toss"><use href="#i-skull"/></svg><svg class="icon"><use href="#i-play"/></svg><span data-t="ui.watch-the-shared-replay">Watch the shared replay</span></button>
@@ -252,6 +257,9 @@
     <div class="row"><div><div class="lbl" data-t="ui.high-contrast">High contrast</div><div class="sub" data-t="ui.a-bright-halo-round-the">A bright halo round the ring and Morty, bolder text</div></div><button class="switch" role="switch" id="set-contrast" aria-checked="false" aria-label="High contrast" data-t-aria="ui.high-contrast" type="button"></button></div>
     <div class="row stack"><div><div class="lbl" data-t="ui.text-size">Text size</div><div class="sub" data-t="ui.menus-sheets-and-the-hud">Menus, sheets and the HUD</div></div>
       <div class="seg" role="radiogroup" aria-label="Text size" data-t-aria="ui.text-size" id="set-text"><button type="button" role="radio" data-v="normal" aria-checked="true" data-t="ui.normal">Normal</button><button type="button" role="radio" data-v="large" aria-checked="false" data-t="ui.large">Large</button></div></div>
+    <div class="row"><div><div class="lbl" data-t="ui.share-play-data">Share play data</div><div class="sub" id="analyticsNote">Anonymous: where runs end and what's too hard</div></div><button class="switch" role="switch" id="set-analytics" aria-checked="false" aria-label="Share play data" data-t-aria="ui.share-play-data" type="button"></button></div>
+    <details class="row sent"><summary data-t="ui.what-s-sent">What's sent</summary><p data-t="ui.what-s-sent-body">How each run goes (the mode, the map, how far, the score, how it ended), the first time you do each thing, bosses met and beaten, power-ups, continues, what's bought and worn, challenges claimed, and any error the game hits. With it: this build, the screen size, the language and whether motion is reduced. Never your name, your save, anything you type, or anything to do with ads. It's kept 30 days, filed under an anonymous id.</p></details>
+    <div class="row stack" id="row-restore"><div><div class="lbl" data-t="ui.recover-progress">Recover progress</div><div class="sub" data-t="ui.restore-sub">Merges a daily copy of your progress back in: nothing you have now is lost</div></div><div class="restore-list" id="restoreList"></div></div>
     <div class="row"><div><div class="lbl" data-t="ui.reset-progress">Reset progress</div><div class="sub" data-t="ui.clears-stats-bones-best-score">Clears stats, bones, best score and the Vault</div></div><button class="ghost-btn danger" id="resetBtn" type="button" data-t="ui.reset">Reset</button></div>
   </div>
 </section>

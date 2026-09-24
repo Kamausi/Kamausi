@@ -95,7 +95,7 @@
       { id: "bootleg", name: "Bootleg Copy", s: 4, price: 6000, shop: true }
     ],
     title: [
-      { id: "understudy", name: "Understudy", s: 1, req: ["careerLevel", 5] },          { id: "headliner", name: "Headliner", s: 2, req: ["careerLevel", 10] },   // (career levels, v31)
+      { id: "understudy", name: "Understudy", s: 1, req: ["careerLevel", 5] },          { id: "topbill", name: "Top of the Bill", s: 2, req: ["careerLevel", 10] },   // (career levels, v31)
       { id: "matinee", name: "Matinee Idol", s: 2, req: ["careerLevel", 20] },          { id: "boxoffice", name: "Box Office Draw", s: 3, req: ["careerLevel", 30] },
       { id: "legend", name: "Picture-Palace Legend", s: 4, req: ["careerLevel", 40] },  { id: "equal", name: "Mortimer's Equal", s: 4, req: ["careerLevel", 50] },
       { id: "shotdoctor", name: "Shot Doctor", s: 4, req: ["goldShots", 12] },   // (gold on every signature shot, v32)
