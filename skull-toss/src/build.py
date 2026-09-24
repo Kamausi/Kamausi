@@ -28,6 +28,9 @@ js = "\n".join(f.read_text() for f in server_js if f.exists()) + "\n" + js
 fb = root / "firebase.config.json"
 FB = json.loads(fb.read_text()) if fb.exists() else {}
 FB = FB if isinstance(FB, dict) and FB.get("apiKey") and FB.get("projectId") else None
+# the dev build (the spec, the matrix, the soak bot) never talks to the real project, unless asked with --live
+if dev and "--live" not in sys.argv: FB = None
+if FB: FB = {k: v for k, v in FB.items() if not k.startswith("_")}   # (the file's note stays in the file)
 js = "  const FIREBASE_CONFIG = " + json.dumps(FB) + ";\n" + js
 # the platforms' store and ad ids (src/platform.config.json, see platforms/README.md); --pwa marks the build that
 # ships with a service worker beside it (tools/package.py)
