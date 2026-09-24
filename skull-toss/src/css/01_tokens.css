@@ -59,11 +59,7 @@ body[data-reel="bootleg"] #stage,[data-reel="bootleg"] > #previewCv{filter:satur
 .flash.ko{animation:flashko .5s ease-out}
 .flash.soft{animation:flashsoft .3s ease-out}
 @keyframes flashsoft{0%{opacity:.1}100%{opacity:0}}
-/* accessibility (Settings): high contrast brightens the dim text and lines and inks the HUD harder; large text zooms the UI */
-html.hc{--cream-dim:rgba(242,231,201,.95);--cream-faint:rgba(242,231,201,.8);--line:rgba(242,231,201,.45);--line-2:rgba(242,231,201,.7)}
-html.hc .hud,html.hc #hint,html.hc .stagecard,html.hc .sheet-body{text-shadow:0 0 2px var(--ink),0 0 4px var(--ink)}
-html.hc #vig{opacity:.45}
-html.hc :focus-visible{outline:3px solid #FFF3B0!important;outline-offset:3px}
+/* accessibility (Settings): large text zooms the UI */
 html[data-text="large"] .sheet,html[data-text="large"] .screen .col,html[data-text="large"] .hud,html[data-text="large"] #hint{zoom:1.15}
 @keyframes flashko{0%{opacity:.55}25%{opacity:.18}40%{opacity:.3}100%{opacity:0}}
 

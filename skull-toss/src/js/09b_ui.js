@@ -49,9 +49,12 @@
   // ───────────────────────── Play: Story or Arcade, and Arcade's map ─────────────────────────
   const clockStr = s => `${Math.floor(s / 60)}:${String(Math.floor(s) % 60).padStart(2, "0")}`;
   function renderPlay(maps = false, pickFor = ui.pickFor || "arcade") {
+    const minis = maps === "minis"; if (minis) maps = false;
     ui.pickFor = pickFor;
-    $("modePick").hidden = maps; $("mapPick").hidden = !maps;
-    $("h-play").textContent = !maps ? t("ui.play") : pickFor === "practice" ? t("mode.practice.name") : t("card.arcade.k");
+    $("modePick").hidden = maps || minis; $("mapPick").hidden = !maps; $("miniPick").hidden = !minis;
+    $("h-play").textContent = minis ? t("ui.mini-games") : !maps ? t("ui.play") : pickFor === "practice" ? t("mode.practice.name") : t("card.arcade.k");
+    if (minis) { renderMiniModes(); return; }
+    const mb = MINI_IDS.map(m => modeRec(m)).filter(R => R.runs); $("minisBest").textContent = mb.length ? t("play.minisPlayed", { n: mb.length, total: MINI_IDS.length }) : "";
     $("mapPickK").textContent = pickFor === "practice" ? t("play.pickPractice") : t("play.pickArcade");
     $("practiceOpts").hidden = pickFor !== "practice";
     segValue($("prac-ring"), practice.ring); segValue($("prac-half"), practice.half); segValue($("prac-hz"), practice.hazards ? "on" : "off");
@@ -84,15 +87,25 @@
   // the other ways to play: a tile each, with its record, or what opens it
   function renderMoreModes() {
     const box = $("moreModes"); box.textContent = "";
-    for (const m of ["practice", "rush", ...MINI_IDS, ...(seasonNow() ? ["feature"] : [])].filter(m => !Flags.modeOff(m))) {
+    for (const m of ["practice", "rush", ...(seasonNow() ? ["feature"] : [])].filter(m => !Flags.modeOff(m))) {
       const M = MODES[m], open = !M.open || M.open(), R = modeRec(m);
       const rec = !open ? t("mode.locked") : m === "practice" ? (R.runs ? t("mode.practiced", { n: R.runs }) : t("mode.none")) : R.runs ? t("mode.best", { v: modeValueText(m, R.best) }) : t("mode.none");
       box.append(h("button", { class: `mode-tile m-${m}${open ? "" : " locked"}${M.mini ? " m-mini" : ""}`, type: "button", data: { mode: m }, "aria-disabled": open ? null : "true" },
         h("b", {}, t(`mode.${m}.name`)), h("span", { class: "d" }, t(`mode.${m}.rule`)), h("span", { class: "rec" }, rec)));
     }
   }
-  // in the map list, Back steps back to the two modes rather than closing
-  $("sheet-play").querySelector("[data-back]").addEventListener("click", e => { if (!$("mapPick").hidden) { e.stopImmediatePropagation(); renderPlay(false); Sound.ui("close"); } }, true);   // (and back to the modes from Practice's too)
+  // v46: the mini-games, a tile each with its record
+  function renderMiniModes() {
+    const box = $("miniModes"); box.textContent = "";
+    for (const m of MINI_IDS.filter(m => !Flags.modeOff(m))) {
+      const R = modeRec(m), rec = R.runs ? t("mode.best", { v: modeValueText(m, R.best) }) : t("mode.none");
+      box.append(h("button", { class: `mode-tile m-${m} m-mini`, type: "button", data: { mode: m } }, h("b", {}, t(`mode.${m}.name`)), h("span", { class: "d" }, t(`mode.${m}.rule`)), h("span", { class: "rec" }, rec)));
+    }
+  }
+  $("modePick").addEventListener("click", e => { if (e.target.closest("[data-open=minis]")) { Sound.ui("flick"); renderPlay("minis"); const f = $("miniModes").querySelector("button"); if (f && ui.kbd) f.focus({ preventScroll: true }); } });
+  $("miniModes").addEventListener("click", e => { const b = e.target.closest("[data-mode]"); if (!b || Flags.modeOff(b.dataset.mode)) return; closeSheet(false); startGame({ mode: b.dataset.mode }); });
+  // in the map list (and the mini-games), Back steps back to the modes rather than closing
+  $("sheet-play").querySelector("[data-back]").addEventListener("click", e => { if (!$("mapPick").hidden || !$("miniPick").hidden) { e.stopImmediatePropagation(); renderPlay(false); Sound.ui("close"); } }, true);   // (and back to the modes from Practice's too)
   $("toMenu").addEventListener("click", toTitle);
   $("pauseBtn").addEventListener("click", pauseRun);
   $("resumeBtn").addEventListener("click", resumeRun);

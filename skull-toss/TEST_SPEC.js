@@ -851,7 +851,7 @@
   test("PLAY asks Story or Arcade; Arcade lists every map with its best, and a map starts there", () => {
     T.setStats({ ...ZERO, bestStage: 9 }); T.toTitle(); $("play").click();
     assert(T.state().sheet === "play" && !$("modePick").hidden, "PLAY should open the mode picker");
-    assert(document.querySelectorAll("#modePick .mode-card[data-mode]").length === 2 && document.querySelectorAll("#moreModes [data-mode]").length === 5, "Story and Arcade, and five more ways to play (v26)");
+    assert(document.querySelectorAll("#modePick .mode-card[data-mode]").length === 2 && document.querySelector('#modePick .mode-card[data-open="minis"]') && document.querySelectorAll("#moreModes [data-mode]").length === 2, "Adventure and Arcade, the Mini Games card (v46), and two more ways to play");
     document.querySelector('#modePick [data-mode="arcade"]').click();
     const maps = [...document.querySelectorAll("#mapList [data-map]")];
     assert(!$("mapPick").hidden && maps.length === T.stages().length, `every map should be listed (${maps.length})`);
@@ -967,7 +967,8 @@
     const slot = $("mascot").getBoundingClientRect(), back = $("mascotBack").getBoundingClientRect(), front = $("mascotFront").getBoundingClientRect(), em = parseFloat(getComputedStyle($("mascot")).fontSize);
     assert(front.width >= slot.width + em && back.width === front.width && front.bottom > slot.bottom, "the canvases should be wider and deeper than the letter slot");
     assert(+getComputedStyle($("mascotBack")).zIndex < 0 && +getComputedStyle($("mascotFront")).zIndex > 0, "the back layer goes behind the lettering, the front one over it");
-    assert(/A lost cartoon from 1933/.test(document.querySelector(".tagline").textContent) && !/One skull/.test(document.querySelector(".tagline").textContent), "the tagline is just the one line");
+    const tag = document.querySelector(".tagline");
+    assert(/The Adventure of Mortimer Bones/i.test(tag.textContent) && !/One skull/.test(tag.textContent) && getComputedStyle(tag).textTransform === "uppercase", "the tagline is the one line, in capitals (v46: The Adventure of Mortimer Bones)");
   });
   test("The score follows the acts: menu, A, B and the boss, with the synth as the understudy", () => {
     T.toTitle(); assert(T.music().want === "menu", `title plays ${T.music().want}`);
@@ -1079,13 +1080,13 @@
     }
     T.setSetting("flashes", "full"); T.toTitle();
   });
-  test("High contrast and large text reach the page", () => {
-    T.setSetting("contrast", true); T.setSetting("text", "large");
-    assert(T.access().hc && T.access().text === "large", JSON.stringify(T.access()));
+  test("Large text reaches the page; the High contrast setting is gone (v46)", () => {
+    T.setSetting("text", "large");
+    assert(T.access().text === "large" && !T.access().hc, JSON.stringify(T.access()));
     assert(getComputedStyle(document.querySelector(".hud")).zoom === "1.15", `the HUD should zoom for large text (${getComputedStyle(document.querySelector(".hud")).zoom})`);
-    fresh(); T.step(0.2);   // the picture still draws with the halo on
-    T.setSetting("contrast", false); T.setSetting("text", "normal");
-    assert(!T.access().hc && getComputedStyle(document.querySelector(".hud")).zoom === "1", "both should switch off again");
+    T.setSetting("text", "normal");
+    assert(getComputedStyle(document.querySelector(".hud")).zoom === "1", "and switch off again");
+    assert(!$("set-contrast") && !("contrast" in T.settings()), "no High contrast row, and no setting behind it");
     T.toTitle();
   });
   test("Focus stays inside an open sheet, and its radio rows move with the arrow keys", () => {
@@ -1637,18 +1638,29 @@
     assert(T.canPrizes().length === 7 && T.canPrizes().every(k => { const [kind, id] = k.split(":"); return T.findItem(kind, id); }), "seven prizes, one a map before the last, all in the Vault");
     T.encore(false); T.setStats(ZERO); T.toTitle();
   });
-  test("The Play sheet: five more ways to play, locked until an end boss falls; Practice picks a map and its options", () => {
+  test("The Play sheet: Practice and Boss Rush under More ways to play (Boss Rush opens with an end boss); Mini Games has its own card, open from the start (v46)", () => {
     T.setStats(ZERO); T.toTitle(); $("play").click();
     let tiles = [...document.querySelectorAll("#moreModes [data-mode]")];
-    assert(tiles.length === 5 && tiles.filter(b => b.classList.contains("locked")).length === 4, "only Practice is open at first");
+    assert(tiles.map(b => b.dataset.mode).join() === "practice,rush" && tiles.filter(b => b.classList.contains("locked")).map(b => b.dataset.mode).join() === "rush", `Practice open, Boss Rush locked (${tiles.map(b => b.dataset.mode + (b.classList.contains("locked") ? "*" : "")).join()})`);
+    document.querySelector('#modePick [data-open="minis"]').click();
+    const minis = [...document.querySelectorAll("#miniModes [data-mode]")];
+    assert(!$("miniPick").hidden && $("modePick").hidden && minis.map(b => b.dataset.mode).join() === "curtain,longshot,gallery,cans" && !minis.some(b => b.classList.contains("locked")), `the Mini Games card: four, all open (${minis.map(b => b.dataset.mode).join()})`);
+    document.querySelector("#sheet-play [data-back]").click(); assert(!$("modePick").hidden && $("miniPick").hidden, "Back steps back to the modes");
     T.closeSheet(); T.setStats(OPENED); T.toTitle(); $("play").click();
-    tiles = [...document.querySelectorAll("#moreModes [data-mode]")]; assert(!tiles.some(b => b.classList.contains("locked")), "all open after an end boss");
+    tiles = [...document.querySelectorAll("#moreModes [data-mode]")]; assert(!tiles.some(b => b.classList.contains("locked")), "Boss Rush open after an end boss");
     document.querySelector('#moreModes [data-mode="practice"]').click();
     assert(!$("mapPick").hidden && !$("practiceOpts").hidden && /Practice/.test($("mapPickK").textContent), "Practice goes to the map list, with its options");
     document.querySelector('#mapList [data-map="1"]').click(); assert(T.inPractice() && T.state().stage === 2, "and starts there");
     T.toTitle(); T.setStats(ZERO);
   });
-
+  test("v46: Can Alley as a mini-game: the ten cans, twenty-five seconds, its own record, and no Adventure prize", () => {
+    T.setStats(ZERO); T.toTitle(); T.startMode("cans"); T.step(0.2);
+    const m = T.modeState(); assert(m.mode === "cans" && m.phase === "encore" && T.cans().length === 10, `the cans are up (${m.mode}, ${m.phase}, ${T.cans().length})`);
+    T.cans().forEach((c, i) => { if (!c.down) T.knockCan(i); }); T.endThrow(); T.step(3);
+    const P = T.profile(); assert(T.state().state === "over" && P.modes.cans && P.modes.cans.best === 10, `over, and a best of ten (${T.state().state}, ${JSON.stringify(P.modes.cans)})`);
+    assert(!P.unlocked.includes("aim:tickets") && !(P.canAlley || {})[1], "the carnival prizes stay the Adventure's");
+    T.setStats(ZERO); T.toTitle();
+  });
   // ── v27: the Codex and the Production Archive ──
   test("The Codex notes things as they turn up: a boss when you meet it, a power-up when you grab it, each map's hazard and target", () => {
     T.setStats(ZERO); let K = T.codex(); assert(K.total === 75 && K.count === 1, `75 entries, only Crow Hollow known at first (${K.count}/${K.total})`);

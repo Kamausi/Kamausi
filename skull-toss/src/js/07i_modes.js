@@ -7,16 +7,17 @@
   //   Curtain Call twenty seconds, as many makes as you can; misses cost nothing (a mini-game)
   //   Longshot     a still ring that backs off after every make: how far can you reach? (a mini-game)
   //   Target Gallery ten throws through a still ring at the targets hanging behind it (a mini-game)
-  // Boss Rush and the mini-games open once you've put an end boss down. v45: after every end boss but the last the
+  // Boss Rush opens once you've put an end boss down; the mini-games (v46: with Can Alley among them) are open from the start. v45: after every end boss but the last the
   // Adventure offers a bonus round, Can Alley (07o_bonus.js): the "encore" phase, where misses are free.
   const MODES = {
     story:    { lives: true, cont: true, board: true },
     arcade:   { lives: true, cont: true, maps: true },
     practice: { maps: true, free: true, open: () => true },
     rush:     { lives: true, open: () => profile.bossKills > 0 },
-    curtain:  { free: true, mini: true, clock: 20, map: 7, open: () => profile.bossKills > 0 },
-    longshot: { lives: true, mini: true, map: 3, open: () => profile.bossKills > 0 },
-    gallery:  { lives: true, mini: true, throws: 10, map: 5, open: () => profile.bossKills > 0 },
+    curtain:  { free: true, mini: true, clock: 20, map: 7 },   // (v46: the mini-games are open from the start, on their own card)
+    longshot: { lives: true, mini: true, map: 3 },
+    gallery:  { lives: true, mini: true, throws: 10, map: 5 },
+    cans:     { free: true, mini: true, map: 0 },              // v46: Can Alley on its own (07o_bonus.js): ten cans, twenty-five seconds
     director: { lives: true, open: () => true },  // the Director's Challenge (07k_director.js): the week's map, whatever you've reached
     feature:  { lives: true, open: () => !!seasonNow() }   // the season's Feature (07l_season.js): only while a season's on
   };
@@ -58,7 +59,8 @@
       rushBoss();
     } else if (m === "longshot") { ring.frozen = { x: 0, y: RING_Y, z: LONGSHOT.z0 }; }
     else if (m === "gallery") { ring.frozen = { x: 0, y: RING_Y, z: RING_Z }; galleryTargets(); }
-    if (MODES[m].mini) stageCard(t(`mode.${m}.name`), t(`mode.${m}.rule`), "", 2.2, "gold");
+    if (m === "cans") startEncore(() => gameOver(true));   // (the bonus round, played for its own sake: no map to go on to)
+    else if (MODES[m].mini) stageCard(t(`mode.${m}.name`), t(`mode.${m}.rule`), "", 2.2, "gold");
     if (m === "director") directorBegin();
     if (m === "feature") featureBegin();
   }
@@ -146,9 +148,9 @@
     if (game.phase !== "encore") return;
     const then = game.run.encoreThen, n = cans.filter(c => c.down).length, total = cans.length, clear = total > 0 && n === total, stage = game.stage;
     game.run.encoreEnd = null; game.run.encoreThen = null;
-    const bones = n * CANS.per + (clear ? canClearBonus(stage) : 0); addBones(bones); game.run.bossBones = (game.run.bossBones || 0) + bones; game.run.canBones = (game.run.canBones || 0) + bones;
+    const story = game.mode === "story", bones = n * CANS.per + (clear && story ? canClearBonus(stage) : 0); addBones(bones);   // (the clear bonus and the prizes are the Adventure's) game.run.bossBones = (game.run.bossBones || 0) + bones; game.run.canBones = (game.run.canBones || 0) + bones;
     const P = canPrize(stage), key = P ? `${CAN_PRIZES[stage - 1][0]}:${P.id}` : "", had = !key || profile.unlocked.includes(key);
-    if (clear) { profile.canClears++; profile.canAlley = profile.canAlley || {}; profile.canAlley[stage] = (profile.canAlley[stage] || 0) + 1; checkUnlocks(); }
+    if (clear) { profile.canClears++; if (story) { profile.canAlley = profile.canAlley || {}; profile.canAlley[stage] = (profile.canAlley[stage] || 0) + 1; } checkUnlocks(); }
     const won = !had && profile.unlocked.includes(key);
     if (won) game.run.prizes = (game.run.prizes || []).concat(key);
     stageCard(clear ? t("cans.clear") : t("cans.time"), t("cans.count", { n, total }), t("cans.paid", { bones }) + (won ? " · " + t("cans.won", { name: P.name }) : ""), 2.2, "gold");
@@ -182,11 +184,11 @@
     const m = game.mode;
     if (m === "director") { directorAfterRun(); game.run.modeValue = game.score; return; }   // (its record is the week's: 07k_director.js)
     const R = profile.modes[m] || (profile.modes[m] = { best: 0, runs: 0 });
-    const value = m === "rush" ? game.run.bosses : m === "curtain" ? game.hits : m === "longshot" ? Math.round(modeSt.far * 10) : m === "gallery" ? (game.run.targets || 0) : m === "feature" ? game.score : 0;
+    const value = m === "rush" ? game.run.bosses : m === "curtain" ? game.hits : m === "longshot" ? Math.round(modeSt.far * 10) : m === "gallery" ? (game.run.targets || 0) : m === "cans" ? (game.run.cans || 0) : m === "feature" ? game.score : 0;
     game.newBest = value > R.best; R.best = Math.max(R.best, value); R.runs++;
     if (m === "rush" || MODES[m].mini) challenge("modeRuns", 1);
     if (m === "rush") R.score = Math.max(R.score || 0, game.score);
     game.run.modeValue = value;
     Telemetry.emit("mode_end", { mode: m, value, best: R.best });
   }
-  const modeValueText = (m, v) => m === "feature" ? t("mode.feature.v", { n: fmtN(v) }) : m === "longshot" ? t("mode.longshot.m", { m: (v / 10).toFixed(1) }) : m === "rush" ? t("mode.rush.bosses", { n: v }) : m === "gallery" ? t("mode.gallery.targets", { n: v }) : t("mode.curtain.makes", { n: v });
+  const modeValueText = (m, v) => m === "feature" ? t("mode.feature.v", { n: fmtN(v) }) : m === "longshot" ? t("mode.longshot.m", { m: (v / 10).toFixed(1) }) : m === "rush" ? t("mode.rush.bosses", { n: v }) : m === "gallery" ? t("mode.gallery.targets", { n: v }) : m === "cans" ? t("mode.cans.n", { n: v }) : t("mode.curtain.makes", { n: v });

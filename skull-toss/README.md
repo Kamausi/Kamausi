@@ -1,8 +1,16 @@
-# SKULL TOSS v45
+# SKULL TOSS v46
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)), with a synthesised waltz standing in wherever they can't load.
+
+## New in v46: the studio logo, a wizard at the Cart, and Mini Games on their own card
+
+- **Launch:** the Kamausi logo (`src/art/logo/logo.webp`) fades in on a black screen, holds, and fades out; the black fades away on the title with its red curtains closed, and they open on the lettering and the buttons. A tap skips ahead.
+- **The tagline** is now *The Adventure of Mortimer Bones*, in capitals.
+- **Mort, who keeps the Curio Cart, is a wizard:** a starry robe, a crooked wizard's hat, a wispy beard, and a wand that sparks when you buy something.
+- **Mini Games** has its own card on the Play sheet, open from the start: Curtain Call, Longshot, Target Gallery and **Can Alley** (the bonus round, played on its own, with its own record; its carnival prizes stay the Adventure's). Practice and Boss Rush stay under *More ways to play*.
+- **The High contrast setting is gone.** The ring keeps its own dark backing and rim light on every map.
 
 ## New in v45: fire, cans, a quieter Vault and Souls at the Cart
 

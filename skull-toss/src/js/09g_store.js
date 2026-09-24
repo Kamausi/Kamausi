@@ -1,5 +1,5 @@
   // ───────────────────────── the Curio Cart: Mort's shop ─────────────────────────
-  // A travelling cart run by Mort, a ghoul in a bowler. v45: Mort takes Souls, never bones (the Vault is where bones
+  // A travelling cart run by Mort, a ghoul wizard (v46: he traded the bowler for a hat with stars on). v45: Mort takes Souls, never bones (the Vault is where bones
   // go). He sells his exclusives (things you can't get anywhere else), shelf by shelf; one of them each day at a
   // quarter off; and the Mystery Coffin (a Vault look you don't own yet, drawn as it lands). Souls are the server's
   // (09m_souls.js), so the prices are the shared economy's (Economy: CART, dealOf, COFFIN) and the server charges
@@ -7,7 +7,8 @@
   const cart = { sel: null, R: makeRig(), bounce: 0, quip: 0, won: null, show: null };
   const MORT_QUIPS = ["Fresh from the grave. Barely worn!", "No refunds. No returns. No pulse.", "Souls, please. I don't take bones: I've got plenty.",
     "That hat? Belonged to a duke. Or a duck.", "Everything's haunted. No extra charge.", "Mind the coffin, it bites.", "Buy two, the second one's still full price!",
-    "Lovely skull you've got there. Shame about the rest.", "I'd throw in a warranty, but you'd only throw it."];
+    "Lovely skull you've got there. Shame about the rest.", "I'd throw in a warranty, but you'd only throw it.",
+    "Abraca-deal-bra. Souls, please.", "I'd magic up a discount, but the wand's on strike.", "Every look here is enchanted. Mostly with dust."];
   const today = () => Economy.dayOf(Date.now());
   // the day's deal: one exclusive, a quarter off (the server works it out the same way)
   function dailyDeals() {
@@ -175,15 +176,19 @@
     if (!parlour.back || parlour.w !== w || parlour.h !== h) { parlour.back = paintShopBack(w, h); parlour.w = w; parlour.h = h; }
     return parlour.back;
   }
-  // Mort himself, chin in one glove, elbow on the counter, thoroughly unimpressed
+  // Mort himself, a ghoul wizard, chin in one glove, elbow on the counter, thoroughly unimpressed
   function drawMort(c, x, y, s, T, lookAt) {
     const tt = Math.floor(T * 12) / 12, bob = Math.sin(tt * 2.6) * s * 0.02 - (cart.bounce > 0 ? Math.sin(cart.bounce * Math.PI) * s * 0.07 : 0);
     c.save(); c.translate(x, y + bob); c.lineJoin = "round"; c.lineCap = "round"; c.strokeStyle = INK; c.lineWidth = Math.max(2, s * 0.03);
-    // body: a pear of a ghoul in a waistcoat, cut off by the counter
-    c.fillStyle = "#7A8A70"; c.beginPath(); c.moveTo(-s * 0.46, s * 0.95); c.bezierCurveTo(-s * 0.62, s * 0.2, -s * 0.42, -s * 0.5, 0, -s * 0.55);
-    c.bezierCurveTo(s * 0.42, -s * 0.5, s * 0.62, s * 0.2, s * 0.46, s * 0.95); c.closePath(); c.fill(); c.stroke();
-    c.fillStyle = "#A94332"; c.beginPath(); c.moveTo(-s * 0.4, s * 0.95); c.lineTo(-s * 0.36, s * 0.16); c.lineTo(0, s * 0.42); c.lineTo(s * 0.36, s * 0.16); c.lineTo(s * 0.4, s * 0.95); c.closePath(); c.fill(); c.stroke();
-    c.fillStyle = GOLD; for (const yy of [0.5, 0.72]) { c.beginPath(); c.arc(0, s * yy, s * 0.03, 0, TAU); c.fill(); }
+    // body (v46: Mort's a wizard now): a pear of a ghoul in a starry robe, gold-trimmed down the front, cut off by the counter
+    const robe = () => { c.beginPath(); c.moveTo(-s * 0.46, s * 0.95); c.bezierCurveTo(-s * 0.62, s * 0.2, -s * 0.42, -s * 0.5, 0, -s * 0.55); c.bezierCurveTo(s * 0.42, -s * 0.5, s * 0.62, s * 0.2, s * 0.46, s * 0.95); c.closePath(); };
+    c.fillStyle = "#3B2A6E"; robe(); c.fill(); c.stroke();
+    c.save(); robe(); c.clip(); c.fillStyle = "rgba(0,0,0,.22)"; c.fillRect(s * 0.14, -s, s, s * 2);   // (the side away from the lantern)
+    c.fillStyle = "#E8D38A"; for (const [sx, sy, r] of [[-0.3, 0.3, 0.05], [0.28, 0.1, 0.045], [-0.2, 0.72, 0.04], [0.3, 0.62, 0.05], [0.05, -0.2, 0.035]]) { star(c, sx * s, sy * s, r * s, 5, 0.45, tt); c.fill(); }
+    c.beginPath(); c.arc(-s * 0.08, s * 0.08, s * 0.06, 0.6, 5.1); c.arc(-s * 0.05, s * 0.07, s * 0.05, 4.9, 0.8, true); c.fill();   // a little moon
+    c.restore();
+    c.strokeStyle = GOLD; c.lineWidth = s * 0.05; c.beginPath(); c.moveTo(-s * 0.1, s * 0.95); c.quadraticCurveTo(-s * 0.12, s * 0.3, 0, -s * 0.12); c.moveTo(s * 0.1, s * 0.95); c.quadraticCurveTo(s * 0.12, s * 0.3, 0, -s * 0.12); c.stroke();
+    c.strokeStyle = INK; c.lineWidth = Math.max(2, s * 0.03);
     // the propping forearm: it comes up out of the counter and ends in a glove under his cheek
     c.strokeStyle = INK; c.lineWidth = s * 0.17; c.lineCap = "round";
     c.beginPath(); c.moveTo(-s * 0.56, s * 0.95); c.quadraticCurveTo(-s * 0.62, s * 0.3, -s * 0.46, -s * 0.02); c.stroke();
@@ -202,10 +207,19 @@
     c.fillStyle = "#1A1510"; c.strokeStyle = INK; c.lineWidth = Math.max(2, s * 0.025);   // a sly one-sided grin
     c.beginPath(); c.moveTo(-s * 0.18, -s * 0.03); c.quadraticCurveTo(0, s * 0.14, s * 0.22, -s * 0.06); c.quadraticCurveTo(0, s * 0.02, -s * 0.18, -s * 0.03); c.fill(); c.stroke();
     c.fillStyle = CREAM; for (let k = -1; k <= 1; k++) c.fillRect(k * s * 0.07 - s * 0.024, -s * 0.05 + Math.abs(k) * s * 0.012, s * 0.048, s * 0.05);
-    c.fillStyle = "#2A2622"; c.strokeStyle = INK; c.lineWidth = Math.max(2, s * 0.03);    // bowler
-    c.beginPath(); c.ellipse(0, -s * 0.55, s * 0.34, s * 0.06, -0.06, 0, TAU); c.fill(); c.stroke();
-    c.beginPath(); c.moveTo(-s * 0.23, -s * 0.56); c.bezierCurveTo(-s * 0.25, -s * 0.86, s * 0.23, -s * 0.86, s * 0.21, -s * 0.56); c.closePath(); c.fill(); c.stroke();
-    c.fillStyle = "#A94332"; c.fillRect(-s * 0.22, -s * 0.64, s * 0.44, s * 0.05);
+    // a wispy grey beard under the grin
+    c.fillStyle = "#D8D4CC"; c.strokeStyle = INK; c.lineWidth = Math.max(2, s * 0.025);
+    c.beginPath(); c.moveTo(-s * 0.2, s * 0.05); c.quadraticCurveTo(-s * 0.16, s * 0.3, s * 0.02 + Math.sin(tt * 2) * s * 0.02, s * 0.44); c.quadraticCurveTo(s * 0.2, s * 0.28, s * 0.24, s * 0.02); c.quadraticCurveTo(s * 0.02, s * 0.12, -s * 0.2, s * 0.05); c.closePath(); c.fill(); c.stroke();
+    c.strokeStyle = "rgba(90,84,76,.6)"; c.lineWidth = Math.max(1, s * 0.012); for (const bx of [-0.08, 0.02, 0.11]) { c.beginPath(); c.moveTo(bx * s, s * 0.12); c.quadraticCurveTo(bx * s + s * 0.02, s * 0.25, bx * s * 0.4, s * 0.36); c.stroke(); }
+    // the wizard's hat: tall, crooked, starred, with a gold band and a moon on the front
+    c.fillStyle = "#2E2260"; c.strokeStyle = INK; c.lineWidth = Math.max(2, s * 0.03);
+    const tip = Math.sin(tt * 1.7) * s * 0.03;
+    c.beginPath(); c.moveTo(-s * 0.3, -s * 0.54); c.quadraticCurveTo(-s * 0.16, -s * 0.8, -s * 0.02, -s * 0.98); c.quadraticCurveTo(s * 0.12, -s * 1.12, s * 0.36 + tip, -s * 1.02); c.quadraticCurveTo(s * 0.16, -s * 0.94, s * 0.12, -s * 0.84); c.quadraticCurveTo(s * 0.2, -s * 0.66, s * 0.3, -s * 0.54); c.closePath(); c.fill(); c.stroke();
+    c.beginPath(); c.ellipse(0, -s * 0.54, s * 0.42, s * 0.075, -0.06, 0, TAU); c.fill(); c.stroke();
+    c.fillStyle = GOLD; c.beginPath(); c.moveTo(-s * 0.27, -s * 0.6); c.quadraticCurveTo(0, -s * 0.66, s * 0.27, -s * 0.6); c.lineTo(s * 0.25, -s * 0.66); c.quadraticCurveTo(0, -s * 0.72, -s * 0.25, -s * 0.66); c.closePath(); c.fill(); c.stroke();
+    c.fillStyle = "#E8D38A"; c.beginPath(); c.arc(-s * 0.04, -s * 0.78, s * 0.06, 0.7, 5.3); c.arc(-s * 0.01, -s * 0.79, s * 0.05, 5.1, 0.9, true); c.fill();
+    star(c, s * 0.1, -s * 0.9, s * 0.035, 5, 0.45, 0); c.fill();
+    const tw = 0.5 + 0.5 * Math.sin(T * 5); c.globalAlpha = tw; c.fillStyle = "#FFF3C0"; star(c, s * 0.42 + tip, -s * 1.06, s * 0.05 * (0.6 + tw * 0.6), 4, 0.3, 0); c.fill(); c.globalAlpha = 1;
     c.restore();
     c.strokeStyle = INK; c.lineWidth = Math.max(2, s * 0.025); c.fillStyle = "#F7F1DF";
     c.beginPath(); c.arc(-s * 0.44, -s * 0.06, s * 0.15, 0, TAU); c.fill(); c.stroke();
@@ -226,6 +240,11 @@
       for (let k = 0; k < 3; k++) { c.beginPath(); c.arc(gx + flip * s * (0.03 + k * 0.05), gy - s * (0.12 + (k % 2) * 0.02), s * 0.042, 0, TAU); c.fill(); c.stroke(); }
     };
     hose(s * 0.38, s * 0.5, s * 0.72, s * 0.34, s * 0.84, s * 0.08);       // his other arm, laid along the counter
+    { const wx = s * 0.92, wy = s * 0.02, ex = s * 1.22, ey = -s * 0.34, tw = 0.5 + 0.5 * Math.sin(T * 6);   // his wand, held loosely, sparking now and then
+      c.strokeStyle = INK; c.lineWidth = s * 0.06; c.beginPath(); c.moveTo(wx, wy); c.lineTo(ex, ey); c.stroke();
+      c.strokeStyle = "#5A3A22"; c.lineWidth = s * 0.035; c.stroke(); c.strokeStyle = "#F2E7C9"; c.lineWidth = s * 0.035; c.beginPath(); c.moveTo(ex - (ex - wx) * 0.12, ey - (ey - wy) * 0.12); c.lineTo(ex, ey); c.stroke();
+      c.fillStyle = `rgba(255,243,192,${0.35 + 0.5 * tw})`; star(c, ex, ey, s * (0.06 + 0.04 * tw), 4, 0.35, T * 2); c.fill();
+      if (cart.bounce > 0) { c.fillStyle = "#FFE36A"; for (let i = 0; i < 6; i++) { const a = (i / 6) * TAU + T * 4, d = s * (0.1 + 0.25 * (1 - cart.bounce / 1.4)); star(c, ex + Math.cos(a) * d, ey + Math.sin(a) * d, s * 0.03, 5, 0.45, a); c.fill(); } } }
     glove(s * 0.9, s * 0.05, 1);
     c.restore();
   }

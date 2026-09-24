@@ -31,13 +31,20 @@
   welcomeGift(); ensureDaily(); applyCosmetics(); applyAccess(); layOutProps(); resize(); snapRing(); VisualSystem.init(); showScreen("title", false); updateHud();
   // v45: on launch, the studio's logo on black (src/art/logo/logo.png when there is one), then the title with its curtains
   // closed, and they open on the title and the menu. (Not under automation: the spec and the QA tools start straight in.)
+  // v45: the studio's logo on a black screen (it fades in, holds, and fades out), then the black fades away on the
+  // title with its red curtains closed, and they open on the lettering and the buttons. A tap skips ahead.
   function openingCurtains() {
     const sp = $("splash"), T = $("title"), fast = reduceMotion;
     if (navigator.webdriver || /[?&]test\b/.test(location.search)) return;
     T.classList.add("closed");
-    $("splashLogo").innerHTML = LOGO_ART ? `<img src="${LOGO_ART}" alt="">` : `<div class="word">KAMAUSI</div><div class="sub">presents</div>`;
-    sp.hidden = false;
-    setTimeout(() => { sp.classList.add("out"); setTimeout(() => { sp.hidden = true; }, 520); setTimeout(() => { T.classList.remove("closed"); Sound.ui("claim"); }, fast ? 100 : 450); }, fast ? 900 : 2000);
+    $("splashLogo").innerHTML = LOGO_ART ? `<img src="${LOGO_ART}" alt="Kamausi">` : `<div class="word">KAMAUSI</div><div class="sub">presents</div>`;
+    sp.hidden = false; sp.classList.remove("out", "done");
+    const timers = [], at = (ms, fn) => timers.push(setTimeout(fn, ms));
+    let over = false;
+    const open = () => { if (over) return; over = true; timers.forEach(clearTimeout); sp.classList.add("done", "out"); setTimeout(() => { sp.hidden = true; }, 600); setTimeout(() => { T.classList.remove("closed"); Sound.ui("claim"); }, fast ? 80 : 650); };
+    at(fast ? 1000 : 2300, () => sp.classList.add("done"));   // the logo fades out; the screen stays black a beat
+    at(fast ? 1300 : 2900, open);                              // then the black fades away on the closed curtains, and they open
+    sp.addEventListener("pointerdown", open, { once: true });
   }
   openingCurtains();
   Platform.init(); $("quitBtnTitle").hidden = !Platform.caps.quit; $("quitBtnTitle").addEventListener("click", () => Platform.quit());   // (03e_platform.js)

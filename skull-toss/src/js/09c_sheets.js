@@ -66,7 +66,7 @@
     for (const b of $("set-voice").querySelectorAll("button")) b.setAttribute("aria-checked", String(b.dataset.v === settings.voice));
     $("voiceNote").textContent = t(`settings.voice.${settings.voice}`);
     segValue($("set-flashes"), settings.flashes); $("flashNote").textContent = t(`settings.flash.${settings.flashes}`);
-    set("set-contrast", settings.contrast); segValue($("set-text"), settings.text);
+    segValue($("set-text"), settings.text);
     const langs = LOCALE_IDS().filter(l => l !== "pseudo"); $("row-lang").hidden = langs.length < 2;   // (a picker once there's a translation)
     if (langs.length > 1 && !$("set-lang").children.length) for (const l of langs) $("set-lang").append(h("button", { type: "button", role: "radio", data: { v: l } }, (STRINGS[l] && STRINGS[l]["lang.name"]) || l));
     segValue($("set-lang"), LANG); $("langNote").textContent = t("lang.name");
@@ -102,7 +102,6 @@
   $("set-vibe").addEventListener("click", () => toggleSetting("vibe"));
   $("set-shake").addEventListener("click", () => toggleSetting("shake"));
   $("set-mischief").addEventListener("click", () => toggleSetting("mischief"));
-  $("set-contrast").addEventListener("click", () => { toggleSetting("contrast"); applyAccess(); });
   bindSeg("set-flashes", v => { settings.flashes = v; persist(); applyAccess(); renderSettings(); Sound.ui("tick"); });
   bindSeg("set-lang", v => { settings.lang = setLang(v); persist(); renderSettings(); Sound.ui("tick"); });
   bindSeg("set-soundset", v => { settings.soundSet = v; persist(); Sound.apply(); renderSettings(); Sound.toon("boing"); });   // (a sample in the new set)

@@ -118,10 +118,6 @@
 .title.closed .curtain{width:51%}
 .title.closed .col,.title.closed .screen-top{opacity:0}
 .title .col{transition:opacity .5s .8s}
-.splash{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:#07060A;transition:opacity .5s}
-.splash.out{opacity:0}
-.splash-logo{max-width:72vw;max-height:40vh;opacity:0;transform:scale(.94);animation:splashIn 1.9s ease-out forwards}
-.splash-logo img{max-width:72vw;max-height:40vh;display:block}
 .splash-logo .word{font:clamp(40px,12vw,84px)/1 var(--display);letter-spacing:.08em;color:var(--cream);text-shadow:var(--outline),0 5px 0 var(--ink)}
 .splash-logo .sub{margin-top:10px;font:800 13px/1 var(--ui);letter-spacing:.4em;color:var(--mustard-l);text-transform:uppercase}
 @keyframes splashIn{0%{opacity:0;transform:scale(.94)}25%,80%{opacity:1;transform:scale(1)}100%{opacity:1;transform:scale(1.02)}}
@@ -134,3 +130,10 @@
 .res-stats dt,.res-stats dd{font-size:clamp(15px,4.1vw,20px)}
 .stone .ribbon{max-width:100%;margin-left:auto;margin-right:auto}
 #sleeper{width:clamp(118px,34vw,176px);height:clamp(118px,34vw,176px);margin:0 -26px -10px -14px}
+
+/* v45: the studio logo on true black, then a fade to the closed curtains */
+.splash{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:#000;transition:opacity .6s ease}
+.splash.out{opacity:0;pointer-events:none}
+.splash-logo{opacity:0;transform:scale(.94);animation:splashIn .9s ease-out .2s forwards;transition:opacity .45s ease,transform .45s ease}
+.splash.done .splash-logo{opacity:0 !important;transform:scale(1.02);animation:none}
+.splash-logo img{display:block;width:min(76vw,52vh,480px);height:auto}

@@ -48,7 +48,7 @@
   <div class="screen-top"><span></span><span class="bones" id="bonesTitle"><svg><use href="#i-bone"/></svg><span>0</span></span></div>
   <div class="col">
     <h1 class="logo" aria-label="Skull Toss"><span class="w1" aria-hidden="true"><i style="--i:0">S</i><i style="--i:1">K</i><i style="--i:2">U</i><i style="--i:3">L</i><i style="--i:4">L</i></span><span class="w2" aria-hidden="true"><i style="--i:5">T</i><span class="mascot" id="mascot" role="img" aria-label="Morty (poke him)" data-t-aria="ui.morty-poke-him"><canvas class="m-back" id="mascotBack"></canvas><canvas class="m-front" id="mascotFront"></canvas></span><i style="--i:7">S</i><i style="--i:8">S</i></span></h1>
-    <p class="tagline" data-t="ui.a-lost-cartoon-from-1933">A lost cartoon from 1933</p>
+    <p class="tagline" data-t="ui.the-adventure-of-mortimer-bones">The Adventure of Mortimer Bones</p>
     <p class="event-banner" id="eventBanner" hidden></p>
     <div class="consent-card" id="consentCard" role="region" aria-label="Play data" data-t-aria="ui.play-data" hidden>
       <p><b data-t="ui.help-fix-the-game">Help fix the game?</b></p>
@@ -170,10 +170,12 @@
     <div class="modes" id="modePick">
       <button class="mode-card story" type="button" data-mode="story"><span class="mode-ic"><svg><use href="#i-crow"/></svg></span><span class="mode-t"><span class="k" data-t="ui.story-mode">Adventure mode</span><b data-t="ui.story">Adventure</b><span class="mode-s" data-t="ui.eight-maps-a-mini-boss">Eight maps, a mini-boss and an end boss on each. Every end boss holds one of Morty's missing pieces: win them all back to end the reel.</span><span class="mode-best" id="storyBest"></span></span></button>
       <button class="mode-card arcade" type="button" data-mode="arcade"><span class="mode-ic"><svg><use href="#i-retry"/></svg></span><span class="mode-t"><span class="k" data-t="ui.arcade-mode">Arcade mode</span><b data-t="ui.arcade">Arcade</b><span class="mode-s" data-t="ui.any-map-you-ve-reached">Any map you've reached in Adventure. No bosses, no end: the ring keeps speeding up. Survive as long as you can and beat your best.</span><span class="mode-best" id="arcadeBest"></span></span></button>
+      <button class="mode-card minis" type="button" data-open="minis"><span class="mode-ic"><svg><use href="#i-star"/></svg></span><span class="mode-t"><span class="k" data-t="ui.mini-games-mode">Mini-games</span><b data-t="ui.mini-games">Mini Games</b><span class="mode-s" data-t="ui.minis-sub">Curtain Call, Longshot, Target Gallery and Can Alley: short, sharp and scored. Misses cost nothing in two of them.</span><span class="mode-best" id="minisBest"></span></span></button>
       <div class="director-card" id="directorCard"></div>
       <p class="map-k" data-t="ui.more-ways-to-play">More ways to play</p>
       <div class="mode-grid" id="moreModes"></div>
     </div>
+    <div class="minis" id="miniPick" hidden><p class="map-k" data-t="ui.pick-a-mini-game">Pick a mini-game</p><div class="mode-grid" id="miniModes"></div></div>
     <div class="maps" id="mapPick" hidden>
       <p class="map-k" id="mapPickK"></p>
       <div class="practice-opts" id="practiceOpts" hidden>
@@ -274,7 +276,6 @@
     <div class="row stack"><div><div class="lbl" data-t="ui.flashes">Flashes</div><div class="sub" id="flashNote">Camera flashes, lightning and the film's flicker</div></div>
       <div class="seg" role="radiogroup" aria-label="Flashes" data-t-aria="ui.flashes" id="set-flashes"><button type="button" role="radio" data-v="full" aria-checked="true" data-t="ui.full">Full</button><button type="button" role="radio" data-v="reduced" aria-checked="false" data-t="ui.reduced">Reduced</button><button type="button" role="radio" data-v="off" aria-checked="false" data-t="ui.off">Off</button></div></div>
     <div class="row" id="row-fullscreen" hidden><div><div class="lbl" data-t="ui.full-screen">Full screen</div><div class="sub" data-t="ui.fullscreen-sub">The picture fills the screen, with no browser around it</div></div><button class="switch" role="switch" id="set-fullscreen" aria-checked="false" aria-label="Full screen" data-t-aria="ui.full-screen" type="button"></button></div>
-    <div class="row"><div><div class="lbl" data-t="ui.high-contrast">High contrast</div><div class="sub" data-t="ui.a-bright-halo-round-the">A bright halo round the ring and Morty, bolder text</div></div><button class="switch" role="switch" id="set-contrast" aria-checked="false" aria-label="High contrast" data-t-aria="ui.high-contrast" type="button"></button></div>
     <div class="row stack"><div><div class="lbl" data-t="ui.text-size">Text size</div><div class="sub" data-t="ui.menus-sheets-and-the-hud">Menus, sheets and the HUD</div></div>
       <div class="seg" role="radiogroup" aria-label="Text size" data-t-aria="ui.text-size" id="set-text"><button type="button" role="radio" data-v="normal" aria-checked="true" data-t="ui.normal">Normal</button><button type="button" role="radio" data-v="large" aria-checked="false" data-t="ui.large">Large</button></div></div>
     <div class="row"><div><div class="lbl" data-t="ui.share-play-data">Share play data</div><div class="sub" id="analyticsNote">Anonymous: where runs end and what's too hard</div></div><button class="switch" role="switch" id="set-analytics" aria-checked="false" aria-label="Share play data" data-t-aria="ui.share-play-data" type="button"></button></div>

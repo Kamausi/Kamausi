@@ -430,10 +430,16 @@ details.row.sent{display:block}details.row.sent summary{cursor:pointer;font:700 
 .pc-stats{margin:12px 0 0;text-align:left}
 .pc-note{margin:10px 0 0;font:700 11px/1.3 var(--ui);color:var(--cream-faint)}
 /* v45: finger-sized hit areas round the small new controls (the matrix counts --hit), and a narrow phone wraps the outfits row */
-#sheet-customize .cat-tabs button{--hit:6px}
+#sheet-customize .cat-tabs button{--hit:7px}
 #sheet-customize .cat-tabs button::before,#sheet-customize .outfits .slot::before,.board-modes button::before{content:"";position:absolute;inset:calc(0px - var(--hit)) -2px}
-#sheet-customize .outfits .slot{position:relative;--hit:6px}
-.board-modes button{position:relative;--hit:6px}
+#sheet-customize .outfits .slot{position:relative;--hit:7px}
+.board-modes button{position:relative;--hit:8px}
 #sheet-customize .outfits{flex-wrap:wrap}
 #sheet-customize .section-k .clear-badges{position:relative;--hit:8px;min-height:24px}
 #sheet-customize .section-k .clear-badges::before{content:"";position:absolute;inset:calc(0px - var(--hit)) 0}
+
+/* v46: the Mini Games card on the Play sheet */
+.mode-card.minis{background:linear-gradient(180deg,#9FD8C8,#5FA89A)}
+.mode-card.minis .mode-ic{background:#2A2040;color:#FFE36A}
+.minis .mode-grid{margin-top:12px}
+.mode-tile.m-cans{background:repeating-linear-gradient(90deg,#7A2A22 0 12px,#652018 12px 24px)}

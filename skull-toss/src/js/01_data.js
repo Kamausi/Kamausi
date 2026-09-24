@@ -260,7 +260,7 @@
     return p;
   }
   const DEFAULT_SETTINGS = { sound: true, music: 45, sfx: 80, amb: 50, vibe: true, shake: true, guide: "full", film: reduceMotion ? "light" : "full", camera: reduceMotion ? "still" : "full", voice: "babble",
-    flashes: reduceMotion ? "reduced" : "full", contrast: false, text: "normal", cards: "full", lang: "en", mischief: true, soundSet: "classic", analytics: "ask" };   // analytics: ask | yes | no (04g_telemetry.js)   // soundSet: 02e_audio_sets.js   // cards: the reel's title cards (09i_reel.js)   // accessibility: flash strength, high contrast, text size
+    flashes: reduceMotion ? "reduced" : "full", text: "normal", cards: "full", lang: "en", mischief: true, soundSet: "classic", analytics: "ask" };   // analytics: ask | yes | no (04g_telemetry.js)   // soundSet: 02e_audio_sets.js   // cards: the reel's title cards (09i_reel.js)   // accessibility: flash strength, text size
   // "best" is the most hits in one run (what older saves called their best score); "bestScore" is the arcade score
   const STAT_KEYS = ["games", "throws", "makes", "perfects", "rims", "bestStreak", "bestPerfStreak", "peakLives", "points", "best", "bonesTotal", "bonks", "misses", "clutch",
     "bestScore", "scoreTotal", "bestStage", "miniKills", "miniFlawless", "bossKills", "bossFlawless",
@@ -416,7 +416,7 @@
     if (typeof settings.lang !== "string") settings.lang = "en";
     settings.mischief = settings.mischief !== false;
     if (!["classic", "vintage", "spooky", "chiptune", "kazoo"].includes(settings.soundSet)) settings.soundSet = "classic";
-    settings.contrast = !!settings.contrast;
+    delete settings.contrast;   // (v46: the High contrast setting is gone)
     if (!["ask", "yes", "no"].includes(settings.analytics)) settings.analytics = "ask";
     profile = cleanProfile(readSaved(KEYS.profile));
     profile.best = Math.max(profile.best, Number(store.get(KEYS.best, 0)) || 0);
