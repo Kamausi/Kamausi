@@ -1,8 +1,16 @@
-# SKULL TOSS v28
+# SKULL TOSS v29
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)), with a synthesised waltz standing in wherever they can't load.
+
+## New in v29: bands, outfits and Surprise me
+
+- **Bands.** A new Vault shelf of eight slingshot bands, strung on the launcher in play: Rubber Band (yours from the start), Licorice Whip, Bone Twine, Candy Cane (striped), Jester's Ribbon, Gilded Cord (with a shine), Ectoplasm (glowing; the prize for finishing the story) and Barbed Wire (Hall of Shame: 300 misses). The Vault now holds 372 items.
+- **Outfits.** Three saved looks in the Vault. Tap an empty slot (or **Save look**) to keep what Morty's wearing; tap a filled one to put it all back on. An outfit never puts on something you no longer own.
+- **Surprise me.** Something of yours from every shelf, picked at random.
+- **Renamed items.** A renamed Vault item still belongs to you: owned items migrate by ID, as equipped ones already did.
+- **Item goals.** They now say "Beat 3 mini-bosses", "Beat an end boss" and "Reach map 5" where they still named the Crow King, the Pumpkin King and stages.
 
 ## New in v28: the cartoon misbehaves, and nine secrets
 
@@ -33,7 +41,7 @@ A new **Codex** chip on the title screen opens everything you've met, written up
 
 An entry is **???** until you meet the thing in play, with a word on how to find it.
 
-- **How entries fill in.** Maps, pieces and shots come from your progress. Bosses, power-ups, hazards and targets are noted the first time they turn up (`profile.seen`), with a toast.
+- **How entries fill in.** Maps, pieces and shots come from your progress. Bosses, power-ups, hazards and targets are noted the first time they turn up (`profile.met`), with a toast.
 - **Practice.** What you see there still goes in the Codex: it records what you know, not what you've scored.
 
 **The Production Archive** is the Codex's last tab: the studio's paperwork from 1933, twelve documents unsealed as the story goes on. It runs from the first production memo and Morty's model sheet, through the censor's letter, the payroll ledger and the newspaper clipping about the fire, to the restoration report you unseal by finishing the story.
@@ -752,7 +760,7 @@ From the console, `SkullToss.debug.visualAnimation` lists the pose library (`pos
 
 ## Tests
 
-Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **164 checks**, covering:
+Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **167 checks**, covering:
 
 - **Layout, scoring and aiming.**
   - Everything is centred and every result is classified correctly.
@@ -871,3 +879,7 @@ Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to
   - The cartoon misbehaves between throws: nothing in the first five, one a map at most, never mid-flight, and never with Mischief off.
   - The six misbehaviours each do their thing. Tapping the animator's hand is a secret.
   - The secrets are each found their own way, each pays 150 bones once, and the Codex's Secrets tab keeps them.
+- **v29.**
+  - Eight bands in the Vault, the rubber one yours, and each strung on the launcher its own way. Barbed Wire comes from 300 misses and Ectoplasm from the story.
+  - An outfit saves a look and wears it back, never with things you no longer own. Surprise me uses only your things.
+  - Renamed items stay yours, and item goals name the right bosses.

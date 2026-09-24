@@ -144,12 +144,24 @@
     const pouch = layer => { ctx.save(); ctx.translate(sx + off.x, sy + off.y); ctx.scale(k, k); ctx.translate(-ax, -ay); drawLayer(ctx, "launcher", layer); ctx.restore(); };
     frame("shadow"); frame("frame");
     const tl = onFrame(N.bandL), tr = onFrame(N.bandR), pl = onPouch(N.pouchL), pr = onPouch(N.pouchR), B = M.bands;
-    ctx.lineCap = "round";
-    for (const [col, w, min] of [[B.outline, B.width, 3.5], [B.color, B.core, 1.8]]) {
-      ctx.strokeStyle = col; ctx.lineWidth = Math.max(min, w * k); ctx.beginPath(); ctx.moveTo(tl.x, tl.y); ctx.lineTo(pl.x, pl.y); ctx.moveTo(tr.x, tr.y); ctx.lineTo(pr.x, pr.y); ctx.stroke();
-    }
-    ctx.lineCap = "butt";
+    drawBands(ctx, [[tl, pl], [tr, pr]], Math.max(3.5, B.width * k), Math.max(1.8, B.core * k), B, cos.band, game.time);
     frame("tips"); pouch("pouch");
+  }
+  // the band's look (the Vault's Bands, v29): colours, a stripe, a shine, a glow, or barbs along it
+  const BANDS = { classic: {}, licorice: { core: "#3A1C1C", outline: "#0E0707" }, bone: { core: "#EDE3C8" }, candy: { core: "#F4ECDA", stripe: "#C0392B" },
+    jester: { core: "#6B3FA0", stripe: "#E3B64B" }, gilded: { core: "#E3B64B", shine: "#FFF3C4" }, ghostly: { core: "#CFF3E8", glow: "rgba(170,240,220,.9)" }, barbed: { core: "#8A8A8A", barbs: true } };
+  function drawBands(c, segs, w, cw, B, id, t) {
+    const S = BANDS[id] || BANDS.classic, core = S.core || B.color, line = (col, lw, dash) => {
+      c.strokeStyle = col; c.lineWidth = lw; c.setLineDash(dash || []); c.beginPath(); for (const [a, b] of segs) { c.moveTo(a.x, a.y); c.lineTo(b.x, b.y); } c.stroke(); };
+    c.lineCap = "round";
+    if (S.glow) { c.save(); c.shadowColor = S.glow; c.shadowBlur = 8 + 4 * Math.sin(t * 5); line(core, cw); c.restore(); }
+    line(S.outline || B.outline, w); line(core, cw);
+    if (S.stripe) { c.lineCap = "butt"; line(S.stripe, cw, [cw * 1.3, cw * 1.3]); c.lineCap = "round"; }
+    if (S.shine) line(S.shine, Math.max(0.8, cw * 0.32));
+    if (S.barbs) { c.strokeStyle = INK; c.lineWidth = Math.max(1, cw * 0.4); c.setLineDash([]);
+      for (const [a, b] of segs) { const L = Math.hypot(b.x - a.x, b.y - a.y), n = Math.floor(L / (cw * 4)), nx = -(b.y - a.y) / (L || 1), ny = (b.x - a.x) / (L || 1);
+        for (let i = 1; i < n; i++) { const x = a.x + (b.x - a.x) * i / n, y = a.y + (b.y - a.y) * i / n; c.beginPath(); c.moveTo(x - nx * cw * 1.2, y - ny * cw * 1.2); c.lineTo(x + nx * cw * 1.2, y + ny * cw * 1.2); c.stroke(); } } }
+    c.setLineDash([]); c.lineCap = "butt";
   }
   function drawLauncherFront(sx, sy, r, off) {   // an optional pouch-front layer is drawn over the seated skull
     const A = ASSETS.launcher; if (!A || !A.layers["pouch-front"]) return;

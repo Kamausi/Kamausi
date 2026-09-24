@@ -248,7 +248,7 @@
     "powerups", "cursed", "saves", "bonesSpent", "shopBuys", "coffins", "playTime", "grabs", "arcadeRuns", "chalClaims", "achSeen", "storyClears", "targetHits", "hazardHits", "continues"];
   // arcade: the best on each map, keyed by map number ({ score, secs, hits, runs }); achievements: the ones unlocked
   const DEFAULT_PROFILE = { name: "", bones: 0, daily: null, weekly: null, monthly: null, unlocked: [], seen: [], achievements: [], arcade: {}, updatedAt: 0, board: false, bestStage: 1, boardBest: null,
-    fragments: [], bossLog: {}, shots: {}, modes: {}, seen: [], secrets: [] };   // secrets: the ones found (09l_mischief.js)   // seen: what the Codex has noted ("boss:crow", "power:rush"…)   // modes: Boss Rush's and each mini-game's record (07i_modes.js)   // shots: each signature shot, how many times (07h_shots.js)   // fragments: Morty's pieces recovered (ids); bossLog: each boss beaten, how many times
+    fragments: [], bossLog: {}, shots: {}, modes: {}, met: [], secrets: [] };   // met: what the Codex has noted ("boss:crow", "power:rush"…); secrets: the ones found (09l_mischief.js)   // modes: Boss Rush's and each mini-game's record (07i_modes.js)   // shots: each signature shot, how many times (07h_shots.js)   // fragments: Morty's pieces recovered (ids); bossLog: each boss beaten, how many times
   for (const k of STAT_KEYS) if (!(k in DEFAULT_PROFILE)) DEFAULT_PROFILE[k] = 0;
   const DEFAULT_COS = { skull: "bone", eyes: "pie", teeth: "grin", paint: "none", trail: "dust", impact: "classic", ring: "hoop", aim: "bone", reel: "standard", title: "rookie", updatedAt: 0 };
   let sandbox = null;   // while the spec runs, nothing is written to the player's storage or cloud
@@ -295,7 +295,7 @@
     const md = {}; if (out.modes && typeof out.modes === "object") for (const [k, v] of Object.entries(out.modes)) if (/^[a-z]{2,16}$/.test(k) && v && typeof v === "object") { md[k] = {}; for (const [f, n] of Object.entries(v)) if (/^[a-z]{2,12}$/i.test(f)) md[k][f] = Math.max(0, Math.floor(Number(n) || 0)); }
     out.modes = md;
     out.secrets = Array.isArray(out.secrets) ? [...new Set(out.secrets.filter(k => typeof k === "string" && /^[a-z]{2,16}$/.test(k)))].slice(0, 40) : [];
-    out.seen = Array.isArray(out.seen) ? [...new Set(out.seen.filter(k => typeof k === "string" && /^[a-z]{2,8}:[a-z0-9]{1,16}$/.test(k)))].slice(0, 400) : [];
+    out.met = Array.isArray(out.met) ? [...new Set(out.met.filter(k => typeof k === "string" && /^[a-z]{2,8}:[a-z0-9]{1,16}$/.test(k)))].slice(0, 400) : [];
     return out;
   }
   function cleanArcade(a) {
@@ -312,7 +312,7 @@
     const out = { ...a };
     for (const k of STAT_KEYS) out[k] = Math.max(a[k], b[k]);
     out.unlocked = [...new Set([...a.unlocked, ...b.unlocked])];
-    out.seen = [...new Set([...a.seen, ...b.seen])]; out.secrets = [...new Set([...a.secrets, ...b.secrets])];
+    out.met = [...new Set([...a.met, ...b.met])]; out.secrets = [...new Set([...a.secrets, ...b.secrets])];
     const newer = b.updatedAt > a.updatedAt ? b : a, older = newer === a ? b : a;
     out.name = newer.name || older.name;
     out.bones = newer.bones;   // a spendable balance: the most recent save wins (max() would refund purchases)
@@ -342,6 +342,9 @@
       const it = CATALOG[kind].find(i => i.id === out[kind]);
       if (!it || (profile && !canUse(kind, it))) out[kind] = DEFAULT_COS[kind];
     }
+    // three saved looks (the Vault's Outfits, v29): only the slots' ids are kept here; wearing one checks each is still yours
+    out.outfits = [0, 1, 2].map(i => { const o = Array.isArray(out.outfits) ? out.outfits[i] : null; if (!o || typeof o !== "object") return null;
+      const L = {}; for (const k of KINDS) if (typeof o[k] === "string" && o[k].length < 24) L[k] = o[k]; return Object.keys(L).length ? L : null; });
     out.updatedAt = Number(out.updatedAt) || 0;
     return out;
   }

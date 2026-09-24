@@ -219,7 +219,7 @@
   const ZERO = { bones: 0, bonks: 0, misses: 0, clutch: 0, bonesTotal: 0, makes: 0, best: 0, perfects: 0, rims: 0, bestStreak: 0, bestPerfStreak: 0, peakLives: 0, games: 0, points: 0, throws: 0, unlocked: [], boardBest: null, fragments: [], bossLog: {} };
   for (const [k, v] of Object.entries(T.profile())) if (typeof v === "number" && !(k in ZERO) && k !== "updatedAt" && k !== "schema") ZERO[k] = k === "bestStage" ? 1 : 0;   // every other counter too
   ZERO.achievements = T.achievements().map(a => a.id); ZERO.arcade = {};   // (all achievements in hand, so none pays out in the middle of a bones test)
-  ZERO.shots = {}; ZERO.modes = {}; ZERO.seen = []; ZERO.secrets = [];   // (v25–v27: signature shots, mode records, what the Codex has noted)
+  ZERO.shots = {}; ZERO.modes = {}; ZERO.met = []; ZERO.secrets = [];   // (v25–v27: signature shots, mode records, what the Codex has noted)
   const statFor = { perfStreak: "bestPerfStreak" };
   const DEF = { skull: "bone", eyes: "pie", teeth: "grin", paint: "none", trail: "dust", impact: "classic", ring: "hoop", aim: "bone", reel: "standard", title: "rookie", hat: "none", aura: "none", pole: "wood" };
   const dressDefault = () => { for (const [k, v] of Object.entries(DEF)) T.equip(k, v); };
@@ -1607,6 +1607,35 @@
     T.closeSheet(); T.setStats(ZERO); T.toTitle();
   });
   T.mischiefOn(false);
+
+  // ── v29: cosmetics and customization ──
+  test("Bands: eight slingshot bands in the Vault, the rubber one yours from the start, each strung on the launcher its own way", () => {
+    T.setStats(ZERO); T.toTitle(); const B = T.catalog().band;
+    assert(B.length === 8 && T.cosmetics().band === "classic" && T.bandStyle().id === "classic", `${B.length} bands, the rubber one on`);
+    T.openSheet("customize"); document.querySelector('#catTabs [data-cat="band"]').click();
+    assert(document.querySelectorAll('#shopGrid .item').length === 8 && document.querySelectorAll('#shopGrid .item.locked').length === 7, "the Bands shelf, all but one locked");
+    T.closeSheet(); T.setStats({ ...ZERO, unlocked: ["band:candy"] }); assert(T.equip("band", "candy") && T.bandStyle().stripe, "Candy Cane: a striped band");
+    T.setStats({ ...ZERO, misses: 300 }); assert(T.equip("band", "barbed") && T.bandStyle().barbs, "Barbed Wire comes free after 300 misses (Hall of Shame)");
+    T.setStats({ ...ZERO, storyClears: 1 }); assert(T.equip("band", "ghostly") && T.bandStyle().glow, "Ectoplasm is the story's prize");
+    fresh(); T.step(0.5); T.toTitle(); T.setStats(ZERO); T.equip("band", "classic");
+  });
+  test("Outfits: save a look, change it, wear it back; Surprise me dresses Morty only in what's yours", () => {
+    const C0 = T.catalog(), skin = C0.skull.find(i => i.price).id, hat = C0.hat.find(i => i.price).id;
+    T.setStats({ ...ZERO, unlocked: [`skull:${skin}`, `hat:${hat}`, "band:licorice"] }); T.toTitle();
+    T.equip("skull", skin); T.equip("hat", hat); T.saveOutfit(0);
+    T.equip("skull", "bone"); T.equip("hat", "none"); assert(T.cosmetics().skull === "bone", "changed");
+    T.wearOutfit(0); let c = T.cosmetics(); assert(c.skull === skin && c.hat === hat, `outfit 1 back on (${c.skull}, ${c.hat})`);
+    T.setStats({ ...ZERO, unlocked: [] }); T.wearOutfit(0); c = T.cosmetics(); assert(c.skull === skin, "an outfit never puts on what you no longer own (wearing leaves it as it was)");
+    T.equip("skull", "bone"); T.equip("hat", "none");
+    T.setStats({ ...ZERO, unlocked: [`skull:${skin}`, `hat:${hat}`, "band:licorice"] });
+    for (let i = 0; i < 12; i++) { T.surprise(); c = T.cosmetics(); for (const [k, id] of Object.entries(c)) if (C0[k]) { const it = C0[k].find(x => x.id === id); assert(it && (!it.price && !it.req || T.profile().unlocked.includes(`${k}:${id}`) || it.req), `${k}:${id} isn't yours`); } }
+    T.equip("skull", "bone"); T.equip("hat", "none"); T.equip("band", "classic"); T.setStats(ZERO); T.toTitle();
+  });
+  test("A renamed Vault item still belongs to you, and item goals name the right bosses", () => {
+    const P = T.cleanProfile({ unlocked: ["skull:gilded", "trail:embers"] });
+    assert(P.unlocked.includes("skull:gold") && P.unlocked.includes("trail:fire") && !P.unlocked.includes("skull:gilded"), JSON.stringify(P.unlocked));
+    assert(T.reqText("miniKills", 3) === "Beat 3 mini-bosses" && T.reqText("bossKills", 1) === "Beat an end boss" && T.reqText("bestStage", 5) === "Reach map 5", `${T.reqText("miniKills", 3)} / ${T.reqText("bossKills", 1)}`);
+  });
 
   T.sandbox(false); T.start(); T.pause(false);  // leave the game playable, player's saved data untouched
   window.__skullTossResults = results;

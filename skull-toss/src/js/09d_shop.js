@@ -1,7 +1,7 @@
   // ───────────────────────── the Skull Vault ─────────────────────────
   // An old cartoon prop room: pick a shelf, tap an item, and the skull hops onto the pedestal wearing it.
-  const shop = { cat: "skull", sel: null };
-  const CAT_LABEL = { skull: "Skulls", eyes: "Eyes", teeth: "Teeth", paint: "Paint jobs", hat: "Hats", aura: "Auras", trail: "Trails", impact: "Impacts", ring: "Rings", pole: "Ring poles", aim: "Aim lines", reel: "Film reels", title: "Titles" };
+  const shop = { cat: "skull", sel: null, slot: 0 };
+  const CAT_LABEL = { skull: "Skulls", eyes: "Eyes", teeth: "Teeth", paint: "Paint jobs", hat: "Hats", aura: "Auras", trail: "Trails", impact: "Impacts", ring: "Rings", pole: "Ring poles", band: "Bands", aim: "Aim lines", reel: "Film reels", title: "Titles" };
   const fmt = n => n.toLocaleString("en-US");
   const starsText = it => "★".repeat(starsOf(it)) + "☆".repeat(4 - starsOf(it));
   const vault = { R: makeRig(), y: -140, vy: 0, ang: 0, spin: 0, parts: [], bursts: [], trail: [], loop: 0, nextHop: 0, nextReact: 0, react: null, reactUntil: 0, dragX: null };
@@ -42,6 +42,11 @@
     if (kind === "eyes") { drawSkull(c, 26, 30, 20, { t, look: { ...look, skull: "bone", paint: "none" }, face: faceFor("idle", t, { lx: 0.3, ly: -0.2 }) }); return; }
     if (kind === "teeth") { drawSkull(c, 26, 25, 16, { t, look: { ...look, skull: "bone", paint: "none" }, face: faceFor("excited", t), jaw: 0.5 }); return; }
     if (kind === "ring") { drawRingShape(c, 26, 26, 15, 5, id, t); return; }
+    if (kind === "band") {   // a little slingshot, strung with the band
+      c.strokeStyle = "#6B4526"; c.lineWidth = 5; c.lineCap = "round"; c.beginPath(); c.moveTo(26, 49); c.lineTo(26, 31); c.lineTo(12, 11); c.moveTo(26, 31); c.lineTo(40, 11); c.stroke(); c.lineCap = "butt";
+      drawBands(c, [[{ x: 12, y: 12 }, { x: 24, y: 36 }], [{ x: 40, y: 12 }, { x: 28, y: 36 }]], 5, 3, { color: "#A94332", outline: INK }, id, t);
+      c.fillStyle = "#4A2F19"; c.strokeStyle = INK; c.lineWidth = 1.5; c.beginPath(); c.ellipse(26, 37, 6, 3.5, 0, 0, TAU); c.fill(); c.stroke(); return;
+    }
     if (kind === "aim") { drawAimArc(c, 8, 44, 42, 30, 1, id, 0); return; }
     if (kind === "reel") { reelFrame(c, 26, 26, 44, 34, id, t); return; }
     if (kind === "impact") { const I = IMPACTS[id], b = makeBurst(I.word, 26, 27, I, { scale: 0.78 }, 300); b.t = b.dur * 0.3; b.rot = -0.08; b.seed = 7; drawBurstList(c, [b], 120); return; }
@@ -142,8 +147,31 @@
       if (fresh.includes(kind + ":" + it.id)) b.insertAdjacentHTML("beforeend", '<span class="new" aria-hidden="true"></span>');
       grid.appendChild(b);
     }
-    renderBuybar();
+    renderBuybar(); renderOutfits();
   }
+  // ── outfits: three saved looks (tap a slot to wear it, or to fill it when it's empty; Save look fills the chosen one)
+  function renderOutfits() {
+    const box = $("outfitSlots"); box.textContent = "";
+    cos.outfits.forEach((o, i) => box.append(h("button", { type: "button", class: `slot${o ? " filled" : ""}${shop.slot === i ? " on" : ""}`, data: { outfit: i }, "aria-label": `Outfit ${i + 1}${o ? "" : ", empty"}` }, String(i + 1))));
+  }
+  const lookNow = () => Object.fromEntries(KINDS.map(k => [k, cos[k]]));
+  function saveOutfit(i = shop.slot) { cos.outfits[i] = lookNow(); cos.updatedAt = Date.now(); persist(); renderOutfits(); Sound.ui("equip"); toast(`<b>Outfit ${i + 1}</b> saved`); }
+  function wearOutfit(i) {
+    const o = cos.outfits[i]; if (!o) return false;
+    let n = 0; for (const [k, id] of Object.entries(o)) { const it = findItem(k, id); if (it && canUse(k, it) && cos[k] !== id) { cos[k] = id; n++; } }
+    cos.updatedAt = Date.now(); applyCosmetics(); persist(); renderShop(); Sound.ui("equip"); vault.react = "excited";
+    return n;
+  }
+  // Surprise me: something of yours from every shelf, picked at random
+  function surpriseLook() {
+    let n = 0;
+    for (const k of KINDS) { const mine = CATALOG[k].filter(it => canUse(k, it)); if (mine.length < 2) continue; const it = mine[Math.floor(Math.random() * mine.length)]; if (it.id !== cos[k]) { cos[k] = it.id; n++; } }
+    cos.updatedAt = Date.now(); applyCosmetics(); persist(); renderShop(); Sound.ui("equip");
+    return n;
+  }
+  $("outfitSlots").addEventListener("click", e => { const b = e.target.closest("[data-outfit]"); if (!b) return; const i = +b.dataset.outfit; shop.slot = i; if (cos.outfits[i]) wearOutfit(i); else saveOutfit(i); renderOutfits(); });
+  $("outfitSave").addEventListener("click", () => saveOutfit());
+  $("surpriseBtn").addEventListener("click", () => surpriseLook());
   function renderBuybar() {
     const bar = $("buybar"), s = shop.sel, it = s && findItem(s.kind, s.id);
     if (!it || canUse(s.kind, it)) { bar.hidden = true; shop.sel = null; return; }

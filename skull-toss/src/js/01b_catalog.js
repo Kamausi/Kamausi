@@ -182,13 +182,21 @@
     ]
   };
   for (const [k, list] of Object.entries(MORE)) (CATALOG[k] = CATALOG[k] || []).push(...list);
-  KINDS.push("hat", "aura", "pole");
-  Object.assign(KIND_LABEL, { hat: "hat", aura: "aura", pole: "ring pole" });
-  Object.assign(DEFAULT_COS, { hat: "none", aura: "none", pole: "wood" });
+  // v29: the slingshot's band (its look in BANDS, 08c_scene.js)
+  CATALOG.band = [
+    { id: "classic", name: "Rubber Band" },
+    { id: "licorice", name: "Licorice Whip", s: 1, price: 600 },    { id: "bone", name: "Bone Twine", s: 1, price: 700 },
+    { id: "candy", name: "Candy Cane", s: 2, price: 1400 },          { id: "jester", name: "Jester's Ribbon", s: 2, price: 1800 },
+    { id: "gilded", name: "Gilded Cord", s: 3, price: 3200 },        { id: "ghostly", name: "Ectoplasm", s: 3, req: ["storyClears", 1], boss: true },
+    { id: "barbed", name: "Barbed Wire", s: 2, req: ["misses", 300], shame: true }
+  ];
+  KINDS.push("hat", "aura", "pole", "band");
+  Object.assign(KIND_LABEL, { hat: "hat", aura: "aura", pole: "ring pole", band: "band" });
+  Object.assign(DEFAULT_COS, { hat: "none", aura: "none", pole: "wood", band: "classic" });
   Object.assign(REQ_TEXT, {
-    bestScore: n => `Score ${fmtN(n)} in one run`, scoreTotal: n => `${fmtN(n)} points in all`, bestStage: n => `Reach stage ${n}`,
-    miniKills: n => n > 1 ? `Beat the Crow King ${n} times` : "Beat the Crow King", miniFlawless: n => "Beat the Crow King without a miss",
-    bossKills: n => n > 1 ? `Beat the Pumpkin King ${n} times` : "Beat the Pumpkin King", bossFlawless: n => "Beat the Pumpkin King without a miss",
+    bestScore: n => `Score ${fmtN(n)} in one run`, scoreTotal: n => `${fmtN(n)} points in all`, bestStage: n => `Reach map ${Math.min(n, MAP_DATA.length)}`,
+    miniKills: n => n > 1 ? `Beat ${n} mini-bosses` : "Beat a mini-boss", miniFlawless: n => "Beat a mini-boss without a miss",
+    bossKills: n => n > 1 ? `Beat ${n} end bosses` : "Beat an end boss", bossFlawless: n => "Beat an end boss without a miss", storyClears: n => "Finish the story",
     wides: n => `Miss wide ${n} times`, overs: n => `Throw too high ${n} times`, lows: n => `Throw too low ${n} times`, posts: n => `Hit the post ${n} times`,
     shorts: n => `Fall short ${n} times`, clanks: n => `Clank off the rim ${n} times`, seeds: n => `Eat ${n} pumpkin seeds`,
     zeroRuns: n => `End ${n} runs without a hit`, quickDeaths: n => `Lose a run in 5 throws, ${n} times`, powerups: n => `Grab ${n} power-ups`,

@@ -224,3 +224,12 @@
 .codex-list .doc .doc-body{margin:0;font:13px/1.5 "Courier New",Courier,ui-monospace,monospace}
 .codex-list .doc.sealed{background:var(--panel-2);color:var(--cream-faint);box-shadow:none;border:2px dashed var(--line-2)}
 .codex-list .doc.sealed .doc-date{color:var(--cream-faint)}
+
+/* the Vault's outfits row (v29): three numbered slots, then Save look and Surprise me */
+.outfits{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:12px}
+.outfits .k{font:800 11px var(--ui);letter-spacing:.16em;text-transform:uppercase;color:var(--cream-dim)}
+.outfits .slots{display:flex;gap:6px}
+.outfits .slot{width:34px;height:34px;border-radius:50%;border:2px dashed var(--line-2);background:transparent;color:var(--cream-faint);font:18px/1 var(--num);cursor:pointer}
+.outfits .slot.filled{border:2px solid var(--ink);background:var(--mustard);color:var(--ink);box-shadow:0 2px 0 var(--ink)}
+.outfits .slot.on{outline:2px solid var(--cream);outline-offset:2px}
+.outfits .ghost-btn{padding:7px 10px;font-size:12px}

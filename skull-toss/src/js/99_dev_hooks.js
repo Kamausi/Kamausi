@@ -3,7 +3,8 @@
   // TEST_SPEC.js drives the game through them with the clock paused.
   Object.assign(window.SkullToss.debug, {
     constants: { G, SKULL_R, START_Y, RING_Z, RING_Y, RING_TUBE, RC_START, RC_MIN, POST_HALF, FLIGHT_T, START_LIVES, MAX_LIVES },
-    level, catalog: () => JSON.parse(JSON.stringify(CATALOG)),
+    level, catalog: () => JSON.parse(JSON.stringify(CATALOG)), bandStyle: () => ({ id: cos.band, ...(BANDS[cos.band] || {}) }), wearOutfit: i => wearOutfit(i), saveOutfit: i => saveOutfit(i), surprise: () => surpriseLook(),
+    reqText: (k, n) => REQ_TEXT[k](n), cleanProfile: p => cleanProfile(p),
     start() { startGame(); },
     pause(on = true) { manual = on; },
     simStep: SIM_STEP, simAdvance: dt => advance(dt), simReset() { simAcc = 0; },   // the live loop's fixed step
@@ -24,7 +25,7 @@
     targetsFull: () => targets.map(T => ({ ...T })), mischiefOn(on = true) { if (sandbox) sandbox.mischiefOn = on; }, misbehave: kind => misbehave(kind),
     misc: () => (updateCamFx(), { kind: misc.kind, log: misc.log.slice(), lastMap: misc.lastMap, css: cvs.style.transform, hand: misc.kind === "hand" ? handAt((game.time - misc.t0) / misc.dur) : null, wrong: reelEl.classList.contains("wrong") && !reelEl.hidden }),
     clearMisc() { misc.kind = null; misc.log = []; misc.lastMap = 0; misc.lastThrow = -99; }, secrets: () => realProfile().secrets.slice(), titleIdle(s) { sec.quietSince = uiNow() - s; sec.slept = false; },
-    upwardPull() { secretUpward(); }, secretName: n => secretName(n), canvas: () => cvs, codex: () => ({ count: codexCount(), total: codexTotal(), seen: realProfile().seen.slice(), archive: ARCHIVE.filter(A => A.open()).map(A => A.id) }), shots(on = true) { if (sandbox) sandbox.shotsOn = on; }, lastShots: () => (skull.shots || []).slice(), shotList: () => SHOTS.map(S => ({ id: S.id, rare: S.rare, cam: S.cam })),
+    upwardPull() { secretUpward(); }, secretName: n => secretName(n), canvas: () => cvs, codex: () => ({ count: codexCount(), total: codexTotal(), seen: realProfile().met.slice(), archive: ARCHIVE.filter(A => A.open()).map(A => A.id) }), shots(on = true) { if (sandbox) sandbox.shotsOn = on; }, lastShots: () => (skull.shots || []).slice(), shotList: () => SHOTS.map(S => ({ id: S.id, rare: S.rare, cam: S.cam })),
     camfx: () => (updateCamFx(), { kind: camfx.kind, log: camfx.log.slice(), css: cvs.style.transform, spot: !!film.spot }), clearCamLog() { camfx.log = []; }, setStreak(n) { game.streak = n; }, bossInfo: () => Object.fromEntries(BOSS_IDS.map(id => [id, { ...BOSS_INFO[id] }])),
     tr: (id, vars) => t(id, vars), lineIds: prefix => lineIds(prefix).slice(),
     reel: () => ({ card: reelSt.card ? reelSt.card.kind : null, n: reelSt.card ? reelSt.card.n || 0 : 0, shown: reelSt.shown.slice(), cues: reelSt.cues.length, title: $("rcTitle").textContent, reel: $("rcReel").textContent, hidden: reelEl.hidden, cine: game.cine ? game.cine.kind : null, dur: game.cine ? game.cine.dur : 0 }),

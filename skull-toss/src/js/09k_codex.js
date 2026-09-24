@@ -2,20 +2,20 @@
   // The Codex is everything you've met, written up: the eight maps, sixteen bosses, Morty's eight pieces, the seven
   // power-ups, each map's hazard and target, and the twelve signature shots. An entry stays "???" (with a word on
   // how to find it) until you've met the thing in play. Maps, pieces and shots come straight from progress; bosses,
-  // power-ups, hazards and targets are noted the first time they turn up (profile.seen). Seeing things counts even in
+  // power-ups, hazards and targets are noted the first time they turn up (profile.met). Seeing things counts even in
   // Practice: the Codex is what you know, not what you've scored.
   // The Production Archive is the studio's paperwork from 1933, from the first memo to the restoration report,
   // unsealed one document at a time as the story goes on.
   const CODEX = {
     map:    { ids: () => MAP_DATA.map(m => String(m.n)), seen: id => Number(id) <= profile.bestStage,
               name: id => mapData(+id).name, body: id => `${mapData(+id).premise} ${t(`codex.map.${id}`)}`, stat: id => t("codex.stat.reel", { reel: mapData(+id).reel, mechanic: mapData(+id).identity.mechanic.split(":")[0] }) },
-    boss:   { ids: () => BOSS_IDS.slice(), seen: id => !!profile.bossLog[id] || profile.seen.includes("boss:" + id),
+    boss:   { ids: () => BOSS_IDS.slice(), seen: id => !!profile.bossLog[id] || profile.met.includes("boss:" + id),
               name: id => BOSS_INFO[id].name, body: id => `${t(`codex.boss.${id}`)} ${BOSS_INFO[id].tell}.`, stat: id => (profile.bossLog[id] ? t("codex.stat.beaten", { n: profile.bossLog[id] }) : "") },
     piece:  { ids: () => Object.keys(FRAGMENTS), seen: id => profile.fragments.includes(id), name: id => FRAGMENTS[id].name, body: id => FRAGMENTS[id].line, stat: id => BOSS_INFO[FRAGMENTS[id].from].name },
-    power:  { ids: () => POWER_IDS.slice(), seen: id => profile.seen.includes("power:" + id), name: id => POWERS[id].name, body: id => `${t(`codex.power.${id}`)} ${POWERS[id].tip}.`, stat: () => "" },
-    hazard: { ids: () => ["bats", "wind", "bonefall", "fog", "balloons", "pendulum", "jumpcut"], seen: id => profile.seen.includes("hazard:" + id),
+    power:  { ids: () => POWER_IDS.slice(), seen: id => profile.met.includes("power:" + id), name: id => POWERS[id].name, body: id => `${t(`codex.power.${id}`)} ${POWERS[id].tip}.`, stat: () => "" },
+    hazard: { ids: () => ["bats", "wind", "bonefall", "fog", "balloons", "pendulum", "jumpcut"], seen: id => profile.met.includes("hazard:" + id),
               name: id => t(`codex.hazard.${id}.name`), body: id => t(`codex.hazard.${id}.body`), stat: () => "" },
-    target: { ids: () => MAP_DATA.map(m => m.target), seen: id => profile.seen.includes("target:" + id), name: id => t(`codex.target.${id}.name`), body: id => t(`codex.target.${id}.body`), stat: () => "" },
+    target: { ids: () => MAP_DATA.map(m => m.target), seen: id => profile.met.includes("target:" + id), name: id => t(`codex.target.${id}.name`), body: id => t(`codex.target.${id}.body`), stat: () => "" },
     shot:   { ids: () => SHOT_IDS.slice(), seen: id => !!profile.shots[id], name: id => t(`shot.${id}.name`), body: id => t(`shot.${id}.desc`), stat: id => (profile.shots[id] ? t("codex.stat.made", { n: profile.shots[id] }) : "") }
   };
   const CODEX_CATS = Object.keys(CODEX);
@@ -31,8 +31,8 @@
   // the first time something turns up in play: note it (on the real profile, even in Practice) and say so
   function sawIt(cat, id) {
     const P = realProfile(), key = `${cat}:${id}`;
-    if (P.seen.includes(key)) return false;
-    P.seen.push(key); if (profile !== P && !profile.seen.includes(key)) profile.seen.push(key);
+    if (P.met.includes(key)) return false;
+    P.met.push(key); if (profile !== P && !profile.met.includes(key)) profile.met.push(key);
     if (!sandbox) toast(`<b>${t("codex.new")}</b> · ${CODEX[cat] ? CODEX[cat].name(id) : id}`);
     Telemetry.emit("codex", { key }); updatePips();
     return true;
