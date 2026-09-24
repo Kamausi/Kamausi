@@ -477,7 +477,7 @@
 
 
   // ── v11: score, progress, stages and bosses ───────────────
-  const toHit = n => { T.setHits(n - 1); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); T.unfreezeRing(); };
+  const toHit = n => { T.calm(); T.setHits(n - 1); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); T.unfreezeRing(); };
   const beatCrow = (stage = 1) => { fresh(); if (stage > 1) T.setStage(stage); toHit(25); T.step(2.6); T.hurtBoss(99); T.endThrow(); T.step(3.2); };
   test("HUD: the score centred, the hits under it, the best under that, all in the game's numerals; small skulls and combo", () => {
     fresh(); throwAndSettle(0, C.RING_Y);
@@ -1172,6 +1172,51 @@
   test("A run's play comes from one seeded stream: the same seed lays out the same targets and hazards", () => {
     const lay = seed => { fresh(); T.setStage(6); T.seedRun(seed); T.refillTargets(); for (let i = 0; i < 4; i++) T.hazardsAfterThrow(); return JSON.stringify(T.targets()); };
     assert(lay(77) === lay(77) && lay(77) !== lay(78), "same seed, same run; another seed, another run");
+    T.toTitle();
+  });
+
+  // ── v20: the boss framework and all sixteen bosses ──
+  const watchBoss = secs => {   // step through a fight, noting where the ring goes and what the boss does
+    const seen = { pos: [], states: new Set(), shots: 0 };
+    for (let t = 0; t < secs; t += 0.1) { T.step(0.1); const r = T.state().ring; seen.pos.push({ ...r }); seen.states.add(T.visualSystem().boss); seen.shots = Math.max(seen.shots, T.seeds().length); }
+    return seen;
+  };
+  const inPlay = q => q.y < 0.9 || (Math.abs(q.x) <= 2.35 && q.y <= 3.8 && q.z >= 4.3 && q.z <= 8.7);   // (a diving ring may go under; one in play stays in the ring's space)
+  test("Every map's mini-boss takes the ring, moves it, gives its tell, and falls", () => {
+    const M = T.maps();
+    for (let n = 1; n <= 8; n++) {
+      fresh(); T.setStage(n); toHit(25); const id = M[n - 1].bosses.mini;
+      assert(T.boss() && T.boss().kind === id, `map ${n}: the mini-boss should be ${id} (${T.boss() && T.boss().kind})`);
+      const s = watchBoss(9), xs = s.pos.map(q => q.x), ys = s.pos.map(q => q.y), zs = s.pos.map(q => q.z);
+      assert(Math.max(...xs) - Math.min(...xs) + Math.max(...ys) - Math.min(...ys) + Math.max(...zs) - Math.min(...zs) > 1, `${id} should move the ring`);
+      assert(s.pos.every(inPlay), `${id} carries the ring out of play: ${JSON.stringify(s.pos.find(q => !inPlay(q)))}`);
+      assert(s.states.has("attack"), `${id} should give its tell (${[...s.states]})`);
+      T.hurtBoss(99); assert(T.boss().dead, `${id} should go down`); T.endThrow(); T.step(3.4);
+      assert(!T.boss() && T.state().phase === "B", `after ${id}, the second half (${T.state().phase})`);
+    }
+    T.toTitle();
+  });
+  test("Every map's end boss attacks with its own volleys, told first, and falls holding its piece", () => {
+    const M = T.maps(); T.setStats({ ...ZERO, bestScore: 0 });
+    for (let n = 1; n <= 8; n++) {
+      beatCrow(n); toHit(50); const id = M[n - 1].bosses.end;
+      assert(T.boss() && T.boss().kind === id, `map ${n}: the end boss should be ${id} (${T.boss() && T.boss().kind})`);
+      const s = watchBoss(11);
+      assert(s.shots > 0 && s.states.has("attack"), `${id} should throw something, after a tell (${s.shots} shots; ${[...s.states]})`);
+      assert(s.pos.every(inPlay), `${id} carries the ring out of play: ${JSON.stringify(s.pos.find(q => !inPlay(q)))}`);
+      T.hurtBoss(99); T.endThrow(); T.step(n === 8 ? 4.2 : 3.4);
+      assert(T.profile().fragments.includes(M[n - 1].fragment), `${id} should give up Morty's ${M[n - 1].fragment}`);
+    }
+    assert(T.profile().fragments.length === 8 && T.profile().storyClears === 1, "all eight pieces, and the story finished");
+    T.setStats({ ...ZERO, bestScore: 0 }); T.toTitle();
+  });
+  test("A new end boss's volleys knock the skull down, and a Ghost Toss turns up at two-thirds and one-third health", () => {
+    beatCrow(1); toHit(50); T.step(2.9); T.freezeRing(0, C.RING_Y);
+    const a = { AX: 0, AY: C.RING_Y }, q = T.skullPathAt(a.AX, a.AY, 3 / (C.RING_Z / C.FLIGHT_T)), lives = T.state().lives;
+    T.plantSeed(q.x, q.y, q.z); T.throwAt(a.AX, a.AY); T.step(2.5);
+    assert(T.state().lastResult.kind === "seed" && T.state().lives === lives - 1, `a clod to the face (${T.state().lastResult.kind})`);
+    const max = T.boss().max; T.hurtBoss(max - Math.ceil(max * 2 / 3)); T.endThrow();
+    assert(T.pickup() && T.pickup().id === "ghost", "a Ghost Toss at two-thirds health");
     T.toTitle();
   });
 

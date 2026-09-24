@@ -122,7 +122,7 @@
     game.phase = "mini"; clearPickups(); clearPowers(); clearDirectors(); Sound.toon("brass"); Sound.setAct("boss");
     boss = makeBoss(bossIds().mini, game.stage); setRingMode("boss"); snapRing(); Telemetry.emit("boss_start", { kind: boss.kind, stage: game.stage });
     stageCard("Mini-boss", BOSS_INFO[boss.kind].name, `Toss through his ring ${boss.max} times`, 2.3, "boss");
-    cine("mini-in", 2.3, () => setHint("He swoops near and far: lead the ring"));
+    cine("mini-in", 2.3, () => setHint(BOSS_INFO[boss ? boss.kind : "crow"].hint));
     updateHud();
   }
   function miniBossDown() {
@@ -140,7 +140,7 @@
     game.phase = "boss"; clearPickups(); clearPowers(); clearDirectors(); Sound.toon("brass"); Sound.setAct("boss");
     boss = makeBoss(bossIds().end, game.stage); setRingMode("boss"); snapRing(); Telemetry.emit("boss_start", { kind: boss.kind, stage: game.stage });
     stageCard("End boss", BOSS_INFO[boss.kind].name, BOSS_INFO[boss.kind].tell, 2.6, "boss");
-    cine("boss-in", 2.6, () => setHint("Throw between his seed volleys"), 0.35);
+    cine("boss-in", 2.6, () => setHint(BOSS_INFO[boss ? boss.kind : "pumpkin"].hint), 0.35);
     updateHud();
   }
   function mainBossDown() {

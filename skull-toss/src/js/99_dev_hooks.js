@@ -13,6 +13,7 @@
     maps: () => JSON.parse(JSON.stringify(MAP_DATA)),
     implemented: () => ({ skyline: Object.keys(SKYLINES), lane: Object.keys(LANES), props: Object.keys(PROPSETS), foreground: Object.keys(FOREGROUNDS), near: Object.keys(NEAR_SETS),
       weather: ["none", "mist", ...Object.keys(WX_COUNT)], moon: ["art", "none", "crescent", "harvest", "full", "screen"], registry: MAP_REGISTRY }),
+    calm() { HZ.kind = "none"; HZ.list = []; HZ.wind = 0; HZ.fogT = 0; HZ.fog = 0; renderWind(); },   // (for set-up throws that aren't about hazards)
     tier: () => ({ ...tierNow() }), setWind(w) { HZ.wind = w; renderWind(); }, hz: () => ({ kind: HZ.kind, wind: HZ.wind, fog: HZ.fog, list: HZ.list.map(h => ({ kind: h.kind, fixed: !!h.fixed })), bob: pendBob() }),
     fogIn() { HZ.fogT = 3.6; }, hazardsAfterThrow: () => hazardsAfterThrow(), setPendT(t) { HZ.pendT = t; }, pend: () => ({ ...PEND, period: pendPeriod() }),
     plantHazard(kind, x, y, z, r = 0.28) { HZ.list = HZ.list.filter(h => h.kind !== kind); HZ.list.push({ kind, x, y, z, ox: x, oy: y, oz: z, r, fixed: true, t: 0, at: 0, dir: 1 }); },

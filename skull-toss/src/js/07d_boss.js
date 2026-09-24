@@ -243,10 +243,24 @@
       ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.beginPath(); ctx.ellipse(g.x, g.y, r * 1.1, r * 0.3, 0, 0, TAU); ctx.fill();
       ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(sd.rot);
       ctx.fillStyle = "#F4E6BE"; ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1.5, r * 0.16);
-      ctx.beginPath(); ctx.moveTo(0, -r * 1.2); ctx.bezierCurveTo(r * 1.1, -r * 0.6, r * 0.8, r * 1, 0, r * 1.1); ctx.bezierCurveTo(-r * 0.8, r * 1, -r * 1.1, -r * 0.6, 0, -r * 1.2); ctx.fill(); ctx.stroke();
-      ctx.strokeStyle = "rgba(160,120,60,.6)"; ctx.lineWidth = Math.max(1, r * 0.1); ctx.beginPath(); ctx.moveTo(0, -r * 0.8); ctx.lineTo(0, r * 0.8); ctx.stroke();
+      if (sd.kind && sd.kind !== "seed") drawShot(sd.kind, r, sd.rot);
+      else {
+        ctx.beginPath(); ctx.moveTo(0, -r * 1.2); ctx.bezierCurveTo(r * 1.1, -r * 0.6, r * 0.8, r * 1, 0, r * 1.1); ctx.bezierCurveTo(-r * 0.8, r * 1, -r * 1.1, -r * 0.6, 0, -r * 1.2); ctx.fill(); ctx.stroke();
+        ctx.strokeStyle = "rgba(160,120,60,.6)"; ctx.lineWidth = Math.max(1, r * 0.1); ctx.beginPath(); ctx.moveTo(0, -r * 0.8); ctx.lineTo(0, r * 0.8); ctx.stroke();
+      }
       ctx.restore();
     }
+  }
+  // what the other end bosses throw (drawn at the seed's place, r its size on screen)
+  function drawShot(kind, r, rot) {
+    const f = c => { ctx.fillStyle = c; ctx.fill(); ctx.stroke(); };
+    if (kind === "clod") { ctx.beginPath(); for (let i = 0; i < 9; i++) { const a = (i / 9) * TAU, k = 1 + ((i * 37) % 5) * 0.08; ctx.lineTo(Math.cos(a) * r * k, Math.sin(a) * r * k); } ctx.closePath(); f("#6A4A2E"); }
+    else if (kind === "bat") { ctx.rotate(-rot); ctx.fillStyle = INK; drawBat(ctx, 0, 0, r * 0.9, Math.sin(rot * 3)); }
+    else if (kind === "bone") { ctx.beginPath(); rr(ctx, -r * 1.1, -r * 0.2, r * 2.2, r * 0.4, r * 0.15); f("#E4DAC4"); for (const e of [-1, 1]) for (const g of [-1, 1]) { ctx.beginPath(); ctx.arc(e * r * 1.1, g * r * 0.22, r * 0.26, 0, TAU); f("#E4DAC4"); } }
+    else if (kind === "mud") { ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); f("#5A4A2A"); ctx.fillStyle = "#7A6A3A"; ctx.beginPath(); ctx.arc(-r * 0.3, -r * 0.3, r * 0.3, 0, TAU); ctx.fill(); }
+    else if (kind === "pin") { ctx.beginPath(); ctx.moveTo(0, -r * 1.3); ctx.quadraticCurveTo(r * 0.5, -r * 0.6, r * 0.5, r * 0.5); ctx.quadraticCurveTo(r * 0.4, r * 1.2, 0, r * 1.2); ctx.quadraticCurveTo(-r * 0.4, r * 1.2, -r * 0.5, r * 0.5); ctx.quadraticCurveTo(-r * 0.5, -r * 0.6, 0, -r * 1.3); f(CREAM); ctx.fillStyle = RED; ctx.fillRect(-r * 0.4, -r * 0.3, r * 0.8, r * 0.2); }
+    else if (kind === "gear") { ctx.beginPath(); for (let i = 0; i < 16; i++) { const a = (i / 16) * TAU, k = i % 2 ? 0.8 : 1.05; ctx.lineTo(Math.cos(a) * r * k, Math.sin(a) * r * k); } ctx.closePath(); f(GOLD); ctx.beginPath(); ctx.arc(0, 0, r * 0.3, 0, TAU); f("#6A4A2E"); }
+    else if (kind === "frame") { ctx.beginPath(); ctx.rect(-r, -r * 0.75, r * 2, r * 1.5); f("#141414"); ctx.fillStyle = "#F2E7C9"; ctx.fillRect(-r * 0.6, -r * 0.45, r * 1.2, r * 0.9); ctx.fillStyle = "#3A3A3A"; for (const sy of [-1, 1]) for (let i = 0; i < 4; i++) ctx.fillRect(-r * 0.85 + i * r * 0.5, sy * r * 0.62 - r * 0.06, r * 0.18, r * 0.12); }
   }
   function updateSeeds(dt) {
     if (!seeds.length) return;
@@ -299,10 +313,10 @@
     seeds.length = 0;
   }
   function updateBoss(dt) { if (boss) boss.update(dt); }
-  // a boss by id (see BOSS_INFO). Until each has its own moves, a mini-boss flies like the Crow King and an end boss fights
-  // like the Pumpkin King, under its own name.
+  // a boss by id (see BOSS_INFO): the Crow King and the Pumpkin King are hand-made here, every other one is built from its
+  // definition (07f_bosses.js)
   function makeBoss(id, stage) {
-    const mini = MAP_REGISTRY.mini.includes(id), B = id === "pumpkin" ? makePumpkinKing(stage) : id === "crow" ? makeCrowKing(stage) : mini ? makeCrowKing(stage) : makePumpkinKing(stage);
+    const B = id === "pumpkin" ? makePumpkinKing(stage) : id === "crow" ? makeCrowKing(stage) : makeGenericBoss(id, stage);
     B.kind = id; B.short = BOSS_INFO[id].short;
     return B;
   }

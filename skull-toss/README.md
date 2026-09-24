@@ -1,8 +1,25 @@
-# SKULL TOSS v19
+# SKULL TOSS v20
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)), with a synthesised waltz standing in wherever they can't load.
+
+## New in v20: sixteen bosses
+
+Every map has its own mini-boss and its own end boss. Each end boss holds one of Morty's pieces, and each boss has its own way of moving the ring, its own tell and its own hint.
+
+| Map | Mini-boss (carries the ring) | End boss (attacks) | Holding |
+|---|---|---|---|
+| Moonshine Cemetery | The Crow King: swoops between perches, caws first | The Undertaker: swings the ring round on his shovel rope, flings clods of dirt | Top Hat |
+| The Crooked Crypts | The Bat Baron: dives high and low, screeches first | Count Crookula: spins the ring round a circle by his spell (and turns it about), sends bats | Bow Tie |
+| Pumpkin Patch Hollow | Old Tattersack: the ring swings from his arm, with a big lurch every third sway | The Pumpkin King: the vine and the seeds | White Gloves |
+| The Bone Orchard | The Bone Owl: hops between trees, two hoots first | Old Marrowroot: the ring swings from a branch, and bones drop from above | Cane |
+| The Drowned Bayou | Ferryman Gator: balances it on his snout, dives and surfaces elsewhere (bubbles first) | Madame Muck: the ring hops the lily pads, mud spat down the lane | Spats |
+| The Carnival | Jack-in-the-Box: the box slides, the crank winds, POP | The Ringmaster: the ring leaps round a circle, juggling pins thrown | Whistle |
+| The Clockwork Belfry | The Cuckoo: ticks the ring round its clock, now and then backwards | The Clockwork King: a clock hand ticking round, gears flung | Pocket Watch |
+| The Final Reel | The Projectionist: cuts the ring between frames, the flicker first | The Reel Reaper: cuts between frames, then circles when he's hurt; throws film frames | Shadow |
+
+The framework (`07f_bosses.js`) builds a boss from a carrier, an optional attack and a drawing. The carriers are perch, loop, sway, circle, surface, orbit, bounce and jump. Every attack is told first, and every end boss gets angrier at half health and leaves a Ghost Toss at two-thirds and one-third health. The Crow King and the Pumpkin King keep their original hand-tuned code.
 
 ## New in v19: every map plays differently
 
@@ -38,8 +55,6 @@ Open `index.html` in any browser, on a phone or a desktop. The fonts and all the
 - **Maps are data** (`src/maps/*.json`). The build checks each one against the [spatial blueprint](docs/SPATIAL_BLUEPRINT.md) and the registry of what the code can draw: the ring's triangle has to stay in the playable space, no pattern may loop a corner onto itself, every painter it names must exist, and no two maps may share a boss or a piece. The [stage bible](docs/STAGE_BIBLE.md) is generated from the same files.
 - **Canon.** The Story card, the progress bar, the stage cards and the achievements all speak of maps, mini-bosses and end bosses now. New achievements: Half the Reel, The Whole Reel (finish the story), A Piece of Morty, Piece by Piece, Boss Hunter and Boss Slayer.
 - **Save schema 3.** A v12 save's "stage 5 and beyond" was map 1 again, faster. It now means map 5, which that player had earned by clearing the four old maps. Anyone who already had The Whole Reel keeps it as Half the Reel, so the new Whole Reel can still be earned.
-
-Until V20, the new maps' bosses borrow the Crow King's and the Pumpkin King's moves under their own names.
 
 ## New in v15: accessibility and the performance budget
 
@@ -600,7 +615,7 @@ From the console, `SkullToss.debug.visualAnimation` lists the pose library (`pos
 
 ## Tests
 
-Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **127 checks**, covering:
+Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to `index-dev.html` and open **`index-dev.html?test`**. The release build leaves the test hooks out, so it can't run the spec. The tests run with the clock paused, so results are deterministic, and they never touch your saved data. There are **130 checks**, covering:
 
 - **Layout, scoring and aiming.**
   - Everything is centred and every result is classified correctly.
@@ -672,3 +687,7 @@ Build the dev version (`python3 src/build.py --dev`), put `TEST_SPEC.js` next to
   - Hazards come round on the tier's schedule, fog rolls in and out, and no pendulum swings during the end boss.
   - A make that flies on into a bonus target pays and counts, map 1 opens with none, and the orchard hangs a bone-fruit.
   - The same seed lays out the same targets and hazards.
+- **v20.**
+  - Every map's mini-boss takes the ring, keeps it moving in play, gives its tell and falls, and the second half follows.
+  - Every map's end boss throws its volleys after a tell, keeps the ring in play and falls holding its piece. All eight pieces finish the story.
+  - A new end boss's volley knocks the skull down, and a Ghost Toss appears at two-thirds health.
