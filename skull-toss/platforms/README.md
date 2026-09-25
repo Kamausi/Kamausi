@@ -21,13 +21,22 @@ The store and ad ids live in `src/platform.config.json` (embedded at build as `P
 
 ```json
 {
-  "products": { "souls.100": "souls.100", "souls.550": "souls.550", "souls.1200": "souls.1200" },
+  "products": { "souls.100": "souls.100", "souls.500": "souls.500", "souls.1100": "souls.1100", "souls.2300": "souls.2300", "souls.6000": "souls.6000", "souls.13000": "souls.13000" },
   "admob": { "test": true, "rewarded": { "ios": "ca-app-pub-…/…", "android": "ca-app-pub-…/…" } }
 }
 ```
 
-`products` maps each Soul pack (`firebase/functions/shared/economy.js`: `PACKS`) to the product id you create in App
-Store Connect and the Play Console. The AdMob ids shipped here are **Google's public test ids**: they show test ads
+`products` maps each Soul pack (`firebase/functions/shared/economy.js`: `PACK_TIERS`) to the product id you create in App
+Store Connect and the Play Console. Set the store prices to the tiers' list prices (v49):
+
+| Product | Price (USD) | Souls | Bonus |
+|---|---|---|---|
+| `souls.100` | $0.99 | 100 | none (the starter: deliberately the worst value) |
+| `souls.500` | $4.99 | 500 | none (the baseline) |
+| `souls.1100` | $9.99 | 1,100 | +100 (10%) |
+| `souls.2300` | $19.99 | 2,300 | +300 (15%) |
+| `souls.6000` | $49.99 | 6,000 | +1,000 (20%) |
+| `souls.13000` | $99.99 | 13,000 | +3,000 (30%) | The AdMob ids shipped here are **Google's public test ids**: they show test ads
 only. Put your own in before release, and set `"test": false`.
 
 ## The web

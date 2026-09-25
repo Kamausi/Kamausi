@@ -8,7 +8,7 @@
     reqText: (k, n) => REQ_TEXT[k](n), cleanProfile: p => cleanProfile(p),
     async fakeServer(uid) { Backend.reset(); Backend.useFake(uid); await Souls.connect(); return Backend.kind; }, noServer() { Backend.reset(); Souls.connect(); },
     setWallet(w) { Souls.set(w); }, levelFor: xp => levelFor(xp), xpForLevel: L => xpForLevel(L),
-    shape: (f, type, dur, peak, slide, o) => soundShape(f, type, dur, peak, slide, o), motifPlan: id => motifPlan(id), sting: r => playSting(r), soundSets: () => SOUNDSET_IDS.slice(), soundRoom: () => soundRoom(),
+    shape: (f, type, dur, peak, slide, o) => soundShape(f, type, dur, peak, slide, o), motifPlan: id => motifPlan(id), sting: r => playSting(r), soundRoom: () => soundRoom(),
     claimMastery: (cat, id, i) => claimMastery(cat, id, i), masteryClaimable: () => masteryClaimable(), tierReached: (cat, id, i) => tierReached(cat, id, i),   // (the client's view only: for drawing tests)
     setInitials: ini => setInitials(ini), directorOf: w => directorOf(w), directorWith(o) { directorOverride = o; if (o !== null) startGame({ mode: "director" }); }, director: () => game.director && JSON.parse(JSON.stringify(game.director)), setFlags: v => Flags.set(v), flags: () => ({ ...Flags.values }), ensurePeriod: per => JSON.parse(JSON.stringify(ensurePeriod(per))), streakAfterRun: d => streakAfterRun(d),
     watchReplay: () => Replay.watch(Replay.last), replaying: () => !!Replay.play, lastReplay: () => Replay.last && JSON.parse(JSON.stringify(Replay.last)),
@@ -185,6 +185,7 @@
     travelAt: h => travelAt(h), travelEnd: () => travelAt(STAGE_END),
     travelSpans: () => GY.props.filter(k => k.travel && k.kind !== "digger").map(k => { const K = travelKind(k.kind), w = (K.canvas[0] / 100) * k.mul, f = (K.foot[0] / 100) * k.mul, x0 = k.flip > 0 ? k.x - f : k.x - (w - f); return { kind: k.kind, d: k.d, x0, x1: x0 + w }; }),
     snapTravel() { TRAVEL.D = travelGoal(); travelApply(); },
+    welcome(on = true) { if (sandbox) sandbox.welcomeOn = on; }, coffinBones: () => COFFIN_BONES, fitResults: () => fitResults(),
     crossings(on = true) { if (sandbox) sandbox.crossOn = on; }, bodyShow(on = true) { if (sandbox) sandbox.bodyOn = on; },
     crossing: () => ({ on: crossOn(), n: game.run.crossN || 0, makes: game.run.crossMakes || 0, gold: crossGolden(), rc: game.run.crossRc || 0, frozen: ring.frozen ? { ...ring.frozen } : null, map: sceneMap + 1, D: +TRAVEL.D.toFixed(3), goal: TRAVEL.goal }),
     body: () => ({ have: (profile.body || []).slice(), run: (game.run.sections || []).slice(), show: game.run.bodyShow ? game.run.bodyShow.id : null, cine: game.cine ? game.cine.kind : null, sections: BODY_SECTIONS.slice(), of: n => sectionOf(n) }),

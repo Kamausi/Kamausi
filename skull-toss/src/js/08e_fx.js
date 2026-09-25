@@ -80,16 +80,19 @@
     kaboom:   { word: "KABOOM!", fill: EMBER,   text: INK,   bits: "smoke", shape: "cloud", big: 1.25 }
   };
   // a scoring or bonking moment: the word in a burst, plus the equipped style's flourish
+  const POP_K = 0.72;   // v49: the comic-book words are smaller and quicker, so the ring stays in sight
   function impact(word, x, y, o = {}) {
-    const I = IMPACTS[o.style || cos.impact] || IMPACTS.classic;
-    bursts.push(makeBurst(word, clamp(x, U * 0.26, W - U * 0.26), Math.max(y, H * 0.17), I, o, U));
+    const I = IMPACTS[o.style || cos.impact] || IMPACTS.classic, bx = clamp(x, U * 0.26, W - U * 0.26), by = Math.max(y, H * 0.17);
+    const b = makeBurst(word, bx, by, I, o, U);
+    if (I.shape === "cloud" && gpuSmoke(bx, by, b.size * 1.9, 30)) { b.shape = "none"; bursts.push(b); return; }   // v49: the KABOOM's cloud is real smoke, on the GPU (08j_gpu.js)
+    bursts.push(b);
     if (o.bits !== false) flourish(I.bits, x, y, o.scale || 1);
   }
   function makeBurst(word, x, y, I, o, S) {
     return { word, x, y, fill: o.fill || I.fill, text: o.text || I.text, shape: o.shape || I.shape || "burst",
-      size: S * 0.085 * (o.scale || 1) * (I.big || 1), sub: o.sub || "", t: -(o.delay || 0), dur: o.dur || 1.05, rot: rand(-0.16, 0.16), seed: (Math.random() * 1e6) | 0 };
+      size: S * 0.085 * POP_K * (o.scale || 1) * (I.big || 1), sub: o.sub || "", t: -(o.delay || 0), dur: o.dur || 0.9, rot: rand(-0.16, 0.16), seed: (Math.random() * 1e6) | 0 };
   }
-  function caption(text, x, y) { bursts.push({ word: text, x: clamp(x, U * 0.22, W - U * 0.22), y: Math.max(y, H * 0.17), shape: "tag", fill: PAPER, text: INK, size: U * 0.042, sub: "", t: 0, dur: 1.1, rot: rand(-0.06, 0.06), seed: 1 }); }
+  function caption(text, x, y) { bursts.push({ word: text, x: clamp(x, U * 0.22, W - U * 0.22), y: Math.max(y, H * 0.17), shape: "tag", fill: PAPER, text: INK, size: U * 0.036, sub: "", t: 0, dur: 1.0, rot: rand(-0.06, 0.06), seed: 1 }); }
   function flourish(kind, x, y, sc, list = particles, S = U) {
     const n = Math.round(14 * sc * QUALITY.particles), sp = S * 0.9;
     for (let i = 0; i < n; i++) {
@@ -164,13 +167,13 @@
     for (const b of list) {
       if (b.t < 0) continue;
       const k = b.t / b.dur, pop = k < 0.16 ? easeOutBack(k / 0.16) : 1, a = k < 0.7 ? 1 : 1 - (k - 0.7) / 0.3;
-      c.save(); c.globalAlpha = clamp(a, 0, 1);
+      c.save(); c.globalAlpha = clamp(a, 0, 1) * (list === bursts ? 0.9 : 1);   // (v49: in play, a touch see-through)
       c.translate(b.x, b.y - S * 0.05 * Math.min(1, k * 1.4)); c.rotate(b.rot + Math.sin(b.t * 18) * 0.03 * (1 - k)); c.scale(pop, pop);
       const font = b.shape === "tag" ? `800 ${Math.round(b.size)}px ${UIFONT}` : `${Math.round(b.size)}px ${COMIC}`;
       c.font = font; const tw = c.measureText(b.word).width, R = b.shape === "tag" ? tw * 0.5 + b.size * 0.7 : Math.max(tw * 0.58, b.size * 0.9);
       const rnd = mulberry32(b.seed);
-      c.fillStyle = INK; c.save(); c.translate(b.size * 0.08, b.size * 0.1); burstShape(c, b, R, rnd); c.fill(); c.restore();   // drop shadow
-      const rnd2 = mulberry32(b.seed); burstShape(c, b, R, rnd2); c.fillStyle = b.fill; c.save(); c.filter = "saturate(1.45) contrast(1.08)"; c.fill(); c.restore(); c.lineWidth = Math.max(2.5, b.size * 0.12);   // (v45: bolder colours, a heavier outline) c.strokeStyle = INK; c.lineJoin = "round"; c.stroke();
+      if (b.shape !== "none") { c.fillStyle = INK; c.save(); c.translate(b.size * 0.08, b.size * 0.1); burstShape(c, b, R, rnd); c.fill(); c.restore();   // drop shadow
+      const rnd2 = mulberry32(b.seed); burstShape(c, b, R, rnd2); c.fillStyle = b.fill; c.save(); c.filter = "saturate(1.45) contrast(1.08)"; c.fill(); c.restore(); c.lineWidth = Math.max(2.5, b.size * 0.12); }   // (v45: bolder colours, a heavier outline) c.strokeStyle = INK; c.lineJoin = "round"; c.stroke(); (v49: "none": the word alone, over the GPU's smoke)
       if (b.shape === "rough") { c.lineWidth = Math.max(1, b.size * 0.04); for (let i = 0; i < 10; i++) { const an = (i / 10) * TAU; c.beginPath(); c.moveTo(Math.cos(an) * R * 1.25, Math.sin(an) * R * 0.95); c.lineTo(Math.cos(an) * R * 1.5, Math.sin(an) * R * 1.15); c.stroke(); } }
       if (b.shape === "news") { c.fillStyle = "rgba(23,19,15,.18)"; for (let y = -R * 0.5; y < R * 0.55; y += b.size * 0.16) for (let x = -R; x < R; x += b.size * 0.16) { c.beginPath(); c.arc(x, y, b.size * 0.03, 0, TAU); c.fill(); } }
       c.textAlign = "center"; c.textBaseline = "middle"; c.font = font; c.lineJoin = "round";

@@ -209,7 +209,7 @@
       "water": true
     }
   },
-  "anchor": "rope",
+  "anchor": "post",
   "ring": {
     "speed": 1.18,
     "tri": {
@@ -335,7 +335,9 @@
     "far": 170,
     "_doc": "v47 perceptual travel (docs/TRAVEL.md): see 01-hollow.json.",
     "backdrop": [
-      "pillar"
+      "opera-box",
+      "pillar",
+      "marquee"
     ],
     "zones": [
       {
@@ -347,10 +349,11 @@
         "density": 0.7,
         "fog": 0.08,
         "tone": "rgba(0,0,0,0)",
-        "near": "seats",
+        "near": "kelp",
         "mix": {
-          "seats": 5,
-          "rope": 1,
+          "theatre-seats": 5,
+          "kelp": 2,
+          "stage-light": 1,
           "pillar": 1
         }
       },
@@ -363,12 +366,17 @@
         "density": 0.66,
         "fog": 0.1,
         "tone": "rgba(40,10,20,.1)",
-        "near": "seats",
+        "near": "kelp",
         "mix": {
-          "pillar": 2,
-          "seats": 4,
+          "opera-box": 2,
+          "theatre-seats": 3,
+          "kelp": 1,
           "popcorn": 1
-        }
+        },
+        "backdrop": [
+          "opera-box",
+          "pillar"
+        ]
       },
       {
         "id": "screen",
@@ -379,11 +387,12 @@
         "density": 0.6,
         "fog": 0.14,
         "tone": "rgba(20,30,50,.14)",
-        "near": "seats",
+        "near": "kelp",
         "mix": {
-          "seats": 3,
+          "theatre-seats": 3,
           "filmcans": 2,
-          "pillar": 1
+          "stage-light": 2,
+          "marquee": 1
         }
       },
       {
@@ -395,9 +404,11 @@
         "density": 0.38,
         "fog": 0.2,
         "tone": "rgba(20,20,40,.22)",
-        "near": "seats",
+        "near": "kelp",
         "mix": {
-          "pillar": 3,
+          "jester-pole": 3,
+          "kelp": 2,
+          "pillar": 1,
           "balloons": 1
         }
       },
@@ -410,13 +421,13 @@
         "density": 0.55,
         "fog": 0.14,
         "tone": "rgba(60,20,20,.18)",
-        "near": "pennant",
+        "near": "kelp",
         "mix": {
           "tent": 2,
           "booth": 2,
-          "pennant": 3,
-          "horse": 1,
-          "balloons": 1
+          "jester-pole": 2,
+          "pennant": 2,
+          "stage-light": 1
         }
       }
     ],

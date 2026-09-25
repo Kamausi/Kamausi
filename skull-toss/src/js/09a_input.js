@@ -49,7 +49,7 @@
   window.addEventListener("keydown", e => {
     const k = e.key;
     if (Replay.play && screen === "play") { if (k === "Escape") { Replay.stop(true); e.preventDefault(); } return; }
-    if (sheet) { if (k === "Escape") { closeSheet(); e.preventDefault(); } return; }
+    if (sheet) { if (k === "Escape") { $("sheet-" + sheet).querySelector("[data-back]").click(); e.preventDefault(); } return; }
     if (game.state === "continue") { if (k === "Escape") { declineContinue("no"); e.preventDefault(); } return; }
     if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
     if (screen === "pause") { if (k === "Escape" || k === "p" || k === "P") { resumeRun(); e.preventDefault(); } return; }

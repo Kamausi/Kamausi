@@ -215,7 +215,7 @@
       "lightning": false
     }
   },
-  "anchor": "gear",
+  "anchor": "post",
   "ring": {
     "speed": 1.34,
     "tri": {
@@ -402,9 +402,9 @@
     "far": 170,
     "_doc": "v47 perceptual travel (docs/TRAVEL.md): see 01-hollow.json.",
     "backdrop": [
-      "stalagmite",
-      "stalagmite",
-      "gear"
+      "stalagmites",
+      "gear-stack",
+      "stalagmite"
     ],
     "zones": [
       {
@@ -418,9 +418,11 @@
         "tone": "rgba(0,0,0,0)",
         "near": "stalagmite",
         "mix": {
-          "stalagmite": 5,
+          "stalagmites": 3,
+          "mine-cart": 2,
+          "mine-lamp": 2,
           "crate": 1,
-          "barrel": 1
+          "crystal-cluster": 1
         }
       },
       {
@@ -434,9 +436,10 @@
         "tone": "rgba(40,24,10,.1)",
         "near": "stalagmite",
         "mix": {
-          "gear": 2,
-          "stalagmite": 3,
-          "lamppost": 2
+          "gear-stack": 2,
+          "stalagmites": 2,
+          "mine-lamp": 2,
+          "crystal-cluster": 1
         }
       },
       {
@@ -450,10 +453,10 @@
         "tone": "rgba(30,20,10,.16)",
         "near": "stalagmite",
         "mix": {
-          "lamppost": 2,
-          "stalagmite": 3,
-          "minecart": 1,
-          "gear": 1
+          "pendulum-frame": 2,
+          "mine-lamp": 2,
+          "stalagmites": 2,
+          "mine-cart": 1
         },
         "flock": 0.3
       },
@@ -468,8 +471,9 @@
         "tone": "rgba(20,14,8,.24)",
         "near": "stalagmite",
         "mix": {
-          "stalagmite": 3,
-          "gear": 2
+          "crystal-cluster": 3,
+          "stalagmites": 3,
+          "gear-stack": 1
         },
         "flock": 0.5
       },
@@ -484,9 +488,10 @@
         "tone": "rgba(40,30,10,.2)",
         "near": "stalagmite",
         "mix": {
-          "gear": 3,
-          "bell": 1,
-          "lamppost": 2
+          "gear-stack": 3,
+          "pendulum-frame": 1,
+          "mine-lamp": 2,
+          "bell": 1
         }
       }
     ],

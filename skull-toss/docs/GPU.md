@@ -1,4 +1,4 @@
-# The GPU effects layer (v47)
+# The GPU effects layer (v47; fire and smoke from v49)
 
 The picture is still painted on the 2D canvas: a flat, inked 1930s cartoon, and the only thing the game needs to
 play. On top of it, `08j_gpu.js` runs a WebGL canvas (`#gpuFx`) that adds what a GPU does best, and nothing but looks.
@@ -21,6 +21,13 @@ play. On top of it, `08j_gpu.js` runs a WebGL canvas (`#gpuFx`) that adds what a
   - the moon.
 
   Every big contact also sets off a **flash of light** that fades (`gpuFlash`), scaled by Settings → Flashes.
+- **Fire and smoke** (v49). Every fire in play is drawn here when the layer is on, from its own buffer of 3,072 flames:
+  - the burning ring;
+  - torches;
+  - flaming skulls, fire auras and flaming hair;
+  - the Cursed skull's green flames.
+
+  Each flame is born white-hot at its root, cools through orange to red as it rises, swells then shrinks, and sways. A fire at a point in a prop's or a skull's own drawing space goes through `gpuFireAt`, which returns false when the layer is off, so the caller paints its 2D fire instead. The Dynamite's KABOOM puts real smoke (`gpuSmoke`: pale puffs that billow, rise and thin) where the cartoon cloud was.
 - **Glow** (Full only). A bloom pass:
   1. The 2D frame is shrunk to a quarter size.
   2. Only its bright parts are kept.

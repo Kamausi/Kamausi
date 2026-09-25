@@ -70,7 +70,7 @@ The build imports the SVGs with `svgart.py`, the same importer as the skull and 
 - an unknown layer;
 - any **collision**. Travel scenery is looks only, and none of it can ever touch a throw.
 
-The Crow Hollow library has 15 assets (the other maps add a lair each: 22 in all):
+The Crow Hollow library has 15 assets. The other maps add a lair each (v48) and six scenery pieces each (v49): 64 in all. Crow Hollow's are:
 
 - two trees (an autumn one, and a dead one full of crows);
 - the farmhouse and the barn;

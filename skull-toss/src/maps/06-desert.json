@@ -5,7 +5,7 @@
   "reel": "Reel Six",
   "premise": "Everything that ever fell in the desert is still there, bleached white. The bones are patient; the cannons aren't.",
   "identity": {
-    "visual": "Rust-red dunes, mesas, a giant ribcage on the skyline, a skeleton hand holding up the ring.",
+    "visual": "Rust-red dunes, mesas, a giant ribcage on the skyline, a bone-white pole holding up the ring.",
     "spatial": "Long and open: the ring stands far back, small against the dunes; bone cannons dug in either side of the lane.",
     "mechanic": "Distance and precision: a smaller, further ring, cannonballs across the lane, vultures dropping bones.",
     "throw": "Long, flat and exact: more power, less margin.",
@@ -205,7 +205,7 @@
       "lightning": false
     }
   },
-  "anchor": "hand",
+  "anchor": "post",
   "ring": {
     "speed": 1.2,
     "tri": {
@@ -354,8 +354,8 @@
     "_doc": "v47 perceptual travel (docs/TRAVEL.md): see 01-hollow.json.",
     "pal": "bone",
     "backdrop": [
-      "cactus",
-      "ribcage",
+      "mesa",
+      "saguaro",
       "rock"
     ],
     "zones": [
@@ -368,11 +368,12 @@
         "density": 0.42,
         "fog": 0.06,
         "tone": "rgba(0,0,0,0)",
-        "near": "cactus",
+        "near": "tumbleweed",
         "mix": {
-          "cactus": 4,
-          "rock": 3,
-          "skullpile": 1
+          "saguaro": 4,
+          "tumbleweed": 2,
+          "rock": 2,
+          "skull-post": 1
         }
       },
       {
@@ -384,12 +385,18 @@
         "density": 0.46,
         "fog": 0.08,
         "tone": "rgba(80,40,10,.1)",
-        "near": "rock",
+        "near": "tumbleweed",
         "mix": {
-          "cactus": 2,
-          "rock": 3,
-          "ribcage": 1
-        }
+          "saguaro": 2,
+          "rock": 2,
+          "skull-post": 2,
+          "wagon-wreck": 1
+        },
+        "backdrop": [
+          "mesa",
+          "mesa",
+          "saguaro"
+        ]
       },
       {
         "id": "ribcage",
@@ -400,11 +407,12 @@
         "density": 0.5,
         "fog": 0.1,
         "tone": "rgba(80,30,10,.14)",
-        "near": "cactus",
+        "near": "tumbleweed",
         "mix": {
           "ribcage": 3,
-          "skullpile": 2,
-          "cactus": 2
+          "skull-post": 2,
+          "saguaro": 2,
+          "wagon-wreck": 1
         },
         "flock": 0.3
       },
@@ -417,10 +425,12 @@
         "density": 0.34,
         "fog": 0.14,
         "tone": "rgba(60,20,10,.22)",
-        "near": "rock",
+        "near": "tumbleweed",
         "mix": {
-          "rock": 3,
-          "cactus": 2
+          "wagon-wreck": 2,
+          "saguaro": 2,
+          "tumbleweed": 2,
+          "skull-post": 1
         },
         "flock": 0.5
       },
@@ -433,11 +443,12 @@
         "density": 0.5,
         "fog": 0.12,
         "tone": "rgba(50,20,20,.2)",
-        "near": "cactus",
+        "near": "tumbleweed",
         "mix": {
-          "stone": 3,
+          "boot-hill": 4,
           "cross": 2,
-          "skullpile": 2
+          "skull-post": 1,
+          "saguaro": 1
         }
       }
     ],

@@ -137,3 +137,22 @@
 .splash-logo{opacity:0;transform:scale(.94);animation:splashIn .9s ease-out .2s forwards;transition:opacity .45s ease,transform .45s ease}
 .splash.done .splash-logo{opacity:0 !important;transform:scale(1.02);animation:none}
 .splash-logo img{display:block;width:min(76vw,52vh,480px);height:auto}
+
+/* v49: the title's six small buttons in two rows of three, icon over label */
+.title .menu-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 10px;width:100%;padding-top:2px}
+.title .menu-row .chip-btn{flex-direction:column;justify-content:center;gap:3px;padding:8px 2px 7px;min-height:58px;font-size:clamp(11px,3.1vw,15px);letter-spacing:0}
+.title .menu-row .chip-btn .icon{width:19px;height:19px}
+.title .menu-row .chip-btn>[data-t]{max-width:100%}
+/* v49: a slower, smoother opening: the studio logo eases in and out, the black lifts gently, the curtains glide open */
+.splash{transition:opacity 1.2s cubic-bezier(.4,0,.2,1)}
+.splash-logo{animation:splashIn2 3.2s cubic-bezier(.4,0,.2,1) .3s forwards;transition:opacity 1s cubic-bezier(.4,0,.2,1),transform 1.2s cubic-bezier(.4,0,.2,1)}
+@keyframes splashIn2{0%{opacity:0;transform:scale(.95)}40%{opacity:1;transform:scale(1)}100%{opacity:1;transform:scale(1.025)}}
+.splash.done .splash-logo{transform:scale(1.04)}
+.curtain{transition:width 2.6s cubic-bezier(.45,0,.2,1)}
+.title .col{transition:opacity 1.2s cubic-bezier(.4,0,.2,1) 1.3s}
+.title .screen-top{transition:opacity 1.2s cubic-bezier(.4,0,.2,1) 1.6s}
+@media (prefers-reduced-motion:reduce){.curtain{transition:none}.splash-logo{animation-duration:1.2s}.title .col,.title .screen-top{transition-duration:.4s;transition-delay:0s}}
+/* v49: the headstone's four small buttons in one row, and the whole results screen fits without scrolling */
+.results .res-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;width:100%;padding-top:0}
+.results .res-row .chip-btn{flex-direction:column;justify-content:center;gap:3px;padding:7px 2px 6px;min-height:52px;font-size:clamp(10.5px,2.9vw,14px);letter-spacing:0;line-height:1.05}
+.results .res-row .chip-btn .icon{width:17px;height:17px}

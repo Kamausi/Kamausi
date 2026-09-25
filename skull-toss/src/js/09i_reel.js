@@ -1,6 +1,6 @@
   // ───────────────────────── the reel's own cards: the leader, main titles, the intermission and THE END ─────────────────────────
-  // Skull Toss is a restored 1933 cartoon, so it opens like one: a countdown leader (3, 2, 1, the sweep going round),
-  // then each reel's main title card: the reel's number, the map's name and what's odd about it. After Reel Four the
+  // Skull Toss is a restored 1933 cartoon, so it opens like one: each reel's main title card, then (the first run of a
+  // session, v49: after the card) the countdown leader (3, 2, 1, the sweep going round) straight into play. The card: the reel's number, the map's name and what's odd about it. After Reel Four the
   // picture stops for an intermission; after Reel Eight it ends on THE END, with Morty whole again, and the iris
   // closes on him. Between reels the changeover cues (the round marks in the top corner that told a projectionist to
   // switch machines) flash twice in the film. A card holds the throw like any cut-scene, and a tap, Space or Enter
@@ -112,7 +112,7 @@
     const leader = Replay.play ? !!Replay.play.R.leader : mode === "story" && !reelSt.leaderShown && cardsMode() === "full";   // (a replay shows it if the run did)
     reelSt.introLeader = leader;
     if (leader) reelSt.leaderShown = true;
-    const list = mode !== "story" ? [titleCard(map + 1, mode)] : (leader ? [{ kind: "leader" }] : []).concat(titleCard(1));
+    const list = mode !== "story" ? [titleCard(map + 1, mode)] : [titleCard(1)].concat(leader ? [{ kind: "leader" }] : []);   // (v49: the map's card, then the countdown into play)
     reelCards(list, () => { setHint(t("hint.start")); mortySays(`map.${game.stage}`, { priority: true }); });
   }
   function nextReel() {   // a map is clear and the next one is set: its card (after the intermission, halfway)

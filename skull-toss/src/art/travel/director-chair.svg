@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 260">
+  <!-- The Black Abyss: an empty director's chair. 100 units = 1 m; foot at (110, 254). -->
+  <style>.k{stroke:ink;stroke-linejoin:round;stroke-linecap:round}.c{stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.b{fill:none;stroke:ink;stroke-linecap:round;stroke-linejoin:round}.cb{fill:none;stroke-linecap:round;stroke-linejoin:round}.g{fill:none;stroke:gold;stroke-linecap:round}.w2{fill:none;stroke:#8A82A0;stroke-linecap:round}.w3{fill:none;stroke:#3E2A1C;stroke-linecap:round}.w4{fill:none;stroke:#5E9A68;stroke-linecap:round}</style>
+  <g id="body" stroke-width="5">
+    <ellipse class="s" cx="110" cy="254" rx="90" ry="8" fill="#000" opacity=".3"/>
+    <path class="b" d="M40 254 L180 120 M180 254 L40 120 M40 120 V20 M180 120 V20" stroke-width="10"/>
+    <path class="k" d="M34 40 H186 V90 H34 Z" fill="#1A1622"/><path class="s" d="M60 58 H160 V70 H60 Z" fill="#C8C4D4" opacity=".4"/>
+    <path class="k" d="M24 140 H196 V160 H24 Z" fill="#1A1622"/>
+    <path class="k" d="M20 110 H60 V124 H20 Z M160 110 H200 V124 H160 Z" fill="#5A5064" stroke-width="3"/>
+  </g>
+</svg>

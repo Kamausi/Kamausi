@@ -1,8 +1,9 @@
   // ───────────────────────── sheets (full-screen on phones, a panel on desktop) ─────────────────────────
   let sheetOpener = null;
-  function openSheet(name) {
+  const sheetTrail = [];   // v49: a sheet opened from another (the Soul Shop from the Curio Cart) goes back to it
+  function openSheet(name, back = false) {
     if (!$("sheet-" + name) || sheet === name) return;
-    if (sheet) closeSheet(false, true);
+    if (sheet) { if (!back) sheetTrail.push(sheet); closeSheet(false, true); }
     sheet = name; cancelAim();
     if (!sheetOpener || !sheetOpener.isConnected) sheetOpener = document.activeElement;
     $("sheet-" + name).hidden = false; $("sheetScrim").hidden = false;
@@ -12,6 +13,7 @@
   }
   function closeSheet(sound = true, swap = false) {
     if (!sheet) return;
+    if (!swap) sheetTrail.length = 0;
     const was = sheet, SHEET_LISTS = { achievements: ["achList"], customize: ["shopGrid"], store: ["dealGrid", "exclGrid"], souls: ["soulsGrid"], profile: ["stats"] };
     $("sheet-" + was).hidden = true; sheet = null;
     if (!swap) $("sheetScrim").hidden = true;
@@ -40,13 +42,14 @@
   }
   document.addEventListener("click", e => {
     const open = e.target.closest("[data-sheet]"); if (open) { sheetOpener = open; openSheet(open.dataset.sheet); return; }
-    if (e.target.closest("[data-back]")) closeSheet();
+    if (e.target.closest("[data-back]")) { if (sheetTrail.length) { Sound.ui("close"); openSheet(sheetTrail.pop(), true); } else closeSheet(); }
   });
   $("sheetScrim").addEventListener("click", () => closeSheet());
 
   // ───────────────────────── settings ─────────────────────────
   const SLIDERS = ["music", "sfx", "amb"];
   function renderSettings() {
+    renderAccount();
     const set = (id, v) => $(id).setAttribute("aria-checked", String(!!v));
     set("set-sound", settings.sound); set("set-shake", settings.shake); set("set-mischief", settings.mischief);
     const canVibe = Platform.caps.haptics != null ? Platform.caps.haptics : typeof navigator.vibrate === "function";   // (a shell's haptics count: 03e_platform.js)
@@ -72,7 +75,6 @@
     const langs = LOCALE_IDS().filter(l => l !== "pseudo"); $("row-lang").hidden = langs.length < 2;   // (a picker once there's a translation)
     if (langs.length > 1 && !$("set-lang").children.length) for (const l of langs) $("set-lang").append(h("button", { type: "button", role: "radio", data: { v: l } }, (STRINGS[l] && STRINGS[l]["lang.name"]) || l));
     segValue($("set-lang"), LANG); $("langNote").textContent = t("lang.name");
-    segValue($("set-soundset"), settings.soundSet); $("soundSetNote").textContent = t(`settings.soundset.${settings.soundSet}`);
     segValue($("set-cards"), settings.cards); $("cardsNote").textContent = t(`settings.cards.${settings.cards}`);
     $("row-fullscreen").hidden = !Platform.caps.fullscreen; set("set-fullscreen", Platform.isFullscreen());   // (03e_platform.js)
     const c = PlayData.consent(), srv = canShare();   // play data (04g_telemetry.js)
@@ -110,7 +112,6 @@
   $("set-mischief").addEventListener("click", () => toggleSetting("mischief"));
   bindSeg("set-flashes", v => { settings.flashes = v; persist(); applyAccess(); renderSettings(); Sound.ui("tick"); });
   bindSeg("set-lang", v => { settings.lang = setLang(v); persist(); renderSettings(); Sound.ui("tick"); });
-  bindSeg("set-soundset", v => { settings.soundSet = v; persist(); Sound.apply(); renderSettings(); Sound.toon("boing"); });   // (a sample in the new set)
   bindSeg("set-cards", v => { settings.cards = v; persist(); renderSettings(); Sound.ui("tick"); });
   bindSeg("set-text", v => { settings.text = v; persist(); applyAccess(); renderSettings(); Sound.ui("tick"); });
   for (const key of SLIDERS) {
@@ -129,8 +130,8 @@
   }));
 
   // ───────────────────────── profile ─────────────────────────
-  // v44 (the corrected roadmap's V31): a profile picture (Morty in your look, the face you pick, in a frame each map's
-  // end boss earns you) and a short bio. Both are saved with the profile; the bio never leaves it.
+  // v44 (the corrected roadmap's V31): a profile picture (Morty in your look, in one of eight face-and-frame pictures)
+  // and a short bio. Both are saved with the profile; the bio never leaves it.
   const PIC_FACES = ["happy", "excited", "perfect", "deadpan", "dizzy", "confused", "fear", "idle"];
   const PIC_FRAMES = [["plain", "#26364A", 0], ...MAP_DATA.map(M => [M.id, M.look.sky[2], M.n])];
   const picNow = () => profile.pic || { face: "happy", frame: "plain" };
@@ -142,15 +143,18 @@
     c.strokeStyle = M ? GOLD : CREAM; c.lineWidth = n * 0.03; c.strokeRect(n * 0.1, n * 0.03, n * 0.8, n * 0.94);
     drawSkull(c, n / 2, n * 0.56, n * 0.27, { t: 0.5, look, face: faceFor(pic.face, 0.5) }); drawHat(c, n / 2, n * 0.56, n * 0.27, 0, 0.5, null, 1, hatOf(look));
   }
+  // v49: eight pictures to pick from, each shown as itself (a face in a frame), all of them yours
+  const PIC_SET = [["happy", "plain"], ["excited", "hollow"], ["perfect", "gilded"], ["deadpan", "woods"], ["dizzy", "drowned"], ["confused", "marsh"], ["fear", "desert"], ["idle", "abyss"]];
   function renderPicPick() {
-    const pic = picNow(), faces = $("picFaces"), frames = $("picFrames"); if (!faces) return;
-    faces.textContent = ""; frames.textContent = "";
-    PIC_FACES.forEach((f, i) => faces.append(h("button", { type: "button", data: { face: f }, "aria-pressed": String(pic.face === f), "aria-label": t("pic.face", { n: i + 1 }) }, String(i + 1))));
-    for (const [id, , n] of PIC_FRAMES) { const open = !n || profile.bestStage > n; frames.append(h("button", { type: "button", data: { frame: id }, "aria-pressed": String(pic.frame === id), disabled: open ? null : "", "aria-label": n ? mapData(n).name : t("pic.plain") }, n ? String(n) : "·")); }
+    const pic = picNow(), grid = $("picGrid"); if (!grid) return;
+    if (grid.children.length !== PIC_SET.length) {
+      grid.textContent = "";
+      PIC_SET.forEach(([face, frame], i) => { const cv = h("canvas", { width: 96, height: 96 }), b = h("button", { type: "button", data: { face, frame }, "aria-label": t("pic.n", { n: i + 1 }) }); b.append(cv); grid.append(b); });
+    }
+    for (const b of grid.children) { b.setAttribute("aria-pressed", String(pic.face === b.dataset.face && pic.frame === b.dataset.frame)); drawProfilePic(b.firstChild, { face: b.dataset.face, frame: b.dataset.frame }); }
     drawProfilePic($("profPic"), pic);
   }
-  $("picFaces").addEventListener("click", e => { const b = e.target.closest("[data-face]"); if (!b) return; profile.pic = { ...picNow(), face: b.dataset.face }; persist(800); renderPicPick(); Sound.ui("tick"); });
-  $("picFrames").addEventListener("click", e => { const b = e.target.closest("[data-frame]"); if (!b || b.disabled) return; profile.pic = { ...picNow(), frame: b.dataset.frame }; persist(800); renderPicPick(); Sound.ui("tick"); });
+  $("picGrid").addEventListener("click", e => { const b = e.target.closest("[data-face]"); if (!b) return; profile.pic = { face: b.dataset.face, frame: b.dataset.frame }; persist(800); renderPicPick(); Sound.ui("tick"); });
   $("prof-bio").addEventListener("input", e => { profile.bio = e.target.value.replace(/[<>]/g, "").slice(0, 120); persist(2500); });
   function renderProfile() {
     const n = $("prof-name"); if (document.activeElement !== n) n.value = profile.name;
@@ -204,15 +208,17 @@
     const title = $("saveTitle"), status = $("saveStatus"), av = $("saveAvatar"), icon = $("saveIcon");
     const me = Cloud.me;
     if (me && Cloud.ref) {
-      title.textContent = me.name ? `Signed in as ${me.name}` : "Signed in";
+      const g = Account.google();
+      title.textContent = g ? `Signed in as ${g.displayName || g.email}` : me.name ? `Signed in as ${me.name}` : "Saved to the cloud from this device";
       av.hidden = !me.avatarUrl; icon.hidden = !!me.avatarUrl; if (me.avatarUrl) av.src = me.avatarUrl;
       const s = { ok: ["ok", `Synced to your account ${ago(Cloud.lastSync)}`], busy: ["busy", "Syncing…"], error: ["err", "Can't reach your account. Saved on this device"], connecting: ["busy", "Connecting…"] }[Cloud.state] || ["ok", "Synced"];
-      status.className = "status " + s[0]; status.textContent = s[1];
+      status.className = "status " + s[0]; status.textContent = g || me.name ? s[1] : `${s[1]} · sign in with Google to keep it`;
     } else {
       av.hidden = true; icon.hidden = false;
       title.textContent = Cloud.state === "connecting" ? "Checking your account…" : "Saved on this device";
       status.className = "status"; status.textContent = "Use a save code to move progress to another device";
     }
+    renderAccount();
   }
   $("copyCodeBtn").addEventListener("click", () => {
     const code = exportCode(), box = $("codeBox"), ta = $("codeText");

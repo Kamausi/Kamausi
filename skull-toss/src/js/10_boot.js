@@ -41,9 +41,9 @@
     sp.hidden = false; sp.classList.remove("out", "done");
     const timers = [], at = (ms, fn) => timers.push(setTimeout(fn, ms));
     let over = false;
-    const open = () => { if (over) return; over = true; timers.forEach(clearTimeout); sp.classList.add("done", "out"); setTimeout(() => { sp.hidden = true; }, 600); setTimeout(() => { T.classList.remove("closed"); Sound.ui("claim"); }, fast ? 80 : 650); };
-    at(fast ? 1000 : 2300, () => sp.classList.add("done"));   // the logo fades out; the screen stays black a beat
-    at(fast ? 1300 : 2900, open);                              // then the black fades away on the closed curtains, and they open
+    const open = () => { if (over) return; over = true; timers.forEach(clearTimeout); sp.classList.add("done", "out"); setTimeout(() => { sp.hidden = true; }, 1300); setTimeout(() => { T.classList.remove("closed"); Sound.ui("claim"); }, fast ? 80 : 1100); };
+    at(fast ? 1000 : 3500, () => sp.classList.add("done"));   // (v49: slower) the logo holds, then fades out; the screen stays black a beat
+    at(fast ? 1300 : 4600, open);                              // then the black lifts on the closed curtains, and they glide open
     sp.addEventListener("pointerdown", open, { once: true });
   }
   openingCurtains();

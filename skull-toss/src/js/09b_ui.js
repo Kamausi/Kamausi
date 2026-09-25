@@ -4,11 +4,22 @@
     hud.hidden = name !== "play";
     comboEl.style.visibility = name === "play" ? "" : "hidden";
     if (name === "title") { mascot.enter = true; fitLogo(); }
-    if (name === "over") { ui.shownAt = uiNow(); countUp($("resBones"), game.run.bones, 700); }
+    if (name === "over") { ui.shownAt = uiNow(); countUp($("resBones"), game.run.bones, 700); fitResults(); requestAnimationFrame(fitResults); }
     if (name !== "play") gameOverCard(false);
     const focus = { title: "play", pause: "resumeBtn", over: "again" }[name];
     if (focus && !sheet && ui.kbd) $(focus).focus({ preventScroll: true });
   }
+  // v49: the headstone fits the screen without scrolling: on a short screen the whole column shrinks just enough
+  function fitResults() {
+    const scr = $("over"), col = scr && scr.querySelector(".col"); if (!col || scr.hidden) return;
+    col.style.zoom = "";
+    for (let i = 0; i < 2; i++) {
+      const over = scr.scrollHeight - scr.clientHeight; if (over <= 0) return;
+      const h = col.getBoundingClientRect().height, z = Number(col.style.zoom) || 1;
+      col.style.zoom = String(clamp(z * (h - over - 2) / h, 0.62, 1));
+    }
+  }
+  window.addEventListener("resize", () => fitResults());
   // big scene changes iris out and back in, like the end of an old cartoon; pausing is instant
   function showScreen(name, fx = true) {
     const prev = screen; screen = name;
@@ -239,8 +250,8 @@
   // the logo grows to fill whatever height the menu leaves free (and never wider than the screen)
   function fitLogo() {
     const scr = $("title"); if (scr.hidden) return;
-    const logo = scr.querySelector(".logo"), vw = window.innerWidth, curtain = clamp(vw * 0.07, 16, 130), maxW = Math.min(vw - 2 * curtain - 18, 640);   // clear of the curtains
-    let lo = 44, hi = 200;
+    const logo = scr.querySelector(".logo"), vw = window.innerWidth, curtain = clamp(vw * 0.07, 16, 130), maxW = Math.min(vw - 2 * curtain - 18, 720);   // clear of the curtains
+    let lo = 44, hi = 260;
     for (let i = 0; i < 11; i++) {
       const mid = (lo + hi) / 2; logo.style.fontSize = mid + "px";
       const wide = Math.max(...[...logo.children].map(el => el.scrollWidth));
@@ -325,6 +336,7 @@
     if (sheet === "customize") drawShopPreview(T, dt);
     if (sheet === "store") { drawCart(T, dt); drawCoffinShow(T); }
     if (sheet === "challenges") { const s = Math.floor(T); if (s !== ui.tick) { ui.tick = s; tickChallenges(); } }
+    if (sheet === "souls") { const s = Math.floor(T); if (s !== ui.tick) { ui.tick = s; tickSoulsDaily(); } }
     drawReelCard(); updateCamFx();
     filmFrame(now);
   }

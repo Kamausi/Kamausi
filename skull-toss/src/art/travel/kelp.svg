@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 320">
+  <!-- The Drowned Theater: kelp swaying where the stalls used to be. 100 units = 1 m; foot at (100, 314). -->
+  <style>.k{stroke:ink;stroke-linejoin:round;stroke-linecap:round}.c{stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.b{fill:none;stroke:ink;stroke-linecap:round;stroke-linejoin:round}.cb{fill:none;stroke-linecap:round;stroke-linejoin:round}.g{fill:none;stroke:gold;stroke-linecap:round}.w2{fill:none;stroke:#8A82A0;stroke-linecap:round}.w3{fill:none;stroke:#3E2A1C;stroke-linecap:round}.w4{fill:none;stroke:#5E9A68;stroke-linecap:round}</style>
+  <g id="body" stroke-width="5">
+    <ellipse class="s" cx="100" cy="314" rx="70" ry="7" fill="#000" opacity=".22"/>
+    <path class="k" d="M80 314 C60 260 100 220 80 170 C60 120 90 80 76 20 C100 70 90 120 104 170 C120 220 90 260 100 314 Z" fill="#2E6A4A"/>
+    <path class="k" d="M110 314 C130 270 104 230 124 190 C144 150 124 110 146 70 C150 120 150 150 140 190 C130 230 146 270 126 314 Z" fill="#3A7E58"/>
+    <path class="k" d="M60 314 C40 280 56 250 44 220 C36 200 40 180 30 160 C56 180 62 210 66 240 C70 270 80 290 76 314 Z" fill="#285E42"/>
+    <ellipse class="s" cx="86" cy="120" rx="6" ry="9" fill="#5EA07A"/><ellipse class="s" cx="132" cy="150" rx="5" ry="8" fill="#5EA07A"/>
+  </g>
+</svg>

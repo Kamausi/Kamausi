@@ -1,7 +1,7 @@
   // ───────────────────────── the Skull Vault ─────────────────────────
   // An old cartoon prop room: pick a shelf, tap an item, and the skull hops onto the pedestal wearing it.
   const shop = { cat: "skull", sel: null, slot: 0 };
-  const CAT_LABEL = { skull: "Skulls", eyes: "Eyes", teeth: "Teeth", paint: "Paint jobs", hat: "Hats", aura: "Auras", trail: "Trails", impact: "Impacts", ring: "Rings", pole: "Ring poles", band: "Bands", aim: "Aim lines", reel: "Film reels", title: "Titles", hair: "Hair", beard: "Facial hair", wings: "Wings", launcher: "Launchers", wizard: "Wizard Mort" , glasses: "Glasses", ringwings: "Ring wings" };
+  const CAT_LABEL = { skull: "Skulls", eyes: "Eyes", teeth: "Teeth", paint: "Paint jobs", hat: "Hats", aura: "Auras", trail: "Trails", impact: "Impacts", ring: "Rings", pole: "Ring poles", band: "Bands", aim: "Aim lines", reel: "Film reels", title: "Titles", hair: "Hair", beard: "Facial hair", wings: "Wings", launcher: "Launchers", glasses: "Glasses", ringwings: "Ring wings" };
   const fmt = n => n.toLocaleString("en-US");
   const starsText = it => "★".repeat(starsOf(it)) + "☆".repeat(4 - starsOf(it));
   const vault = { R: makeRig(), y: -140, vy: 0, ang: 0, spin: 0, parts: [], bursts: [], trail: [], loop: 0, nextHop: 0, nextReact: 0, react: null, reactUntil: 0, dragX: null };
@@ -52,8 +52,8 @@
     if (kind === "aim") { drawAimArc(c, 8, 44, 42, 30, 1, id, 0); return; }
     if (kind === "reel") { reelFrame(c, 26, 26, 44, 34, id, t); return; }
     if (kind === "impact") { const I = IMPACTS[id], b = makeBurst(I.word, 26, 27, I, { scale: 0.78 }, 300); b.t = b.dur * 0.3; b.rot = -0.08; b.seed = 7; drawBurstList(c, [b], 120); return; }
-    if (kind === "hair" || kind === "wizard") { drawSkull(c, 26, 33, 13, { t, look: { ...cos, hat: "none", [kind]: id }, face: faceFor("idle", t, { ly: -0.2 }) }); if (kind === "wizard") drawHat(c, 26, 33, 13, 0, t, null, 1, hatOf({ ...cos, wizard: id })); return; }
-    if (kind === "beard") { drawSkull(c, 26, 22, 15, { t, look: { ...cos, beard: id, wizard: "none" }, face: faceFor("idle", t) }); return; }
+    if (kind === "hair") { drawSkull(c, 26, 33, 13, { t, look: { ...cos, hat: "none", hair: id }, face: faceFor("idle", t, { ly: -0.2 }) }); return; }
+    if (kind === "beard") { drawSkull(c, 26, 22, 15, { t, look: { ...cos, beard: id }, face: faceFor("idle", t) }); return; }
     if (kind === "wings") { drawSkull(c, 26, 28, 10, { t, look: { ...cos, wings: id }, face: faceFor("happy", t) }); return; }
     if (kind === "launcher") { const L = LAUNCHERS[id] || { wood: "#6B4526", hi: "rgba(242,231,201,.25)" }; c.lineCap = "round"; for (const [col, w] of [[INK, 7], [L.wood, 4.5]]) { c.strokeStyle = col; c.lineWidth = w; c.beginPath(); c.moveTo(26, 49); c.lineTo(26, 31); c.lineTo(12, 11); c.moveTo(26, 31); c.lineTo(40, 11); c.stroke(); } c.lineCap = "butt"; return; }
     if (kind === "hat") { drawSkull(c, 26, 36, 14, { t, look: { ...cos, hat: id }, face: faceFor("idle", t, { ly: -0.2 }) }); drawHat(c, 26, 36, 14, 0, t, null, 1, id); return; }
@@ -144,7 +144,7 @@
       if (bub) { if (n) bub.textContent = n > 9 ? "9+" : String(n); else bub.remove(); }
       b.setAttribute("aria-label", `${CAT_LABEL[b.dataset.cat]}${n ? `, ${n} new` : ""}`);
     }
-    $("clearBadges").hidden = !fresh.length; if (!fresh.length) $("clearAsk").hidden = true;
+    $("clearBadges").hidden = !fresh.length;
   }
   const howTo = it => (it.price && !it.shop ? `<i class="b" title="Buy it with bones"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-bone"/></svg>${t("vault.how.bones")}</i>` : "")
     + (it.req ? `<i class="m" title="${REQ_TEXT[it.req[0]](it.req[1])}"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-crown"/></svg>${t("vault.how.earn")}</i>` : "");
@@ -152,7 +152,7 @@
     const kind = shop.cat, fresh = unseen(), grid = $("shopGrid"), list0 = CATALOG[kind].filter(it => seasonLookVisible(kind, it));   // (a past season's look shows only if it's yours: 07l_season.js)
     const list = list0.map((it, i) => ({ it, i })).sort((p, q) => (p.it.s ? RAR_ORDER.indexOf(rarityOf(p.it)) + 1 : 0) - (q.it.s ? RAR_ORDER.indexOf(rarityOf(q.it)) + 1 : 0) || p.i - q.i).map(p => p.it);
     renderTabs();
-    $("catLabel").textContent = CAT_LABEL[kind];
+    $("catLabel").textContent = CAT_LABEL[kind]; $("closetNow").textContent = CAT_LABEL[kind];
     $("catCount").textContent = `${list.filter(it => canUse(kind, it)).length}/${list.length} ${kind === "title" ? "earned" : "owned"}`;
     grid.className = "grid" + (kind === "title" ? " rows" : "");
     grid.innerHTML = "";
@@ -185,11 +185,11 @@
     renderShop();
   }
   function tryOff() {
-    shop.sel = null; $("sheet-customize").classList.remove("trying"); $("tryClose").hidden = true; $("previewTag").textContent = t("ui.on-the-pedestal");
+    shop.sel = null; $("sheet-customize").classList.remove("trying"); $("tryClose").hidden = true; $("previewTag").textContent = t("ui.preview");
     renderShop();
   }
   function seeItem(key) { if (profile.unlocked.includes(key) && !profile.seen.includes(key)) { profile.seen.push(key); persist(); updatePips(); } }
-  // ── outfits: three saved looks (tap a slot to wear it, or to fill it when it's empty; Save look fills the chosen one)
+  // ── outfits: four saved looks (v49: a fourth) (tap a slot to wear it, or to fill it when it's empty; Save look fills the chosen one)
   function renderOutfits() {
     const box = $("outfitSlots"); box.textContent = "";
     cos.outfits.forEach((o, i) => box.append(h("button", { type: "button", class: `slot${o ? " filled" : ""}${shop.slot === i ? " on" : ""}`, data: { outfit: i }, "aria-label": `Outfit ${i + 1}${o ? "" : ", empty"}` }, String(i + 1))));
@@ -236,7 +236,7 @@
   $("catTabs").addEventListener("click", e => {
     const b = e.target.closest("button"); if (!b || b.dataset.cat === shop.cat) return;
     shop.cat = b.dataset.cat; shop.sel = null; vault.y = -140; vault.vy = 0; vault.bursts = []; vault.parts = [];
-    $("vaultScroll").scrollTop = 0; renderShop(); Sound.ui("tick");
+    $("vaultScroll").scrollTop = 0; $("closet").open = false; renderShop(); Sound.ui("tick");   // (v49: picking a shelf folds the closet away)
   });
   $("shopGrid").addEventListener("click", e => {
     const b = e.target.closest(".item"); if (!b) return;
@@ -255,10 +255,8 @@
       for (const el of document.querySelectorAll(".bones")) bump(el);
     } else { Sound.ui("deny"); const btn = $("buyBtn"); btn.classList.remove("deny"); void btn.offsetWidth; btn.classList.add("deny"); }
   });
-  // Clear badges: asks first, then marks everything new as seen
-  $("clearBadges").addEventListener("click", () => { $("clearAskText").textContent = t("vault.clearAsk", { n: unseen().length }); $("clearAsk").hidden = false; Sound.ui("tick"); });
-  $("clearNo").addEventListener("click", () => { $("clearAsk").hidden = true; });
-  $("clearYes").addEventListener("click", () => { markSeen(); $("clearAsk").hidden = true; renderShop(); Sound.ui("flick"); });
+  // Clear badges: marks everything new as seen, straight away (v49: no question first)
+  $("clearBadges").addEventListener("click", () => { markSeen(); renderShop(); Sound.ui("flick"); });
 
   // ───────────────────────── challenges: daily, weekly, monthly ─────────────────────────
   let chalTab = "daily";
@@ -275,11 +273,12 @@
       return `<div class="chal ${per}${it.claimed ? " claimed" : done ? " done" : ""}"><div class="chal-top"><div class="chal-title">${def.text(it.n)}</div>`
         + `<div class="chal-reward">+${fmt(it.reward)}${BONE_SVG}</div></div>`
         + `<div class="chal-prog"><div class="bar"><i style="width:${pct}%"></i></div><span>${show(have)}/${show(it.n)}</span></div>${foot}</div>`;
-    }).join("") + (() => {   // v45: the set bonus, for claiming all three
+    }).join("");
+    {   // v45: the set bonus, for claiming all three (v49: a slim strip at the top, above the timer and the streak)
       const n = d.items.filter(x => x.claimed).length, b = Math.round(SET_BONUS[per] * Math.max(0.5, Math.min(5, Number(Flags.get("challenges.bonus")) || 1)) / 5) * 5;
-      return `<div class="chal-set ${per}${d.setPaid ? " claimed" : ""}"><div class="chal-top"><div class="chal-title">${t("chal.setTitle", { what: P.label.toLowerCase() })}</div><div class="chal-reward">+${fmt(b)}${BONE_SVG}</div></div>`
-        + `<div class="chal-prog"><div class="bar"><i style="width:${Math.round((100 * n) / Math.max(1, d.items.length))}%"></i></div><span>${n}/${d.items.length}</span></div>${d.setPaid ? `<p class="k" style="margin:14px 0 0">${t("chal.setPaid")}</p>` : ""}</div>`;
-    })();
+      $("chalSet").innerHTML = `<div class="chal-set ${per}${d.setPaid ? " claimed" : ""}"><div class="chal-title">${d.setPaid ? t("chal.setPaid") : t("chal.setTitle", { what: P.label.toLowerCase() })}</div>`
+        + `<div class="bar"><i style="width:${Math.round((100 * n) / Math.max(1, d.items.length))}%"></i></div><span class="n">${n}/${d.items.length}</span><div class="chal-reward">+${fmt(b)}${BONE_SVG}</div></div>`;
+    }
     tickChallenges();
   }
   function tickChallenges() {

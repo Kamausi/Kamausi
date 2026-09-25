@@ -213,3 +213,20 @@ html.hc .rc-text{text-shadow:0 0 2px var(--ink),0 0 4px var(--ink)}
 .bonus-pay{margin:0;font:800 13px/1.35 var(--ui);color:var(--cream)}
 .bonus-prize{margin:4px 0 6px;font:800 12px/1.35 var(--ui);letter-spacing:.06em;text-transform:uppercase;color:var(--mustard-l)}
 .bonus-prize:empty{display:none}
+
+/* v49: quieter popups. The act and boss cards are smaller and see-through; the reels' title cards are a panel over the
+   picture rather than the whole screen; mid-run achievements are a slim strip. */
+.stagecard{top:66%;min-width:0;max-width:min(320px,84vw);padding:7px 16px 8px;border-width:2px;border-radius:10px;
+  background:rgba(20,25,37,.66);box-shadow:inset 0 0 0 2px rgba(196,154,66,.55),0 4px 0 rgba(23,19,15,.5),0 10px 22px rgba(0,0,0,.3)}
+.stagecard .k{margin-bottom:2px;font-size:10px}
+.stagecard b{font-size:clamp(19px,5.2vw,28px);text-shadow:0 2px 0 var(--ink),var(--outline)}
+.stagecard .s{margin-top:3px;font-size:10.5px;line-height:1.25}
+.stagecard.boss{background:rgba(52,20,20,.68)}
+.reelcard[data-kind="title"],.reelcard[data-kind="intermission"]{inset:auto;left:50%;top:42%;transform:translate(-50%,-50%);width:min(350px,88vw);padding:52px 30px 44px;
+  border-radius:14px;border:2px solid rgba(242,231,201,.3);background:rgba(16,20,30,.7);box-shadow:0 12px 30px rgba(0,0,0,.4)}
+.reelcard[data-kind="title"] .rc-t,.reelcard[data-kind="intermission"] .rc-t{font-size:clamp(24px,6.6vw,36px);text-shadow:var(--outline),0 3px 0 var(--ink)}
+.reelcard[data-kind="title"] .rc-reel,.reelcard[data-kind="intermission"] .rc-reel{font-size:16px}
+.reelcard[data-kind="title"] .rc-s,.reelcard[data-kind="intermission"] .rc-s{font-size:12px}
+.reelcard[data-kind="title"] .rc-n,.reelcard[data-kind="intermission"] .rc-n{font-size:10.5px}
+.reelcard[data-kind="title"] .rc-text,.reelcard[data-kind="intermission"] .rc-text{gap:5px}
+.reelcard[data-kind="title"] .rc-skip,.reelcard[data-kind="intermission"] .rc-skip{bottom:9px;font-size:9px}

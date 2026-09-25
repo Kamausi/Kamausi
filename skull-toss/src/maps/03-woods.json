@@ -7,8 +7,8 @@
   "identity": {
     "visual": "Tall black trunks, hollow logs, crooked signposts, will-o'-wisps in the ferns.",
     "spatial": "A narrow cutting through the trees; hollow logs lie across the lane's edges and blow up it.",
-    "mechanic": "Trajectory and deception: the wind turns every throw, hollow logs gust the skull, and painted decoys hang in the way.",
-    "throw": "Read the wind sign and the leaves, aim off, and never trust a target that's in front of the ring.",
+    "mechanic": "Trajectory and deception: the wind turns every throw, hollow logs gust the skull, and painted decoys hide among the bullseyes.",
+    "throw": "Read the wind sign and the leaves, aim off, and never trust a bullseye with a question mark on it.",
     "boss": "Marrowroot whistles up a gale and hangs his decoys in the lane: the ring you see sway may not be the one to throw at.",
     "targets": "Will-o'-wisps, and cardboard decoys that only look like them.",
     "hazards": "Wind and hollow-log gusts.",
@@ -210,7 +210,7 @@
       "crows": true
     }
   },
-  "anchor": "sign",
+  "anchor": "post",
   "ring": {
     "speed": 1.12,
     "tri": {
@@ -375,9 +375,10 @@
     "far": 170,
     "_doc": "v47 perceptual travel (docs/TRAVEL.md): see 01-hollow.json.",
     "backdrop": [
-      "tree",
-      "tree",
-      "bonetree"
+      "pine",
+      "pine",
+      "owl-tree",
+      "tree"
     ],
     "zones": [
       {
@@ -389,12 +390,12 @@
         "density": 0.6,
         "fog": 0.08,
         "tone": "rgba(0,0,0,0)",
-        "near": "tree",
+        "near": "fern",
         "mix": {
-          "tree": 5,
-          "tuft": 2,
-          "mushroom": 2,
-          "log": 1
+          "pine": 4,
+          "fern": 3,
+          "mushroom-ring": 2,
+          "tree": 1
         }
       },
       {
@@ -406,11 +407,12 @@
         "density": 0.64,
         "fog": 0.12,
         "tone": "rgba(20,40,30,.1)",
-        "near": "tree",
+        "near": "fern",
         "mix": {
-          "tree": 4,
-          "log": 3,
-          "mushroom": 2
+          "hollow-log": 3,
+          "pine": 3,
+          "fern": 2,
+          "mushroom-ring": 1
         }
       },
       {
@@ -422,12 +424,13 @@
         "density": 0.6,
         "fog": 0.18,
         "tone": "rgba(20,30,40,.16)",
-        "near": "tree",
+        "near": "fern",
         "mix": {
           "signpost": 2,
-          "tree": 4,
-          "mushroom": 1,
-          "log": 1
+          "pine": 3,
+          "hollow-log": 1,
+          "fern": 2,
+          "mushroom-ring": 1
         },
         "flock": 0.3
       },
@@ -440,12 +443,18 @@
         "density": 0.4,
         "fog": 0.26,
         "tone": "rgba(10,20,30,.26)",
-        "near": "tree",
+        "near": "fern",
         "mix": {
-          "tree": 3,
-          "mushroom": 2
+          "owl-tree": 3,
+          "pine": 2,
+          "fern": 2,
+          "mushroom-ring": 1
         },
-        "flock": 0.6
+        "flock": 0.6,
+        "backdrop": [
+          "owl-tree",
+          "pine"
+        ]
       },
       {
         "id": "root",
@@ -456,11 +465,12 @@
         "density": 0.55,
         "fog": 0.18,
         "tone": "rgba(40,30,20,.2)",
-        "near": "tree",
+        "near": "fern",
         "mix": {
-          "bonetree": 3,
-          "tree": 2,
-          "log": 2,
+          "gnarled-root": 3,
+          "bonetree": 2,
+          "owl-tree": 1,
+          "hollow-log": 1,
           "skullpile": 1
         }
       }
@@ -496,5 +506,5 @@
     "rate": 1.03,
     "key": 1
   },
-  "blurb": "The wind turns every throw, hollow logs gust up the lane, and decoys hang in front of the ring"
+  "blurb": "The wind turns every throw, hollow logs gust up the lane, and decoys hide among the bullseyes"
 }

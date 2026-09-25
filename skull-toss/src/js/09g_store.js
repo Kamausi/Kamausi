@@ -30,14 +30,21 @@
   }
   // the Mystery Coffin: something you don't own, mostly cheaper things, now and then a Special
   function coffinPool() { return KINDS.flatMap(kind => CATALOG[kind].filter(it => it.price && !it.shop && starsOf(it) <= 3 && !canUse(kind, it)).map(it => ({ kind, it }))); }
-  function drawCoffinPick(rnd = Math.random) {
+  function drawCoffinPick(rnd = Math.random, cur = "coffin") {
     const pool = coffinPool(); if (!pool.length) return null;
     const w = e => [0, 6, 3.5, 1.2][starsOf(e.it)], total = pool.reduce((s2, e) => s2 + w(e), 0);
     let r = rnd() * total, pick = pool[0];
     for (const e of pool) { r -= w(e); if (r <= 0) { pick = e; break; } }
     profile.coffins++; const key = pick.kind + ":" + pick.it.id; profile.unlocked.push(key);
-    checkUnlocks(); persist(800); updatePips(); Telemetry.emit("shop_buy", { kind: pick.kind, id: pick.it.id, price: Economy.COFFIN, cur: "coffin" });
+    checkUnlocks(); persist(800); updatePips(); Telemetry.emit("shop_buy", { kind: pick.kind, id: pick.it.id, price: cur === "bones" ? COFFIN_BONES : Economy.COFFIN, cur: cur === "bones" ? "coffin-bones" : "coffin" });
     return pick;
+  }
+  // v49: the coffin can be opened for bones too (bones stay on this device, so no server is asked)
+  const COFFIN_BONES = 1200;
+  function openCoffinBones(rnd = Math.random) {
+    if (!coffinPool().length || profile.bones < COFFIN_BONES) return null;
+    profile.bones -= COFFIN_BONES; profile.bonesSpent += COFFIN_BONES; renderBones();
+    return drawCoffinPick(rnd, "bones");
   }
   function openCoffin(rnd = Math.random) {
     if (!coffinPool().length || !soulsOpen()) return Promise.resolve(null);
@@ -72,7 +79,9 @@
     $("dealTimer").textContent = `new in ${fmtCountdown(msToReset())}`;
     const left = coffinPool().length, cb = $("coffinBtn"), open = soulsOpen();
     cb.disabled = !left || !open || Souls.busy || (Souls.wallet && Souls.wallet.souls < Economy.COFFIN);
-    cb.innerHTML = !left ? "The coffin's empty" : `Open · ◆ ${fmtN(Economy.COFFIN)}`;
+    cb.innerHTML = !left ? "The coffin's empty" : `◆ ${fmtN(Economy.COFFIN)}`;
+    const bb = $("coffinBones"); bb.hidden = !left; bb.disabled = !left || profile.bones < COFFIN_BONES; bb.innerHTML = `${BONE_SVG} ${fmtN(COFFIN_BONES)}`;
+    bb.setAttribute("aria-label", t("cart.coffinBones", { n: fmtN(COFFIN_BONES) }));
     $("coffinNote").textContent = left ? `${left} Vault looks you don't own yet could be inside` : "You own everything it could hold. Show-off.";
     $("cartStatus").hidden = open; $("cartStatus").textContent = !Souls.available() ? t("cart.offline") : Souls.state === "loading" ? t("souls.loading") : t("souls.error");
     if (profile.dealSeen !== dayKey()) { profile.dealSeen = dayKey(); persist(2000); updatePips(); }
@@ -100,6 +109,10 @@
     const it = findItem(s.kind, s.id);
     if (canUse(s.kind, it)) { equip(s.kind, s.id); Sound.ui("equip"); renderStore(); return; }
     cartBuy(s.kind, s.id).then(ok => { if (!ok) { Sound.ui("deny"); const btn = $("cartBuy"); btn.classList.remove("deny"); void btn.offsetWidth; btn.classList.add("deny"); } else for (const el of document.querySelectorAll(".souls-chip")) bump(el); });
+  });
+  $("coffinBones").addEventListener("click", () => {
+    const got = openCoffinBones(); if (!got) { Sound.ui("deny"); return; }
+    Sound.ui("buy"); cart.won = got; cart.sel = { kind: got.kind, id: got.it.id }; startCoffinShow(got); renderStore();
   });
   $("coffinBtn").addEventListener("click", () => {
     openCoffin().then(got => {

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 400">
+  <!-- The Drowned Theater: an old marquee on two posts, a frame of bulbs, the letters long gone. 100 units = 1 m; foot at (220, 394). -->
+  <style>.k{stroke:ink;stroke-linejoin:round;stroke-linecap:round}.c{stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.b{fill:none;stroke:ink;stroke-linecap:round;stroke-linejoin:round}.cb{fill:none;stroke-linecap:round;stroke-linejoin:round}.g{fill:none;stroke:gold;stroke-linecap:round}.w2{fill:none;stroke:#8A82A0;stroke-linecap:round}.w3{fill:none;stroke:#3E2A1C;stroke-linecap:round}.w4{fill:none;stroke:#5E9A68;stroke-linecap:round}</style>
+  <g id="body" stroke-width="5">
+    <ellipse class="s" cx="220" cy="394" rx="200" ry="10" fill="#000" opacity=".3"/>
+    <path class="k" d="M60 394 V200 H86 V394 Z M354 394 V200 H380 V394 Z" fill="#3A2A2E"/>
+    <path class="k" d="M20 210 V40 H420 V210 Z" fill="#2A1418"/>
+    <path class="k" d="M44 186 V64 H396 V186 Z" fill="#E6D8B0"/>
+    <path class="s" d="M70 96 H200 V110 H70 Z M230 96 H370 V110 H230 Z M100 140 H340 V154 H100 Z" fill="#8A7A60" opacity=".35"/>
+    <path class="k" d="M20 40 L220 6 L420 40" fill="#A8283A"/>
+    <g fill="#FFD27A" stroke="ink" stroke-width="2"><circle cx="40" cy="52" r="7"/><circle cx="90" cy="52" r="7"/><circle cx="140" cy="52" r="7"/><circle cx="190" cy="52" r="7"/><circle cx="240" cy="52" r="7"/><circle cx="290" cy="52" r="7"/><circle cx="340" cy="52" r="7"/><circle cx="400" cy="52" r="7"/>
+    <circle cx="40" cy="198" r="7"/><circle cx="140" cy="198" r="7"/><circle cx="240" cy="198" r="7"/><circle cx="340" cy="198" r="7"/><circle cx="400" cy="198" r="7"/><circle cx="32" cy="100" r="7"/><circle cx="32" cy="150" r="7"/><circle cx="408" cy="100" r="7"/><circle cx="408" cy="150" r="7"/></g>
+    <circle cx="90" cy="198" r="7" fill="#3A2A2E" stroke="ink" stroke-width="2"/><circle cx="290" cy="198" r="7" fill="#3A2A2E" stroke="ink" stroke-width="2"/>
+  </g>
+</svg>

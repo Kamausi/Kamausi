@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 480">
+  <!-- The Drowned Theater: an opera box on a gilded column, curtains drawn back, a lamp lit. 100 units = 1 m; foot at (190, 474). -->
+  <style>.k{stroke:ink;stroke-linejoin:round;stroke-linecap:round}.c{stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.b{fill:none;stroke:ink;stroke-linecap:round;stroke-linejoin:round}.cb{fill:none;stroke-linecap:round;stroke-linejoin:round}.g{fill:none;stroke:gold;stroke-linecap:round}.w2{fill:none;stroke:#8A82A0;stroke-linecap:round}.w3{fill:none;stroke:#3E2A1C;stroke-linecap:round}.w4{fill:none;stroke:#5E9A68;stroke-linecap:round}</style>
+  <g id="body" stroke-width="5">
+    <ellipse class="s" cx="190" cy="474" rx="140" ry="10" fill="#000" opacity=".3"/>
+    <path class="k" d="M160 474 V270 H220 V474 Z" fill="#C8A050"/><path class="s" d="M172 280 H184 V464 H172 Z" fill="#fff" opacity=".25"/>
+    <path class="k" d="M150 474 V450 H230 V474 Z M150 280 V262 H230 V280 Z" fill="#A88040"/>
+    <path class="k" d="M30 262 C40 230 60 214 80 210 H300 C320 214 340 230 350 262 Z" fill="#C8A050"/>
+    <path class="k" d="M40 210 V60 C40 30 340 30 340 60 V210 Z" fill="#2A1418"/>
+    <path class="k" d="M40 210 V60 C60 100 80 140 70 210 Z M340 210 V60 C320 100 300 140 310 210 Z" fill="#A8283A"/>
+    <path class="k" d="M40 60 C40 30 340 30 340 60 C300 80 260 70 190 76 C120 70 80 80 40 60 Z" fill="#8A1E2E"/>
+    <path class="k" d="M60 210 C90 180 130 176 190 176 C250 176 290 180 320 210 Z" fill="#C8A050" stroke-width="3"/>
+    <circle class="k" cx="190" cy="120" r="18" fill="#FFD27A"/><circle class="s" cx="190" cy="120" r="8" fill="#FFF3C0"/>
+    <path class="c" d="M40 262 H340" fill="none" stroke="gold" stroke-width="6"/>
+  </g>
+</svg>

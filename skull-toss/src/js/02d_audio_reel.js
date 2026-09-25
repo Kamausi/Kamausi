@@ -1,8 +1,8 @@
   // ───────────────────────── the reel: the recorded score ─────────────────────────
   // Four loops sit beside the page — music/menu.mp3, a.mp3, b.mp3, boss.mp3 — one per act, plus two for
   // places: pause.mp3 under the pause menu and shop.mp3 at the Curio Cart. Where they are reachable they
-  // play instead of the synthesised waltz, and the game crossfades between them. Where they are not (a
-  // downloaded single file, a dead line, a blocked fetch) the synth carries on, so nothing waits on a download.
+  // play, and the game crossfades between them. Where they are not (a downloaded single file, a dead line, a
+  // blocked fetch) the music is silent (v49: there is no synthesised stand-in any more).
   // A place plays over the act and hands back to it where it left off; the Cart outranks the pause menu.
   const REEL_SRC = { menu: "music/menu.mp3", A: "music/a.mp3", B: "music/b.mp3", boss: "music/boss.mp3", pause: "music/pause.mp3", shop: "music/shop.mp3" };
   const REEL_PLACES = { pause: 1, shop: 1 };
@@ -30,7 +30,7 @@
     try {
       const el = new Audio(); el.src = reelURL(name); el.loop = true; el.preload = "auto";
       el.addEventListener("canplay", () => { t.live = true; if (reel.want === name) musicStart(); }, { once: true });
-      el.addEventListener("error", () => { t.live = false; if (reel.want === name) synthStart(); }, { once: true });
+      el.addEventListener("error", () => { t.live = false; }, { once: true });
       const node = ac.createMediaElementSource(el), g = ac.createGain();
       g.gain.value = 0; node.connect(g); g.connect(musicBus);
       t.el = el; t.gain = g;
@@ -45,11 +45,11 @@
     clearTimeout(t.off);
     if (!to) t.off = setTimeout(() => { try { t.el.pause(); if (!keep) t.el.currentTime = 0; } catch (e) {} }, REEL_FADE * 1000 + 80);
   }
-  // returns true when the recorded act is playing, false when it is the synth's turn
+  // returns true when the recorded act is playing, false when nothing can play yet
   function reelStart() {
     if (!ac || sandbox || !settings.sound || !settings.music) return false;
     const t = reelTrack(reel.want);
-    if (!t || t.live !== true) return false;    // still loading, or missing: leave it to the synth
+    if (!t || t.live !== true) return false;    // still loading (it starts on canplay), or missing
     const toPlace = !!REEL_PLACES[reel.want];
     for (const [k, o] of Object.entries(reel.tracks)) if (k !== reel.want && o !== t) reelFade(o, 0, toPlace && !REEL_PLACES[k]);
     reel.cur = t; reel.on = true; reelFade(t, 1);
@@ -66,7 +66,7 @@
     if (reel.want === name) return;
     reel.want = name;
     if (!ac || sandbox) return;
-    if (reelStart()) synthStop(); else if (settings.sound && settings.music) synthStart();
+    reelStart();
   }
   // the next act is fetched while the current one plays, so a change of act never waits on the line
   function reelSoon() {

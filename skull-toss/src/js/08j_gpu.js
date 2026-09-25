@@ -13,7 +13,9 @@
   // drops the context, the layer switches itself off and the game looks just as it did. It never touches the
   // simulation: its randomness is its own, and nothing it does can change a throw.
   const GPU_MAX = 4096, GPU_STRIDE = 12, GPU_LIGHTS = 96;   // particles: x, y, vx, vy · t0, life, size, gravity · r, g, b, a
+  const GPU_FLAMES = 3072;
   const Gpu = { supported: false, on: false, gl: null, cv: null, inst: null, t: 0, data: new Float32Array(GPU_MAX * GPU_STRIDE), head: 0, dirty: [GPU_MAX, -1],
+    fdata: new Float32Array(GPU_FLAMES * GPU_STRIDE), fhead: 0, fdirty: [GPU_FLAMES, -1], dt: 1 / 60, acc: {},
     lights: [], flashes: [], p: {}, b: {}, small: null, sctx: null, tex: null, fbo: [], bw: 0, bh: 0, air: 0, css: "", filt: "", lost: false,
     stats: { emitted: 0, frames: 0, lights: 0, bloom: 0, draws: 0 }, dpr: 1 };
   const gpuMode = () => (Gpu.supported && !Gpu.lost ? settings.gpu || "off" : "off");
@@ -31,6 +33,22 @@
     void main() { vec2 q = a0.xy + aC * a0.z; vec2 c = q / uRes * 2.0 - 1.0; gl_Position = vec4(c.x, -c.y, 0.0, 1.0); vUV = aC; vCol = vec4(a1.rgb, a0.w); }`;
   const GF_LIGHT = `precision mediump float; varying vec2 vUV; varying vec4 vCol;
     void main() { float d = dot(vUV, vUV); if (d > 1.0) discard; float a = vCol.a * exp(-d * 3.2) * (1.0 - d); gl_FragColor = vec4(vCol.rgb * a, 1.0); }`;
+  // v49: fire. Each flame is a soft sprite born white-hot at its root that cools through orange to red as it rises,
+  // swelling then shrinking, flickering side to side; hundreds make a fire. a2: (seed, sway, tint, alpha): tint 0 is
+  // fire, 1 is the Cursed skull's green fire, 2 is smoke (a pale grey that billows and thins, for the dynamite).
+  const GV_FLAME = `attribute vec2 aC; attribute vec4 a0; attribute vec4 a1; attribute vec4 a2; uniform vec2 uRes; uniform float uT; varying vec2 vUV; varying vec4 vCol;
+    void main() { float age = uT - a1.x, life = a1.y; if (age < 0.0 || age > life) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); vUV = aC; vCol = vec4(0.0); return; }
+      float k = age / life; bool smoke = a2.z > 1.5;
+      vec2 p = a0.xy + a0.zw * (smoke ? (1.0 - exp(-2.2 * age)) / 2.2 : age) + vec2(sin(uT * 7.0 + a2.x) * a2.y * k, -0.5 * a1.w * age * age);
+      float sz = smoke ? a1.z * (0.45 + 1.6 * sqrt(k)) : a1.z * (0.7 + 0.9 * k) * (1.0 - 0.75 * k * k);
+      vec3 hot = vec3(1.0, 0.95, 0.74), mid = vec3(1.0, 0.52, 0.12), cool = vec3(0.78, 0.14, 0.04);
+      vec3 col = k < 0.28 ? mix(hot, mid, k / 0.28) : mix(mid, cool, (k - 0.28) / 0.72);
+      if (a2.z > 0.5 && !smoke) col = k < 0.3 ? mix(vec3(0.9, 1.0, 0.7), vec3(0.45, 0.95, 0.25), k / 0.3) : mix(vec3(0.45, 0.95, 0.25), vec3(0.12, 0.4, 0.08), (k - 0.3) / 0.7);
+      if (smoke) col = vec3(0.62, 0.6, 0.58) * (1.0 - 0.35 * k);
+      float fade = smoothstep(0.0, smoke ? 0.12 : 0.06, k) * (1.0 - smoothstep(smoke ? 0.35 : 0.5, 1.0, k));
+      vec2 q = p + aC * sz; vec2 c = q / uRes * 2.0 - 1.0; gl_Position = vec4(c.x, -c.y, 0.0, 1.0); vUV = aC; vCol = vec4(col, a2.w * fade); }`;
+  const GF_FLAME = `precision mediump float; varying vec2 vUV; varying vec4 vCol;
+    void main() { float d = length(vUV); if (d > 1.0) discard; float a = vCol.a * exp(-d * d * 2.6) * (1.0 - d); gl_FragColor = vec4(vCol.rgb * a, 1.0); }`;
   const GV_QUAD = `attribute vec2 aC; varying vec2 vUV; void main() { vUV = aC * 0.5 + 0.5; gl_Position = vec4(aC, 0.0, 1.0); }`;
   const GF_BRIGHT = `precision mediump float; varying vec2 vUV; uniform sampler2D uTex; uniform float uTh;
     void main() { vec3 c = texture2D(uTex, vec2(vUV.x, 1.0 - vUV.y)).rgb; float l = dot(c, vec3(0.299, 0.587, 0.114)); gl_FragColor = vec4(c * smoothstep(uTh, 1.0, l), 1.0); }`;
@@ -61,12 +79,13 @@
     if (!two && !ext) { Gpu.supported = false; cv.hidden = true; return false; }
     Gpu.inst = two ? { div: (i, d) => gl.vertexAttribDivisor(i, d), draw: (m, f, c, n) => gl.drawArraysInstanced(m, f, c, n) } : { div: (i, d) => ext.vertexAttribDivisorANGLE(i, d), draw: (m, f, c, n) => ext.drawArraysInstancedANGLE(m, f, c, n) };
     try {
-      Gpu.p = { part: gpuProgram(gl, GV_PART, GF_PART), light: gpuProgram(gl, GV_LIGHT, GF_LIGHT), bright: gpuProgram(gl, GV_QUAD, GF_BRIGHT), blur: gpuProgram(gl, GV_QUAD, GF_BLUR), add: gpuProgram(gl, GV_QUAD, GF_ADD) };
+      Gpu.p = { flame: gpuProgram(gl, GV_FLAME, GF_FLAME), part: gpuProgram(gl, GV_PART, GF_PART), light: gpuProgram(gl, GV_LIGHT, GF_LIGHT), bright: gpuProgram(gl, GV_QUAD, GF_BRIGHT), blur: gpuProgram(gl, GV_QUAD, GF_BLUR), add: gpuProgram(gl, GV_QUAD, GF_ADD) };
     } catch (e) { Gpu.supported = false; cv.hidden = true; Telemetry.emit("gpu_fail", { why: String(e.message || e).slice(0, 80) }); return false; }
     const buf = (data, usage) => { const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, data, usage); return b; };
-    Gpu.b = { corner: buf(new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW), parts: buf(Gpu.data, gl.DYNAMIC_DRAW), lights: buf(new Float32Array(GPU_LIGHTS * 8), gl.DYNAMIC_DRAW) };
+    Gpu.b = { corner: buf(new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW), parts: buf(Gpu.data, gl.DYNAMIC_DRAW), flames: buf(Gpu.fdata, gl.DYNAMIC_DRAW), lights: buf(new Float32Array(GPU_LIGHTS * 8), gl.DYNAMIC_DRAW) };
     gpuClear();   // (every slot starts dead)
     gl.bindBuffer(gl.ARRAY_BUFFER, Gpu.b.parts); gl.bufferData(gl.ARRAY_BUFFER, Gpu.data, gl.DYNAMIC_DRAW); Gpu.dirty = [GPU_MAX, -1];
+    gl.bindBuffer(gl.ARRAY_BUFFER, Gpu.b.flames); gl.bufferData(gl.ARRAY_BUFFER, Gpu.fdata, gl.DYNAMIC_DRAW); Gpu.fdirty = [GPU_FLAMES, -1];
     Gpu.gl = gl; Gpu.supported = true; Gpu.lost = false; Gpu.tex = null; Gpu.fbo = []; Gpu.bw = Gpu.bh = 0;
     return true;
   }
@@ -84,6 +103,46 @@
     D[o] = x; D[o + 1] = y; D[o + 2] = vx; D[o + 3] = vy; D[o + 4] = Gpu.t; D[o + 5] = life; D[o + 6] = blink ? -size : size; D[o + 7] = grav; D[o + 8] = rgb[0]; D[o + 9] = rgb[1]; D[o + 10] = rgb[2]; D[o + 11] = a;
     Gpu.dirty[0] = Math.min(Gpu.dirty[0], i); Gpu.dirty[1] = Math.max(Gpu.dirty[1], i);
     Gpu.head = (i + 1) % GPU_MAX; Gpu.stats.emitted++;
+  }
+  // ── v49: fire and smoke, flown on the GPU (their own buffer, so a big fire never crowds the sparks out)
+  function gpuFlameEmit(x, y, vx, vy, life, size, rise, sway, tint, a) {
+    const i = Gpu.fhead, o = i * GPU_STRIDE, D = Gpu.fdata;
+    D[o] = x; D[o + 1] = y; D[o + 2] = vx; D[o + 3] = vy; D[o + 4] = Gpu.t; D[o + 5] = life; D[o + 6] = size; D[o + 7] = rise; D[o + 8] = Math.random() * 100; D[o + 9] = sway; D[o + 10] = tint; D[o + 11] = a;
+    Gpu.fdirty[0] = Math.min(Gpu.fdirty[0], i); Gpu.fdirty[1] = Math.max(Gpu.fdirty[1], i);
+    Gpu.fhead = (i + 1) % GPU_FLAMES; Gpu.stats.flames = (Gpu.stats.flames || 0) + 1;
+  }
+  // how many to make this frame, for a fire that makes rate a second (key: which fire, so each keeps its own count)
+  function gpuDue(key, rate) { const n = (Gpu.acc[key] || 0) + rate * Math.min(Gpu.dt, 0.05) * QUALITY.particles * (reduceMotion ? 0.5 : 1); const m = Math.floor(n); Gpu.acc[key] = n - m; return m; }
+  // a fire at a point in the canvas's own space (c's current transform: a prop's or a skull's local units): w wide at
+  // its root, flames h tall. Returns false when the GPU isn't drawing, so the caller paints its 2D fire instead.
+  function gpuFireAt(c, key, lx, ly, w, h, heat = 1, tint = 0) {
+    if (!Gpu.on || c !== ctx || !inRun() && game.state !== "over") return false;
+    const m = c.getTransform(), sc = Math.hypot(m.a, m.b) / DPR, x = (m.a * lx + m.c * ly + m.e) / DPR, y = (m.b * lx + m.d * ly + m.f) / DPR, W2 = w * sc, H2 = h * sc;
+    if (x < -H2 * 2 || x > W + H2 * 2 || y < -H2 * 2 || y > H + H2 * 2) return true;
+    const n = gpuDue(key, (40 + W2 * 2.2) * heat);
+    for (let i = 0; i < n; i++) { const u = rand(-0.5, 0.5), life = rand(0.24, 0.45) * (0.7 + 0.3 * heat); gpuFlameEmit(x + u * W2, y + rand(-0.08, 0.08) * H2, -u * W2 * 0.6, -H2 * rand(0.35, 0.8) / life, life, W2 * rand(0.45, 0.7) * (1 - Math.abs(u) * 0.7) + 2, H2 * 1.2, W2 * 0.1, tint, 0.7); }
+    gpuLight(x, y - H2 * 0.4, Math.max(W2, H2) * 2.2, tint ? "140,255,110" : "255,150,60", 0.22 * heat * (0.85 + 0.15 * Math.sin(Gpu.t * 17 + x)));
+    return true;
+  }
+  // the burning ring (08c_scene.js): tongues all round the top of its band, outward and up, hotter as the streak climbs
+  function gpuRingFire(x, y, E, lw, heat) {
+    if (!Gpu.on) return false;
+    const n = gpuDue("ring", (260 + E * 3) * heat), k = heat;
+    for (let i = 0; i < n; i++) {
+      const a = rand(Math.PI * 0.8, Math.PI * 2.2), ca = Math.cos(a), sa = Math.sin(a); if (sa > 0.5) continue;
+      const out = E * rand(0.9, 1.04), life = rand(0.22, 0.42) * (0.8 + 0.3 * k), up = E * (0.28 + 0.4 * k) * (0.6 + 0.6 * Math.max(0, -sa));   // (tongues that lick up off the band, hugging it)
+      gpuFlameEmit(x + ca * out, y + sa * out, ca * up * 0.35 / life, (sa * 0.35 - 0.75) * up / life, life, Math.max(lw * 2.1, E * 0.26) * rand(0.75, 1.15), E * 0.9, E * 0.04, 0, 0.62);
+    }
+    gpuLight(x, y, E * (2.2 + 0.4 * k), "255,140,50", 0.36 * k * (0.85 + 0.15 * Math.sin(Gpu.t * 17)));
+    return true;
+  }
+  // smoke: a billow of pale puffs that swell, drift up and thin away (the Dynamite's KABOOM: 07c_power.js)
+  function gpuSmoke(x, y, r, n = 26) {
+    if (!Gpu.on) return false;
+    const k = U / 420; n = Math.round(n * QUALITY.particles * (reduceMotion ? 0.6 : 1));
+    for (let i = 0; i < n; i++) { const a = rand(0, TAU), sp = rand(40, 160) * k * (r / (U * 0.3)); gpuFlameEmit(x + Math.cos(a) * r * 0.25, y + Math.sin(a) * r * 0.2, Math.cos(a) * sp, Math.sin(a) * sp * 0.6 - rand(20, 60) * k, rand(1.2, 2.2), r * rand(0.35, 0.6), -rand(20, 50) * k, r * 0.06, 2, rand(0.55, 0.8)); }
+    for (let i = 0; i < Math.round(n * 0.6); i++) { const a = rand(0, TAU), sp = rand(60, 220) * k; gpuFlameEmit(x, y, Math.cos(a) * sp, Math.sin(a) * sp, rand(0.25, 0.5), r * rand(0.25, 0.4), 120 * k, 0, 0, 0.9); }   // (the fireball at its heart)
+    return true;
   }
   // a burst of sparks: n of them out of (x, y), fast and falling, in the recipe's colours
   function gpuBurst(x, y, R, scale = 1) {
@@ -144,7 +203,7 @@
     if (!Gpu.on) { Gpu.on = true; Gpu.cv.hidden = false; gpuResize(); }
     const gl = Gpu.gl, cv = Gpu.cv; if (!gl) return;
     if (cv.width !== Math.round(W * Gpu.dpr) || cv.height !== Math.round(H * Gpu.dpr)) gpuResize();
-    Gpu.t += dt; Gpu.stats.frames++;
+    Gpu.t += dt; Gpu.dt = dt || 1 / 60; Gpu.stats.frames++;
     // the picture's own camera moves (a crash zoom, a whip, a dutch tilt) and its film grade go on this layer too
     if (cvs.style.transform !== Gpu.css) { Gpu.css = cvs.style.transform; cv.style.transform = Gpu.css; }
     if (cvs.style.filter !== Gpu.filt) { Gpu.filt = cvs.style.filter; cv.style.filter = Gpu.filt; }
@@ -156,7 +215,7 @@
     gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
     if (mode === "full" && QUALITY.level >= 0.99) gpuBloom(gl); else Gpu.stats.bloom = 0;
     gl.viewport(0, 0, cv.width, cv.height); gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
-    gpuDrawLights(gl); gpuDrawParticles(gl);
+    gpuDrawLights(gl); gpuDrawFlames(gl); gpuDrawParticles(gl);
     Gpu.stats.lights = Gpu.lights.length; Gpu.lights.length = 0;
   }
   function gpuCorner(gl, P) { gl.bindBuffer(gl.ARRAY_BUFFER, Gpu.b.corner); gl.enableVertexAttribArray(P.loc.aC); gl.vertexAttribPointer(P.loc.aC, 2, gl.FLOAT, false, 0, 0); Gpu.inst.div(P.loc.aC, 0); }
@@ -169,6 +228,15 @@
     gpuCorner(gl, P); gl.bindBuffer(gl.ARRAY_BUFFER, Gpu.b.parts);
     gpuAttr(gl, P.loc.a0, 4, GPU_STRIDE * 4, 0); gpuAttr(gl, P.loc.a1, 4, GPU_STRIDE * 4, 16); gpuAttr(gl, P.loc.a2, 4, GPU_STRIDE * 4, 32);
     Gpu.inst.draw(gl.TRIANGLE_STRIP, 0, 4, GPU_MAX); Gpu.stats.draws++;
+    gpuDone(gl, P);
+  }
+  function gpuDrawFlames(gl) {
+    const P = Gpu.p.flame; gl.useProgram(P.p); gl.uniform2f(P.loc.uRes, W, H); gl.uniform1f(P.loc.uT, Gpu.t);
+    gl.bindBuffer(gl.ARRAY_BUFFER, Gpu.b.flames);
+    if (Gpu.fdirty[1] >= Gpu.fdirty[0]) { const a = Gpu.fdirty[0], b = Gpu.fdirty[1] + 1; gl.bufferSubData(gl.ARRAY_BUFFER, a * GPU_STRIDE * 4, Gpu.fdata.subarray(a * GPU_STRIDE, b * GPU_STRIDE)); Gpu.fdirty = [GPU_FLAMES, -1]; }
+    gpuCorner(gl, P); gl.bindBuffer(gl.ARRAY_BUFFER, Gpu.b.flames);
+    gpuAttr(gl, P.loc.a0, 4, GPU_STRIDE * 4, 0); gpuAttr(gl, P.loc.a1, 4, GPU_STRIDE * 4, 16); gpuAttr(gl, P.loc.a2, 4, GPU_STRIDE * 4, 32);
+    Gpu.inst.draw(gl.TRIANGLE_STRIP, 0, 4, GPU_FLAMES); Gpu.stats.draws++;
     gpuDone(gl, P);
   }
   function gpuDrawLights(gl) {
@@ -215,4 +283,5 @@
     const P = Gpu.p.add; gl.useProgram(P.p); gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, A.tex); gl.uniform1i(P.loc.uTex, 0); gl.uniform1f(P.loc.uAmt, 0.34 * (boss ? 1.15 : 1));
     gpuCorner(gl, P); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); Gpu.stats.draws++;
   }
-  function gpuClear() { Gpu.data.fill(0); for (let i = 0; i < GPU_MAX; i++) Gpu.data[i * GPU_STRIDE + 5] = -1; Gpu.dirty = [0, GPU_MAX - 1]; Gpu.flashes.length = 0; Gpu.lights.length = 0; }
+  function gpuClear() { Gpu.data.fill(0); for (let i = 0; i < GPU_MAX; i++) Gpu.data[i * GPU_STRIDE + 5] = -1; Gpu.dirty = [0, GPU_MAX - 1];
+    Gpu.fdata.fill(0); for (let i = 0; i < GPU_FLAMES; i++) Gpu.fdata[i * GPU_STRIDE + 5] = -1; Gpu.fdirty = [0, GPU_FLAMES - 1]; Gpu.flashes.length = 0; Gpu.lights.length = 0; }

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 400">
+  <!-- The Gilded Graveyard: an angel on a plinth, wings raised, hands to her face. 100 units = 1 m; foot at (120, 394). -->
+  <style>.k{stroke:ink;stroke-linejoin:round;stroke-linecap:round}.c{stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.b{fill:none;stroke:ink;stroke-linecap:round;stroke-linejoin:round}.cb{fill:none;stroke-linecap:round;stroke-linejoin:round}.g{fill:none;stroke:gold;stroke-linecap:round}.w2{fill:none;stroke:#8A82A0;stroke-linecap:round}.w3{fill:none;stroke:#3E2A1C;stroke-linecap:round}.w4{fill:none;stroke:#5E9A68;stroke-linecap:round}</style>
+  <g id="body" stroke-width="5">
+    <ellipse class="s" cx="120" cy="394" rx="90" ry="9" fill="#000" opacity=".3"/>
+    <path class="k" d="M40 394 V330 H200 V394 Z" fill="#6E6680"/><path class="k" d="M30 330 V312 H210 V330 Z" fill="#8A82A0"/>
+    <path class="k" d="M100 150 C60 110 20 80 8 20 C40 50 60 60 90 70 C70 90 84 120 104 140 Z" fill="#C8C2D4"/>
+    <path class="k" d="M140 150 C180 110 220 80 232 20 C200 50 180 60 150 70 C170 90 156 120 136 140 Z" fill="#C8C2D4"/>
+    <path class="w2" d="M30 50 C50 70 70 80 88 84 M210 50 C190 70 170 80 152 84" stroke-width="3"/>
+    <path class="k" d="M80 312 C84 250 88 190 96 150 H144 C152 190 156 250 160 312 Z" fill="#B8B0C8"/>
+    <path class="w2" d="M104 170 C102 220 100 270 98 308 M122 172 V310 M138 170 C140 220 142 270 144 308" stroke-width="3"/>
+    <circle class="k" cx="120" cy="116" r="30" fill="#C8C2D4"/>
+    <path class="k" d="M92 132 C100 110 110 104 118 112 C126 104 136 104 148 130 C140 150 100 150 92 132 Z" fill="#B8B0C8"/>
+    <path class="c" d="M92 96 C100 80 140 80 150 98" fill="none" stroke="gold" stroke-width="5"/>
+  </g>
+</svg>

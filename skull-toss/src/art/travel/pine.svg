@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 540">
+  <!-- The Whistling Woods: a tall dark pine. 100 units = 1 m; foot at (160, 534). -->
+  <style>.k{stroke:ink;stroke-linejoin:round;stroke-linecap:round}.c{stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.b{fill:none;stroke:ink;stroke-linecap:round;stroke-linejoin:round}.cb{fill:none;stroke-linecap:round;stroke-linejoin:round}.g{fill:none;stroke:gold;stroke-linecap:round}.w2{fill:none;stroke:#8A82A0;stroke-linecap:round}.w3{fill:none;stroke:#3E2A1C;stroke-linecap:round}.w4{fill:none;stroke:#5E9A68;stroke-linecap:round}</style>
+  <g id="body" stroke-width="5">
+    <ellipse class="s" cx="160" cy="534" rx="110" ry="10" fill="#000" opacity=".3"/>
+    <path class="k" d="M146 534 V440 H174 V534 Z" fill="#4A3628"/>
+    <path class="k" d="M20 460 L160 300 L300 460 C250 450 210 456 160 446 C110 456 70 450 20 460 Z" fill="#1E3A34"/>
+    <path class="k" d="M44 360 L160 200 L276 360 C236 352 200 358 160 350 C120 358 84 352 44 360 Z" fill="#244640"/>
+    <path class="k" d="M70 262 L160 110 L250 262 C220 256 190 260 160 254 C130 260 100 256 70 262 Z" fill="#2A5048"/>
+    <path class="k" d="M100 170 L160 20 L220 170 C200 166 180 168 160 164 C140 168 120 166 100 170 Z" fill="#305A50"/>
+    <path class="s" d="M160 40 L130 160 L160 150 Z M160 220 L110 340 L160 330 Z M160 320 L80 440 L160 430 Z" fill="#fff" opacity=".07"/>
+  </g>
+</svg>

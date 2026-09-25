@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 1000">
   <!-- The Clockwork Caves' destination: the Clock King's tower, its great face lit, gears turning in its sides. 100 units = 1 m; foot at (350, 990). -->
-  <style>.k{stroke:ink;stroke-width:8;stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}</style>
+  <style>.c{stroke-linejoin:round;stroke-linecap:round}.k{stroke:ink;stroke-width:8;stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}</style>
   <g id="body">
     <ellipse class="s" cx="352" cy="986" rx="320" ry="20" fill="#000" opacity=".35"/>
     <path class="k" d="M150 986 L170 300 L530 300 L550 986 Z" fill="#5A4A3A"/>
@@ -12,7 +12,7 @@
     <path d="M350 320 V340 M350 540 V560 M230 440 H250 M450 440 H470 M265 355 L279 369 M421 511 L435 525 M435 355 L421 369 M279 511 L265 525" stroke="ink" stroke-width="10"/>
     <path class="k" d="M350 440 L350 350 M350 440 L420 470" fill="none" stroke-width="12"/>
     <circle class="k" cx="350" cy="440" r="14" fill="gold" stroke-width="5"/>
-    <circle class="k" cx="350" cy="440" r="150" fill="none" stroke="gold" stroke-width="12"/>
+    <circle class="c" cx="350" cy="440" r="150" fill="none" stroke="gold" stroke-width="12"/>
     <path class="k" d="M350 600 L350 820" fill="none" stroke-width="10"/>
     <circle class="k" cx="350" cy="850" r="44" fill="gold"/>
     <path class="k" d="M100 700 L112 660 L140 668 L150 640 L180 652 L176 682 L200 700 L184 726 L196 752 L168 764 L156 792 L128 780 L106 800 L88 776 L60 780 L60 750 L36 734 L50 708 L38 682 L66 674 Z" fill="#C49A42" stroke-width="6"/>

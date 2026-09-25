@@ -30,6 +30,9 @@
       this.wallet = Economy.cleanWallet(w); this.state = "ok";
       for (const k of KINDS) { const it = findItem(k, cos[k]); if (it && it.souls && !this.owns(`${k}:${it.id}`)) cos[k] = DEFAULT_COS[k]; }   // (the wallet has the last word on what's worn)
       applyCosmetics(); renderSoulsUI(); if (sheet === "customize") renderShop(); if (sheet === "store") renderStore();
+      if (!this.wallet.welcomed && !this.welcoming && !(sandbox && !sandbox.welcomeOn)) {   // v49: 200 Souls the first time a player plays
+        this.welcoming = true; setTimeout(() => this.ask("claimWelcomeSouls", {}, () => { toast(t("souls.welcome", { n: Economy.WELCOME })); Sound.ui("claim"); Telemetry.emit("souls_welcome", { n: Economy.WELCOME }); }).finally(() => { this.welcoming = false; }), 0);
+      }
       if (this.later.length && !this.busy) { const P = this.later.shift(); setTimeout(() => this.settle(P).then(() => { if (this.later.length) this.set(this.wallet); }), 0); }
     },
     // every change goes through the server; the wallet it sends back is the new truth
@@ -58,6 +61,14 @@
     // a purchase that arrived with no buy in progress: credited as soon as the wallet's here
     redeemLater(P) { if (this.state === "ok" && !this.busy) return this.settle(P); this.later.push(P); return null; }
   };
+  // v49: a countdown to the next free handful (the server's day turns over at midnight UTC)
+  const msToSoulsDay = (now = Date.now()) => { const d = new Date(now); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1) - now; };
+  function tickSoulsDaily() {
+    const el = $("soulsNext"); if (!el) return;
+    const W = Souls.wallet, got = W && W.daily === Economy.dayOf(Date.now());
+    el.textContent = got ? t("souls.next", { time: fmtCountdown(msToSoulsDay()) }) : t("souls.ready", { time: fmtCountdown(msToSoulsDay()) });
+    if (!got && W && W.daily && W.daily !== Economy.dayOf(Date.now()) && $("soulsDaily").textContent === t("souls.claimed")) renderSoulsUI();   // (the day turned over while the sheet was open)
+  }
   // the Soul Shop sheet
   function renderSoulsUI() {
     for (const el of document.querySelectorAll(".souls-n")) el.textContent = Souls.wallet ? fmtN(Souls.wallet.souls) : "—";
@@ -68,6 +79,7 @@
     const today = Economy.dayOf(Date.now()), dailyBtn = $("soulsDaily");
     dailyBtn.disabled = !on || Souls.busy || (W && W.daily === today);
     dailyBtn.textContent = W && W.daily === today ? t("souls.claimed") : t("souls.claim", { n: Economy.DAILY });
+    tickSoulsDaily();
     const grid = $("soulsGrid"); grid.textContent = "";
     for (const [key, it] of Object.entries(Economy.ITEMS).filter(([k, it]) => KINDS.includes(k.split(":")[0]) && !it.cart)) {   // (its own sets: a Premium Ticket is on the Season sheet, the Cart's exclusives at the Cart)
       const [kind, id] = key.split(":"), owned = Souls.owns(key), worn = owned && cos[kind] === id;
@@ -76,8 +88,11 @@
       grid.append(b); drawItemIcon(cv, kind, id);
     }
     const packs = $("soulsPacks"); packs.textContent = "";
-    for (const [product, n] of Object.entries(Economy.PACKS)) { const price = Payments.price(product);   // (the store's own price, in the player's currency)
-      packs.append(h("button", { type: "button", class: "btn sm", data: { product }, disabled: !on || !Payments.available() || Souls.busy ? true : null }, t("souls.pack", { n: fmtN(n) }) + (price ? ` · ${price}` : ""))); }
+    for (const P of Economy.PACK_TIERS) {   // v49: the industry's tiers; the store's own price, in the player's currency, when it has one
+      const price = Payments.price(P.product) || `$${P.usd.toFixed(2)}`, n = P.base + P.bonus, b = h("button", { type: "button", class: "pack" + (P.usd === 99.99 ? " whale" : P.usd === 4.99 ? " base" : ""), data: { product: P.product }, disabled: !on || !Payments.available() || Souls.busy ? true : null });
+      b.innerHTML = `<b class="pn">◆ ${fmtN(n)}</b>${P.bonus ? `<span class="pb">${t("souls.bonus", { n: fmtN(P.bonus), pct: Math.round((100 * P.bonus) / P.base) })}</span>` : `<span class="pb none">${P.usd === 4.99 ? t("souls.best") : " "}</span>`}<span class="pp">${price}</span>`;
+      packs.append(b);
+    }
     $("soulsPacksNote").textContent = Payments.available() ? "" : t("souls.inApp");
   }
   $("soulsGrid").addEventListener("click", e => {

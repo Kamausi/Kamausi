@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170 150">
+  <!-- The Bone Desert: a tumbleweed caught at the path's edge. 100 units = 1 m; foot at (85, 144). -->
+  <style>.k{stroke:ink;stroke-linejoin:round;stroke-linecap:round}.c{stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.b{fill:none;stroke:ink;stroke-linecap:round;stroke-linejoin:round}.cb{fill:none;stroke-linecap:round;stroke-linejoin:round}.g{fill:none;stroke:gold;stroke-linecap:round}.w2{fill:none;stroke:#8A82A0;stroke-linecap:round}.w3{fill:none;stroke:#3E2A1C;stroke-linecap:round}.w4{fill:none;stroke:#5E9A68;stroke-linecap:round}</style>
+  <g id="body" stroke-width="5">
+    <ellipse class="s" cx="85" cy="144" rx="60" ry="6" fill="#000" opacity=".25"/>
+    <circle class="k" cx="85" cy="80" r="62" fill="#C8A060" opacity=".35"/>
+    <path class="cb" d="M30 80 C50 30 120 30 140 80 C150 120 90 150 50 120 C20 100 40 50 90 50 C130 54 130 110 90 118 C60 120 60 80 88 76 M40 60 C80 100 120 40 130 110 M60 130 C70 90 110 120 120 40" stroke="#8A6A38" stroke-width="5"/>
+  </g>
+</svg>

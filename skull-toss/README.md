@@ -1,8 +1,76 @@
-# SKULL TOSS v48
+# SKULL TOSS v49
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
-Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)), with a synthesised waltz standing in wherever they can't load.
+Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)); nothing else ever plays in their place.
+
+## New in v49: a tidier title, the Closet, WebGL fire, corner bullseyes and Sign in with Google
+
+- **Every map's scenery is its own.** 42 new SVG drawings, six a map from the Gilded Graveyard on:
+  - **The Gilded Graveyard:** gates, mausoleums, weeping angels, willows, iron railings and gas lamps.
+  - **The Whistling Woods:** pines, hollow logs, fairy rings, an owl's oak, great roots and ferns.
+  - **The Drowned Theater:** half-sunk seats, opera boxes, a marquee, jester poles, stage lights and kelp.
+  - **The Black Marsh:** moss-hung cypresses, cypress knees, stilt shacks, dock posts, lily pads and cattails.
+  - **The Bone Desert:** saguaros, mesas, skull posts, a wagon wreck, boot-hill graves and tumbleweed.
+  - **The Clockwork Caves:** crystals, brass gears, mine carts, stalagmites, a pendulum and mine lamps.
+  - **The Black Abyss:** giant film reels, film strips, spotlights, chained pillars, bridge posts and a director's chair.
+
+  Each map's zones now use them. The props that react when a throw lands near them react the scenery's own way.
+- **The title.**
+  - Settings, Leaderboard (it says so now), Profile, Achievements, Codex and Mastery sit in two rows of three.
+  - The logo is bigger.
+  - The studio logo and the curtains open slower and smoother.
+- **Challenges.** The set bonus is a slim strip at the top, above the countdown and the streak.
+- **Play sheet.** The Director's Challenge comes after Practice and Boss Rush.
+- **Settings are in sections:** Audio, Graphics, Gameplay, Accessibility, and Account & data.
+  - The Sound set option is gone.
+  - So is the synthesised music that played for a moment before your recorded music; only your music plays now.
+- **Sign in with Google** (Settings → Account & data, and the Profile's save card).
+  - Your anonymous account is linked to Google: the same id and the same save, now on any device you sign in on.
+  - If your Google account already has a save, this device's progress is merged into it.
+  - It needs the Google provider switched on in the Firebase console (Authentication → Sign-in method → Google).
+- **Profile pictures.** Eight pictures, each shown as itself, all of them selectable.
+- **The Vault.**
+  - A **Closet** drop-down holds Surprise me (now on the left), **four** outfit slots, Save look and the shelves. Picking a shelf folds it away.
+  - The pedestal's label says **Preview**.
+  - The Wizard Mort shelf is gone.
+  - Clear badges clears them at once, with no question.
+- **Souls.**
+  - **200 Souls** the first time you play (once per account, from the server).
+  - The Mystery Coffin opens for **1,200 bones** as well as 60 Souls.
+  - Back from the Soul Shop goes to the Curio Cart.
+  - The daily free Souls show a **countdown** to the next handful.
+  - **The Soul packs** follow the industry's tiers:
+
+    | Price | Souls |
+    |---|---|
+    | $0.99 | 100 |
+    | $4.99 | 500 |
+    | $9.99 | 1,100 (+10%) |
+    | $19.99 | 2,300 (+15%) |
+    | $49.99 | 6,000 (+20%) |
+    | $99.99 | 13,000 (+30%) |
+
+    See [platforms/README.md](platforms/README.md).
+- **Targets are bullseyes, in the corners.**
+  - Up high or down low, off to either side, never over the ring, even on a narrow phone.
+  - A throw aimed straight at one hits it for points and bones, but the ring's miss still costs its skull.
+  - Gold ones are gold; decoys carry a question mark.
+  - (The Target Gallery mini-game keeps its targets behind the ring: that's its game.)
+- **Every ring stands on its pole.** No more branches, arches, ropes, gears, chains or hands.
+- **The reel's countdown** plays after the map's title card, straight into play.
+- **Quieter popups.**
+  - The title cards are a see-through panel over the picture, not the whole screen.
+  - The act and boss cards are smaller and see-through.
+  - The comic-book words are smaller and quicker.
+  - Mid-run achievements are a slim strip.
+- **WebGL fire.**
+  - With GPU effects on, the burning ring, the torches, flaming skulls, auras and hair, and the Cursed skull's green flames are all drawn on the GPU: hundreds of soft flames that cool from white-hot to red as they rise.
+  - The Dynamite's KABOOM is real smoke instead of a drawn cloud.
+  - With GPU effects off, or no WebGL, the 2D fire stays.
+- **The results screen.**
+  - Watch replay, Share, Leaders and Shop are one row of four.
+  - The whole screen fits without scrolling; on a short screen it shrinks just enough.
 
 ## New in v48: every map travels, Morty gets his bones back, and a Challenge Stage between maps
 
@@ -838,9 +906,9 @@ game only plays the three names it knows.
 - `index.html` + the `music/` folder beside it - the light build (1.2 MB) that loads the six loops as it
   needs them. This is what gets published, and the loops sit alongside the page there.
 
-Open `index.html` on its own, with no `music/` next to it, and the game falls back to the synthesised
-waltz it shipped with - three acts at 92, 100 and 112 bpm, arranged live. Nothing is ever silent: while a
-loop is still downloading the synth keeps playing and the recording fades in when it arrives.
+Open `index.html` on its own, with no `music/` next to it, and the game plays without music (v49: the
+synthesised waltz that used to stand in, and that played for a moment before each loop arrived, is gone).
+A loop fades in as soon as it has loaded.
 
 **To swap a track**, drop a new file in over the old one, same name. Any length; it loops. Trim the fade
 off the end first, or it will dip every time it comes round. Mono or stereo, 96-128 kbps is plenty.

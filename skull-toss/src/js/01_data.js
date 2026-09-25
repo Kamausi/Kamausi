@@ -261,7 +261,7 @@
   }
   // (gpu: the GPU effects layer, 08j_gpu.js: Lite on a touch screen, and Off under automation, where the spec turns it on to test it)
   const DEFAULT_SETTINGS = { sound: true, music: 45, sfx: 80, amb: 50, vibe: true, shake: true, guide: "full", film: reduceMotion ? "light" : "full", camera: reduceMotion ? "still" : "full", gpu: navigator.webdriver ? "off" : window.matchMedia && matchMedia("(pointer: coarse)").matches ? "lite" : "full", voice: "babble",
-    flashes: reduceMotion ? "reduced" : "full", text: "normal", cards: "full", lang: "en", mischief: true, soundSet: "classic", analytics: "ask" };   // analytics: ask | yes | no (04g_telemetry.js)   // soundSet: 02e_audio_sets.js   // cards: the reel's title cards (09i_reel.js)   // accessibility: flash strength, text size
+    flashes: reduceMotion ? "reduced" : "full", text: "normal", cards: "full", lang: "en", mischief: true, analytics: "ask" };   // analytics: ask | yes | no (04g_telemetry.js)   // cards: the reel's title cards (09i_reel.js)   // accessibility: flash strength, text size
   // "best" is the most hits in one run (what older saves called their best score); "bestScore" is the arcade score
   const STAT_KEYS = ["games", "throws", "makes", "perfects", "rims", "bestStreak", "bestPerfStreak", "peakLives", "points", "best", "bonesTotal", "bonks", "misses", "clutch",
     "bestScore", "scoreTotal", "bestStage", "miniKills", "miniFlawless", "bossKills", "bossFlawless",
@@ -403,8 +403,8 @@
       const it = CATALOG[kind].find(i => i.id === out[kind]);
       if (!it || (profile && !canUse(kind, it) && !(it.souls && !Souls.known()))) out[kind] = DEFAULT_COS[kind];   // (a Soul item waits for the wallet before it's judged)
     }
-    // three saved looks (the Vault's Outfits, v29): only the slots' ids are kept here; wearing one checks each is still yours
-    out.outfits = [0, 1, 2].map(i => { const o = Array.isArray(out.outfits) ? out.outfits[i] : null; if (!o || typeof o !== "object") return null;
+    // four saved looks (the Vault's Outfits, v29; a fourth in v49): only the slots' ids are kept here; wearing one checks each is still yours
+    out.outfits = [0, 1, 2, 3].map(i => { const o = Array.isArray(out.outfits) ? out.outfits[i] : null; if (!o || typeof o !== "object") return null;
       const L = {}; for (const k of KINDS) if (typeof o[k] === "string" && o[k].length < 24) L[k] = o[k]; return Object.keys(L).length ? L : null; });
     out.updatedAt = Number(out.updatedAt) || 0;
     return out;
@@ -421,7 +421,7 @@
     if (!["full", "short", "off"].includes(settings.cards)) settings.cards = "full";
     if (typeof settings.lang !== "string") settings.lang = "en";
     settings.mischief = settings.mischief !== false;
-    if (!["classic", "vintage", "spooky", "chiptune", "kazoo"].includes(settings.soundSet)) settings.soundSet = "classic";
+    delete settings.soundSet;   // (v49: the sound sets are gone)
     delete settings.contrast;   // (v46: the High contrast setting is gone)
     if (!["ask", "yes", "no"].includes(settings.analytics)) settings.analytics = "ask";
     profile = cleanProfile(readSaved(KEYS.profile));

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 480">
+  <!-- The Gilded Graveyard: a weeping willow, its curtains down to the grass. 100 units = 1 m; foot at (220, 474). -->
+  <style>.k{stroke:ink;stroke-linejoin:round;stroke-linecap:round}.c{stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.b{fill:none;stroke:ink;stroke-linecap:round;stroke-linejoin:round}.cb{fill:none;stroke-linecap:round;stroke-linejoin:round}.g{fill:none;stroke:gold;stroke-linecap:round}.w2{fill:none;stroke:#8A82A0;stroke-linecap:round}.w3{fill:none;stroke:#3E2A1C;stroke-linecap:round}.w4{fill:none;stroke:#5E9A68;stroke-linecap:round}</style>
+  <g id="body" stroke-width="5">
+    <ellipse class="s" cx="222" cy="474" rx="170" ry="11" fill="#000" opacity=".3"/>
+    <path class="k" d="M190 474 C204 440 206 400 200 350 C196 310 184 280 170 250 L206 244 C216 280 226 300 230 330 C236 300 250 276 268 256 L290 270 C260 300 250 340 248 380 C246 420 250 450 262 474 Z" fill="#4A3C3A"/>
+    <path class="k" d="M40 330 C20 220 90 110 220 100 C350 110 420 220 400 330 C380 300 360 290 340 300 C330 270 300 250 270 260 C250 230 190 230 170 260 C140 250 110 270 100 300 C80 290 60 300 40 330 Z" fill="#3E5A44"/>
+    <path class="cb" d="M60 250 C56 300 62 350 70 400 M100 200 C94 270 96 340 104 410 M150 170 C146 250 150 330 156 420 M290 170 C294 250 290 330 284 420 M340 200 C346 270 344 340 336 410 M380 250 C384 300 378 350 370 400" stroke="#2E4434" stroke-width="10"/>
+    <path class="cb" d="M60 250 C56 300 62 350 70 400 M100 200 C94 270 96 340 104 410 M150 170 C146 250 150 330 156 420 M290 170 C294 250 290 330 284 420 M340 200 C346 270 344 340 336 410 M380 250 C384 300 378 350 370 400" stroke="#5E7E60" stroke-width="4"/>
+    <path class="s" d="M120 150 C160 120 230 112 300 140 C250 130 180 132 120 150 Z" fill="#6E8E6C" opacity=".6"/>
+  </g>
+</svg>

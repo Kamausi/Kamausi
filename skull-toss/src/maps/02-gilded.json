@@ -217,7 +217,7 @@
       "lightning": false
     }
   },
-  "anchor": "arch",
+  "anchor": "post",
   "ring": {
     "speed": 1.06,
     "tri": {
@@ -389,9 +389,10 @@
     "_doc": "v47 perceptual travel (docs/TRAVEL.md): see 01-hollow.json.",
     "pal": "gilded",
     "backdrop": [
+      "willow",
+      "gilded-mausoleum",
       "obelisk",
-      "tree",
-      "mausoleum"
+      "tree"
     ],
     "zones": [
       {
@@ -405,12 +406,13 @@
         "tone": "rgba(0,0,0,0)",
         "near": "tuft",
         "mix": {
+          "iron-fence": 3,
+          "gas-lamp": 2,
           "stone": 3,
           "cross": 2,
-          "urn": 2,
-          "angel": 1,
-          "tuft": 2,
-          "lantern": 1
+          "urn": 1,
+          "weeping-angel": 1,
+          "tuft": 1
         }
       },
       {
@@ -424,12 +426,16 @@
         "tone": "rgba(40,30,60,.1)",
         "near": "tuft",
         "mix": {
-          "mausoleum": 2,
+          "gilded-mausoleum": 2,
           "stone": 3,
           "obelisk": 2,
-          "angel": 1,
-          "urn": 1
-        }
+          "iron-fence": 2,
+          "gas-lamp": 1
+        },
+        "backdrop": [
+          "gilded-mausoleum",
+          "willow"
+        ]
       },
       {
         "id": "angels",
@@ -442,11 +448,11 @@
         "tone": "rgba(60,50,20,.12)",
         "near": "tuft",
         "mix": {
-          "angel": 4,
-          "obelisk": 2,
+          "weeping-angel": 4,
           "urn": 2,
           "cross": 2,
-          "lantern": 1
+          "gas-lamp": 1,
+          "willow": 1
         },
         "flock": 0.4
       },
@@ -461,9 +467,11 @@
         "tone": "rgba(24,14,40,.26)",
         "near": "tuft",
         "mix": {
+          "willow": 2,
           "crypt": 2,
           "obelisk": 2,
-          "tree": 2
+          "tree": 2,
+          "iron-fence": 1
         },
         "flock": 0.8
       },
@@ -478,14 +486,21 @@
         "tone": "rgba(50,20,40,.2)",
         "near": "tuft",
         "mix": {
-          "mausoleum": 3,
+          "gilded-mausoleum": 2,
           "stone": 3,
           "cross": 2,
-          "torch": 1
+          "iron-fence": 2,
+          "gas-lamp": 1
         }
       }
     ],
     "landmarks": [
+      {
+        "asset": "gilded-gate",
+        "hit": 0,
+        "ahead": 16,
+        "x": -7.4
+      },
       {
         "asset": "angel",
         "hit": 0,

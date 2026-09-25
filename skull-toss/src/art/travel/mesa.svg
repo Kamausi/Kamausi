@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420">
+  <!-- The Bone Desert: a flat-topped mesa, striped in the setting sun. 100 units = 1 m; foot at (450, 414). -->
+  <style>.k{stroke:ink;stroke-linejoin:round;stroke-linecap:round}.c{stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.b{fill:none;stroke:ink;stroke-linecap:round;stroke-linejoin:round}.cb{fill:none;stroke-linecap:round;stroke-linejoin:round}.g{fill:none;stroke:gold;stroke-linecap:round}.w2{fill:none;stroke:#8A82A0;stroke-linecap:round}.w3{fill:none;stroke:#3E2A1C;stroke-linecap:round}.w4{fill:none;stroke:#5E9A68;stroke-linecap:round}</style>
+  <g id="body" stroke-width="5">
+    <ellipse class="s" cx="450" cy="414" rx="440" ry="12" fill="#000" opacity=".25"/>
+    <path class="k" d="M10 414 C60 380 90 300 120 200 C130 160 150 120 200 110 H700 C750 120 770 160 780 200 C810 300 840 380 890 414 Z" fill="#B8653A"/>
+    <path class="s" d="M90 290 C300 280 600 280 820 290 L834 330 C600 320 300 320 76 330 Z M118 210 C300 200 600 200 782 210 L790 236 C600 228 300 228 110 236 Z" fill="#8E4A2C" opacity=".6"/>
+    <path class="s" d="M200 110 H700 C730 116 750 130 760 150 H140 C150 130 170 116 200 110 Z" fill="#D8845A"/>
+    <path class="s" d="M620 120 L700 120 C740 130 770 170 790 240 L840 400 L760 400 Z" fill="#000" opacity=".15"/>
+  </g>
+</svg>

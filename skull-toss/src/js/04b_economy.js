@@ -93,12 +93,13 @@
     const median = a => a.slice().sort((x, y) => x - y)[a.length >> 1];
     const tiers = Object.keys(byStars).sort().map(s => ({ stars: +s, items: byStars[s].length, median: median(byStars[s]) }));
     for (let i = 1; i < tiers.length; i++) if (tiers[i].median <= tiers[i - 1].median) problems.push(`${tiers[i].stars}-star looks are no dearer than ${tiers[i - 1].stars}-star ones`);
-    const packs = Object.values(Economy.PACKS); if (packs.some((n, i) => i && n <= packs[i - 1])) problems.push("the Soul packs don't grow");
+    const packs = Economy.PACK_TIERS; if (packs.some((P, i) => i && (P.base + P.bonus <= packs[i - 1].base + packs[i - 1].bonus || P.usd <= packs[i - 1].usd || (i > 1 && P.bonus / P.base < packs[i - 1].bonus / packs[i - 1].base)))) problems.push("the Soul packs don't grow, or their bonus doesn't");
+    if (packs.some(P => Economy.PACKS[P.product] !== P.base + P.bonus)) problems.push("a Soul pack's tier doesn't credit what it says");
     const typicalRun = runBones({ perfects: 4, bestCombo: 6, powerups: 2 }, 20, false, 15000);   // a middling Story run: 20 hits, 15,000 points
     const runsForAll = Math.round(vault / typicalRun), soulDays = Math.ceil(Math.min(...Object.values(Economy.ITEMS).map(i => i.souls)) / Economy.DAILY);
     if (runsForAll < 150 || runsForAll > 3000) problems.push(`everything in the Vault takes ${runsForAll} middling runs (aim: 150 to 3,000)`);
     if (soulDays < 7 || soulDays > 60) problems.push(`the cheapest Soul look takes ${soulDays} days of free Souls (aim: 7 to 60)`);
-    return { problems, items: count, vault, tiers, typicalRun, runsForAll, soulDays, packs: { ...Economy.PACKS }, daily: Economy.DAILY };
+    return { problems, items: count, vault, tiers, typicalRun, runsForAll, soulDays, packs: Object.fromEntries(Economy.PACK_TIERS.map(P => [P.product, P.base + P.bonus])), daily: Economy.DAILY };
   }
   function welcomeGift() { // one-off starter purse so the shop is open on day one
     if (profile.gift) return;

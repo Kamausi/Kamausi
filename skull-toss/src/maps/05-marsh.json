@@ -354,7 +354,9 @@
     "far": 170,
     "_doc": "v47 perceptual travel (docs/TRAVEL.md): see 01-hollow.json.",
     "backdrop": [
-      "cypress"
+      "swamp-cypress",
+      "cypress",
+      "stilt-shack"
     ],
     "zones": [
       {
@@ -366,12 +368,12 @@
         "density": 0.55,
         "fog": 0.12,
         "tone": "rgba(0,0,0,0)",
-        "near": "reeds",
+        "near": "cattails",
         "mix": {
-          "cypress": 3,
-          "reeds": 3,
-          "lily": 2,
-          "stump": 1
+          "dock-post": 3,
+          "cattails": 2,
+          "lily-pads": 3,
+          "swamp-cypress": 1
         }
       },
       {
@@ -383,11 +385,12 @@
         "density": 0.62,
         "fog": 0.16,
         "tone": "rgba(20,40,20,.12)",
-        "near": "reeds",
+        "near": "cattails",
         "mix": {
-          "cypress": 4,
-          "stump": 2,
-          "reeds": 2
+          "cypress-knees": 4,
+          "swamp-cypress": 2,
+          "lily-pads": 2,
+          "cattails": 1
         }
       },
       {
@@ -399,11 +402,13 @@
         "density": 0.58,
         "fog": 0.22,
         "tone": "rgba(20,40,30,.18)",
-        "near": "reeds",
+        "near": "cattails",
         "mix": {
-          "lantern": 2,
-          "cypress": 3,
-          "reeds": 2
+          "dock-post": 2,
+          "swamp-cypress": 2,
+          "cattails": 2,
+          "lily-pads": 1,
+          "stilt-shack": 1
         },
         "flock": 0.4
       },
@@ -416,10 +421,11 @@
         "density": 0.36,
         "fog": 0.3,
         "tone": "rgba(10,24,16,.26)",
-        "near": "reeds",
+        "near": "cattails",
         "mix": {
-          "cypress": 3,
-          "stump": 2
+          "cypress-knees": 3,
+          "swamp-cypress": 2,
+          "lily-pads": 2
         },
         "flock": 0.6
       },
@@ -432,12 +438,13 @@
         "density": 0.5,
         "fog": 0.22,
         "tone": "rgba(30,20,40,.2)",
-        "near": "reeds",
+        "near": "cattails",
         "mix": {
+          "stilt-shack": 2,
           "rowboat": 1,
-          "cypress": 2,
-          "reeds": 3,
-          "lantern": 1
+          "dock-post": 2,
+          "cattails": 2,
+          "lily-pads": 1
         }
       }
     ],

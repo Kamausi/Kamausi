@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 320">
+  <!-- The Drowned Theater: a spotlight on a tripod, still burning. 100 units = 1 m; foot at (100, 314). -->
+  <style>.k{stroke:ink;stroke-linejoin:round;stroke-linecap:round}.c{stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.b{fill:none;stroke:ink;stroke-linecap:round;stroke-linejoin:round}.cb{fill:none;stroke-linecap:round;stroke-linejoin:round}.g{fill:none;stroke:gold;stroke-linecap:round}.w2{fill:none;stroke:#8A82A0;stroke-linecap:round}.w3{fill:none;stroke:#3E2A1C;stroke-linecap:round}.w4{fill:none;stroke:#5E9A68;stroke-linecap:round}</style>
+  <g id="body" stroke-width="5">
+    <ellipse class="s" cx="100" cy="314" rx="70" ry="8" fill="#000" opacity=".3"/>
+    <path class="b" d="M100 180 L40 314 M100 180 L160 314 M100 180 V314" stroke-width="8"/>
+    <path class="k" d="M88 190 V150 H112 V190 Z" fill="#3A3238"/>
+    <path class="k" d="M40 70 L140 40 L170 130 L70 160 Z" fill="#4A4248"/>
+    <path class="s" d="M52 78 L132 54 L140 76 L60 100 Z" fill="#fff" opacity=".12"/>
+    <path class="k" d="M140 40 C170 30 196 110 170 130 C150 136 126 56 140 40 Z" fill="#FFE39A"/>
+    <path class="s" d="M148 56 C164 54 176 100 164 114 C156 110 146 70 148 56 Z" fill="#FFF8DC"/>
+    <path class="k" d="M100 150 L110 110" fill="none" stroke-width="6"/>
+  </g>
+</svg>

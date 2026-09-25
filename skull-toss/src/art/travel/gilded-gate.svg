@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 430">
+  <!-- The Gilded Graveyard: stone gateposts with urns and a wrought-iron arch, gold at the tips. 100 units = 1 m; foot at (260, 424). -->
+  <style>.k{stroke:ink;stroke-linejoin:round;stroke-linecap:round}.c{stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.b{fill:none;stroke:ink;stroke-linecap:round;stroke-linejoin:round}.cb{fill:none;stroke-linecap:round;stroke-linejoin:round}.g{fill:none;stroke:gold;stroke-linecap:round}.w2{fill:none;stroke:#8A82A0;stroke-linecap:round}.w3{fill:none;stroke:#3E2A1C;stroke-linecap:round}.w4{fill:none;stroke:#5E9A68;stroke-linecap:round}</style>
+  <g id="body" stroke-width="5">
+    <ellipse class="s" cx="260" cy="424" rx="250" ry="12" fill="#000" opacity=".3"/>
+    <path class="k" d="M20 424 V150 H110 V424 Z" fill="#6E6680"/><path class="k" d="M410 424 V150 H500 V424 Z" fill="#6E6680"/>
+    <path class="k" d="M10 150 H120 V124 H10 Z M400 150 H510 V124 H400 Z" fill="#8A82A0"/>
+    <path class="s" d="M32 160 H52 V414 H32 Z M422 160 H442 V414 H422 Z" fill="#8A82A0" opacity=".55"/>
+    <path class="k" d="M40 124 C40 96 50 84 65 84 C80 84 90 96 90 124 Z M430 124 C430 96 440 84 455 84 C470 84 480 96 480 124 Z" fill="#5A5268"/>
+    <path class="k" d="M58 84 V70 H72 V84 M448 84 V70 H462 V84" fill="gold" stroke-width="4"/>
+    <path class="b" d="M110 180 C170 90 350 90 410 180" stroke-width="12"/><path class="g" d="M110 180 C170 90 350 90 410 180" stroke-width="5"/>
+    <path class="b" d="M130 424 V200 M165 424 V168 M200 424 V150 M235 424 V142 M285 424 V142 M320 424 V150 M355 424 V168 M390 424 V200" stroke-width="9"/>
+    <path class="b" d="M110 330 H410 M110 250 H410" stroke-width="9"/>
+    <path class="k" d="M260 424 V140" fill="none" stroke-width="8"/>
+    <circle class="k" cx="260" cy="118" r="16" fill="gold"/><path class="k" d="M252 100 L260 78 L268 100 Z" fill="gold" stroke-width="4"/>
+    <path class="c" d="M150 290 C150 270 180 270 180 290 C180 310 150 310 150 290 Z M340 290 C340 270 370 270 370 290 C370 310 340 310 340 290 Z" fill="none" stroke="gold" stroke-width="6"/>
+  </g>
+</svg>

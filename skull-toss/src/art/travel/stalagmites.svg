@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 320">
+  <!-- The Clockwork Caves: a stand of stalagmites. 100 units = 1 m; foot at (170, 314). -->
+  <style>.k{stroke:ink;stroke-linejoin:round;stroke-linecap:round}.c{stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.b{fill:none;stroke:ink;stroke-linecap:round;stroke-linejoin:round}.cb{fill:none;stroke-linecap:round;stroke-linejoin:round}.g{fill:none;stroke:gold;stroke-linecap:round}.w2{fill:none;stroke:#8A82A0;stroke-linecap:round}.w3{fill:none;stroke:#3E2A1C;stroke-linecap:round}.w4{fill:none;stroke:#5E9A68;stroke-linecap:round}</style>
+  <g id="body" stroke-width="5">
+    <ellipse class="s" cx="170" cy="314" rx="160" ry="9" fill="#000" opacity=".3"/>
+    <path class="k" d="M20 314 C40 250 60 180 80 150 C100 190 110 260 120 314 Z" fill="#6E5E54"/>
+    <path class="k" d="M100 314 C120 220 140 100 170 20 C200 100 220 220 240 314 Z" fill="#7E6E62"/>
+    <path class="k" d="M220 314 C236 260 256 220 272 210 C290 240 300 280 320 314 Z" fill="#6E5E54"/>
+    <path class="s" d="M160 60 C150 120 138 200 130 300 L150 300 C152 200 160 120 170 40 Z M76 170 C70 210 62 260 56 300 L70 300 C72 260 76 210 80 170 Z" fill="#fff" opacity=".12"/>
+    <path class="w3" d="M150 150 C170 160 190 150 196 140 M130 240 C170 256 210 246 222 234" stroke-width="3"/>
+  </g>
+</svg>

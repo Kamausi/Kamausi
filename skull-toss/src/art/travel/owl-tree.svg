@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 500">
+  <!-- The Whistling Woods: a gnarled oak with an owl in its hollow. 100 units = 1 m; foot at (180, 494). -->
+  <style>.k{stroke:ink;stroke-linejoin:round;stroke-linecap:round}.c{stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.b{fill:none;stroke:ink;stroke-linecap:round;stroke-linejoin:round}.cb{fill:none;stroke-linecap:round;stroke-linejoin:round}.g{fill:none;stroke:gold;stroke-linecap:round}.w2{fill:none;stroke:#8A82A0;stroke-linecap:round}.w3{fill:none;stroke:#3E2A1C;stroke-linecap:round}.w4{fill:none;stroke:#5E9A68;stroke-linecap:round}</style>
+  <g id="body" stroke-width="5">
+    <ellipse class="s" cx="180" cy="494" rx="130" ry="10" fill="#000" opacity=".3"/>
+    <path class="k" d="M110 494 C140 470 146 430 140 380 C134 330 120 280 130 230 L230 230 C240 280 226 330 220 380 C214 430 220 470 250 494 Z" fill="#4A3A30"/>
+    <path class="k" d="M20 240 C0 170 60 90 130 90 C150 40 230 40 250 90 C320 90 370 170 340 240 C300 270 250 250 220 262 C190 250 160 270 120 256 C80 272 40 266 20 240 Z" fill="#2C4A3A"/>
+    <path class="s" d="M70 140 C110 110 170 104 210 116 C160 120 110 130 70 140 Z" fill="#fff" opacity=".08"/>
+    <ellipse class="k" cx="180" cy="340" rx="34" ry="46" fill="#140E0A"/>
+    <path class="k" d="M156 318 C150 300 160 294 166 304 C176 296 186 296 196 304 C202 294 212 300 206 318 C210 350 196 370 180 370 C164 370 150 350 156 318 Z" fill="#7A6048" stroke-width="3"/>
+    <circle class="s" cx="170" cy="324" r="9" fill="#FFD84A"/><circle class="s" cx="192" cy="324" r="9" fill="#FFD84A"/>
+    <circle class="s" cx="170" cy="324" r="4" fill="ink"/><circle class="s" cx="192" cy="324" r="4" fill="ink"/>
+    <path class="k" d="M177 334 L181 342 L185 334 Z" fill="gold" stroke-width="2"/>
+    <path class="w3" d="M150 420 C160 440 158 460 150 480 M210 410 C200 440 206 460 214 480" stroke-width="4"/>
+  </g>
+</svg>

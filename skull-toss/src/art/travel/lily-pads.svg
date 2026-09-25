@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 90">
+  <!-- The Black Marsh: lily pads, one in flower. 100 units = 1 m; foot at (160, 84). -->
+  <style>.k{stroke:ink;stroke-linejoin:round;stroke-linecap:round}.c{stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.b{fill:none;stroke:ink;stroke-linecap:round;stroke-linejoin:round}.cb{fill:none;stroke-linecap:round;stroke-linejoin:round}.g{fill:none;stroke:gold;stroke-linecap:round}.w2{fill:none;stroke:#8A82A0;stroke-linecap:round}.w3{fill:none;stroke:#3E2A1C;stroke-linecap:round}.w4{fill:none;stroke:#5E9A68;stroke-linecap:round}</style>
+  <g id="body" stroke-width="5">
+    <ellipse class="k" cx="70" cy="70" rx="60" ry="16" fill="#3E6A3A"/><path class="s" d="M70 70 L126 64 L122 76 Z" fill="#1E2A26"/>
+    <ellipse class="k" cx="200" cy="74" rx="70" ry="14" fill="#4A7A42"/><path class="s" d="M200 74 L136 68 L140 80 Z" fill="#1E2A26"/>
+    <ellipse class="k" cx="270" cy="56" rx="40" ry="10" fill="#3E6A3A" stroke-width="3"/>
+    <path class="k" d="M180 64 C170 40 186 30 196 44 C200 24 214 24 214 44 C226 30 240 40 228 64 Z" fill="#E8A6C0" stroke-width="3"/>
+    <circle class="s" cx="204" cy="56" r="6" fill="#FFD84A"/>
+  </g>
+</svg>

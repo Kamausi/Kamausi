@@ -205,7 +205,7 @@
       "lightning": false
     }
   },
-  "anchor": "chain",
+  "anchor": "post",
   "ring": {
     "speed": 1.42,
     "tri": {
@@ -398,8 +398,9 @@
     "far": 170,
     "_doc": "v47 perceptual travel (docs/TRAVEL.md): see 01-hollow.json.",
     "backdrop": [
-      "frame",
-      "pillar"
+      "chain-pillar",
+      "film-reel",
+      "frame"
     ],
     "zones": [
       {
@@ -413,9 +414,10 @@
         "tone": "rgba(0,0,0,0)",
         "near": "seatwreck",
         "mix": {
-          "frame": 4,
-          "seatwreck": 2,
-          "filmcans": 1
+          "rope-post": 4,
+          "film-strip": 2,
+          "spotlight": 1,
+          "seatwreck": 1
         }
       },
       {
@@ -429,8 +431,9 @@
         "tone": "rgba(30,20,50,.12)",
         "near": "seatwreck",
         "mix": {
-          "frame": 3,
-          "pillar": 2
+          "film-strip": 3,
+          "chain-pillar": 2,
+          "frame": 2
         }
       },
       {
@@ -444,9 +447,10 @@
         "tone": "rgba(20,10,40,.18)",
         "near": "seatwreck",
         "mix": {
-          "frame": 3,
+          "film-reel": 2,
+          "film-strip": 2,
           "filmcans": 2,
-          "seatwreck": 2
+          "director-chair": 1
         },
         "flock": 0.3
       },
@@ -461,8 +465,10 @@
         "tone": "rgba(10,6,24,.28)",
         "near": "seatwreck",
         "mix": {
-          "pillar": 2,
-          "frame": 2
+          "spotlight": 2,
+          "director-chair": 2,
+          "chain-pillar": 1,
+          "film-strip": 1
         },
         "flock": 0.5
       },
@@ -477,8 +483,10 @@
         "tone": "rgba(30,10,40,.24)",
         "near": "seatwreck",
         "mix": {
-          "frame": 3,
-          "pillar": 1
+          "chain-pillar": 2,
+          "rope-post": 2,
+          "spotlight": 1,
+          "film-reel": 1
         }
       }
     ],

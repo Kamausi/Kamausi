@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160">
+  <!-- The Whistling Woods: a clump of ferns. 100 units = 1 m; foot at (120, 154). -->
+  <style>.k{stroke:ink;stroke-linejoin:round;stroke-linecap:round}.c{stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.b{fill:none;stroke:ink;stroke-linecap:round;stroke-linejoin:round}.cb{fill:none;stroke-linecap:round;stroke-linejoin:round}.g{fill:none;stroke:gold;stroke-linecap:round}.w2{fill:none;stroke:#8A82A0;stroke-linecap:round}.w3{fill:none;stroke:#3E2A1C;stroke-linecap:round}.w4{fill:none;stroke:#5E9A68;stroke-linecap:round}</style>
+  <g id="body" stroke-width="5">
+    <ellipse class="s" cx="120" cy="154" rx="90" ry="7" fill="#000" opacity=".25"/>
+    <path class="k" d="M120 154 C80 120 40 100 6 104 C40 80 90 90 120 150 Z" fill="#2E5A38"/>
+    <path class="k" d="M120 154 C160 120 200 100 234 104 C200 80 150 90 120 150 Z" fill="#2E5A38"/>
+    <path class="k" d="M120 154 C100 100 80 50 56 20 C100 40 124 90 124 150 Z" fill="#3A6E44"/>
+    <path class="k" d="M120 154 C140 100 160 50 184 20 C140 40 116 90 116 150 Z" fill="#3A6E44"/>
+    <path class="w4" d="M110 140 C94 100 78 60 60 30 M130 140 C146 100 162 60 180 30 M110 150 C80 124 44 108 16 104 M130 150 C160 124 196 108 224 104" stroke-width="3"/>
+  </g>
+</svg>

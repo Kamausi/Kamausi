@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 360">
+  <!-- The Black Abyss: a studio spotlight on a stand, aimed at nothing. 100 units = 1 m; foot at (100, 354). -->
+  <style>.k{stroke:ink;stroke-linejoin:round;stroke-linecap:round}.c{stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.b{fill:none;stroke:ink;stroke-linecap:round;stroke-linejoin:round}.cb{fill:none;stroke-linecap:round;stroke-linejoin:round}.g{fill:none;stroke:gold;stroke-linecap:round}.w2{fill:none;stroke:#8A82A0;stroke-linecap:round}.w3{fill:none;stroke:#3E2A1C;stroke-linecap:round}.w4{fill:none;stroke:#5E9A68;stroke-linecap:round}</style>
+  <g id="body" stroke-width="5">
+    <ellipse class="s" cx="100" cy="354" rx="70" ry="8" fill="#000" opacity=".3"/>
+    <path class="b" d="M100 200 L50 354 M100 200 L150 354" stroke-width="8"/><path class="k" d="M92 200 V120 H108 V200 Z" fill="#3A3444"/>
+    <path class="k" d="M30 40 H150 L170 110 H10 Z" fill="#4A4458"/>
+    <ellipse class="k" cx="90" cy="112" rx="80" ry="18" fill="#E6E2FF"/><ellipse class="s" cx="90" cy="112" rx="50" ry="10" fill="#fff"/>
+  </g>
+</svg>

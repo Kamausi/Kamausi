@@ -17,7 +17,7 @@ Bones are earned by playing and live on the profile, in this browser and in the 
 - the Skull Vault's prices (300 to about 11,000).
 
 **v45: the Curio Cart takes Souls, not bones.** Its 24 exclusives are in the shared economy (`Economy.CART`) at
-130 to 400 Souls, one of them a quarter off each UTC day (`Economy.dealOf`), and the Mystery Coffin costs 60 Souls
+130 to 400 Souls, one of them a quarter off each UTC day (`Economy.dealOf`), and the Mystery Coffin costs 60 Souls (or, from v49, 1,200 bones)
 (`Economy.COFFIN`; the server takes the Souls, the game draws the Vault look inside). An exclusive bought with bones
 before v45 stays yours.
 
@@ -35,7 +35,7 @@ Souls are the server's alone.
 
 - **Where they live.** The balance and what it has bought live in `wallets/{uid}`, written only by Cloud Functions. They are never on the profile, never in a save code, and never in the cloud save: the Firestore rules refuse a save carrying a `souls` or `wallet` field.
 - **What they cost.** Prices come from `firebase/functions/shared/economy.js`. The server charges its own price, whatever the caller sends; the spec checks this.
-- **Getting them.** A free daily handful (10, once per UTC day, by the server's clock), and Soul packs bought in a store. A pack is credited only after the store confirms the receipt, and a receipt is recorded, so it can never be credited twice.
+- **Getting them.** 200 the first time you play (v49, once per account: `claimWelcomeSouls`), a free daily handful (10, once per UTC day, by the server's clock, with a countdown to the next), and Soul packs bought in a store at the industry's tiers (v49: $0.99 → 100, $4.99 → 500, $9.99 → 1,100, $19.99 → 2,300, $49.99 → 6,000, $99.99 → 13,000; `Economy.PACK_TIERS`). A pack is credited only after the store confirms the receipt, and a receipt is recorded, so it can never be credited twice.
 - **The ledger.** Every change to a balance is written to `ledger/`.
 - **Offline.** The game shows the Soul Shop as unavailable. A Soul item is judged only once the wallet has arrived, and never on the device's word.
 - **What Souls buy.** Looks only (two four-piece sets at the Soul Shop and, from v45, the Curio Cart's exclusives and its Mystery Coffin), like bones, and each season's Premium Ticket (v42), which pays extra looks and bones on the Season Ticket.

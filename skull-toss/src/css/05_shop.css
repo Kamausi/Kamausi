@@ -444,3 +444,49 @@ details.row.sent{display:block}details.row.sent summary{cursor:pointer;font:700 
 .minis .mode-grid{margin-top:12px}
 .mode-tile.m-cans{background:repeating-linear-gradient(90deg,#7A2A22 0 12px,#652018 12px 24px)}
 .prof-body{display:flex;gap:12px;align-items:center}.prof-body canvas{width:112px;height:176px;flex:none;border-radius:8px;background:rgba(20,15,12,.08)}.pb-text{min-width:0;flex:1}.pb-n{font:800 20px var(--display,inherit);margin:4px 0}
+/* v49: the set bonus as one slim strip at the top of the challenges */
+#chalSet .chal-set{margin:0 0 2px;padding:7px 12px;display:flex;align-items:center;gap:10px;border-width:2px;box-shadow:0 3px 0 var(--ink);border-radius:10px}
+#chalSet .chal-title{flex:1 1 auto;min-width:0;font-size:14px;line-height:1.15}
+#chalSet .bar{flex:0 0 64px;height:8px;background:rgba(23,19,15,.2)}
+#chalSet .n{font:15px/1 var(--num);letter-spacing:.04em}
+#chalSet .chal-reward{flex:none;font-size:15px}
+/* v49: settings in sections, and Sign in with Google */
+.set-h{margin:18px 2px 2px;font:22px/1 var(--display);letter-spacing:.04em;color:var(--mustard-l);text-shadow:var(--outline);text-align:left}
+.set-h:first-child{margin-top:4px}
+.google-btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#1F1F1F;font:800 15px/1 var(--ui);padding:10px 16px}
+.google-btn .gicon{width:20px;height:20px;flex:none}
+.google-btn.out{background:var(--paper)}.google-btn.out .gicon{opacity:.6}
+.google-btn.wide{width:100%;margin:10px 0 2px}
+.acct-btns{display:flex;gap:8px;flex-wrap:wrap}
+.pic-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:6px}
+.pic-grid button{padding:0;border:2px solid var(--ink);border-radius:8px;background:none;aspect-ratio:1;overflow:hidden;cursor:pointer}
+.pic-grid button canvas{display:block;width:100%;height:100%}
+.pic-grid button[aria-pressed=true]{outline:3px solid var(--mustard-l);outline-offset:1px}
+/* v49: the Closet, a drop-down holding Surprise me, the four outfits, Save look and the shelves */
+#sheet-customize .closet{flex:none;margin-top:8px;border:3px solid var(--ink);border-radius:12px;background:var(--panel-2,rgba(255,255,255,.04));box-shadow:0 4px 0 var(--ink)}
+#sheet-customize .closet>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;min-height:44px}
+#sheet-customize .closet>summary::-webkit-details-marker{display:none}
+#sheet-customize .closet .closet-t{font:22px/1 var(--display);letter-spacing:.04em;text-transform:uppercase;color:var(--cream);text-shadow:var(--outline)}
+#sheet-customize .closet .closet-now{flex:1;font:800 12px/1 var(--ui);letter-spacing:.14em;text-transform:uppercase;color:var(--mustard-l)}
+#sheet-customize .closet .chev{width:18px;height:18px;transform:rotate(-90deg);transition:transform .2s var(--snap);color:var(--cream)}
+#sheet-customize .closet[open] .chev{transform:rotate(90deg)}
+#sheet-customize .closet-body{padding:0 10px 10px;max-height:46vh;overflow:auto}
+#sheet-customize .closet .outfits{margin-top:0;justify-content:space-between;flex-wrap:nowrap}
+#sheet-customize .closet .outfits .slots{flex:1;justify-content:center}
+#sheet-customize.trying .closet{display:none}
+.coffin-buy{display:flex;flex-direction:column;gap:6px;flex:none}.coffin-buy .btn{min-width:108px;justify-content:center}.coffin-buy .btn svg{width:16px;height:16px;vertical-align:-2px}
+.souls-next{margin-top:3px;font:15px/1.1 var(--num);letter-spacing:.06em;color:var(--mustard-l)}
+/* v49: Soul packs, tier by tier */
+.souls-packs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.souls-packs .pack{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px 9px;border:3px solid var(--ink);border-radius:10px;background:var(--paper);color:var(--ink);box-shadow:0 4px 0 var(--ink);cursor:pointer}
+.souls-packs .pack .pn{font:20px/1 var(--num);letter-spacing:.04em}
+.souls-packs .pack .pb{font:800 10px/1.1 var(--ui);color:#1F7A3A;text-align:center;min-height:11px}
+.souls-packs .pack .pb.none{color:var(--ink-2,#6B5A48)}
+.souls-packs .pack .pp{font:800 13px/1 var(--ui);padding:4px 8px;border-radius:6px;background:var(--mustard);border:2px solid var(--ink)}
+.souls-packs .pack.whale{background:linear-gradient(#FFF1B8,#F2D66A)}
+.souls-packs .pack:disabled{opacity:.55;cursor:default}
+/* v49: mid-run, the achievement is a slim, see-through strip */
+.ach-pop.play{width:min(290px,calc(100% - 40px));padding:4px 8px 4px 5px;gap:7px;border-width:2px;border-radius:9px;background:rgba(242,231,201,.82);box-shadow:0 3px 0 rgba(23,19,15,.6)}
+.ach-pop.play .medal{width:28px;height:28px;border-width:2px}.ach-pop.play .medal svg{width:15px;height:15px}
+.ach-pop.play .k{font-size:8.5px}.ach-pop.play b{font-size:15px}.ach-pop.play .s{display:none}
+.ach-pop.play .r{padding:2px 5px 1px;font-size:14px;border-width:1.5px}.ach-pop.play .r svg{width:11px;height:11px}

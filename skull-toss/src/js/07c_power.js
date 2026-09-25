@@ -206,8 +206,8 @@
       c.fillStyle = "rgba(255,230,220,.5)"; c.beginPath(); c.ellipse(-r * 0.5, -r * 0.35, r * 0.2, r * 0.12, -0.6, 0, TAU); c.fill();
       c.save(); c.rotate(-0.6); c.fillStyle = "#E8D8B4"; c.beginPath(); rr(c, -r * 0.75, -r * 0.2, r * 1.5, r * 0.4, r * 0.16); ink(); c.fillStyle = "#C9B58E"; c.fillRect(-r * 0.2, -r * 0.2, r * 0.4, r * 0.4); c.restore();
       c.fillStyle = INK; c.beginPath(); c.arc(-r * 0.3, -r * 0.05, r * 0.09, 0, TAU); c.arc(r * 0.35, -r * 0.1, r * 0.09, 0, TAU); c.fill();
-    } else if (id === "cursed") {     // a purple skull with horns, grinning through green flame
-      for (let i = 0; i < 7; i++) { const a = -Math.PI / 2 + (i - 3) * 0.38, fl = 1 + 0.25 * Math.sin(tt * 14 + i * 2); c.fillStyle = i % 2 ? "#9BC53D" : "#6FA02A"; c.beginPath(); c.moveTo(Math.cos(a - 0.2) * r * 0.7, Math.sin(a - 0.2) * r * 0.7); c.quadraticCurveTo(Math.cos(a) * r * 1.7 * fl, Math.sin(a) * r * 1.7 * fl, Math.cos(a + 0.2) * r * 0.7, Math.sin(a + 0.2) * r * 0.7); c.fill(); }
+    } else if (id === "cursed") {     // a purple skull with horns, grinning through green flame (v49: the GPU's green fire, when it's on)
+      if (!gpuFireAt(c, "cursed", 0, -r * 0.55, r * 1.6, r * 1.1, 1, 1)) for (let i = 0; i < 7; i++) { const a = -Math.PI / 2 + (i - 3) * 0.38, fl = 1 + 0.25 * Math.sin(tt * 14 + i * 2); c.fillStyle = i % 2 ? "#9BC53D" : "#6FA02A"; c.beginPath(); c.moveTo(Math.cos(a - 0.2) * r * 0.7, Math.sin(a - 0.2) * r * 0.7); c.quadraticCurveTo(Math.cos(a) * r * 1.7 * fl, Math.sin(a) * r * 1.7 * fl, Math.cos(a + 0.2) * r * 0.7, Math.sin(a + 0.2) * r * 0.7); c.fill(); }
       for (const sd of [-1, 1]) { c.fillStyle = "#3A2240"; c.beginPath(); c.moveTo(sd * r * 0.35, -r * 0.55); c.quadraticCurveTo(sd * r * 1.05, -r * 0.8, sd * r * 0.95, -r * 1.35); c.quadraticCurveTo(sd * r * 0.75, -r * 0.8, sd * r * 0.15, -r * 0.7); c.closePath(); ink(); }
       drawSkull(c, 0, r * 0.1, r * 0.78, { t, look: { ...DEFAULT_COS, skull: "hex" }, face: faceFor("excited", t), jaw: 0.25 });
     }

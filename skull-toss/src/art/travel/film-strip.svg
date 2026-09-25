@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 320">
+  <!-- The Black Abyss: a strip of film looped over a stake, frames catching the light. 100 units = 1 m; foot at (130, 314). -->
+  <style>.k{stroke:ink;stroke-linejoin:round;stroke-linecap:round}.c{stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.b{fill:none;stroke:ink;stroke-linecap:round;stroke-linejoin:round}.cb{fill:none;stroke-linecap:round;stroke-linejoin:round}.g{fill:none;stroke:gold;stroke-linecap:round}.w2{fill:none;stroke:#8A82A0;stroke-linecap:round}.w3{fill:none;stroke:#3E2A1C;stroke-linecap:round}.w4{fill:none;stroke:#5E9A68;stroke-linecap:round}</style>
+  <g id="body" stroke-width="5">
+    <ellipse class="s" cx="130" cy="314" rx="100" ry="8" fill="#000" opacity=".3"/>
+    <path class="k" d="M118 314 V30 H142 V314 Z" fill="#3A3444"/>
+    <path class="k" d="M142 40 C220 40 240 120 220 200 C210 250 180 280 150 290 L140 270 C170 260 194 230 200 190 C214 120 200 70 142 66 Z" fill="#1A1622"/>
+    <path class="s" d="M160 80 H186 V104 H160 Z M184 130 H208 V156 H184 Z M182 186 H206 V212 H182 Z" fill="#C8C4D4" opacity=".7"/>
+    <path class="k" d="M118 60 C60 60 30 140 50 210 C60 250 90 270 118 276 V252 C96 246 80 230 74 204 C60 150 80 90 118 86 Z" fill="#1A1622"/>
+    <path class="s" d="M70 110 H94 V134 H70 Z M60 160 H84 V184 H60 Z M76 210 H100 V232 H76 Z" fill="#C8C4D4" opacity=".7"/>
+  </g>
+</svg>

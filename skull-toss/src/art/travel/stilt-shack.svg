@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 500">
+  <!-- The Black Marsh: a shack up on stilts, one window lit. 100 units = 1 m; foot at (270, 494). -->
+  <style>.k{stroke:ink;stroke-linejoin:round;stroke-linecap:round}.c{stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.b{fill:none;stroke:ink;stroke-linecap:round;stroke-linejoin:round}.cb{fill:none;stroke-linecap:round;stroke-linejoin:round}.g{fill:none;stroke:gold;stroke-linecap:round}.w2{fill:none;stroke:#8A82A0;stroke-linecap:round}.w3{fill:none;stroke:#3E2A1C;stroke-linecap:round}.w4{fill:none;stroke:#5E9A68;stroke-linecap:round}</style>
+  <g id="body" stroke-width="5">
+    <ellipse class="s" cx="270" cy="494" rx="230" ry="11" fill="#000" opacity=".3"/>
+    <path class="b" d="M90 494 V300 M190 494 V300 M350 494 V300 M450 494 V300 M90 440 L190 360 M350 360 L450 440" stroke-width="12"/>
+    <path class="k" d="M60 310 H480 V286 H60 Z" fill="#5A4A38"/>
+    <path class="k" d="M90 286 V140 H450 V286 Z" fill="#4E5A48"/>
+    <path class="w3" d="M90 176 H450 M90 212 H450 M90 248 H450" stroke-width="4"/>
+    <path class="k" d="M60 150 L270 40 L480 150 Z" fill="#3A3230"/>
+    <path class="k" d="M130 260 V170 H210 V260 Z" fill="#FFC870"/><path class="k" d="M170 170 V260 M130 214 H210" fill="none" stroke-width="4"/>
+    <path class="k" d="M300 286 V180 H380 V286 Z" fill="#2A2420"/>
+    <path class="k" d="M400 140 V80 H430 V116" fill="#3A3230"/>
+    <path class="k" d="M450 286 L520 494" fill="none" stroke-width="8"/><path class="b" d="M462 330 H494 M474 380 H506 M486 430 H518" stroke-width="6"/>
+    <path class="s" d="M0 470 C80 462 160 478 270 470 C380 462 460 478 540 470 V500 H0 Z" fill="#1E2A26" opacity=".75"/>
+  </g>
+</svg>

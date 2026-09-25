@@ -6,8 +6,8 @@
   "premise": "The hollow where Morty was buried with the reel in 1933. The crows kept it for the Pumpkin King, and the pumpkins learned to grin.",
   "identity": {
     "visual": "A harvest hollow at dusk: a crooked barn, a windmill, pumpkin rows, crows on every rail.",
-    "spatial": "Open and shallow: one clean lane between the pumpkin rows, the ring hung from the old oak's branch right over it.",
-    "mechanic": "None: the throw itself. The ring swings side to side on its rope, then flies its triangle.",
+    "spatial": "Open and shallow: one clean lane between the pumpkin rows, the ring on its pole right over it.",
+    "mechanic": "None: the throw itself. The ring slides side to side on its pole, then flies its triangle.",
     "throw": "Plain arcs under a still sky. Lead the swing.",
     "boss": "The Pumpkin King's mouth is the ring and his eyes are targets: shut his eyes to stop the seeds, then throw down his throat.",
     "targets": "Jack-o'-lanterns hung in the oak, still at first.",
@@ -15,7 +15,7 @@
     "camera": "The rostrum camera at rest: lean, follow, settle.",
     "ambient": "Crows on the rails, the black cat, a zombie farmhand, the witch across the harvest moon.",
     "music": "The original waltz at 92 bpm.",
-    "sfx": "Caws, creaking rope, rustling corn.",
+    "sfx": "Caws, creaking wood, rustling corn.",
     "transition": "An iris on the moon.",
     "reward": "Pumpkin-Vine Curls and the first shard of the Black Ring."
   },
@@ -224,7 +224,7 @@
       "crows": true
     }
   },
-  "anchor": "branch",
+  "anchor": "post",
   "ring": {
     "speed": 1.0,
     "tri": {
@@ -504,5 +504,5 @@
     "rate": 1.0,
     "key": 0
   },
-  "blurb": "The gentlest ring: it swings side to side from the oak, then flies a small triangle"
+  "blurb": "The gentlest ring: it slides side to side on its pole, then flies a small triangle"
 }

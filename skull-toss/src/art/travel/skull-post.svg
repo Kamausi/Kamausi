@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 280">
+  <!-- The Bone Desert: a cattle skull nailed to a post. 100 units = 1 m; foot at (80, 274). -->
+  <style>.k{stroke:ink;stroke-linejoin:round;stroke-linecap:round}.c{stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.b{fill:none;stroke:ink;stroke-linecap:round;stroke-linejoin:round}.cb{fill:none;stroke-linecap:round;stroke-linejoin:round}.g{fill:none;stroke:gold;stroke-linecap:round}.w2{fill:none;stroke:#8A82A0;stroke-linecap:round}.w3{fill:none;stroke:#3E2A1C;stroke-linecap:round}.w4{fill:none;stroke:#5E9A68;stroke-linecap:round}</style>
+  <g id="body" stroke-width="5">
+    <ellipse class="s" cx="80" cy="274" rx="46" ry="7" fill="#000" opacity=".3"/>
+    <path class="k" d="M68 274 V100 H92 V274 Z" fill="#8A6A48"/><path class="w3" d="M76 110 V270" stroke-width="3"/>
+    <path class="k" d="M44 80 C20 70 8 40 16 20 C28 40 40 54 60 58 Z M116 80 C140 70 152 40 144 20 C132 40 120 54 100 58 Z" fill="#F2E7C9"/>
+    <path class="k" d="M50 60 C50 44 110 44 110 60 C112 90 100 130 80 140 C60 130 48 90 50 60 Z" fill="#F2E7C9"/>
+    <path class="k" d="M58 78 C58 70 74 70 74 80 C74 88 58 88 58 78 Z M86 80 C86 70 102 70 102 78 C102 88 86 88 86 80 Z" fill="ink" stroke-width="2"/>
+    <path class="k" d="M74 118 C74 112 78 110 78 118 M82 118 C82 110 86 112 86 118" fill="none" stroke-width="3"/>
+  </g>
+</svg>

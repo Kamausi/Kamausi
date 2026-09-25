@@ -79,12 +79,12 @@
     if (squashed) { ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(T.dir); ctx.scale(1 - T.sq, 1 + T.sq * 0.6); ctx.rotate(-T.dir); ctx.translate(-p.x, -p.y); }
     const now = performance.now() / 1000, dtH = clamp(now - ringHeatAt, 0, 0.1); ringHeatAt = now;
     ringHeat += (ringHeatGoal() - ringHeat) * Math.min(1, dtH * (ringHeatGoal() > ringHeat ? 4 : 2.5));
-    if (ringHeat > 0.02) { drawRingFire(p.x, p.y, r, lw, ringHeat, T.t); Gpu.fire = { x: p.x, y: p.y, r: ringOuter(r, lw, cos.ring), heat: ringHeat }; }   // (and the GPU's embers: 08j_gpu.js)
+    if (ringHeat > 0.02) { const E = ringOuter(r, lw, cos.ring); if (!gpuRingFire(p.x, p.y, E, lw, ringHeat)) drawRingFire(p.x, p.y, r, lw, ringHeat, T.t); Gpu.fire = { x: p.x, y: p.y, r: E, heat: ringHeat }; }   // (v49: the GPU draws the fire when it's on, and its embers: 08j_gpu.js)
     const rim = drawRingLight(p.x, p.y, r, lw);   // the backing that keeps it readable on any background, and its rim light
     drawRingShape(ctx, p.x, p.y, r, lw, cos.ring, T.t, ring.flash); rim();
     if (crossOn() && crossGolden()) {   // the crossing's golden rings (07q_crossing.js): a gilt band and a light
       ctx.strokeStyle = GOLD; ctx.lineWidth = Math.max(2, lw * 0.45); ctx.globalAlpha = 0.75 + 0.25 * Math.sin(game.time * 6); ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, TAU); ctx.stroke(); ctx.globalAlpha = 1;
-      gpuLight(p.x, p.y, r * 2.2, [1, 0.82, 0.35], 0.5);
+      gpuLight(p.x, p.y, r * 2.2, "255,209,89", 0.5);
     }
     if (squashed) ctx.restore();
     if (powerOn("deadeye")) {          // Deadeye shows its doubled perfect window

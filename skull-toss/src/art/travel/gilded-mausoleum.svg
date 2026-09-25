@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 500">
+  <!-- The Gilded Graveyard: a family mausoleum, columns and a gold-trimmed pediment, a candle lit inside. 100 units = 1 m; foot at (280, 494). -->
+  <style>.k{stroke:ink;stroke-linejoin:round;stroke-linecap:round}.c{stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.b{fill:none;stroke:ink;stroke-linecap:round;stroke-linejoin:round}.cb{fill:none;stroke-linecap:round;stroke-linejoin:round}.g{fill:none;stroke:gold;stroke-linecap:round}.w2{fill:none;stroke:#8A82A0;stroke-linecap:round}.w3{fill:none;stroke:#3E2A1C;stroke-linecap:round}.w4{fill:none;stroke:#5E9A68;stroke-linecap:round}</style>
+  <g id="body" stroke-width="5">
+    <ellipse class="s" cx="282" cy="494" rx="270" ry="12" fill="#000" opacity=".3"/>
+    <path class="k" d="M30 494 V460 H530 V494 Z" fill="#5A5268"/><path class="k" d="M50 460 V430 H510 V460 Z" fill="#6E6680"/>
+    <path class="k" d="M70 430 V200 H490 V430 Z" fill="#6E6680"/>
+    <path class="k" d="M40 200 L280 70 L520 200 Z" fill="#8A82A0"/><path class="k" d="M100 186 L280 92 L460 186 Z" fill="#5A5268" stroke-width="5"/>
+    <path class="c" d="M40 200 L280 70 L520 200" fill="none" stroke="gold" stroke-width="7"/>
+    <path class="k" d="M88 430 V214 H128 V430 Z M160 430 V214 H200 V430 Z M360 430 V214 H400 V430 Z M432 430 V214 H472 V430 Z" fill="#A49CB8"/>
+    <path class="s" d="M96 222 H106 V424 H96 Z M168 222 H178 V424 H168 Z M368 222 H378 V424 H368 Z M440 222 H450 V424 H440 Z" fill="#fff" opacity=".18"/>
+    <path class="k" d="M226 430 V300 C226 262 334 262 334 300 V430 Z" fill="#1A1020"/>
+    <path class="k" d="M244 430 V310 C244 284 316 284 316 310 V430 Z" fill="#2A1830" stroke-width="4"/>
+    <path class="s" d="M272 380 H288 V410 H272 Z" fill="cream"/><path class="s" d="M280 356 C272 366 272 374 280 378 C288 374 288 366 280 356 Z" fill="#FFB050"/>
+    <circle class="k" cx="280" cy="146" r="18" fill="gold"/><path class="k" d="M270 146 H290 M280 136 V156" fill="none" stroke-width="4"/>
+  </g>
+</svg>

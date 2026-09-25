@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 380">
+  <!-- The Gilded Graveyard: a gas lamp on an iron post, lit. 100 units = 1 m; foot at (70, 374). -->
+  <style>.k{stroke:ink;stroke-linejoin:round;stroke-linecap:round}.c{stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.b{fill:none;stroke:ink;stroke-linecap:round;stroke-linejoin:round}.cb{fill:none;stroke-linecap:round;stroke-linejoin:round}.g{fill:none;stroke:gold;stroke-linecap:round}.w2{fill:none;stroke:#8A82A0;stroke-linecap:round}.w3{fill:none;stroke:#3E2A1C;stroke-linecap:round}.w4{fill:none;stroke:#5E9A68;stroke-linecap:round}</style>
+  <g id="body" stroke-width="5">
+    <ellipse class="s" cx="70" cy="374" rx="44" ry="7" fill="#000" opacity=".3"/>
+    <path class="k" d="M44 374 V350 H96 V374 Z" fill="#3A3246"/>
+    <path class="k" d="M62 350 V120 H78 V350 Z" fill="#2A2232"/>
+    <path class="k" d="M52 180 H88 M56 260 H84" fill="none" stroke-width="6"/>
+    <path class="k" d="M40 120 H100 L90 104 H50 Z" fill="#3A3246"/>
+    <path class="k" d="M44 104 L52 50 H88 L96 104 Z" fill="#FFD27A"/>
+    <path class="s" d="M58 96 L62 60 H78 L82 96 Z" fill="#FFF3C0"/>
+    <path class="k" d="M44 104 L52 50 H88 L96 104 M70 50 V104" fill="none" stroke-width="4"/>
+    <path class="k" d="M46 50 L70 24 L94 50 Z" fill="#3A3246"/><circle class="k" cx="70" cy="18" r="7" fill="gold" stroke-width="3"/>
+  </g>
+</svg>

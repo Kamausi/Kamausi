@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 540">
+  <!-- The Clockwork Caves: a pendulum on its gantry, stopped mid-swing. 100 units = 1 m; foot at (160, 534). -->
+  <style>.k{stroke:ink;stroke-linejoin:round;stroke-linecap:round}.c{stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.b{fill:none;stroke:ink;stroke-linecap:round;stroke-linejoin:round}.cb{fill:none;stroke-linecap:round;stroke-linejoin:round}.g{fill:none;stroke:gold;stroke-linecap:round}.w2{fill:none;stroke:#8A82A0;stroke-linecap:round}.w3{fill:none;stroke:#3E2A1C;stroke-linecap:round}.w4{fill:none;stroke:#5E9A68;stroke-linecap:round}</style>
+  <g id="body" stroke-width="5">
+    <ellipse class="s" cx="160" cy="534" rx="140" ry="10" fill="#000" opacity=".3"/>
+    <path class="k" d="M30 534 L80 40 H240 L290 534 H256 L214 70 H106 L64 534 Z" fill="#5A4030"/>
+    <path class="k" d="M60 60 H260 V30 H60 Z" fill="#7A5A3A"/>
+    <circle class="k" cx="160" cy="70" r="16" fill="#C8963A"/>
+    <path class="c" d="M160 70 L190 400" fill="none" stroke="#C8963A" stroke-width="10"/>
+    <circle class="k" cx="192" cy="430" r="46" fill="#D8A84A"/><circle class="s" cx="178" cy="416" r="14" fill="#FFE0A0" opacity=".7"/>
+    <path class="b" d="M60 300 H100 M220 300 H260" stroke-width="8"/>
+  </g>
+</svg>

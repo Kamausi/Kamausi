@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 240">
+  <!-- The Bone Desert: a boot-hill grave, a wooden cross and a hat left on it. 100 units = 1 m; foot at (110, 234). -->
+  <style>.k{stroke:ink;stroke-linejoin:round;stroke-linecap:round}.c{stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.b{fill:none;stroke:ink;stroke-linecap:round;stroke-linejoin:round}.cb{fill:none;stroke-linecap:round;stroke-linejoin:round}.g{fill:none;stroke:gold;stroke-linecap:round}.w2{fill:none;stroke:#8A82A0;stroke-linecap:round}.w3{fill:none;stroke:#3E2A1C;stroke-linecap:round}.w4{fill:none;stroke:#5E9A68;stroke-linecap:round}</style>
+  <g id="body" stroke-width="5">
+    <ellipse class="s" cx="110" cy="234" rx="100" ry="9" fill="#000" opacity=".3"/>
+    <path class="k" d="M10 234 C30 200 70 186 110 186 C150 186 190 200 210 234 Z" fill="#B88A58"/>
+    <circle class="k" cx="50" cy="220" r="12" fill="#A89A88" stroke-width="3"/><circle class="k" cx="170" cy="216" r="14" fill="#8E8274" stroke-width="3"/><circle class="k" cx="140" cy="226" r="9" fill="#A89A88" stroke-width="3"/>
+    <path class="k" d="M100 196 V40 H120 V196 Z M64 82 H156 V100 H64 Z" fill="#8A6A48"/>
+    <path class="w3" d="M110 50 V190 M70 91 H150" stroke-width="3"/>
+    <path class="k" d="M72 40 C72 20 148 20 148 40 Z" fill="#4A3224"/><path class="k" d="M56 42 C80 50 140 50 164 42 C160 34 60 34 56 42 Z" fill="#5A3E2C"/>
+  </g>
+</svg>

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 190">
+  <!-- The Drowned Theater: a row of red velvet seats, half under water. 100 units = 1 m; foot at (190, 184). -->
+  <style>.k{stroke:ink;stroke-linejoin:round;stroke-linecap:round}.c{stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.b{fill:none;stroke:ink;stroke-linecap:round;stroke-linejoin:round}.cb{fill:none;stroke-linecap:round;stroke-linejoin:round}.g{fill:none;stroke:gold;stroke-linecap:round}.w2{fill:none;stroke:#8A82A0;stroke-linecap:round}.w3{fill:none;stroke:#3E2A1C;stroke-linecap:round}.w4{fill:none;stroke:#5E9A68;stroke-linecap:round}</style>
+  <g id="body" stroke-width="5">
+    <ellipse class="s" cx="190" cy="184" rx="185" ry="9" fill="#000" opacity=".3"/>
+    <path class="k" d="M20 184 V120 H360 V184 Z" fill="#3A1A1E"/>
+    <path class="k" d="M30 120 C30 50 110 50 110 120 Z M140 120 C140 50 220 50 220 120 Z M250 120 C250 50 330 50 330 120 Z" fill="#A8283A"/>
+    <path class="s" d="M44 110 C46 70 70 64 80 70 C64 80 58 94 56 110 Z M154 110 C156 70 180 64 190 70 C174 80 168 94 166 110 Z M264 110 C266 70 290 64 300 70 C284 80 278 94 276 110 Z" fill="#fff" opacity=".18"/>
+    <path class="k" d="M24 136 H116 V150 H24 Z M134 136 H226 V150 H134 Z M244 136 H336 V150 H244 Z" fill="#C83A4A" stroke-width="3"/>
+    <path class="c" d="M20 120 V184 M126 120 V184 M234 120 V184 M344 120 V184" fill="none" stroke="gold" stroke-width="6"/>
+    <path class="s" d="M0 164 C40 156 80 172 120 164 C160 156 200 172 240 164 C280 156 320 172 380 164 V190 H0 Z" fill="#2E6A72" opacity=".65"/>
+  </g>
+</svg>

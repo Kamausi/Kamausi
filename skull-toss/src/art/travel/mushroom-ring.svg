@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 150">
+  <!-- The Whistling Woods: a fairy ring of glowing toadstools. 100 units = 1 m; foot at (140, 144). -->
+  <style>.k{stroke:ink;stroke-linejoin:round;stroke-linecap:round}.c{stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.b{fill:none;stroke:ink;stroke-linecap:round;stroke-linejoin:round}.cb{fill:none;stroke-linecap:round;stroke-linejoin:round}.g{fill:none;stroke:gold;stroke-linecap:round}.w2{fill:none;stroke:#8A82A0;stroke-linecap:round}.w3{fill:none;stroke:#3E2A1C;stroke-linecap:round}.w4{fill:none;stroke:#5E9A68;stroke-linecap:round}</style>
+  <g id="body" stroke-width="5">
+    <ellipse class="s" cx="140" cy="144" rx="130" ry="10" fill="#000" opacity=".25"/>
+    <path class="k" d="M40 144 V104 H56 V144 Z M120 144 V84 H140 V144 Z M200 144 V100 H216 V144 Z M84 144 V120 H96 V144 Z M170 144 V122 H182 V144 Z" fill="cream" stroke-width="3"/>
+    <path class="k" d="M20 108 C20 76 76 76 76 108 Z" fill="#7AB8C8"/>
+    <path class="k" d="M96 90 C96 40 164 40 164 90 Z" fill="#8AD0E0"/>
+    <path class="k" d="M180 104 C180 72 236 72 236 104 Z" fill="#7AB8C8"/>
+    <path class="k" d="M72 124 C72 104 108 104 108 124 Z M156 126 C156 108 196 108 196 126 Z" fill="#9ADCE8" stroke-width="3"/>
+    <circle class="s" cx="120" cy="64" r="7" fill="#E6FAFF"/><circle class="s" cx="146" cy="72" r="5" fill="#E6FAFF"/><circle class="s" cx="40" cy="94" r="5" fill="#E6FAFF"/><circle class="s" cx="214" cy="88" r="5" fill="#E6FAFF"/>
+  </g>
+</svg>

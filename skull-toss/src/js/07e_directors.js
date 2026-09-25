@@ -44,13 +44,10 @@
   const bMode = () => PATH_MODE[stageDef().path] || "tri";
   const ringFlies = () => !!RING_PATHS[ring.mode] && !RING_PATHS[ring.mode].flat;   // the second half's ring, wings and all
 
-  // ── bonus targets: after a make the skull flies on through the ring, and anything hanging behind it can be clipped
-  // for bonus points and bones. Each map has its own (a wisp, a brazier, a jack-o'-lantern, a hanging bone, a frog,
-  // a gallery duck, a bell, a film can). How many hang there at once is the tier's.
+  // ── bonus targets: bullseyes in the corners of the play (v49), clipped by a make that flies on or hit straight on,
+  // for bonus points and bones. How many hang there at once is the tier's.
   const targets = [];
   const TARGET_R = 0.26;
-  const TARGET_WORD = { wisp: "WHOOSH!", brazier: "FWOOSH!", jack: "SPLAT!", bonefruit: "CLACK!", frog: "RIBBIT!", duck: "QUACK!", bell: "DONG!", filmcan: "CLUNK!" };
-  const TARGET_SOUND = { frog: "ribbit", duck: "quack", bell: "clang", bonefruit: "bonk" };
   // v44 (the corrected roadmap's V19): nine kinds of target, on the map's target zone (its production sheet). Standard ones
   // hang and bob; swinging ones swing on a rope; runaways scuttle to and fro; pop-ups duck under and come back up (a
   // rustle first); shielded ones need two hits (the first knocks the lid off); split ones burst into two smaller ones;
@@ -60,23 +57,36 @@
   const tgR = T => TARGET_R * (T.sz || 1);
   function targetPos(T) {
     const t = T.t + T.ph;
-    if (T.type === "swinging") { const a = 0.55 * Math.sin(t * 1.8); return { x: T.x + Math.sin(a) * 1.1, y: T.y + (1 - Math.cos(a)) * 1.1, z: T.z, rope: { x: T.x, y: T.y + 1.1, z: T.z } }; }
-    if (T.type === "runaway") return { x: clamp(T.x + 1.1 * Math.sin(t * 1.3) + (T.flee || 0), -2.2, 2.2), y: T.y + Math.abs(Math.sin(t * 7)) * 0.06, z: T.z };
-    if (T.type === "popup") { const u = ((t % 3.4) + 3.4) % 3.4, up = u < 1.9 ? 1 : u < 2.2 ? 1 - (u - 1.9) / 0.3 : u > 3.1 ? (u - 3.1) / 0.3 : 0; return { x: T.x, y: T.y - (1 - up) * 1.3, z: T.z, up, tell: u > 2.8 && u <= 3.1 }; }
-    return { x: T.x, y: T.y + (T.kind === "frog" ? 0 : Math.sin(T.t * 2 + T.ph) * 0.08), z: T.z };
+    const out = T.corner == null ? 0 : Math.sign(T.x);   // (in a corner, it only ever moves outward from the ring)
+    if (T.type === "swinging") { const a = 0.45 * Math.sin(t * 1.8); return { x: T.x + (out ? out * Math.abs(Math.sin(a)) : Math.sin(a)) * 0.8, y: T.y + (1 - Math.cos(a)) * 0.8, z: T.z, rope: { x: T.x, y: T.y + 0.8, z: T.z } }; }
+    if (T.type === "runaway") return { x: out ? T.x + out * (0.35 + 0.35 * Math.sin(t * 1.3)) + (T.flee || 0) : clamp(T.x + 1.1 * Math.sin(t * 1.3) + (T.flee || 0), -2.2, 2.2), y: T.y + Math.abs(Math.sin(t * 7)) * 0.06, z: T.z };
+    if (T.type === "popup") { const u = ((t % 3.4) + 3.4) % 3.4, up = u < 1.9 ? 1 : u < 2.2 ? 1 - (u - 1.9) / 0.3 : u > 3.1 ? (u - 3.1) / 0.3 : 0; return { x: T.x + (out ? out * (1 - up) * 0.9 : 0), y: T.y - (out ? 0 : (1 - up) * 1.3), z: T.z, up, tell: u > 2.8 && u <= 3.1 }; }
+    return { x: T.x, y: T.y + Math.sin(T.t * 2 + T.ph) * 0.06, z: T.z };
   }
   const targetLive = T => !T.pop && (T.type !== "popup" || targetPos(T).up > 0.6);
   function targetTypesNow() { const M = mapData(game.stage || 1); return (M.targetTypes && M.targetTypes[game.phase === "A" ? "A" : "B"]) || ["standard"]; }
+  // v49: targets keep to the corners of the play: up high or down low, out past the ring's whole sweep, so they're never
+  // in front of it or behind it on screen. A make that flies on can still clip one; a throw aimed straight at one hits
+  // it too (the ring's miss still costs its skull). The four corners come from the map's target zone, so a run's dice
+  // (not the screen) decide where each one hangs, and a replay sees the same.
+  const CORNERS = [[-1, 1], [1, 1], [-1, 0], [1, 0]];   // [side, high]
+  function cornerSpot(M, used) {
+    const Z = M.sheet.zones.targets, R = M.sheet.zones.ring, free = CORNERS.map((c, i) => i).filter(i => !used.includes(i)), i = free.length ? free[(runRand() * free.length) | 0] : (runRand() * 4) | 0;
+    // just short of the ring's depth, so a throw aimed at one reaches it before the ring's plane (where a miss stops);
+    // off to one side, and above the ring's highest reach or below its lowest (rim and all), so on any screen, even a
+    // narrow phone's, it's in a corner of the play and never over the ring; never higher than a throw can aim
+    const [side, high] = CORNERS[i], z = RING_Z - 0.3; void Z;
+    return { corner: i, x: side * rrIn(1.25, 1.75) * z / RING_Z, y: high ? Math.min(R.y[1] + RC_START + rrIn(0.4, 0.6), AIM_Y_MAX - 0.3) : rrIn(0.6, Math.min(0.85, R.y[0] - RC_START - 0.4)), z };
+  }
   function spawnTarget(forceType) {
-    const M = mapData(game.stage || 1), kind = M.target, Z = M.sheet.zones.targets, H = M.sheet.zones.hazards, T0 = tierNow();
+    const M = mapData(game.stage || 1), kind = M.target, T0 = tierNow();
     const pool = targetTypesNow().filter(ty => ty !== "golden" && ty !== "secret"), has = ty => targets.some(T => T.type === ty && !T.pop);
     let type = forceType || pool[(runRand() * pool.length) | 0] || "standard";
     if (!forceType) { const r = runRand(); if (r < (T0.golden || 0) || (targetTypesNow().includes("golden") && r < 0.12)) type = "golden"; else if (r < (T0.golden || 0) + (T0.secret || 0) || (targetTypesNow().includes("secret") && r > 0.86)) type = "secret"; }
     if (type === "decoy" && has("decoy")) type = "standard";
     sawIt("target", type);
-    const low = kind === "frog", decoy = type === "decoy";
-    const x = rrIn(Z.x[0], Z.x[1]), y = low && !decoy ? 0.22 : rrIn(Z.y[0], Z.y[1]), z = decoy ? rrIn(Math.max(H.z[0], 3.2), H.z[1] - 0.4) : rrIn(Z.z[0], Z.z[1]);
-    targets.push({ kind, type, x: decoy ? rrIn(-1.0, 1.0) : x, y: decoy ? rrIn(2.0, 3.0) : type === "swinging" ? Math.min(y, Z.y[1] - 0.3) : y, z, t: 0, left: type === "golden" ? 3 : 6, pop: 0, ph: rrIn(0, TAU), shield: type === "shielded", sz: type === "secret" ? 0.9 : 1 });
+    const P = cornerSpot(M, targets.filter(T => !T.pop && T.corner != null).map(T => T.corner));
+    targets.push({ kind, type, x: P.x, y: P.y, z: P.z, corner: P.corner, t: 0, left: type === "golden" ? 3 : 6, pop: 0, ph: rrIn(0, TAU), shield: type === "shielded", sz: type === "secret" ? 0.9 : 1 });
   }
   function refillTargets() {
     const want = boss || game.state === "title" || game.phase === "crossing" ? 0 : tierNow().targets * directorTargets();
@@ -95,9 +105,9 @@
     T.pop = 0.001;
     const k = TARGET_VALUE[T.type] || 1, pts = Math.max(5, Math.round((200 * k * stageMult()) / 5) * 5);
     game.score += pts; profile.scoreTotal += pts; profile.targetHits++; game.run.targets = (game.run.targets || 0) + 1; addBones(T.type === "golden" ? 25 : T.type === "secret" ? 15 : 3);
-    const word = T.type === "golden" ? "JACKPOT!" : T.type === "secret" ? t("target.secret.found") : TARGET_WORD[T.kind] || "DING!";
+    const word = T.type === "golden" ? "JACKPOT!" : T.type === "secret" ? t("target.secret.found") : "BULLSEYE!";
     impact(word, p.x, p.y - U * 0.05, { fill: T.type === "secret" ? PURPLE : GOLD, text: T.type === "secret" ? CREAM : INK, scale: T.type === "golden" || T.type === "secret" ? 0.75 : 0.55, bits: T.type === "golden" });
-    flyPoints(`+${fmtN(pts)}`, p.x, p.y, T.type === "golden"); Sound.toon(T.type === "golden" ? "fanfare" : TARGET_SOUND[T.kind] || "ding", panOf(P.x));
+    flyPoints(`+${fmtN(pts)}`, p.x, p.y, T.type === "golden"); Sound.toon(T.type === "golden" ? "fanfare" : "ding", panOf(P.x));
     if (T.type === "secret") { profile.secretTargets = (profile.secretTargets || 0) + 1; }
     if (T.type === "split") for (const sd of [-1, 1]) targets.push({ kind: T.kind, type: "half", x: P.x, y: P.y, z: P.z + 0.2, vx: sd * 1.4, t: 0, left: 2, pop: 0, ph: T.ph + sd, sz: 0.65 });
     Telemetry.emit("target", { kind: T.kind, type: T.type, stage: game.stage }); challenge("targets", 1);
@@ -206,7 +216,7 @@
           Sound.toon("poof", panOf(P.x)); resolve("decoy", project(ring.x, ring.y, ring.z), p); profile.hazardHits++; return; }
         continue;
       }
-      if (!game.result || !game.result.make) continue;
+      if (T.corner == null && (!game.result || !game.result.make)) continue;   // (the Gallery's targets behind the ring still want a make first)
       if (T.type === "runaway" && d < 1.2 && !T.fled) { T.fled = true; T.flee = (T.flee || 0) + (P.x > s.pos.x ? 0.7 : -0.7); }   // it sees the skull coming and scuttles
       if (d <= SKULL_R + tgR(T)) hitTarget(T);
     }
@@ -237,7 +247,7 @@
       ctx.lineWidth = Math.max(1.5, r * 0.12); ctx.strokeStyle = INK; ctx.lineJoin = "round";
       if (T.type === "golden") { const g = ctx.createRadialGradient(0, 0, r * 0.3, 0, 0, r * 2.2); g.addColorStop(0, "rgba(255,220,110,.6)"); g.addColorStop(1, "rgba(255,220,110,0)"); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, r * 2.2, 0, TAU); ctx.fill(); ctx.filter = "sepia(1) saturate(4) brightness(1.15)"; }
       if (T.type === "decoy") { ctx.fillStyle = "#C8B28A"; ctx.beginPath(); ctx.rect(-r * 0.06, r * 0.8, r * 0.12, r * 1.2); ctx.fill(); ctx.stroke(); }
-      drawTargetKind(T.kind, r, T.t + T.ph);
+      drawBullseye(r, T, P);
       ctx.filter = "none";
       if (T.type === "decoy") { ctx.strokeStyle = "rgba(60,40,20,.7)"; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.arc(0, 0, r * 1.15, 0, TAU); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = INK; ctx.font = `900 ${Math.max(8, Math.round(r * 0.8))}px ${UIFONT}`; ctx.textAlign = "center"; ctx.fillText("?", r * 0.9, -r * 0.8); }
       if (T.shield) { ctx.fillStyle = "#8A8E96"; ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1.5, r * 0.1); ctx.beginPath(); ctx.arc(0, -r * 0.1, r * 1.05, Math.PI * 1.05, Math.PI * 1.95); ctx.lineTo(r * 0.9, -r * 0.1); ctx.closePath(); ctx.fill(); ctx.stroke(); }
@@ -245,26 +255,18 @@
       if (!T.pop && P.y > 0.4 && !secret) { const g = project(P.x + shadowShift(P.y), 0, P.z); ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.beginPath(); ctx.ellipse(g.x, g.y, r * 0.8, r * 0.18, 0, 0, TAU); ctx.fill(); }
     }
   }
-  function drawTargetKind(kind, r, t) {
-    const fill = (c) => { ctx.fillStyle = c; ctx.fill(); ctx.stroke(); };
-    if (kind === "wisp") { const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 1.8); g.addColorStop(0, "rgba(200,255,230,.8)"); g.addColorStop(1, "rgba(200,255,230,0)"); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, r * 1.8, 0, TAU); ctx.fill();
-      ctx.beginPath(); ctx.moveTo(0, -r); ctx.quadraticCurveTo(r * 0.9, 0, 0, r * 0.7); ctx.quadraticCurveTo(-r * 0.9, 0, 0, -r); fill("#D8FFF0"); }
-    else if (kind === "brazier") { ctx.beginPath(); ctx.moveTo(-r * 0.7, 0); ctx.lineTo(r * 0.7, 0); ctx.lineTo(r * 0.45, r * 0.6); ctx.lineTo(-r * 0.45, r * 0.6); ctx.closePath(); fill("#4A3A30");
-      ctx.beginPath(); ctx.moveTo(-r * 0.5, 0); ctx.quadraticCurveTo(-r * 0.4, -r * 0.8, Math.sin(t * 8) * r * 0.2, -r * 1.2); ctx.quadraticCurveTo(r * 0.4, -r * 0.8, r * 0.5, 0); ctx.closePath(); fill("#E8893A"); }
-    else if (kind === "jack") { ctx.beginPath(); ctx.ellipse(0, 0, r, r * 0.85, 0, 0, TAU); fill("#E8803A"); ctx.fillStyle = "#FFD04A"; for (const sd of [-1, 1]) { ctx.beginPath(); ctx.moveTo(sd * r * 0.45, -r * 0.3); ctx.lineTo(sd * r * 0.15, -r * 0.15); ctx.lineTo(sd * r * 0.45, -r * 0.05); ctx.fill(); }
-      ctx.beginPath(); ctx.ellipse(0, r * 0.35, r * 0.45, r * 0.16, 0, 0, Math.PI); ctx.fill(); ctx.strokeStyle = "#5E7A36"; ctx.beginPath(); ctx.moveTo(0, -r * 0.85); ctx.lineTo(0, -r * 2.6); ctx.stroke(); }
-    else if (kind === "bonefruit") { ctx.strokeStyle = "rgba(30,30,20,.8)"; ctx.beginPath(); ctx.moveTo(0, -r * 0.6); ctx.lineTo(0, -r * 3); ctx.stroke(); ctx.strokeStyle = INK; ctx.save(); ctx.rotate(Math.sin(t * 1.5) * 0.2);
-      ctx.beginPath(); rr(ctx, -r * 0.18, -r * 0.6, r * 0.36, r * 1.2, r * 0.15); fill("#E4DAC4"); for (const e of [-1, 1]) { ctx.beginPath(); ctx.arc(-r * 0.2, e * r * 0.6, r * 0.2, 0, TAU); ctx.arc(r * 0.2, e * r * 0.6, r * 0.2, 0, TAU); fill("#E4DAC4"); } ctx.restore(); }
-    else if (kind === "frog") { ctx.beginPath(); ctx.ellipse(0, r * 0.2, r * 1.3, r * 0.35, 0, 0, TAU); fill("#3E6A42"); ctx.beginPath(); ctx.ellipse(0, -r * 0.2, r * 0.7, r * 0.5, 0, 0, TAU); fill("#6A9A4A");
-      ctx.fillStyle = CREAM; for (const sd of [-1, 1]) { ctx.beginPath(); ctx.arc(sd * r * 0.35, -r * 0.6, r * 0.2, 0, TAU); ctx.fill(); ctx.stroke(); } ctx.fillStyle = INK; for (const sd of [-1, 1]) { ctx.beginPath(); ctx.arc(sd * r * 0.35, -r * 0.58, r * 0.08, 0, TAU); ctx.fill(); } }
-    else if (kind === "duck") { ctx.beginPath(); ctx.ellipse(0, 0, r * 0.9, r * 0.55, 0, 0, TAU); fill("#E3B64B"); ctx.beginPath(); ctx.arc(r * 0.55, -r * 0.55, r * 0.38, 0, TAU); fill("#E3B64B");
-      ctx.beginPath(); ctx.moveTo(r * 0.85, -r * 0.55); ctx.lineTo(r * 1.25, -r * 0.45); ctx.lineTo(r * 0.85, -r * 0.35); fill("#E8893A"); ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(r * 0.62, -r * 0.62, r * 0.07, 0, TAU); ctx.fill();
-      ctx.beginPath(); ctx.rect(-r * 0.1, r * 0.5, r * 0.2, r * 0.8); fill("#8C6239"); }
-    else if (kind === "bell") { ctx.save(); ctx.rotate(Math.sin(t * 2) * 0.15); ctx.strokeStyle = INK; ctx.beginPath(); ctx.moveTo(0, -r * 0.9); ctx.lineTo(0, -r * 3); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(-r * 0.25, -r * 0.9); ctx.quadraticCurveTo(-r * 0.75, -r * 0.6, -r * 0.8, r * 0.5); ctx.lineTo(r * 0.8, r * 0.5); ctx.quadraticCurveTo(r * 0.75, -r * 0.6, r * 0.25, -r * 0.9); ctx.closePath(); fill("#C49A42");
-      ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(0, r * 0.6, r * 0.14, 0, TAU); ctx.fill(); ctx.restore(); }
-    else if (kind === "filmcan") { ctx.save(); ctx.rotate(t * 1.2); ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); fill("#8A8E96"); ctx.fillStyle = "#3A3E46"; for (let i = 0; i < 5; i++) { const a = (i / 5) * TAU; ctx.beginPath(); ctx.arc(Math.cos(a) * r * 0.55, Math.sin(a) * r * 0.55, r * 0.18, 0, TAU); ctx.fill(); }
-      ctx.beginPath(); ctx.arc(0, 0, r * 0.15, 0, TAU); ctx.fill(); ctx.restore(); }
+  // v49: every target is a bullseye (gold for the golden ones), on a post when it's low and on a cord when it's high
+  function drawBullseye(r, T, P) {
+    const gold = T.type === "golden", rings = gold ? ["#E3B64B", "#FFF1B8", "#E3B64B", "#FFF1B8", "#C8942E"] : ["#C0392B", "#F2E7C9", "#C0392B", "#F2E7C9", "#C0392B"];
+    if (T.corner != null && !P.rope) {
+      if (T.y < 1.5) { ctx.fillStyle = "#6A4A30"; ctx.beginPath(); ctx.rect(-r * 0.1, r * 0.8, r * 0.2, r * 2.4); ctx.fill(); ctx.stroke(); }
+      else { ctx.strokeStyle = "rgba(20,14,8,.8)"; ctx.lineWidth = Math.max(1, r * 0.06); ctx.beginPath(); ctx.moveTo(0, -r * 0.95); ctx.lineTo(0, -r * 4); ctx.stroke(); ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1.5, r * 0.12); }
+    }
+    ctx.save(); ctx.scale(1, 0.94);
+    rings.forEach((c, i) => { const rr2 = r * (1 - i * 0.2); ctx.beginPath(); ctx.arc(0, 0, rr2, 0, TAU); ctx.fillStyle = c; ctx.fill(); if (i === 0) ctx.stroke(); });
+    ctx.lineWidth = Math.max(1, r * 0.05); ctx.strokeStyle = "rgba(23,19,15,.55)"; for (let i = 1; i < 5; i++) { ctx.beginPath(); ctx.arc(0, 0, r * (1 - i * 0.2), 0, TAU); ctx.stroke(); }
+    ctx.fillStyle = "rgba(255,255,255,.35)"; ctx.beginPath(); ctx.ellipse(-r * 0.35, -r * 0.4, r * 0.22, r * 0.12, -0.6, 0, TAU); ctx.fill();
+    ctx.restore(); ctx.strokeStyle = INK;
   }
   function drawHazards(front) {
     if (HZ.kind === "pendulum" && game.state !== "title") {

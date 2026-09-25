@@ -117,7 +117,7 @@
   // ── reactions: a prop the skull passes through, lands by or knocks (a bonk nearby) answers in its map's way
   const REACT_DUR = { move: 1.1, rotate: 1.0, bend: 1.2, crack: 0.5, fall: 0.7, squeak: 0.5, shake: 0.6, react: 0.9 };
   function reactionFor(kind) {
-    const S = mapSheet(); for (const it of S.interactions) if (it.on === kind) return it.does;
+    const S = mapData(sceneMap + 1).sheet; for (const it of S.interactions) if (it.on === kind) return it.does;   // (the scenery's own map: v49, so the crossing's props answer the next map's way)
     return kind === "tuft" || kind === "reeds" || kind === "corn" ? "bend" : kind === "stone" || kind === "slab" ? "shake" : null;
   }
   function reactProp(k, dir = 1, strength = 1) {

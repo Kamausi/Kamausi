@@ -50,6 +50,17 @@
           return r.wallet;
         });
       },
+      // v49: the welcome gift, the first time a player plays: once per account
+      async claimWelcomeSouls({ db, uid, data, now }) {
+        signedIn(uid);
+        return db.tx(async t => {
+          const L = await live(t); if (L["kill.souls"]) refuse("unavailable", "shop-closed"); current(L, data);
+          const r = Economy.welcome(await t.get(walletPath(uid)));
+          if (!r.ok) refuse("already-exists", r.why);
+          r.wallet.updatedAt = now; t.set(walletPath(uid), r.wallet); log(t, uid, { kind: "welcome", souls: r.granted }, now);
+          return r.wallet;
+        });
+      },
       // the free daily Souls, once per UTC day
       async claimDailySouls({ db, uid, data, now }) {
         signedIn(uid);

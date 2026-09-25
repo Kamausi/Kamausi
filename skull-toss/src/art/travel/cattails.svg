@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 260">
+  <!-- The Black Marsh: cattails. 100 units = 1 m; foot at (110, 254). -->
+  <style>.k{stroke:ink;stroke-linejoin:round;stroke-linecap:round}.c{stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.b{fill:none;stroke:ink;stroke-linecap:round;stroke-linejoin:round}.cb{fill:none;stroke-linecap:round;stroke-linejoin:round}.g{fill:none;stroke:gold;stroke-linecap:round}.w2{fill:none;stroke:#8A82A0;stroke-linecap:round}.w3{fill:none;stroke:#3E2A1C;stroke-linecap:round}.w4{fill:none;stroke:#5E9A68;stroke-linecap:round}</style>
+  <g id="body" stroke-width="5">
+    <ellipse class="s" cx="110" cy="254" rx="80" ry="7" fill="#000" opacity=".25"/>
+    <path class="cb" d="M60 254 C56 190 62 130 56 70 M100 254 V40 M140 254 C144 190 138 130 146 60 M180 254 C176 200 184 150 176 110" stroke="#4E6A3A" stroke-width="6"/>
+    <path class="k" d="M50 110 C50 96 64 96 64 110 V150 C64 162 50 162 50 150 Z M93 80 C93 64 108 64 108 80 V126 C108 140 93 140 93 126 Z M139 100 C139 86 154 86 154 100 V140 C154 152 139 152 139 140 Z" fill="#6A4028" stroke-width="3"/>
+    <path class="k" d="M100 254 C70 200 40 180 20 170 C50 170 80 190 104 240 Z M120 254 C150 210 180 196 206 190 C180 186 146 200 116 244 Z" fill="#5E7E48" stroke-width="3"/>
+  </g>
+</svg>

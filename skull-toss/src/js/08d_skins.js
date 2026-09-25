@@ -6,6 +6,7 @@
   const glintAt = (c, x, y, k) => { if (k < 0.03) return; c.fillStyle = `rgba(255,252,236,${k})`; star(c, x, y, 0.28 * k, 4, 0.18, 0); c.fill(); };
   const SILVER_NEG = P("#1E1E1E", "#343434", "#4A4A4A", "#EFEFEF", "#F4F4F4", "#111111", null);
   function flameTongues(c, t, n, spread, base, colors) {
+    if (gpuFireAt(c, "tongues" + spread + base, 0, base, spread * 1.1, 0.9)) return;   // v49: in play, the GPU draws the fire (08j_gpu.js)
     for (let i = 0; i < n; i++) {
       const bx = (i / (n - 1) - 0.5) * spread, h = 0.45 + 0.3 * Math.abs(Math.sin(t * 7.3 + i * 1.9)) + (1 - Math.abs(bx) / spread) * 0.35;
       const tipX = bx + Math.sin(t * 9 + i) * 0.12, tipY = base - h;

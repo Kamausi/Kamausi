@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 240">
+  <!-- The Clockwork Caves: amber crystals growing out of the rock, glowing. 100 units = 1 m; foot at (130, 234). -->
+  <style>.k{stroke:ink;stroke-linejoin:round;stroke-linecap:round}.c{stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.b{fill:none;stroke:ink;stroke-linecap:round;stroke-linejoin:round}.cb{fill:none;stroke-linecap:round;stroke-linejoin:round}.g{fill:none;stroke:gold;stroke-linecap:round}.w2{fill:none;stroke:#8A82A0;stroke-linecap:round}.w3{fill:none;stroke:#3E2A1C;stroke-linecap:round}.w4{fill:none;stroke:#5E9A68;stroke-linecap:round}</style>
+  <g id="body" stroke-width="5">
+    <ellipse class="s" cx="130" cy="234" rx="110" ry="8" fill="#000" opacity=".3"/>
+    <path class="k" d="M20 234 C30 200 60 190 90 196 C120 180 180 184 200 200 C230 200 244 220 246 234 Z" fill="#4A3A30"/>
+    <path class="k" d="M100 200 L90 60 L126 20 L150 70 L140 200 Z" fill="#F0A840"/>
+    <path class="k" d="M60 210 L40 110 L66 90 L90 130 L86 210 Z" fill="#E08A30"/>
+    <path class="k" d="M150 206 L170 110 L200 100 L208 150 L180 210 Z" fill="#E08A30"/>
+    <path class="s" d="M108 190 L100 66 L124 36 Z M52 200 L46 116 L64 100 Z M160 200 L176 118 L196 110 Z" fill="#FFE0A0" opacity=".6"/>
+  </g>
+</svg>

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 440">
+  <!-- The Bone Desert: a saguaro with its arms up. 100 units = 1 m; foot at (120, 434). -->
+  <style>.k{stroke:ink;stroke-linejoin:round;stroke-linecap:round}.c{stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.b{fill:none;stroke:ink;stroke-linecap:round;stroke-linejoin:round}.cb{fill:none;stroke-linecap:round;stroke-linejoin:round}.g{fill:none;stroke:gold;stroke-linecap:round}.w2{fill:none;stroke:#8A82A0;stroke-linecap:round}.w3{fill:none;stroke:#3E2A1C;stroke-linecap:round}.w4{fill:none;stroke:#5E9A68;stroke-linecap:round}</style>
+  <g id="body" stroke-width="5">
+    <ellipse class="s" cx="120" cy="434" rx="70" ry="8" fill="#000" opacity=".3"/>
+    <path class="k" d="M96 434 V60 C96 30 144 30 144 60 V434 Z" fill="#4E7A48"/>
+    <path class="k" d="M96 250 H60 C40 250 30 236 30 216 V120 C30 100 60 100 60 120 V214 H96 Z" fill="#4E7A48"/>
+    <path class="k" d="M144 300 H180 C200 300 210 286 210 266 V170 C210 150 180 150 180 170 V264 H144 Z" fill="#4E7A48"/>
+    <path class="w4" d="M110 70 V430 M130 70 V430 M44 130 V220 M196 180 V270" stroke-width="3"/>
+    <path class="k" d="M112 36 C116 20 124 20 128 36 Z" fill="#E86A7A" stroke-width="3"/>
+  </g>
+</svg>

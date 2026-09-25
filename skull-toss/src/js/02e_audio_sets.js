@@ -1,28 +1,9 @@
-  // ───────────────────────── sound sets, motifs and stings ─────────────────────────
-  // A sound set reshapes every synthesised sound effect (never the music or the graveyard's ambience) as it's made:
-  //   classic   the cartoon foley as it was
-  //   vintage   a worn optical soundtrack: dulled and wavering
-  //   spooky    a haunted organ: lower, longer, triangle-voiced, in a bigger room
-  //   chiptune  everything a square wave, shorter
-  //   kazoo     a kazoo band: buzzing saws through a paper filter, a little higher, with a wobble
-  // Motifs are short phrases: one for each boss as it walks on and one for each reel's title card, played in the
-  // current set. Stings are the signature shots' flourishes, rising with the shot's rarity.
-  const SOUNDSETS = {
-    classic:  {},
-    vintage:  { pitch: 0.97, lp: 2800, vib: [5.5, 0.005] },
-    spooky:   { pitch: 0.8, len: 1.25, wave: { sine: "triangle" }, room: 3 },
-    chiptune: { len: 0.8, wave: { sine: "square", triangle: "square", sawtooth: "square" }, peak: 0.55, noLp: true },
-    kazoo:    { pitch: 1.1, wave: { sine: "sawtooth", triangle: "sawtooth" }, lp: 1900, vib: [6, 0.015], peak: 0.7 }
-  };
-  const SOUNDSET_IDS = Object.keys(SOUNDSETS);
-  // a tone as the current set would make it (pure: the audio engine and the spec both ask)
-  function soundShape(f, type, dur, peak, slide, o = {}) {
-    const S = SOUNDSETS[settings.soundSet] || SOUNDSETS.classic, p = S.pitch || 1;
-    const lp = S.noLp ? undefined : S.lp ? Math.min(o.lp || Infinity, S.lp) : o.lp;
-    const vib = o.vib || (S.vib ? [S.vib[0], f * p * S.vib[1]] : undefined);
-    return { f: f * p, type: (S.wave && S.wave[type]) || type, dur: dur * (S.len || 1), peak: peak * (S.peak || 1), slide: slide ? slide * p : slide, o: { ...o, lp, vib } };
-  }
-  const soundRoom = () => (SOUNDSETS[settings.soundSet] || {}).room || 1;
+  // ───────────────────────── motifs and stings ─────────────────────────
+  // (v49: the sound sets are gone; every effect plays as the cartoon foley it always was.)
+  // Motifs are short phrases: one for each boss as it walks on and one for each reel's title card. Stings are the
+  // signature shots' flourishes, rising with the shot's rarity.
+  function soundShape(f, type, dur, peak, slide, o = {}) { return { f, type, dur, peak, slide, o }; }
+  const soundRoom = () => 1;
   // motifs: [MIDI note (0 a rest), beats] pairs, a tempo, and a voice
   const MOTIFS = {
     crow:          { bpm: 200, wave: "square",   n: [[76, 1], [72, 1], [0, 1], [76, 1], [79, 2]] },

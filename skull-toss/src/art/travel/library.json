@@ -1,5 +1,5 @@
 {
-  "_doc": "Crow Hollow's travel library (v47, the perceptual travel pilot): each asset is one SVG here with a <g id=\"body\">, drawn at 100 canvas units a metre. The build imports them with svgart.py like the skull and launcher. foot: the point that stands on the ground. layer: which depth band it belongs to (docs/TRAVEL.md). family: which of the map's interactions it answers to (maps/01-hollow.json sheet.interactions). collision is always none: travel scenery is looks only; nothing in it ever touches a throw. lights: points that glow (x, y, radius in canvas units).",
+  "_doc": "The travel library (v47 pilot on Crow Hollow; every map from v48, each with its own scenery from v49): each asset is one SVG here with a <g id=\"body\">, drawn at 100 canvas units a metre. The build imports them with svgart.py like the skull and launcher. foot: the point that stands on the ground. layer: which depth band it belongs to (docs/TRAVEL.md). family: which of the map's interactions it answers to (maps/01-hollow.json sheet.interactions). collision is always none: travel scenery is looks only; nothing in it ever touches a throw. lights: points that glow (x, y, radius in canvas units).",
   "version": "1.0.0",
   "units": 100,
   "assets": {
@@ -364,6 +364,646 @@
           110
         ]
       ]
+    },
+    "gilded-gate": {
+      "canvas": [
+        520,
+        430
+      ],
+      "foot": [
+        260,
+        424
+      ],
+      "layer": "midground",
+      "family": "gate",
+      "collision": "none"
+    },
+    "gilded-mausoleum": {
+      "canvas": [
+        560,
+        500
+      ],
+      "foot": [
+        280,
+        494
+      ],
+      "layer": "midground",
+      "family": "house",
+      "collision": "none",
+      "lights": [
+        [
+          280,
+          370,
+          70
+        ]
+      ]
+    },
+    "weeping-angel": {
+      "canvas": [
+        240,
+        400
+      ],
+      "foot": [
+        120,
+        394
+      ],
+      "layer": "gameplay",
+      "family": "angel",
+      "collision": "none"
+    },
+    "willow": {
+      "canvas": [
+        440,
+        480
+      ],
+      "foot": [
+        220,
+        474
+      ],
+      "layer": "midground",
+      "family": "tree",
+      "sway": 0.05,
+      "collision": "none"
+    },
+    "iron-fence": {
+      "canvas": [
+        440,
+        210
+      ],
+      "foot": [
+        220,
+        204
+      ],
+      "layer": "gameplay",
+      "family": "rail",
+      "collision": "none"
+    },
+    "gas-lamp": {
+      "canvas": [
+        140,
+        380
+      ],
+      "foot": [
+        70,
+        374
+      ],
+      "layer": "gameplay",
+      "family": "lantern",
+      "collision": "none",
+      "lights": [
+        [
+          70,
+          78,
+          80
+        ]
+      ]
+    },
+    "pine": {
+      "canvas": [
+        320,
+        540
+      ],
+      "foot": [
+        160,
+        534
+      ],
+      "layer": "midground",
+      "family": "tree",
+      "sway": 0.02,
+      "collision": "none"
+    },
+    "hollow-log": {
+      "canvas": [
+        400,
+        180
+      ],
+      "foot": [
+        200,
+        174
+      ],
+      "layer": "gameplay",
+      "family": "log",
+      "collision": "none"
+    },
+    "mushroom-ring": {
+      "canvas": [
+        280,
+        150
+      ],
+      "foot": [
+        140,
+        144
+      ],
+      "layer": "gameplay",
+      "family": "mushroom",
+      "collision": "none",
+      "lights": [
+        [
+          130,
+          80,
+          70
+        ]
+      ]
+    },
+    "owl-tree": {
+      "canvas": [
+        360,
+        500
+      ],
+      "foot": [
+        180,
+        494
+      ],
+      "layer": "midground",
+      "family": "tree",
+      "sway": 0.02,
+      "collision": "none",
+      "lights": [
+        [
+          181,
+          324,
+          60
+        ]
+      ]
+    },
+    "gnarled-root": {
+      "canvas": [
+        380,
+        230
+      ],
+      "foot": [
+        190,
+        224
+      ],
+      "layer": "gameplay",
+      "family": "root",
+      "collision": "none"
+    },
+    "fern": {
+      "canvas": [
+        240,
+        160
+      ],
+      "foot": [
+        120,
+        154
+      ],
+      "layer": "foreground",
+      "family": "corn",
+      "sway": 0.1,
+      "collision": "none"
+    },
+    "theatre-seats": {
+      "canvas": [
+        380,
+        190
+      ],
+      "foot": [
+        190,
+        184
+      ],
+      "layer": "gameplay",
+      "family": "seats",
+      "collision": "none"
+    },
+    "opera-box": {
+      "canvas": [
+        380,
+        480
+      ],
+      "foot": [
+        190,
+        474
+      ],
+      "layer": "midground",
+      "family": "house",
+      "collision": "none",
+      "lights": [
+        [
+          190,
+          120,
+          80
+        ]
+      ]
+    },
+    "marquee": {
+      "canvas": [
+        440,
+        400
+      ],
+      "foot": [
+        220,
+        394
+      ],
+      "layer": "midground",
+      "family": "sign",
+      "collision": "none",
+      "lights": [
+        [
+          220,
+          52,
+          110
+        ]
+      ]
+    },
+    "jester-pole": {
+      "canvas": [
+        160,
+        400
+      ],
+      "foot": [
+        80,
+        394
+      ],
+      "layer": "gameplay",
+      "family": "jester",
+      "sway": 0.03,
+      "collision": "none"
+    },
+    "stage-light": {
+      "canvas": [
+        200,
+        320
+      ],
+      "foot": [
+        100,
+        314
+      ],
+      "layer": "gameplay",
+      "family": "lantern",
+      "collision": "none",
+      "lights": [
+        [
+          165,
+          85,
+          90
+        ]
+      ]
+    },
+    "kelp": {
+      "canvas": [
+        200,
+        320
+      ],
+      "foot": [
+        100,
+        314
+      ],
+      "layer": "foreground",
+      "family": "reeds",
+      "sway": 0.12,
+      "collision": "none"
+    },
+    "swamp-cypress": {
+      "canvas": [
+        400,
+        540
+      ],
+      "foot": [
+        200,
+        534
+      ],
+      "layer": "midground",
+      "family": "tree",
+      "sway": 0.03,
+      "collision": "none"
+    },
+    "cypress-knees": {
+      "canvas": [
+        280,
+        130
+      ],
+      "foot": [
+        140,
+        124
+      ],
+      "layer": "gameplay",
+      "family": "knees",
+      "collision": "none"
+    },
+    "stilt-shack": {
+      "canvas": [
+        540,
+        500
+      ],
+      "foot": [
+        270,
+        494
+      ],
+      "layer": "midground",
+      "family": "house",
+      "collision": "none",
+      "lights": [
+        [
+          170,
+          214,
+          90
+        ]
+      ]
+    },
+    "dock-post": {
+      "canvas": [
+        220,
+        240
+      ],
+      "foot": [
+        110,
+        234
+      ],
+      "layer": "gameplay",
+      "family": "rail",
+      "collision": "none",
+      "lights": [
+        [
+          70,
+          87,
+          60
+        ]
+      ]
+    },
+    "lily-pads": {
+      "canvas": [
+        320,
+        90
+      ],
+      "foot": [
+        160,
+        84
+      ],
+      "layer": "gameplay",
+      "family": "lily",
+      "collision": "none"
+    },
+    "cattails": {
+      "canvas": [
+        220,
+        260
+      ],
+      "foot": [
+        110,
+        254
+      ],
+      "layer": "foreground",
+      "family": "reeds",
+      "sway": 0.12,
+      "collision": "none"
+    },
+    "saguaro": {
+      "canvas": [
+        240,
+        440
+      ],
+      "foot": [
+        120,
+        434
+      ],
+      "layer": "gameplay",
+      "family": "cactus",
+      "collision": "none"
+    },
+    "mesa": {
+      "canvas": [
+        900,
+        420
+      ],
+      "foot": [
+        450,
+        414
+      ],
+      "layer": "midground",
+      "family": "rock",
+      "collision": "none"
+    },
+    "skull-post": {
+      "canvas": [
+        160,
+        280
+      ],
+      "foot": [
+        80,
+        274
+      ],
+      "layer": "gameplay",
+      "family": "skull",
+      "collision": "none"
+    },
+    "wagon-wreck": {
+      "canvas": [
+        460,
+        280
+      ],
+      "foot": [
+        230,
+        274
+      ],
+      "layer": "midground",
+      "family": "cart",
+      "collision": "none"
+    },
+    "boot-hill": {
+      "canvas": [
+        220,
+        240
+      ],
+      "foot": [
+        110,
+        234
+      ],
+      "layer": "gameplay",
+      "family": "cross",
+      "collision": "none"
+    },
+    "tumbleweed": {
+      "canvas": [
+        170,
+        150
+      ],
+      "foot": [
+        85,
+        144
+      ],
+      "layer": "foreground",
+      "family": "tuft",
+      "sway": 0.04,
+      "collision": "none"
+    },
+    "crystal-cluster": {
+      "canvas": [
+        260,
+        240
+      ],
+      "foot": [
+        130,
+        234
+      ],
+      "layer": "gameplay",
+      "family": "crystal",
+      "collision": "none",
+      "lights": [
+        [
+          120,
+          120,
+          90
+        ]
+      ]
+    },
+    "gear-stack": {
+      "canvas": [
+        380,
+        400
+      ],
+      "foot": [
+        190,
+        394
+      ],
+      "layer": "midground",
+      "family": "gear",
+      "collision": "none"
+    },
+    "mine-cart": {
+      "canvas": [
+        320,
+        240
+      ],
+      "foot": [
+        160,
+        234
+      ],
+      "layer": "gameplay",
+      "family": "minecart",
+      "collision": "none"
+    },
+    "stalagmites": {
+      "canvas": [
+        340,
+        320
+      ],
+      "foot": [
+        170,
+        314
+      ],
+      "layer": "gameplay",
+      "family": "rock",
+      "collision": "none"
+    },
+    "pendulum-frame": {
+      "canvas": [
+        320,
+        540
+      ],
+      "foot": [
+        160,
+        534
+      ],
+      "layer": "midground",
+      "family": "pendulum",
+      "sway": 0.03,
+      "collision": "none"
+    },
+    "mine-lamp": {
+      "canvas": [
+        140,
+        300
+      ],
+      "foot": [
+        70,
+        294
+      ],
+      "layer": "gameplay",
+      "family": "lantern",
+      "collision": "none",
+      "lights": [
+        [
+          110,
+          105,
+          70
+        ]
+      ]
+    },
+    "film-reel": {
+      "canvas": [
+        320,
+        380
+      ],
+      "foot": [
+        160,
+        374
+      ],
+      "layer": "midground",
+      "family": "reel",
+      "collision": "none"
+    },
+    "film-strip": {
+      "canvas": [
+        260,
+        320
+      ],
+      "foot": [
+        130,
+        314
+      ],
+      "layer": "gameplay",
+      "family": "frame",
+      "collision": "none"
+    },
+    "spotlight": {
+      "canvas": [
+        200,
+        360
+      ],
+      "foot": [
+        100,
+        354
+      ],
+      "layer": "gameplay",
+      "family": "lantern",
+      "collision": "none",
+      "lights": [
+        [
+          90,
+          112,
+          100
+        ]
+      ]
+    },
+    "chain-pillar": {
+      "canvas": [
+        200,
+        520
+      ],
+      "foot": [
+        100,
+        514
+      ],
+      "layer": "midground",
+      "family": "pillar",
+      "collision": "none"
+    },
+    "rope-post": {
+      "canvas": [
+        160,
+        260
+      ],
+      "foot": [
+        80,
+        254
+      ],
+      "layer": "gameplay",
+      "family": "rail",
+      "collision": "none"
+    },
+    "director-chair": {
+      "canvas": [
+        220,
+        260
+      ],
+      "foot": [
+        110,
+        254
+      ],
+      "layer": "gameplay",
+      "family": "seats",
+      "collision": "none"
     }
   }
 }

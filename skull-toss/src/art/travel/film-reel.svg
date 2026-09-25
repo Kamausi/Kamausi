@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 380">
+  <!-- The Black Abyss: a giant film reel on a stand, film spilling off it. 100 units = 1 m; foot at (160, 374). -->
+  <style>.k{stroke:ink;stroke-linejoin:round;stroke-linecap:round}.c{stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.b{fill:none;stroke:ink;stroke-linecap:round;stroke-linejoin:round}.cb{fill:none;stroke-linecap:round;stroke-linejoin:round}.g{fill:none;stroke:gold;stroke-linecap:round}.w2{fill:none;stroke:#8A82A0;stroke-linecap:round}.w3{fill:none;stroke:#3E2A1C;stroke-linecap:round}.w4{fill:none;stroke:#5E9A68;stroke-linecap:round}</style>
+  <g id="body" stroke-width="5">
+    <ellipse class="s" cx="160" cy="374" rx="130" ry="10" fill="#000" opacity=".3"/>
+    <path class="k" d="M100 374 L150 220 H170 L220 374 Z" fill="#3A3444"/>
+    <circle class="k" cx="160" cy="170" r="140" fill="#9A96A8"/><circle class="k" cx="160" cy="170" r="120" fill="#6A6678"/>
+    <circle class="k" cx="160" cy="80" r="32" fill="#1A1622"/><circle class="k" cx="160" cy="260" r="32" fill="#1A1622"/><circle class="k" cx="70" cy="170" r="32" fill="#1A1622"/><circle class="k" cx="250" cy="170" r="32" fill="#1A1622"/>
+    <circle class="k" cx="160" cy="170" r="22" fill="#C8C4D4"/>
+    <path class="k" d="M270 250 C300 290 280 330 250 350 C230 362 240 374 260 374 H300 C320 340 320 290 290 240 Z" fill="#2A2632"/>
+  </g>
+</svg>

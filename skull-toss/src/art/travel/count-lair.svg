@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 820">
   <!-- The Gilded Graveyard's destination: the Count's crypt, gold-trimmed, its stained window glowing. 100 units = 1 m; foot at (450, 810). -->
-  <style>.k{stroke:ink;stroke-width:8;stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}</style>
+  <style>.c{stroke-linejoin:round;stroke-linecap:round}.k{stroke:ink;stroke-width:8;stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}</style>
   <g id="body">
     <ellipse class="s" cx="452" cy="806" rx="420" ry="22" fill="#000" opacity=".35"/>
     <path class="k" d="M170 806 L170 380 L450 150 L730 380 L730 806 Z" fill="#5A5268"/>
@@ -16,7 +16,7 @@
     <path class="s" d="M400 300 L440 300 L440 326 L400 326 Z" fill="#FFB050" opacity=".7"/>
     <path class="k" d="M110 420 C60 380 30 400 20 360 C60 370 70 340 110 360 C120 330 150 340 160 370 Z" fill="#2A2232" stroke-width="6"/>
     <path class="k" d="M790 420 C840 380 870 400 880 360 C840 370 830 340 790 360 C780 330 750 340 740 370 Z" fill="#2A2232" stroke-width="6"/>
-    <path class="k" d="M170 806 H730" fill="none" stroke="gold" stroke-width="10"/>
-    <path class="k" d="M150 396 L450 150 L750 396" fill="none" stroke="gold" stroke-width="7"/>
+    <path class="c" d="M170 806 H730" fill="none" stroke="gold" stroke-width="10"/>
+    <path class="c" d="M150 396 L450 150 L750 396" fill="none" stroke="gold" stroke-width="7"/>
   </g>
 </svg>

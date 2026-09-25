@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 280">
+  <!-- The Bone Desert: the ribs of a covered wagon, one wheel off. 100 units = 1 m; foot at (230, 274). -->
+  <style>.k{stroke:ink;stroke-linejoin:round;stroke-linecap:round}.c{stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.b{fill:none;stroke:ink;stroke-linecap:round;stroke-linejoin:round}.cb{fill:none;stroke-linecap:round;stroke-linejoin:round}.g{fill:none;stroke:gold;stroke-linecap:round}.w2{fill:none;stroke:#8A82A0;stroke-linecap:round}.w3{fill:none;stroke:#3E2A1C;stroke-linecap:round}.w4{fill:none;stroke:#5E9A68;stroke-linecap:round}</style>
+  <g id="body" stroke-width="5">
+    <ellipse class="s" cx="230" cy="274" rx="220" ry="10" fill="#000" opacity=".3"/>
+    <path class="k" d="M40 220 L400 200 L410 230 L50 252 Z" fill="#7A5A3A"/>
+    <path class="b" d="M80 220 C80 120 140 80 180 76 M150 214 C150 110 210 70 250 70 M220 210 C230 110 280 76 320 80 M290 206 C310 130 350 110 380 116" stroke-width="10"/>
+    <path class="k" d="M190 90 C230 80 280 84 310 96 L300 150 C270 140 230 138 196 146 Z" fill="#E8DCC0" stroke-width="3"/>
+    <circle class="k" cx="110" cy="250" r="28" fill="none" stroke-width="8"/><path class="b" d="M110 222 V278 M82 250 H138" stroke-width="5"/>
+    <path class="k" d="M360 274 C350 250 360 230 390 226 C420 222 440 240 440 260 C440 272 430 274 420 274 Z" fill="none" stroke-width="8"/>
+    <path class="b" d="M390 230 L406 272 M372 262 L436 244" stroke-width="5"/>
+  </g>
+</svg>

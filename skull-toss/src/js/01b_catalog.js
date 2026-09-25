@@ -258,14 +258,10 @@
     { id: "iron", name: "Cast Iron", s: 2, price: 1100 },          { id: "candy", name: "Candy Fork", s: 2, price: 1300 },
     { id: "gold", name: "Gold Plate", s: 3, price: 3000 },         { id: "neon", name: "Neon Fork", s: 4, price: 7000 }
   ];
-  CATALOG.wizard = [
-    { id: "none", name: "Just Morty" },
-    { id: "apprentice", name: "Apprentice Mort", s: 3, req: ["shards", 4], boss: true },
-    { id: "mort", name: "Wizard Mort", s: 4, req: ["storyClears", 1], boss: true }
-  ];
-  KINDS.push("hair", "beard", "wings", "launcher", "wizard");
-  Object.assign(KIND_LABEL, { hair: "hair", beard: "facial hair", wings: "wings", launcher: "launcher", wizard: "Wizard Mort" });
-  Object.assign(DEFAULT_COS, { hair: "none", beard: "none", wings: "none", launcher: "classic", wizard: "none" });
+  // (v49: the Wizard Mort shelf is gone)
+  KINDS.push("hair", "beard", "wings", "launcher");
+  Object.assign(KIND_LABEL, { hair: "hair", beard: "facial hair", wings: "wings", launcher: "launcher" });
+  Object.assign(DEFAULT_COS, { hair: "none", beard: "none", wings: "none", launcher: "classic" });
   REQ_TEXT.shards = n => `Win ${n} shards of the Black Ring`;
   // v45: two new shelves. Glasses sit over Morty's sockets; ring wings are the wings the ring sprouts after the mini-boss
   // (the classic bat membrane, or any of Morty's own wing styles), and the mini-bosses give some of them back.

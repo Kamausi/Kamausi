@@ -67,9 +67,9 @@
     fresh(); const s = throwAndSettle(0, C.RING_Y + C.RC_START); // aimed straight at the top of the tube
     assert(!s.lastResult.make, `got ${s.lastResult.kind}`);
   });
-  test("Misses are classified: wide, too high, too low, post, short (a post only where the ring stands on one)", () => {
+  test("Misses are classified: wide, too high, too low, post, short (v49: every map's ring stands on a pole)", () => {
     const cases = [[C.RC_START + 1.2, C.RING_Y, "wide"], [0.2, C.RING_Y + C.RC_START + 0.7, "over"],
-      [0.6, C.RING_Y - C.RC_START - 0.7, "low"], [0, 0.9, "post", 5], [0, 0.9, "low", 1], [0, -2, "short"]];
+      [0.6, C.RING_Y - C.RC_START - 0.7, "low"], [0, 0.9, "post", 5], [0, 0.9, "post", 1], [0, -2, "short"]];
     for (const [ax, ay, want, stage] of cases) { fresh(); if (stage) { T.setStage(stage); T.calm(); T.freezeRing(0, C.RING_Y); } const s = throwAndSettle(ax, ay); assert(s.lastResult.kind === want, `aim (${ax}, ${ay}) on map ${stage || 1} → ${s.lastResult.kind}, wanted ${want}`); }
   });
 
@@ -350,8 +350,7 @@
     $("buyBtn").click(); assert(T.cosmetics().hat === "bowler" && !$("sheet-customize").classList.contains("trying"), "Wear it puts it on");
     const how = $("shopGrid").querySelector(".item.locked .how"); assert(how && /Bones/i.test(how.textContent), "a locked item says how it's had");
     T.shopCat("glasses"); const g = $("shopGrid").querySelector('[data-id="bandit"] .how'); assert(g && /Earn/i.test(g.textContent), "and an earned one says so");
-    $("clearBadges").click(); assert(!$("clearAsk").hidden && bub("glasses") === 1, "Clear badges asks first");
-    $("clearYes").click(); assert(bub("glasses") === 0 && bub("hat") === 0 && $("clearBadges").hidden, "then clears every bubble");
+    $("clearBadges").click(); assert(bub("glasses") === 0 && bub("hat") === 0 && $("clearBadges").hidden, "Clear badges clears every bubble at once, no question asked");
     T.closeSheet(); T.equip("hat", "none"); T.setStats(ZERO);
   });
   test("v45: three times the achievements, in sections; twenty-one ranks, the last at 50,000 makes; a set bonus for all three of a period", () => {
@@ -364,7 +363,7 @@
     const b0 = T.bones(); T.claim(0); T.claim(1); const b2 = T.bones(); T.claim(2);
     const paid = T.bones() - b2 - T.daily().items[2].reward;
     assert(paid === 150 && T.profile().chalSets === 1 && T.daily().setPaid, `the set bonus pays once (${paid}, from ${b0})`);
-    T.openSheet("challenges"); assert(document.querySelector("#chalList .chal-set.claimed"), "the sheet shows the set bonus, paid"); T.closeSheet();
+    T.openSheet("challenges"); assert(document.querySelector("#chalSet .chal-set.claimed"), "the sheet shows the set bonus, paid, in its strip at the top"); T.closeSheet();
     T.setStats(ZERO); T.setDaily(null);
   });
   test("Daily challenges: three a day, progress counts, claiming pays once", () => {
@@ -970,7 +969,7 @@
     const tag = document.querySelector(".tagline");
     assert(/The Adventure of Mortimer Bones/i.test(tag.textContent) && !/One skull/.test(tag.textContent) && getComputedStyle(tag).textTransform === "uppercase", "the tagline is the one line, in capitals (v46: The Adventure of Mortimer Bones)");
   });
-  test("The score follows the acts: menu, A, B and the boss, with the synth as the understudy", () => {
+  test("The score follows the acts: menu, A, B and the boss, the recorded score and nothing else", () => {
     T.toTitle(); assert(T.music().want === "menu", `title plays ${T.music().want}`);
     fresh(); assert(T.music().want === "A", `a run opens on ${T.music().want}`);
     toHit(C.STAGE_MINI); assert(T.music().want === "boss", `the mini-boss plays ${T.music().want}`);
@@ -1161,7 +1160,7 @@
     beatCrow(8); toHit(C.STAGE_BOSS); T.step(2.9); assert(T.boss().kind === "reaper", `map 8's end boss is the Reel Reaper (${T.boss().kind})`);
     T.hurtBoss(99); T.endThrow(); T.step(9);   // (the knockout's hold, the reward and the shard, then the 3.4 s ending)
     const p = T.profile();
-    assert(p.storyClears === 1 && p.fragments.includes("abyss") && p.bestStage === 9 && T.canUse("wings", "shadow") && T.canUse("wizard", "mort"), JSON.stringify({ c: p.storyClears, f: p.fragments, b: p.bestStage }));
+    assert(p.storyClears === 1 && p.fragments.includes("abyss") && p.bestStage === 9 && T.canUse("wings", "shadow"), JSON.stringify({ c: p.storyClears, f: p.fragments, b: p.bestStage }));
     assert(T.state().state === "over" && /THE\s*END/.test(T.goWords()), `the reel should end (${T.state().state}, "${T.goWords()}")`);
     T.step(2.2);
     assert(/The end/.test(document.querySelector("#over .rip").textContent), "the results say The end, not Here lies");
@@ -1398,11 +1397,11 @@
   const skipCards = () => { for (let i = 0; i < 6 && T.reel().card; i++) { T.skipReel(); T.step(0.02); } };
   const beatBoth = stage => { fresh(); skipCards(); T.setStage(stage); toHit(C.STAGE_MINI); T.step(2.6); T.hurtBoss(99); T.endThrow(); T.step(3.2); toHit(C.STAGE_BOSS); T.step(2.9); T.hurtBoss(99); T.endThrow(); };
   step(() => T.cards(true));
-  test("A Story run opens on the countdown leader, then Reel One's title card; the throw waits, and a tap skips", () => {
+  test("A Story run opens on Reel One's title card, then the countdown leader (v49: after the card); the throw waits, and a tap skips", () => {
     T.setStats(ZERO); T.start(); T.freezeRing(0, C.RING_Y);
-    let R = T.reel(); assert(R.card === "leader" && !R.hidden && T.state().state === "cine", `the leader first (${JSON.stringify(R)})`);
+    let R = T.reel(); assert(R.card === "title" && R.n === 1 && R.title === T.maps()[0].name && /Reel One of Eight/.test(R.reel) && T.state().state === "cine", `the map's card first (${JSON.stringify(R)})`);
     assert(!T.throwAt(0, C.RING_Y), "no throw while a card is up");
-    T.step(2.5); R = T.reel(); assert(R.card === "title" && R.n === 1 && R.title === T.maps()[0].name && /Reel One of Eight/.test(R.reel), JSON.stringify(R));
+    T.step(2.9); R = T.reel(); assert(R.card === "leader" && !R.hidden, `then the countdown (${JSON.stringify(R)})`);
     $("reelCard").dispatchEvent(new PointerEvent("pointerdown", { bubbles: true })); T.step(0.05);
     R = T.reel(); assert(R.hidden && T.state().state === "ready", `a tap skips to play (${JSON.stringify(R)})`);
     T.start(); R = T.reel(); assert(R.card === "title", `the leader plays once a session; the next run opens on the title (${R.card})`);
@@ -1859,18 +1858,11 @@
     T.closeSheet(); T.setStats(ZERO); T.toTitle();
   });
 
-  // ── v33: sound sets, motifs and stings ──
-  test("Five sound sets reshape every sound effect as it's made; Classic leaves them as they were", () => {
-    assert(T.soundSets().join() === "classic,vintage,spooky,chiptune,kazoo", T.soundSets().join());
-    const shape = set => { T.setSetting("soundSet", set); return T.shape(440, "sine", 0.2, 0.1, 880, { lp: 4000 }); };
-    let S = shape("classic"); assert(S.f === 440 && S.type === "sine" && S.dur === 0.2 && S.o.lp === 4000 && !S.o.vib, JSON.stringify(S));
-    S = shape("vintage"); assert(S.o.lp === 2800 && S.o.vib && Math.abs(S.f - 426.8) < 0.01, `vintage: dulled and wavering (${JSON.stringify(S)})`);
-    S = shape("spooky"); assert(Math.abs(S.f - 352) < 1e-9 && S.type === "triangle" && Math.abs(S.dur - 0.25) < 1e-9 && S.slide === 704 && T.soundRoom() === 3, `spooky: lower, longer, a bigger room (${JSON.stringify(S)})`);
-    S = shape("chiptune"); assert(S.type === "square" && S.o.lp === undefined && S.dur < 0.2, `chiptune: square, unfiltered (${JSON.stringify(S)})`);
-    S = shape("kazoo"); assert(S.type === "sawtooth" && S.o.lp === 1900 && S.f > 440, `kazoo (${JSON.stringify(S)})`);
-    T.setSetting("soundSet", "classic"); T.toTitle(); T.openSheet("settings");
-    assert(document.querySelectorAll("#set-soundset button").length === 5 && /as it was/.test($("soundSetNote").textContent), "the Settings row");
-    T.closeSheet();
+  // ── v33: motifs and stings (v49: the sound sets are gone) ──
+  test("v49: no sound sets and no synthesised music: effects play as they always did, and the Settings row is gone", () => {
+    const S = T.shape(440, "sine", 0.2, 0.1, 880, { lp: 4000 }); assert(S.f === 440 && S.type === "sine" && S.dur === 0.2 && S.o.lp === 4000 && T.soundRoom() === 1, JSON.stringify(S));
+    T.toTitle(); T.openSheet("settings"); assert(!$("set-soundset") && !("soundSet" in T.settings()), "the Settings row"); T.closeSheet();
+    assert(!T.music().synth, "no synth music");
   });
   test("Every boss walks on to its own motif, every reel's card has one, and a signature shot's sting rises with its rarity", () => {
     const ids = Object.keys(T.bossInfo()).concat([1, 2, 3, 4, 5, 6, 7, 8].map(n => "map" + n));
@@ -2313,16 +2305,15 @@
       assert(m.sheet.ambient.length <= B.ambientBudget.max && m.sheet.lighting.ring >= B.lighting.ringReadability, `${m.name}: inside the ambient budget, the ring readable`);
       const Z = m.sheet.zones; assert(Z.targets.z[0] >= Z.ring.z[0] && Z.hazards.z[1] <= Z.ring.z[1], `${m.name}: targets behind the ring, hazards before it`);
     }
-    assert(new Set(M.map(m => m.anchor)).size === 8, "eight maps, eight ways the ring belongs to them");
+    assert(M.every(m => m.anchor === "post"), "v49: every map's ring stands on its pole");
   });
   test("Tiers I to VI have their names: The Toss, The Distraction, The Hazard, The Puzzle, The Chaos, The Secrets", () => {
     assert(T.tiers().map(x => x.name).join() === "The Toss,The Distraction,The Hazard,The Puzzle,The Chaos,The Secrets", T.tiers().map(x => x.name).join());
     const M = T.maps(); assert(M[0].tiers[0] === "I" && M[7].tiers[1] === "VI", "the reel climbs from the Toss to the Secrets");
   });
-  test("The ring hangs from its map: it holds in the first half, snaps loose when it flies, and the Bone Desert stands it further off", () => {
-    fresh(); T.unfreezeRing(); let A = T.anchor(); assert(A.kind === "branch" && A.holds && A.z0 === C.RING_Z, `Crow Hollow's oak branch (${JSON.stringify(A)})`);
-    beatCrow(1); A = T.anchor(); assert(!A.holds, "the winged ring has left its rope");
-    fresh(); T.setStage(6); T.unfreezeRing(); T.step(0.2); A = T.anchor(); assert(A.kind === "hand" && Math.abs(T.state().ring.z - (C.RING_Z + 1.4)) < 1e-6, `the desert's hand holds it 1.4 m further off (${T.state().ring.z})`);
+  test("v49: the ring stands on its pole on every map: it holds in the first half and leaves it when it flies", () => {
+    for (const n of [1, 2, 6, 8]) { fresh(); if (n > 1) T.setStage(n); T.unfreezeRing(); T.step(0.2); const A = T.anchor(); assert(A.kind === "post" && A.holds, `map ${n}: on its pole (${JSON.stringify(A)})`); }
+    beatCrow(1); assert(!T.anchor().holds, "the winged ring has left its pole");
     T.toTitle();
   });
   test("The environment answers a hit: props near a landing move, bend, squeak, crack or fall, the map's way", () => {
@@ -2374,8 +2365,25 @@
     fresh(); T.setStage(4); T.calm(); T.spawnTargetType("popup"); let up = 0, down = 0; for (let i = 0; i < 40; i++) { T.step(0.1); if (T.targetLive(0)) up++; else down++; } assert(up > 5 && down > 5, `it ducks and comes back (${up}/${down})`);
     fresh(); T.setStage(8); T.calm(); const b = T.bones(); T.spawnTargetType("golden"); T.hitTargetNow(0); assert(T.bones() >= b + 25, "gold pays bones");
     const secrets = T.profile().secretTargets || 0; T.spawnTargetType("secret"); T.hitTargetNow(1); assert((T.profile().secretTargets || 0) === secrets + 1, "a secret found counts");
-    fresh(); T.setStage(3); T.calm(); T.freezeRing(0, C.RING_Y); const { a, q } = pathAt(3.6); const d = T.spawnTargetType("decoy"); assert(d.z < C.RING_Z, "a decoy hangs in front of the ring");
+    fresh(); T.setStage(3); T.calm(); T.freezeRing(0, C.RING_Y); const { a, q } = pathAt(3.6); const d = T.spawnTargetType("decoy"); assert(d.corner != null, "v49: a decoy keeps to a corner like the rest");
     void a; void q; T.toTitle();
+  });
+  test("v49: targets are bullseyes in the corners, never in front of the ring or behind it on screen; a throw straight at one hits it (and still misses the ring)", () => {
+    for (const n of [2, 4, 6, 8]) {
+      fresh(); T.setStage(n); T.calm(); for (let i = 0; i < 4; i++) T.spawnTargetType("standard");
+      const R = T.maps()[n - 1].sheet.zones.ring;
+      const Ts = T.targetsFull(); assert(new Set(Ts.map(q => q.corner)).size === 4, `map ${n}: one in each corner (${Ts.map(q => q.corner)})`);
+      for (const q of Ts) {
+        assert(q.y - 0.26 > R.y[1] + C.RC_START || q.y + 0.26 < R.y[0] - C.RC_START, `map ${n}: above the ring's highest reach or below its lowest (${q.y.toFixed(2)})`);
+        assert(Math.abs(q.x) > 1 && Math.abs(q.x) < 2, `map ${n}: off to one side, on screen even on a phone (${q.x.toFixed(2)})`);
+        const a = T.aimFor(q.x, q.y, q.z); assert(Math.abs(a.AX) <= 2.8 && a.AY <= 5 && a.AY >= 0.35, `map ${n}: within a throw's aim (${JSON.stringify(a)})`);
+      }
+    }
+    fresh(); T.setStage(3); T.calm(); T.spawnTargetType("standard"); const q = T.targetsFull()[0], a = T.aimFor(q.x, q.y, q.z), lives = T.state().lives, pts = T.profile().targetHits || 0;
+    void q;
+    T.freezeRing(0, C.RING_Y); T.throwAt(a.AX, a.AY); T.step(3);
+    assert((T.profile().targetHits || 0) === pts + 1 && !T.state().lastResult.make && T.state().lives === lives - 1, `straight at a corner: the bullseye pays, the ring's miss costs a skull (${T.profile().targetHits}, ${T.state().lastResult.kind})`);
+    T.toTitle();
   });
   test("A decoy in the throw's way is a miss; the Codex knows all nine targets and eight obstacles", () => {
     fresh(); T.setStage(3); T.calm(); T.freezeRing(0, C.RING_Y); const { a, q } = pathAt(3.6); T.plantDecoy(q.x, q.y, q.z); const lives = T.state().lives;
@@ -2419,22 +2427,21 @@
     T.hurtBoss(Math.ceil(F.max / 3)); assert(T.fight().phase === 1, `a third down: phase II (${JSON.stringify(T.fight())})`);
     T.toTitle(); T.setStats(ZERO);
   });
-  test("The new slots: hair, facial hair and wings come back from the end bosses; a launcher; Wizard Mort at four shards and the whole Black Ring", () => {
+  test("The new slots: hair, facial hair and wings come back from the end bosses; a launcher (v49: no Wizard Mort shelf)", () => {
     T.setStats(ZERO); T.toTitle(); T.openSheet("customize");
-    for (const k of ["hair", "beard", "wings", "launcher", "wizard"]) { T.shopCat(k); assert(document.querySelectorAll("#shopGrid .item").length >= 3, `the ${k} shelf`); }
+    for (const k of ["hair", "beard", "wings", "launcher"]) { T.shopCat(k); assert(document.querySelectorAll("#shopGrid .item").length >= 3, `the ${k} shelf`); }
     const groups = [...document.querySelectorAll("#catTabs [data-group]")].map(b => b.dataset.group);
-    assert(groups.join() === "Head,Face,Hair,Facial hair,Wings,Effects,Skull,Ring,Launcher,Special,Wizard Mort", groups.join());
-    assert(!T.canUse("wizard", "apprentice") && !T.canUse("wizard", "mort") && !T.canUse("hair", "vines"), "locked at first");
-    T.setStats({ ...ZERO, fragments: ["hollow", "gilded", "whistle", "drowned"], bossLog: { pumpkin: 1 } }); assert(T.canUse("wizard", "apprentice") && !T.canUse("wizard", "mort") && T.canUse("hair", "vines"), "four shards: the apprentice; the Pumpkin King: his vines");
-    T.setStats({ ...ZERO, storyClears: 1 }); assert(T.canUse("wizard", "mort"), "the Adventure finished: Wizard Mort");
-    T.closeSheet(); T.equip("wizard", "mort"); T.equip("wings", "shadow"); T.start(); T.step(0.5); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); assert(T.state().lastResult.make, "and he still throws the same");
-    T.equip("wizard", "none"); T.equip("wings", "none"); T.setStats(ZERO); T.toTitle();
+    assert(groups.join() === "Head,Face,Hair,Facial hair,Wings,Effects,Skull,Ring,Launcher,Special" && !document.querySelector('#catTabs [data-cat="wizard"]'), groups.join());
+    assert(!T.canUse("hair", "vines"), "locked at first");
+    T.setStats({ ...ZERO, bossLog: { pumpkin: 1 } }); assert(T.canUse("hair", "vines"), "the Pumpkin King: his vines");
+    T.closeSheet(); T.equip("wings", "shadow"); T.start(); T.step(0.5); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); assert(T.state().lastResult.make, "and he still throws the same");
+    T.equip("wings", "none"); T.setStats(ZERO); T.toTitle();
   });
-  test("The profile has a picture (a face, a frame each map earns) and a bio, and both travel in a save code", () => {
+  test("The profile has a picture (one of eight) and a bio, and both travel in a save code", () => {
     T.setStats({ ...ZERO, bestStage: 3 }); T.toTitle(); T.openSheet("profile");
-    document.querySelector('#picFaces [data-face="dizzy"]').click(); document.querySelector('#picFrames [data-frame="gilded"]').click();
-    assert(T.profile().pic.face === "dizzy" && T.profile().pic.frame === "gilded", JSON.stringify(T.profile().pic));
-    assert(document.querySelector('#picFrames [data-frame="abyss"]').disabled, "a frame is earned by clearing its map");
+    const pics = document.querySelectorAll("#picGrid button"); assert(pics.length === 8 && [...pics].every(b => !b.disabled), "eight pictures, all of them selectable");
+    document.querySelector('#picGrid [data-face="dizzy"]').click();
+    assert(T.profile().pic.face === "dizzy" && T.profile().pic.frame === "drowned" && document.querySelector('#picGrid [data-face="dizzy"]').getAttribute("aria-pressed") === "true", JSON.stringify(T.profile().pic));
     const bio = $("prof-bio"); bio.value = "Tosser of skulls <b>"; bio.dispatchEvent(new Event("input")); assert(T.profile().bio === "Tosser of skulls b", `markup stripped (${T.profile().bio})`);
     const code = T.exportCode(); T.setStats(ZERO); assert(T.importCode(code) && T.profile().bio === "Tosser of skulls b" && T.profile().pic.face === "dizzy", "the code carries them");
     T.closeSheet(); T.setStats(ZERO); T.toTitle();
@@ -2480,6 +2487,70 @@
     fresh(); T.setStage(2); assert(T.travel().on && T.travel().D === 0, "and so does the next map (all eight do: the v48 test)");
     T.startArcade(0); T.setHits(20); T.step(0.5); assert(T.travel().on && T.travel().D === 0, "Arcade on Crow Hollow stands at the start");
     T.toTitle(); T.setStats(ZERO);
+  });
+  // ── v49: the menus, the Vault's Closet, the Cart and the Soul Shop, the popups and the results ──
+  test("v49 title: six small buttons in two rows of three, and Leaderboard says so", () => {
+    T.toTitle(); const chips = [...document.querySelectorAll("#title .menu-row .chip-btn")].filter(b => !b.hidden);
+    assert(chips.length === 6 && getComputedStyle(document.querySelector("#title .menu-row")).display === "grid", `six, in a grid (${chips.length})`);
+    const tops = [...new Set(chips.map(b => Math.round(b.getBoundingClientRect().top)))]; assert(tops.length === 2, `two rows (${tops})`);
+    assert(chips.some(b => b.textContent.trim() === "Leaderboard") && !chips.some(b => b.textContent.trim() === "Leaders"), "Leaderboard, not Leaders");
+  });
+  test("v49 Play sheet and challenges: the Director's Challenge comes after Practice and Boss Rush; the set bonus is a slim strip at the top", () => {
+    T.setStats(OPENED); T.toTitle(); T.openSheet("play"); const kids = [...$("modePick").children].map(el => el.id || el.className);
+    assert(kids.indexOf("directorCard") > kids.indexOf("moreModes"), `the director's card below the other modes (${kids})`); T.closeSheet();
+    T.openSheet("challenges"); const body = [...document.querySelector("#sheet-challenges .sheet-body").children].map(el => el.id || el.className);
+    assert(body.indexOf("chalSet") < body.indexOf("streakLine") && body.indexOf("chalSet") < body.indexOf("chalList") && $("chalSet").querySelector(".chal-set"), `the strip above the streak and the timer (${body})`);
+    assert($("chalSet").firstElementChild.getBoundingClientRect().height < 64, `and it's slim (${$("chalSet").firstElementChild.getBoundingClientRect().height})`); T.closeSheet(); T.setStats(ZERO);
+  });
+  test("v49 settings: in sections (Audio, Graphics, Gameplay, Accessibility, Account & data), with Sign in with Google", () => {
+    T.toTitle(); T.openSheet("settings");
+    assert([...document.querySelectorAll("#sheet-settings .set-h")].map(h => h.textContent).join("|") === "Audio|Graphics|Gameplay|Accessibility|Account & data", "the sections");
+    const btn = $("googleSignIn"); assert(btn && /Sign in with Google/.test(btn.textContent) && btn.disabled, "the Google button (off without the online game)");
+    assert(/online game/.test($("accountNote").textContent), $("accountNote").textContent); T.closeSheet();
+    T.openSheet("profile"); assert(document.querySelector("#saveCard .google-btn"), "and on the Profile's save card"); T.closeSheet();
+  });
+  test("v49 Vault: a Closet holds Surprise me (first), four outfits, Save look and the shelves; the pedestal says Preview; no Wizard Mort", () => {
+    T.setStats(ZERO); T.toTitle(); T.openSheet("customize");
+    const closet = $("closet"); assert(closet.tagName === "DETAILS" && /Closet/.test(closet.querySelector("summary").textContent) && !closet.open, "a Closet drop-down, folded");
+    for (const id of ["surpriseBtn", "outfitSlots", "outfitSave", "catTabs"]) assert(closet.contains($(id)), `${id} is in the Closet`);
+    assert($("outfits").firstElementChild.id === "surpriseBtn", "Surprise me on the left");
+    assert(document.querySelectorAll("#outfitSlots .slot").length === 4 && T.cosmetics().outfits.length === 4, "four outfit slots");
+    assert($("previewTag").textContent === "Preview", $("previewTag").textContent);
+    closet.open = true; document.querySelector('#catTabs [data-cat="hat"]').click(); assert(!closet.open && $("closetNow").textContent === "Hats", "picking a shelf folds it away, and it names the shelf");
+    T.closeSheet();
+  });
+  test("v49 Cart and Souls: the coffin opens for bones too; 200 welcome Souls; a countdown to the daily handful; the pack tiers; Back from the Soul Shop is the Cart", async () => {
+    T.setStats({ ...ZERO, bones: 5000 }); T.toTitle(); T.welcome(true); await T.fakeServer("welcome1"); for (let i = 0; i < 5; i++) await new Promise(r => setTimeout(r, 0));
+    assert(T.wallet().souls === 200 && T.wallet().welcomed, `200 Souls to start (${JSON.stringify(T.wallet())})`);
+    const again = await T.callServer("claimWelcomeSouls", {}).then(() => "paid", e => e.code); assert(again === "already-exists", `once per account (${again})`);
+    T.welcome(false);
+    T.openSheet("store"); const b0 = T.bones(), u0 = T.profile().unlocked.length; $("coffinBones").click();
+    assert(T.bones() === b0 - T.coffinBones() && T.profile().unlocked.length === u0 + 1, `the coffin, for ${T.coffinBones()} bones`);
+    T.step(0.1); $("coffinKeep").hidden = false; $("coffinKeep").click();
+    document.querySelector('#sheet-store [data-sheet="souls"]').click(); assert(!$("sheet-souls").hidden, "the Soul Shop");
+    assert(/\d/.test($("soulsNext").textContent), `a countdown (${$("soulsNext").textContent})`);
+    const packs = [...document.querySelectorAll("#soulsPacks .pack")].map(b => b.dataset.product); assert(packs.join() === "souls.100,souls.500,souls.1100,souls.2300,souls.6000,souls.13000", packs.join());
+    assert(/\$99\.99/.test(document.querySelector('#soulsPacks [data-product="souls.13000"]').textContent), "the whale anchor's list price");
+    document.querySelector("#sheet-souls [data-back]").click(); assert(!$("sheet-store").hidden && $("sheet-souls").hidden, "Back goes to the Curio Cart, not the title");
+    document.querySelector("#sheet-store [data-back]").click(); assert($("sheet-store").hidden, "and Back again closes it");
+    T.noServer(); T.setStats(ZERO);
+  });
+  test("v49 results: the headstone's four small buttons in one row, and the whole screen without scrolling", () => {
+    T.setStats(ZERO); fresh(); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); T.endRun(); T.step(2);
+    const row = document.querySelector("#over .res-row"); assert(row && row.querySelectorAll(".chip-btn").length === 4, "one row of four");
+    const tops = new Set([...row.querySelectorAll(".chip-btn")].map(b => Math.round(b.getBoundingClientRect().top))); assert(tops.size === 1, "side by side");
+    T.fitResults(); const scr = $("over"); assert(scr.scrollHeight <= scr.clientHeight + 1, `no scrolling (${scr.scrollHeight} / ${scr.clientHeight})`);
+    T.toTitle();
+  });
+  test("v49 GPU fire: the burning ring, a torch and the Cursed skull's green flames are the GPU's when it's on; the KABOOM's cloud is its smoke", () => {
+    T.setSetting("gpu", "full"); fresh(); T.calm(); T.gpuFrame(1 / 60); const G = T.gpu();
+    if (G.supported) {
+      T.setStreak(10); const f0 = T.gpu().flames || 0; for (let i = 0; i < 20; i++) { T.step(1 / 30); T.gpuFrame(1 / 30); }
+      assert((T.gpu().flames || 0) > f0 + 40, `the ring's fire is flames on the GPU (${T.gpu().flames})`);
+      T.setStreak(0); T.step(0.5); const f1 = T.gpu().flames || 0; T.givePower("blast"); T.freezeRing(0, C.RING_Y); T.throwAt(0, C.RING_Y); T.step(1.3); T.gpuFrame(1 / 60);
+      assert((T.gpu().flames || 0) > f1 + 20, `the KABOOM's smoke (${T.gpu().flames})`);
+    } else assert(!G.on, "no WebGL here: the 2D fire stays");
+    T.setSetting("gpu", "off"); T.gpuFrame(1 / 60); T.toTitle();
   });
   // ── v48: travel on every map, Morty's body section by section, and the Challenge Stage between maps ──
   test("v48 travel: all eight maps travel, each toward its own end boss's lair, and none of it ever stands in the lane", () => {

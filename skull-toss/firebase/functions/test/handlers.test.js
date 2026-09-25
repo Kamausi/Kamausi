@@ -70,3 +70,17 @@ test("v45: every scored mode has a board of its own, and each entry carries its 
   assert.strictEqual(e.bio, "Tosses bskulls/b"); assert.deepStrictEqual(e.pic, { face: "grin", frame: "hollow" }); assert.strictEqual(e.rank, "Crypt Keeper");
   await refusal(call(h, "submitRun", db, "u1", { run: { ...run, mode: "director" } }, now + 60e3), "invalid-argument");
 });
+test("v49: 200 welcome Souls, once per account; the pack tiers credit what they say and their bonus grows", async () => {
+  const db = memoryDb(), h = makeHandlers(Economy, accept);
+  assert.strictEqual(Economy.WELCOME, 200);
+  const w = await call(h, "claimWelcomeSouls", db, "u1");
+  assert.strictEqual(w.souls, 200); assert.strictEqual(w.welcomed, true);
+  await refusal(call(h, "claimWelcomeSouls", db, "u1"), "already-exists");
+  assert.strictEqual((await call(h, "wallet", db, "u1")).souls, 200);
+  await refusal(call(h, "claimWelcomeSouls", db, null), "unauthenticated");
+  const T = Economy.PACK_TIERS;
+  assert.deepStrictEqual(T.map(P => P.usd), [0.99, 4.99, 9.99, 19.99, 49.99, 99.99]);
+  for (const P of T) assert.strictEqual(Economy.PACKS[P.product], P.base + P.bonus);
+  assert.strictEqual((await call(h, "redeemPurchase", db, "u2", { platform: "google", receipt: "OK:big", product: "souls.13000" })).souls, 13000);
+  assert.strictEqual((await call(h, "redeemPurchase", db, "u3", { platform: "google", receipt: "OK:old", product: "souls.550" })).souls, 550, "an old pack's receipt still credits");
+});

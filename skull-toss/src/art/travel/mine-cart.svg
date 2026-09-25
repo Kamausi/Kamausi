@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240">
+  <!-- The Clockwork Caves: a mine cart heaped with ore, on a stub of track. 100 units = 1 m; foot at (160, 234). -->
+  <style>.k{stroke:ink;stroke-linejoin:round;stroke-linecap:round}.c{stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.b{fill:none;stroke:ink;stroke-linecap:round;stroke-linejoin:round}.cb{fill:none;stroke-linecap:round;stroke-linejoin:round}.g{fill:none;stroke:gold;stroke-linecap:round}.w2{fill:none;stroke:#8A82A0;stroke-linecap:round}.w3{fill:none;stroke:#3E2A1C;stroke-linecap:round}.w4{fill:none;stroke:#5E9A68;stroke-linecap:round}</style>
+  <g id="body" stroke-width="5">
+    <ellipse class="s" cx="160" cy="234" rx="150" ry="8" fill="#000" opacity=".3"/>
+    <path class="k" d="M10 226 H310 V216 H10 Z" fill="#6A6A70"/><path class="b" d="M40 234 V226 M100 234 V226 M160 234 V226 M220 234 V226 M280 234 V226" stroke-width="8"/>
+    <path class="k" d="M40 110 H280 L260 196 H60 Z" fill="#7A5A3A"/>
+    <path class="k" d="M40 110 H280 V124 H40 Z" fill="#8E8E96"/><path class="b" d="M100 124 L110 196 M220 124 L210 196" stroke-width="6"/>
+    <path class="k" d="M60 110 C70 70 100 60 120 80 C140 50 190 50 200 80 C220 64 250 76 262 110 Z" fill="#4A4048"/>
+    <circle class="s" cx="120" cy="86" r="8" fill="#F0A840"/><circle class="s" cx="180" cy="74" r="6" fill="#F0A840"/><circle class="s" cx="226" cy="92" r="7" fill="#F0A840"/>
+    <circle class="k" cx="90" cy="206" r="18" fill="#4A4A50"/><circle class="k" cx="230" cy="206" r="18" fill="#4A4A50"/>
+  </g>
+</svg>

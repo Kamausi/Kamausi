@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 210">
+  <!-- The Gilded Graveyard: a run of iron railings on a stone kerb, gold spear tips. 100 units = 1 m; foot at (220, 204). -->
+  <style>.k{stroke:ink;stroke-linejoin:round;stroke-linecap:round}.c{stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.b{fill:none;stroke:ink;stroke-linecap:round;stroke-linejoin:round}.cb{fill:none;stroke-linecap:round;stroke-linejoin:round}.g{fill:none;stroke:gold;stroke-linecap:round}.w2{fill:none;stroke:#8A82A0;stroke-linecap:round}.w3{fill:none;stroke:#3E2A1C;stroke-linecap:round}.w4{fill:none;stroke:#5E9A68;stroke-linecap:round}</style>
+  <g id="body" stroke-width="5">
+    <ellipse class="s" cx="220" cy="204" rx="215" ry="8" fill="#000" opacity=".28"/>
+    <path class="k" d="M6 204 V178 H434 V204 Z" fill="#6E6680"/>
+    <path class="b" d="M20 178 V60 M60 178 V60 M100 178 V60 M140 178 V60 M180 178 V60 M220 178 V60 M260 178 V60 M300 178 V60 M340 178 V60 M380 178 V60 M420 178 V60" stroke-width="8"/>
+    <path class="b" d="M12 150 H428 M12 84 H428" stroke-width="7"/>
+    <path class="k" d="M14 60 L20 38 L26 60 Z M54 60 L60 38 L66 60 Z M94 60 L100 38 L106 60 Z M134 60 L140 38 L146 60 Z M174 60 L180 38 L186 60 Z M214 60 L220 38 L226 60 Z M254 60 L260 38 L266 60 Z M294 60 L300 38 L306 60 Z M334 60 L340 38 L346 60 Z M374 60 L380 38 L386 60 Z M414 60 L420 38 L426 60 Z" fill="gold" stroke-width="3"/>
+    <path class="c" d="M40 118 C40 104 80 104 80 118 C80 132 40 132 40 118 Z M200 118 C200 104 240 104 240 118 C240 132 200 132 200 118 Z M360 118 C360 104 400 104 400 118 C400 132 360 132 360 118 Z" fill="none" stroke="gold" stroke-width="4"/>
+  </g>
+</svg>

@@ -1,7 +1,17 @@
 {
-  "products": { "souls.100": "souls.100", "souls.550": "souls.550", "souls.1200": "souls.1200" },
+  "products": {
+    "souls.100": "souls.100",
+    "souls.500": "souls.500",
+    "souls.1100": "souls.1100",
+    "souls.2300": "souls.2300",
+    "souls.6000": "souls.6000",
+    "souls.13000": "souls.13000"
+  },
   "admob": {
     "test": true,
-    "rewarded": { "ios": "ca-app-pub-3940256099942544/1712485313", "android": "ca-app-pub-3940256099942544/5224354917" }
+    "rewarded": {
+      "ios": "ca-app-pub-3940256099942544/1712485313",
+      "android": "ca-app-pub-3940256099942544/5224354917"
+    }
   }
 }

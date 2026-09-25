@@ -14,7 +14,7 @@
     mohawk(c) { c.beginPath(); c.moveTo(-0.12, -0.95); for (let i = 0; i <= 6; i++) { const x = -0.5 + i * 0.17; c.lineTo(x * 0.5, -1.05 - (i % 2 ? 0.25 : 0.55) + Math.abs(x) * 0.3); } c.lineTo(0.12, -0.95); c.closePath(); inkB(c, HAIR_COL.mohawk); },
     mullet(c) { c.beginPath(); c.moveTo(-0.64, -0.8); c.quadraticCurveTo(-0.6, -1.25, 0, -1.2); c.quadraticCurveTo(0.6, -1.25, 0.64, -0.8); c.lineTo(0.9, -0.2); c.lineTo(0.66, -0.4); c.lineTo(0.62, -0.84); c.quadraticCurveTo(0, -1.0, -0.62, -0.84); c.closePath(); inkB(c, HAIR_COL.mullet); },
     afro(c) { for (const [x, y, r] of [[-0.55, -0.95, 0.32], [0.55, -0.95, 0.32], [-0.3, -1.25, 0.34], [0.3, -1.25, 0.34], [0, -1.35, 0.34]]) { c.beginPath(); c.arc(x, y, r, 0, TAU); inkB(c, HAIR_COL.afro); } },
-    flame(c, t) { for (let i = 0; i < 5; i++) { const x = -0.5 + i * 0.25, h = 0.45 + 0.15 * Math.sin(t * 9 + i * 1.7); c.beginPath(); c.moveTo(x - 0.15, -0.9); c.quadraticCurveTo(x - 0.1, -1.0 - h * 0.6, x + Math.sin(t * 7 + i) * 0.06, -1.0 - h); c.quadraticCurveTo(x + 0.12, -1.0 - h * 0.5, x + 0.15, -0.9); c.closePath(); inkB(c, i % 2 ? "#E8893A" : "#F5C84A"); } },
+    flame(c, t) { if (gpuFireAt(c, "hair", 0, -0.92, 1.15, 0.6)) return; for (let i = 0; i < 5; i++) { const x = -0.5 + i * 0.25, h = 0.45 + 0.15 * Math.sin(t * 9 + i * 1.7); c.beginPath(); c.moveTo(x - 0.15, -0.9); c.quadraticCurveTo(x - 0.1, -1.0 - h * 0.6, x + Math.sin(t * 7 + i) * 0.06, -1.0 - h); c.quadraticCurveTo(x + 0.12, -1.0 - h * 0.5, x + 0.15, -0.9); c.closePath(); inkB(c, i % 2 ? "#E8893A" : "#F5C84A"); } },
     vines(c, t) { c.lineWidth = 0.1; c.strokeStyle = INK; for (let i = 0; i < 5; i++) { const x = -0.55 + i * 0.27, cx = x + Math.sin(t * 2 + i) * 0.05; c.beginPath(); c.moveTo(x, -0.92); c.bezierCurveTo(x - 0.2, -1.2, cx + 0.3, -1.35, cx, -1.18); c.stroke(); c.strokeStyle = HAIR_COL.vines; c.lineWidth = 0.06; c.stroke(); c.strokeStyle = INK; c.lineWidth = 0.1; }
       c.lineWidth = 0.04; c.beginPath(); c.ellipse(0.35, -1.26, 0.13, 0.07, 0.6, 0, TAU); inkB(c, "#7F9447"); },
     quiff(c) { c.beginPath(); c.moveTo(-0.64, -0.84); c.quadraticCurveTo(-0.5, -1.2, 0.1, -1.18); c.bezierCurveTo(0.2, -1.7, 1.05, -1.6, 0.85, -1.2); c.quadraticCurveTo(0.7, -1.0, 0.62, -0.84); c.quadraticCurveTo(0, -1.0, -0.64, -0.84); inkB(c, HAIR_COL.quiff);
@@ -52,26 +52,17 @@
     for (const sd of [-1, 1]) { c.save(); c.scale(sd, 1); c.rotate(-0.1 - flap); W1(c, t, sd); c.restore(); }
     c.restore();
   }
-  // in front: hair on the crown, facial hair on the jaw (dropped with it), and Wizard Mort's beard
+  // in front: hair on the crown, facial hair on the jaw (dropped with it)
   function drawBodyFront(c, look, t, jawDrop) {
     c.save(); c.lineWidth = 0.05; c.strokeStyle = INK; c.lineJoin = "round"; c.lineCap = "round";
     if (HAIR[look.hair]) HAIR[look.hair](c, t);
     if (GLASSES[look.glasses]) { c.save(); GLASSES[look.glasses](c, t, SOCK[0].x < SOCK[1].x ? SOCK : [SOCK[1], SOCK[0]]); c.restore(); }   // (v45: over the sockets)
     c.translate(0, jawDrop);
-    if (look.wizard === "mort" || look.wizard === "apprentice") {   // the wizard's beard: long and white, the apprentice's still short
-      const L = look.wizard === "mort" ? 1.6 : 0.95; c.beginPath(); c.moveTo(-0.55, 0.3); c.quadraticCurveTo(-0.5, L * 0.8, 0.05 + Math.sin(t * 2) * 0.05, L); c.quadraticCurveTo(0.5, L * 0.8, 0.55, 0.3); c.quadraticCurveTo(0, 0.62, -0.55, 0.3); inkB(c, "#F4F0E8");
-      c.strokeStyle = "rgba(160,150,140,.7)"; c.lineWidth = 0.03; for (const x of [-0.2, 0.05, 0.28]) { c.beginPath(); c.moveTo(x, 0.55); c.quadraticCurveTo(x + 0.05, L * 0.7, x * 0.4, L * 0.92); c.stroke(); } c.strokeStyle = INK; c.lineWidth = 0.05;
-    } else if (BEARD[look.beard]) BEARD[look.beard](c, t);
+    if (BEARD[look.beard]) BEARD[look.beard](c, t);
     c.restore();
   }
-  // the hat Morty wears: Wizard Mort's, when he's the wizard
-  const hatOf = (L = cos) => (L.wizard === "mort" || L.wizard === "apprentice" ? "wiz_" + L.wizard : L.hat);
-  Object.assign(HATS, {
-    wiz_apprentice(c) { brimEllipse(c, -0.86, 0.8, 0.13, "#3A4A8A"); c.fillStyle = "#3A4A8A"; c.beginPath(); c.moveTo(-0.5, -0.88); c.quadraticCurveTo(-0.1, -1.4, 0.15, -1.85); c.quadraticCurveTo(0.2, -1.4, 0.5, -0.88); c.closePath(); inkFill(c); c.fillStyle = MUSTARD; star(c, 0.0, -1.2, 0.12, 5, 0.45, -Math.PI / 2); c.fill(); },
-    wiz_mort(c, t) { brimEllipse(c, -0.86, 1.0, 0.15, "#2A2060"); c.fillStyle = "#2A2060"; c.beginPath(); c.moveTo(-0.58, -0.88); c.quadraticCurveTo(-0.2, -1.7, 0.25, -2.35); c.quadraticCurveTo(0.6, -2.4, 0.75, -2.15 + Math.sin(t * 2) * 0.05); c.quadraticCurveTo(0.35, -2.1, 0.3, -1.7); c.quadraticCurveTo(0.35, -1.2, 0.58, -0.88); c.closePath(); inkFill(c);
-      c.fillStyle = "#F5D84A"; for (const [x, y, r] of [[-0.15, -1.2, 0.13], [0.2, -1.55, 0.09], [-0.25, -0.98, 0.07]]) { star(c, x, y, r, 5, 0.45, t * 0.8); c.fill(); }
-      c.fillStyle = "#E8E0FF"; c.beginPath(); c.arc(0.1, -1.05, 0.07, 0, TAU); c.fill(); c.strokeStyle = "#0A0A10"; c.lineWidth = 0.035; c.beginPath(); c.arc(0.1, -1.05, 0.05, 0, TAU); c.stroke(); }   // (a little Black Ring on the band)
-  });
+  // the hat Morty wears (v49: the Wizard Mort shelf, and its hats, are gone)
+  const hatOf = (L = cos) => L.hat;
   // the launcher's frames: wood, bone, iron, candy, gold, neon (the classic is the drawn asset)
   const LAUNCHERS = { branch: { wood: "#6A4A2E", hi: "rgba(242,231,201,.25)" }, bone: { wood: "#E4DAC4", hi: "#FFF8EA" }, iron: { wood: "#3A3E46", hi: "#8A8E96" },
     candy: { wood: "#F4ECDA", stripe: "#C0392B", hi: "#FFFFFF" }, gold: { wood: "#C49A42", hi: "#FFF3C4" }, neon: { wood: "#B48CFF", hi: "#F2ECFF", glow: "rgba(180,140,255,.9)" } };
