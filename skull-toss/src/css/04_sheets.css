@@ -91,8 +91,8 @@
 .prof-head canvas{width:88px;height:88px;flex:none;border-radius:10px}
 .ph-text{flex:1;min-width:0;text-align:left}
 .ph-name{display:flex;align-items:center;gap:6px}
-.ph-name b{font:26px/1.05 var(--display);letter-spacing:.03em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-.ph-name .pencil{flex:none;width:36px;height:36px;min-width:36px;min-height:36px;padding:6px}
+.ph-name b{font:26px/1.05 var(--display);letter-spacing:.03em;overflow-wrap:anywhere;min-width:0}
+.ph-name .pencil{flex:none;width:44px;height:44px;min-width:44px;min-height:44px;padding:10px}
 .ph-name .pencil .icon{width:18px;height:18px}
 .prof-head .prof-title{margin-top:6px;font-size:15px}
 .ph-bio{margin:8px 0 0;font:600 14px/1.35 var(--ui);color:var(--cream-dim);overflow-wrap:anywhere}
