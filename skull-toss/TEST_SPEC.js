@@ -337,7 +337,7 @@
     assert($("buyBtn").disabled && /Need 400/.test($("buyBtn").textContent), `short of bones should say so (${$("buyBtn").textContent})`);
     T.closeSheet(); T.equip("aim", "toxic"); T.setStats(ZERO);
   });
-  test("v45 Vault: shelf tabs in a grid with new-item bubbles; only the shelves scroll; rarity headings; try-on before wearing; Clear badges asks first", () => {
+  test("v45 Vault: shelf tabs in a grid with new-item bubbles; only the shelves scroll; rarity headings; try-on before wearing; Clear badges clears at once (v49)", () => {
     T.setStats({ ...ZERO, unlocked: ["hat:bowler", "hat:fez", "glasses:round"], seen: [] }); T.toTitle(); T.openSheet("customize"); T.shopCat("hat");
     const tabs = $("catTabs"), bub = k => { const b = tabs.querySelector(`[data-cat="${k}"] .bubble`); return b ? +b.textContent : 0; };
     assert(getComputedStyle(tabs).display === "grid" && tabs.querySelector('[data-cat="glasses"]') && tabs.querySelector('[data-cat="ringwings"]'), "the shelves are a grid, glasses and ring wings among them");
@@ -1155,7 +1155,7 @@
     const p = T.profile(); assert(p.fragments.length === 1 && p.fragments[0] === "hollow" && p.bossLog.pumpkin === 2 && T.canUse("hair", "vines"), JSON.stringify({ f: p.fragments, log: p.bossLog }));
     T.setStats({ ...ZERO, bestScore: 0 }); T.toTitle();
   });
-  test("The Adventure ends after map 8: the last shard, the Black Ring whole, THE END, Wizard Mort and The Whole Reel", () => {
+  test("The Adventure ends after map 8: the last shard, the Black Ring whole, THE END and The Whole Reel", () => {
     T.setStats({ ...ZERO, bestScore: 0 });
     beatCrow(8); toHit(C.STAGE_BOSS); T.step(2.9); assert(T.boss().kind === "reaper", `map 8's end boss is the Reel Reaper (${T.boss().kind})`);
     T.hurtBoss(99); T.endThrow(); T.step(9);   // (the knockout's hold, the reward and the shard, then the 3.4 s ending)
