@@ -123,6 +123,7 @@
     if (I.transient) cue("transient", { v: clamp(w * o.k, 0.25, 1.5), pan: o.pan });
     if (I.sparks && o.hit) sparks(o.hit, Math.max(2, Math.round(I.sparks * clamp(o.fk, 0.6, 1.5) * QUALITY.particles)));
     if (I.sparkle && o.at) sparkle(o.at, kind === "perfect");
+    gpuImpact(kind, o.at, o.hit);   // the GPU's sparks and flash of light (08j_gpu.js)
     if (I.star) impactStar(o.hit || o.at, I.star, w * clamp(o.k, 0.6, 1.4), I.star === "ground" && game.state === "flying" && skull.pos.z > ring.z + 0.05);
     if (I.pose) { VPOSE.hold = I.pose; VPOSE.holdUntil = VCLOCK.t + (R ? R.dur : 0.6); }
     // flash, two drawings on

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 150">
+  <!-- Crow Hollow travel: three pumpkins on a vine. 100 units = 1 m; foot at (130, 144). -->
+  <style>.k{stroke:ink;stroke-width:3.5;stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.l{fill:none;stroke:ink;stroke-linecap:round}</style>
+  <g id="body">
+    <ellipse class="s" cx="132" cy="143" rx="118" ry="8" fill="#000" opacity=".28"/>
+    <path class="l" d="M20 132 C40 112 70 126 90 112 C120 92 150 120 180 104 C210 90 230 110 246 96" stroke="#3E5A2A" stroke-width="7"/>
+    <path class="l" d="M20 132 C40 112 70 126 90 112 C120 92 150 120 180 104 C210 90 230 110 246 96" stroke="#5E7A36" stroke-width="3.5"/>
+    <path class="k" d="M34 120 C22 104 40 94 50 102 C54 90 70 94 66 108 C74 112 66 126 54 122 Z" fill="#5E7A36" stroke-width="3"/>
+    <path class="k" d="M214 104 C206 90 222 82 230 90 C236 80 250 86 246 98 C252 104 244 114 234 110 Z" fill="#5E7A36" stroke-width="3"/>
+    <ellipse class="k" cx="62" cy="120" rx="30" ry="22" fill="#D9692A"/>
+    <ellipse class="k" cx="62" cy="120" rx="12" ry="22" fill="#E07A30"/>
+    <path class="k" d="M60 98 C60 90 66 86 72 88 L68 98 Z" fill="#5A6B2A" stroke-width="2.5"/>
+    <ellipse class="k" cx="198" cy="118" rx="36" ry="26" fill="#EE8A3E"/>
+    <ellipse class="k" cx="198" cy="118" rx="15" ry="26" fill="#F29A4A"/>
+    <path class="k" d="M196 92 C194 82 202 78 208 80 L204 92 Z" fill="#5A6B2A" stroke-width="2.5"/>
+    <ellipse class="k" cx="126" cy="108" rx="52" ry="36" fill="#D9692A"/>
+    <ellipse class="k" cx="126" cy="108" rx="34" ry="36" fill="#E07A30"/>
+    <ellipse class="k" cx="126" cy="108" rx="14" ry="36" fill="#EE8A3E"/>
+    <path class="k" d="M122 72 C118 58 128 50 138 54 L132 72 Z" fill="#5A6B2A" stroke-width="3"/>
+    <ellipse class="s" cx="104" cy="92" rx="10" ry="6" fill="#FFC98A" opacity=".55"/>
+  </g>
+</svg>

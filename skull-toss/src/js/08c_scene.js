@@ -79,7 +79,7 @@
     if (squashed) { ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(T.dir); ctx.scale(1 - T.sq, 1 + T.sq * 0.6); ctx.rotate(-T.dir); ctx.translate(-p.x, -p.y); }
     const now = performance.now() / 1000, dtH = clamp(now - ringHeatAt, 0, 0.1); ringHeatAt = now;
     ringHeat += (ringHeatGoal() - ringHeat) * Math.min(1, dtH * (ringHeatGoal() > ringHeat ? 4 : 2.5));
-    if (ringHeat > 0.02) drawRingFire(p.x, p.y, r, lw, ringHeat, T.t);
+    if (ringHeat > 0.02) { drawRingFire(p.x, p.y, r, lw, ringHeat, T.t); Gpu.fire = { x: p.x, y: p.y, r: ringOuter(r, lw, cos.ring), heat: ringHeat }; }   // (and the GPU's embers: 08j_gpu.js)
     const rim = drawRingLight(p.x, p.y, r, lw);   // the backing that keeps it readable on any background, and its rim light
     drawRingShape(ctx, p.x, p.y, r, lw, cos.ring, T.t, ring.flash); rim();
     if (squashed) ctx.restore();
@@ -333,6 +333,7 @@
     drawGroundPlane(ctx, groundLayer);
     if (midLayer) L(midLayer, 30, "world");
     drawGroundWorld();
+    drawTravelTone();   // the travel zone's colour (06g_travel.js)
     const tint = game.state !== "title" && stageDef().tint;   // each map's colour grade, washed over the graveyard (not the ring or the skull)
     if (tint) { ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalCompositeOperation = "soft-light"; ctx.globalAlpha = 0.55; ctx.fillStyle = tint; ctx.fillRect(-20, -20, W + 40, H + 40); ctx.restore(); }
     if (game.mode === "feature" && game.state !== "title") {   // the season's Feature plays after dark: a night grade over the scenery, a lantern glow in the middle (07l_season.js)

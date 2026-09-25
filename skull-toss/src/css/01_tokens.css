@@ -24,20 +24,22 @@ body{font-family:var(--ui);font-size:14px;touch-action:none;user-select:none;-we
 button{font-family:inherit;color:inherit}
 #stage{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none}
 #stage.aiming{cursor:grabbing}
+#gpuFx{position:fixed;inset:0;width:100%;height:100%;display:block;pointer-events:none;mix-blend-mode:screen}
+#gpuFx[hidden]{display:none}
 #vig{position:fixed;inset:0;z-index:1;pointer-events:none}
 #film{position:fixed;inset:0;width:100%;height:100%;z-index:30;pointer-events:none}
 [hidden]{display:none!important}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 /* film reels (cosmetic): only the play field is filtered, never the menus */
-body[data-reel="silent"] #stage,[data-reel="silent"] > #previewCv{filter:grayscale(1) sepia(.18) contrast(1.12)}
-body[data-reel="techni"] #stage,[data-reel="techni"] > #previewCv{filter:saturate(1.35) contrast(1.06)}
-body[data-reel="lost"] #stage,[data-reel="lost"] > #previewCv{filter:sepia(.28) contrast(1.05)}
-body[data-reel="damaged"] #stage,[data-reel="damaged"] > #previewCv{filter:sepia(.15) contrast(1.15) brightness(1.03)}
-body[data-reel="noir"] #stage,[data-reel="noir"] > #previewCv{filter:grayscale(1) contrast(1.45) brightness(.95)}
-body[data-reel="cyan"] #stage,[data-reel="cyan"] > #previewCv{filter:grayscale(1) sepia(1) hue-rotate(175deg) saturate(1.6) contrast(1.05)}
-body[data-reel="infra"] #stage,[data-reel="infra"] > #previewCv{filter:hue-rotate(290deg) saturate(1.4) contrast(1.08)}
-body[data-reel="twostrip"] #stage,[data-reel="twostrip"] > #previewCv{filter:saturate(.75) sepia(.25) hue-rotate(-12deg) contrast(1.12)}
-body[data-reel="bootleg"] #stage,[data-reel="bootleg"] > #previewCv{filter:saturate(1.6) contrast(1.25) blur(.35px) hue-rotate(12deg)}
+body[data-reel="silent"] #stage,body[data-reel="silent"] #gpuFx,[data-reel="silent"] > #previewCv{filter:grayscale(1) sepia(.18) contrast(1.12)}
+body[data-reel="techni"] #stage,body[data-reel="techni"] #gpuFx,[data-reel="techni"] > #previewCv{filter:saturate(1.35) contrast(1.06)}
+body[data-reel="lost"] #stage,body[data-reel="lost"] #gpuFx,[data-reel="lost"] > #previewCv{filter:sepia(.28) contrast(1.05)}
+body[data-reel="damaged"] #stage,body[data-reel="damaged"] #gpuFx,[data-reel="damaged"] > #previewCv{filter:sepia(.15) contrast(1.15) brightness(1.03)}
+body[data-reel="noir"] #stage,body[data-reel="noir"] #gpuFx,[data-reel="noir"] > #previewCv{filter:grayscale(1) contrast(1.45) brightness(.95)}
+body[data-reel="cyan"] #stage,body[data-reel="cyan"] #gpuFx,[data-reel="cyan"] > #previewCv{filter:grayscale(1) sepia(1) hue-rotate(175deg) saturate(1.6) contrast(1.05)}
+body[data-reel="infra"] #stage,body[data-reel="infra"] #gpuFx,[data-reel="infra"] > #previewCv{filter:hue-rotate(290deg) saturate(1.4) contrast(1.08)}
+body[data-reel="twostrip"] #stage,body[data-reel="twostrip"] #gpuFx,[data-reel="twostrip"] > #previewCv{filter:saturate(.75) sepia(.25) hue-rotate(-12deg) contrast(1.12)}
+body[data-reel="bootleg"] #stage,body[data-reel="bootleg"] #gpuFx,[data-reel="bootleg"] > #previewCv{filter:saturate(1.6) contrast(1.25) blur(.35px) hue-rotate(12deg)}
 
 /* type roles */
 .k{font:800 10px/1 var(--ui);letter-spacing:.2em;text-transform:uppercase;color:var(--cream-faint)}

@@ -62,6 +62,8 @@
     $("filmNote").textContent = t(`settings.film.${settings.film}`);
     for (const b of $("set-camera").querySelectorAll("button")) b.setAttribute("aria-checked", String(b.dataset.v === settings.camera));
     $("cameraNote").textContent = t(`settings.camera.${settings.camera}`);
+    segValue($("set-gpu"), settings.gpu); $("gpuNote").textContent = Gpu.supported ? t(`settings.gpu.${settings.gpu}`) : t("settings.gpu.none");   // (08j_gpu.js)
+    for (const b of $("set-gpu").querySelectorAll("button")) b.disabled = !Gpu.supported && b.dataset.v !== "off";
     $("set-shake").disabled = settings.camera === "still";   // a locked-off camera doesn't jolt either
     for (const b of $("set-voice").querySelectorAll("button")) b.setAttribute("aria-checked", String(b.dataset.v === settings.voice));
     $("voiceNote").textContent = t(`settings.voice.${settings.voice}`);
@@ -92,6 +94,10 @@
   $("set-camera").addEventListener("click", e => {
     const b = e.target.closest("button"); if (!b) return;
     settings.camera = b.dataset.v; persist(); renderSettings(); Sound.ui("tick");
+  });
+  $("set-gpu").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b || b.disabled) return;
+    settings.gpu = b.dataset.v; persist(); renderSettings(); Sound.ui("tick");
   });
   $("set-film").addEventListener("click", e => {
     const b = e.target.closest("button"); if (!b) return;

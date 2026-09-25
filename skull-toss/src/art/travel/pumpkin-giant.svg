@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 280">
+  <!-- Crow Hollow travel: a giant pumpkin, big as a cart. 100 units = 1 m; foot at (170, 272). -->
+  <style>.k{stroke:ink;stroke-width:5;stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.l{fill:none;stroke:ink;stroke-linecap:round}</style>
+  <g id="body">
+    <ellipse class="s" cx="172" cy="270" rx="160" ry="12" fill="#000" opacity=".3"/>
+    <ellipse class="k" cx="100" cy="176" rx="82" ry="92" fill="#C85A24"/>
+    <ellipse class="k" cx="240" cy="176" rx="82" ry="92" fill="#C85A24"/>
+    <ellipse class="k" cx="130" cy="172" rx="74" ry="98" fill="#D9692A"/>
+    <ellipse class="k" cx="210" cy="172" rx="74" ry="98" fill="#D9692A"/>
+    <ellipse class="k" cx="170" cy="170" rx="62" ry="102" fill="#E07A30"/>
+    <ellipse class="s" cx="136" cy="116" rx="18" ry="30" fill="#FFB070" opacity=".5"/>
+    <path class="l" d="M218 214 l14 10 l-6 12 l14 8" stroke-width="4"/>
+    <path class="k" d="M160 74 C152 44 168 24 190 30 C184 44 182 58 184 74 Z" fill="#5A6B2A"/>
+    <path class="l" d="M188 40 C220 20 250 30 262 52 C270 66 290 66 300 56" stroke="#3E5A2A" stroke-width="8"/>
+    <path class="l" d="M188 40 C220 20 250 30 262 52 C270 66 290 66 300 56" stroke="#5E7A36" stroke-width="4"/>
+    <path class="k" d="M244 40 C236 20 262 12 270 26 C284 20 296 34 284 44 C290 58 268 62 262 50 Z" fill="#5E7A36" stroke-width="3.5"/>
+  </g>
+</svg>

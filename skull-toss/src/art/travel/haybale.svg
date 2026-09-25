@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 130">
+  <!-- Crow Hollow travel: a round hay bale. 100 units = 1 m; foot at (100, 124). -->
+  <style>.k{stroke:ink;stroke-width:3.5;stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.l{fill:none;stroke-linecap:round}</style>
+  <g id="body">
+    <ellipse class="s" cx="104" cy="123" rx="90" ry="7" fill="#000" opacity=".28"/>
+    <path class="k" d="M40 20 L150 20 C176 20 184 122 150 122 L40 122 Z" fill="#C8A04A"/>
+    <path class="l" d="M60 26 C62 60 58 90 62 118 M86 24 C88 60 84 90 88 120 M112 24 C114 60 110 90 114 120 M136 24 C138 60 134 90 138 120" stroke="#9A7A30" stroke-width="3"/>
+    <ellipse class="k" cx="42" cy="71" rx="30" ry="51" fill="#E0B85C"/>
+    <path class="l" d="M42 71 m-4 0 a4 6 0 1 1 8 0 a9 14 0 1 1 -18 0 a14 22 0 1 1 28 0 a19 30 0 1 1 -38 0 a22 38 0 1 1 44 0" stroke="#B08A38" stroke-width="3"/>
+    <path class="l" d="M98 20 C104 60 102 96 98 122 M122 20 C128 60 126 96 122 122" stroke="#6A4A20" stroke-width="4"/>
+    <path class="l" d="M150 30 l12 -8 M160 70 l14 -2 M156 104 l12 6" stroke="#C8A04A" stroke-width="3"/>
+  </g>
+</svg>

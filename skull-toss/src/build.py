@@ -55,6 +55,25 @@ for name in VECTOR:
         continue
     ART_ASSETS[name] = svgart.load_asset(folder, TOKENS)
     if ART_ASSETS[name]["meta"]["id"] != name: sys.exit(f"build refused: art/{name}/asset.json says its id is \"{ART_ASSETS[name]['meta']['id']}\"")
+# ── v47: the travel library (src/art/travel/library.json + one SVG per asset, each with a <g id="body">): the scenery that
+#    comes toward Morty as he travels (docs/TRAVEL.md). Each lands in ART_ASSETS as travel/<id>, drawn like the skull. ──
+TRAVEL_DIR = root / "art" / "travel"
+TRAVEL_LAYERS = ("distant", "midground", "gameplay", "foreground")
+if (TRAVEL_DIR / "library.json").exists():
+    LIB = json.loads((TRAVEL_DIR / "library.json").read_text())
+    if LIB.get("units") != 100: sys.exit("build refused: art/travel/library.json: units must be 100 (canvas units a metre)")
+    for aid, m in LIB["assets"].items():
+        f = TRAVEL_DIR / f"{aid}.svg"
+        if not f.exists(): sys.exit(f"build refused: art/travel/{aid}.svg is missing")
+        doc = svgart.Doc(f, TOKENS); cw, ch = m["canvas"]
+        if doc.viewbox() != [0, 0, cw, ch]: sys.exit(f"build refused: art/travel/{aid}.svg must use viewBox=\"0 0 {cw} {ch}\"")
+        g = doc.find_layer("body"); shapes = doc.shapes(g) if g is not None else []
+        if not shapes: sys.exit(f"build refused: art/travel/{aid}.svg has no <g id=\"body\"> with shapes in it")
+        fx, fy = m["foot"]
+        if not (0 <= fx <= cw and ch * 0.85 <= fy <= ch): sys.exit(f"build refused: art/travel/{aid}: the foot must sit at the bottom of its canvas")
+        if m.get("layer") not in TRAVEL_LAYERS: sys.exit(f"build refused: art/travel/{aid}: layer must be one of {', '.join(TRAVEL_LAYERS)}")
+        if m.get("collision") != "none": sys.exit(f"build refused: art/travel/{aid}: travel scenery never collides (collision must be \"none\")")
+        ART_ASSETS["travel/" + aid] = {"meta": {"id": aid, "version": LIB.get("version", "1.0.0"), "shapes": len(shapes), **m}, "layers": {"body": shapes}}
 # ── optional scene planes: src/art/scene/{sky,far,mid,near,foreground} — an SVG (viewBox 0 0 2000 1000) or a painted
 #    plate as WebP/PNG at 2:1 (3200×1600 is a good size). Either way the horizon sits 35% of the way down. ──
 def image_size(data, suffix):   # width, height of a PNG or WebP, read from its header (no imaging library needed)
@@ -207,6 +226,55 @@ def map_problems(m, fname):
     if m["fragment"] not in REG["fragment"]: bad.append(f"fragment \"{m['fragment']}\" isn't registered")
     if m.get("target") not in REG["target"]: bad.append(f"target \"{m.get('target')}\" isn't one the code draws ({', '.join(REG['target'])})")
     if not 0.85 <= m["music"].get("rate", 0) <= 1.15: bad.append("music.rate must be 0.85–1.15")
+    if "travel" in m: bad += travel_problems(m["travel"], SB, C)
+    return bad
+# ── v47 perceptual travel (docs/TRAVEL.md): the map's track, checked here the way the game will build it ──
+CANVAS_KINDS = {"pumpkin", "jack", "tuft", "hay", "corn", "scarecrow", "rail", "tree"}
+def travel_table(Tv, SB):   # how far on the camera stands at each hit (the game's travelTable, 06g_travel.js)
+    D, d, arr = [0.0], 0.0, Tv["arrive"]
+    for h in range(1, SB["end"] + 1):
+        leg = (0, SB["mini"]) if h <= SB["mini"] else (SB["loose"], SB["boss"]) if SB["loose"] < h <= SB["boss"] else None
+        if leg:
+            left = leg[1] - h; k = arr[len(arr) - 1 - left] if left < len(arr) else 1.0
+            d += Tv["step"] * k
+        D.append(d)
+    return D
+def travel_problems(Tv, SB, C):
+    bad, lib = [], {k[len("travel/"):]: v["meta"] for k, v in ART_ASSETS.items() if k.startswith("travel/")}
+    if not lib: return ["travel: the map travels, but there's no travel library (src/art/travel/library.json)"]
+    if not 2 <= Tv.get("step", 0) <= 12: bad.append("travel.step must be 2–12 metres a hit")
+    arr = Tv.get("arrive", [])
+    if not (isinstance(arr, list) and 1 <= len(arr) <= 8 and all(0 < a <= 1 for a in arr) and arr == sorted(arr, reverse=True)): bad.append("travel.arrive: up to eight step sizes (0–1), getting shorter as a boss comes up")
+    if not 1.5 <= Tv.get("gap", 0) <= 8: bad.append("travel.gap must be 1.5–8 metres")
+    if not 60 <= Tv.get("far", 0) <= 300: bad.append("travel.far must be 60–300 metres")
+    if bad: return bad
+    D, starts, ids = travel_table(Tv, SB), [], set()
+    hit_ok = lambda h: isinstance(h, int) and 0 <= h <= SB["end"]
+    for z in Tv.get("zones", []):
+        if z.get("id") in ids: bad.append(f"travel zone {z.get('id')} twice")
+        ids.add(z.get("id")); fr = z.get("from", [])
+        if not (isinstance(fr, list) and len(fr) == 2 and hit_ok(fr[0])): bad.append(f"travel zone {z.get('id')}: from is [hit, metres ahead]"); continue
+        starts.append(D[fr[0]] + fr[1])
+        if not (0 <= z.get("density", -1) <= 1 and 0 <= z.get("fog", -1) <= 1): bad.append(f"travel zone {z['id']}: density and fog are 0–1")
+        if not COLOR.match(str(z.get("tone", ""))): bad.append(f"travel zone {z['id']}: tone must be a colour")
+        for k, w in z.get("mix", {}).items():
+            if k not in lib and k not in CANVAS_KINDS: bad.append(f"travel zone {z['id']}: \"{k}\" isn't in the travel library or a prop the code paints")
+            if not (isinstance(w, (int, float)) and w > 0): bad.append(f"travel zone {z['id']}: {k}'s weight must be above 0")
+        if not z.get("mix"): bad.append(f"travel zone {z['id']} has nothing in its mix")
+    if not starts: bad.append("travel needs at least one zone")
+    elif starts != sorted(starts) or starts[0] > 0: bad.append("travel zones must start in order along the way, the first at the start")
+    far_end = D[SB["end"]]
+    for L in Tv.get("landmarks", []):
+        a = L.get("asset")
+        if a != "digger" and a not in lib: bad.append(f"travel landmark {a} isn't in the travel library"); continue
+        if not hit_ok(L.get("hit")): bad.append(f"travel landmark {a}: hit must be 0–{SB['end']}"); continue
+        d = D[L["hit"]] + L.get("ahead", 0); x = L.get("x", 0)
+        if a in lib: cw, fx = lib[a]["canvas"][0], lib[a]["foot"][0]; x0, x1 = x - fx / 100, x + (cw - fx) / 100
+        else: x0 = x1 = x
+        in_lane = x1 > -C["halfWidth"] and x0 < C["halfWidth"]
+        if a != "digger" and in_lane and d - far_end < C["zMax"]: bad.append(f"travel landmark {a} would come into the throw corridor (it stands at |x| < {C['halfWidth']} and comes nearer than z {C['zMax']})")
+    for c in Tv.get("clear", []):
+        if not (hit_ok(c.get("hit")) and c.get("back", -1) >= 0 and c.get("ahead", -1) > 0 and c.get("x", 0) > C["halfWidth"]): bad.append("travel.clear: each clearing is a hit, metres back and ahead, and a half-width wider than the corridor")
     return bad
 MAP_DATA, problems = [], []
 for f in sorted(MAPDIR.glob("[0-9][0-9]-*.json")):

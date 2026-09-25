@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 640">
+  <!-- Crow Hollow travel: the red barn, hayloft open, the rooster on the vane. 100 units = 1 m; foot at (410, 632). -->
+  <style>.k{stroke:ink;stroke-width:5;stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.l{fill:none;stroke:ink;stroke-linecap:round}</style>
+  <g id="body">
+    <ellipse class="s" cx="414" cy="630" rx="330" ry="16" fill="#000" opacity=".3"/>
+    <path class="l" d="M410 118 V58" stroke-width="5"/>
+    <path class="k" d="M384 58 C392 40 412 34 424 44 L438 36 L432 52 C436 62 428 70 416 70 L396 70 C402 64 396 60 384 58 Z" fill="ink" stroke-width="3"/>
+    <path class="l" d="M380 84 H440 M410 70 V96" stroke-width="4"/>
+    <path class="k" d="M150 630 L154 300 L240 170 L410 104 L580 170 L666 300 L670 630 Z" fill="red"/>
+    <path class="s" d="M196 300 V626 M242 262 V626 M288 222 V626 M334 196 V626 M380 180 V626 M440 180 V626 M486 196 V626 M532 222 V626 M578 262 V626 M624 300 V626" stroke="#8C3326" stroke-width="4" opacity=".75"/>
+    <path class="k" d="M126 308 L240 160 L410 90 L580 160 L694 308 L674 316 L574 180 L410 114 L246 180 L146 316 Z" fill="#4A2A26"/>
+    <path class="s" d="M140 300 L240 168 L410 98 L420 108 L250 176 L152 308 Z" fill="#6A3A34" opacity=".9"/>
+    <path class="k" d="M352 200 L468 200 L468 300 L352 300 Z" fill="#2A1A14"/>
+    <path class="k" d="M352 200 L468 200 L468 300 L352 300 Z M352 200 L468 300 M468 200 L352 300" fill="none" stroke="cream" stroke-width="9"/>
+    <path class="k" d="M352 200 L468 200 L468 300 L352 300 Z" fill="none"/>
+    <path class="k" d="M366 300 C372 282 386 276 392 290 C398 270 414 272 418 292 C424 276 440 280 446 300 Z" fill="#E0B85C" stroke-width="3"/>
+    <path class="l" d="M380 296 L376 316 M404 296 L404 318 M430 296 L436 316" stroke="#C49A42" stroke-width="3"/>
+    <path class="k" d="M264 410 L556 410 L556 630 L264 630 Z" fill="#8C3326"/>
+    <path class="k" d="M264 410 L556 410 L556 630 L264 630 Z M410 410 V630 M264 410 L410 630 M410 410 L264 630 M410 410 L556 630 M556 410 L410 630" fill="none" stroke="cream" stroke-width="10"/>
+    <path class="k" d="M264 410 L556 410 L556 630 L264 630 Z" fill="none"/>
+    <path class="k" d="M150 300 L240 170 L410 104 L580 170 L666 300" fill="none" stroke="cream" stroke-width="8"/>
+    <rect class="k" x="190" y="340" width="44" height="44" fill="#FFD27A" stroke-width="4"/>
+    <path class="l" d="M212 340 V384 M190 362 H234" stroke-width="4"/>
+    <rect class="k" x="586" y="340" width="44" height="44" fill="#2A1A14" stroke-width="4"/>
+    <path class="k" d="M676 630 C690 600 720 596 740 612 C750 596 780 600 790 630 Z" fill="#E0B85C" stroke-width="3"/>
+  </g>
+</svg>

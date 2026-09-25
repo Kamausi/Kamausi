@@ -112,6 +112,7 @@
     profile.powerLog = profile.powerLog || {}; profile.powerLog[id] = (profile.powerLog[id] || 0) + 1;   // (v45: each prop's own count, for the Profile and the achievements)
     mortySays("power." + id, { chance: MORTY.power });
     const p = at || project(ring.x, ring.y, ring.z);
+    gpuPickup(p.x, p.y, P.color);   // (08j_gpu.js)
     impact("POP!", p.x, p.y - ring.rc * p.s * 1.2, { fill: P.color, text: INK, scale: 0.75, delay: 0.3, bits: false, sub: P.name });
     for (let i = 0; i < 16; i++) { const a = (i / 16) * TAU, v = U * rand(0.4, 0.8); particles.push({ kind: i % 2 ? "star" : "dot", x: p.x, y: p.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, rot: a, vr: 6, life: 0.5, max: 0.5, size: rand(2, 4), color: i % 3 ? P.color : CREAM, g: 0.3, a: 1 }); }
     Sound.sample("powerup", () => Sound.toon("pop")); if (id === "cursed") Sound.voice.cackle(0, 0.8);
@@ -228,6 +229,7 @@
     if (pk.left <= 1 && !pk.pop && Math.floor(pk.t * 6) % 2) { ctx.strokeStyle = CREAM; ctx.setLineDash([3, 4]); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(p.x, p.y + bob, R * 1.45, 0, TAU); ctx.stroke(); ctx.setLineDash([]); }
     drawPowerIcon(ctx, pk.id, p.x, p.y + bob, R * k, pk.t);
     ctx.restore();
+    const c = hexRgb(POWERS[pk.id].color || CREAM); gpuLight(p.x, p.y + bob, R * 3.4, `${c.map(v => Math.round(v * 255)).join(",")}`, 0.3 * a * (0.85 + 0.15 * Math.sin(pk.t * 5)));
   }
   // what the carried power-ups do to the skull's look
   function drawPowerAura(c, x, y, r, t) {

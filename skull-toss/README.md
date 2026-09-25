@@ -1,8 +1,37 @@
-# SKULL TOSS v46
+# SKULL TOSS v47
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)), with a synthesised waltz standing in wherever they can't load.
+
+## New in v47: 80 hits a map, a world that travels, and a GPU on top
+
+- **Every map is 80 hits now, in ten-hit sections** (`src/maps/blueprint.json`: `structure`). Something changes every ten hits:
+
+  | Hits | What happens |
+  |---|---|
+  | 1–30 | **Acts I–III**, each with its own name on a card as it begins. Crow Hollow's are *The Hollow*, *Haunted Farm* and *Harvest Grove*. |
+  | 31–40 | **The mini-boss.** Ten hits on him, and a perfect is one hit too (it pays double instead). |
+  | 40 | **He drops the ring and it breaks loose.** The first throw through it as it flies catches it. |
+  | 41–50 | **The approach.** Crow Hollow's is the Pumpkin Field. |
+  | 51–80 | **The end boss, in three phases of ten**, each harder, with a card between them. The Pumpkin King's phases are **The Eyes** (his eyes are the targets, and a poke is a hit), **The Roll** (his head rolls round the arena) and **The Mouth** (his eyes screw shut, and only a throw down his throat hurts him). |
+  | 80 | He's down: the body part, the Black Ring shard, Can Alley if you want it, and the next map. |
+
+  The progress bar shows the whole map, with the Crow King at 30, the King at 50 and the shard at 80, and the end boss's bar shows his three phases. The other end bosses climb three phases too, faster and angrier each time. Boss Rush keeps its short fights. Obstacles now come in on the acts (Act II, Act III, then the approach). Replays move to version 2, since a replay recorded before plays out differently.
+- **Crow Hollow travels** (the pilot; [docs/TRAVEL.md](docs/TRAVEL.md)).
+  - **The scenery comes toward Morty.** Every make before a boss carries the camera six metres on. The trees, the farmhouse, the barn, the corn, the fences and the scarecrows come toward Morty, grow, pass the edge of the frame and are gone. New scenery comes up out of the distance.
+  - **Nothing moves while you aim.** The last steps before each boss are shorter, so the world slows and settles as he arrives, and it stands still through each fight.
+  - **The zones.** The Hollow gives way to the Haunted Farm, then the Harvest Grove, then crow territory, then the Pumpkin Field. Each has its own colour and fog, and the crows come up out of the trees as you near their King.
+  - **The destination.** The Pumpkin King lies asleep on the horizon from the Harvest Grove on, nearer and nearer, until he wakes.
+  - **The art.** All of it is SVG (`src/art/travel`, 15 assets), drawn from sprites sized to how far off it is, and as crisp vectors up close.
+  - **Always where the run is.** Where the world stands comes from the hits alone, so a continue, a reload or a replay finds it exactly there.
+  - **Looks only.** The build refuses travel scenery that collides, and none of it stands in the throw lane.
+- **A GPU effects layer** ([docs/GPU.md](docs/GPU.md)). A WebGL canvas, screen-blended over the game, adds:
+  - **GPU particles**: sparks off every make and clank, embers off a burning ring, a K.O.'s fireworks, a power-up's sparkle, and each map's own air (fireflies, gold dust, wisps, motes). Thousands at once, flown entirely in the shader.
+  - **Light**: breathing pools of light from lanterns, lit windows, jack-o'-lanterns, the burning ring, the Pumpkin King's eyes and the moon, and a flash of light at every big contact.
+  - **Glow**: a bloom pass on the bright parts of the picture.
+
+  Settings → **GPU effects: Full, Lite** (no bloom; the default on a phone) **or Off**. With no WebGL, the game looks just as it did. The layer never touches a throw.
 
 ## New in v46: the studio logo, a wizard at the Cart, and Mini Games on their own card
 

@@ -123,3 +123,18 @@ Blockout → playtest → adjust spatial relationships → art pass:
 4. Choose its two tiers and its bosses; set the end boss's obstacles.
 5. Art pass: skyline (`05b`/`05d`), lane, frame and near props (`05c`/`05d`), props (`06d`/`06f`), weather (`06e`).
 6. Lighting, ambient animation within budget, sound; then `python3 tools/stage_bible.py` and the full pipeline (docs/QA.md).
+
+## The 80-hit structure (v47)
+
+Every map is 80 hits in ten-hit sections (`blueprint.json`: `structure`):
+
+| Hits | Section |
+|---|---|
+| 1–30 | Acts I–III (each map names its acts in `acts`) |
+| 31–40 | The mini-boss; at 40 he drops the ring and it breaks loose |
+| 41–50 | The approach |
+| 51–80 | The end boss, in three phases of ten |
+
+The build refuses a map without four act names. It also refuses an obstacle that comes in after its half ends: the first half is 30 hits, the approach 10.
+
+A map may **travel** (`travel`, [TRAVEL.md](TRAVEL.md)): its scenery comes toward Morty through the acts and the approach, and stands still through the fights. Travel scenery obeys the same corridor rule as everything else, and never collides.

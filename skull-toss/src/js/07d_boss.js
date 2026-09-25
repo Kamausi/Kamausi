@@ -239,11 +239,13 @@
       ctx.fillStyle = "#1A0A04"; ctx.beginPath();
       for (let k = 0; k <= 16; k++) { const a = (k / 16) * TAU, rr2 = mr * (k % 2 ? 1.08 : 1.28) * (1 + (B.blind > 0 ? 0.12 : 0)); ctx.lineTo(mx + Math.cos(a) * rr2 * 1.25, my + Math.sin(a) * rr2); } ctx.closePath(); ctx.fill();
       const glow = angry ? "#FFD04A" : "#FFB84A", fl = 0.8 + 0.2 * Math.sin(t * 13) * Math.sin(t * 4.1);
+      if (!h && !B.dead) gpuLight(mo.x, mo.y, mr * 2.8, angry ? "255,200,70" : "255,170,70", 0.26 * fl * (B.phase === 2 ? 1.5 : 1));   // the fire in his throat, on the GPU (08j_gpu.js)
       ctx.fillStyle = glow; ctx.globalAlpha = 0.35 * fl; ctx.beginPath(); ctx.ellipse(mx, my + mr * 0.6, mr * 0.8, mr * 0.25, 0, 0, TAU); ctx.fill(); ctx.globalAlpha = 1;
       if (puff > 0.1) for (const sd of [-1, 1]) { ctx.fillStyle = "rgba(255,150,120,.5)"; ctx.beginPath(); ctx.ellipse(mx + sd * mr * 1.9, my - mr * 0.1, R * 0.16 * (1 + puff), R * 0.11 * (1 + puff), 0, 0, TAU); ctx.fill(); }
       // the eyes: targets, a glowing bull's-eye each, squeezed shut once hit
       for (const i of [0, 1]) {
         const e = B.eyePos(i, { x: m.x, y: m.y - drop, z: m.z }), ep = project(e.x, e.y, e.z), ex = ep.x - c.x, ey = ep.y - c.y, er = PK_EYE.r * ep.s;
+        if (!h && !B.dead && (!B.eyes[i] || B.phase === 2)) gpuLight(ep.x, ep.y, er * 4.2, "255,200,80", (B.eyes[i] ? 0.2 : 0.36) * fl);
         if (B.eyes[i] || B.dead) {
           if (B.phase === 2 && !B.dead) { ctx.strokeStyle = glow; ctx.globalAlpha = fl; ctx.lineWidth = er * 0.6; ctx.beginPath(); ctx.moveTo(ex - er * 1.1, ey - er * (i ? 0.35 : -0.1)); ctx.lineTo(ex + er * 1.1, ey - er * (i ? -0.1 : 0.35)); ctx.stroke(); ctx.globalAlpha = 1; }   // (phase III: screwed shut, glaring)
           ctx.strokeStyle = INK; ctx.lineWidth = er * 0.35; ctx.beginPath(); ctx.moveTo(ex - er, ey); ctx.quadraticCurveTo(ex, ey + er * 0.5, ex + er, ey); ctx.stroke(); for (let k = -1; k <= 1; k++) { ctx.beginPath(); ctx.moveTo(ex + k * er * 0.5, ey + er * 0.1); ctx.lineTo(ex + k * er * 0.6, ey + er * 0.5); ctx.lineWidth = er * 0.12; ctx.stroke(); } continue; }

@@ -2462,6 +2462,42 @@
     delete window.firebase; T.noServer(); T.toTitle();
   });
 
+  // ── v47: perceptual travel (the Crow Hollow pilot) and the GPU effects layer ──
+  test("v47 travel: Crow Hollow's scenery comes toward Morty a step a make, slows as a boss comes up, stands still through the fights, and never stands in the lane", () => {
+    T.setStats(ZERO); fresh(); T.calm(); let V = T.travel();
+    assert(V.on && V.D === 0 && V.props > 100, `Crow Hollow travels, from the start (${JSON.stringify(V)})`);
+    const at = T.travelAt, step = at(1) - at(0);
+    assert(step > 3 && at(C.ACT_LEN) > at(0) && at(C.STAGE_MINI) > at(2 * C.ACT_LEN), `every make of the acts carries it on (${[0, 10, 20, 30].map(at)})`);
+    assert(at(C.STAGE_MINI) - at(C.STAGE_MINI - 1) < step * 0.5 && at(C.STAGE_BOSS) - at(C.STAGE_BOSS - 1) < step * 0.5, "the world slows as Morty arrives at a boss");
+    assert(at(C.STAGE_LOOSE) === at(C.STAGE_MINI) && at(C.STAGE_END) === at(C.STAGE_BOSS) && at(C.STAGE_BOSS) > at(C.STAGE_LOOSE), "still through each fight, on again through the approach");
+    const D0 = T.travel().D; T.freezeRing(0, C.RING_Y); throwAndSettle(3, C.RING_Y); assert(T.travel().D === D0, "a miss goes nowhere");
+    T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); V = T.travel(); assert(Math.abs(V.D - at(1)) < 0.05, `a make: one step on (${V.D} of ${at(1)})`);
+    T.step(2); assert(T.travel().D === V.D, "and nothing moves while you aim");
+    T.setHits(24); T.snapTravel(); assert(T.travel().D === at(24) && T.travel().zone === "harvest", `where the world stands comes from the hits alone, so a reload or a replay finds it there (${JSON.stringify(T.travel())})`);
+    toHit(C.STAGE_MINI); const Dm = T.travel().D; T.step(2.6); T.hurtBoss(4); T.step(1); assert(T.travel().D === Dm && T.travel().zone === "crows", "the Crow King's arena stands still");
+    const half = 2.4, far = T.travelEnd(), bad = T.travelSpans().filter(s => s.x1 > -half && s.x0 < half && s.d - far < 16);
+    assert(!bad.length, `no scenery ever stands in the throw corridor (${JSON.stringify(bad.slice(0, 3))})`);
+    fresh(); T.setStage(2); assert(!T.travel().on, "the other maps don't travel yet");
+    T.startArcade(0); T.setHits(20); T.step(0.5); assert(T.travel().on && T.travel().D === 0, "Arcade on Crow Hollow stands at the start");
+    T.toTitle(); T.setStats(ZERO);
+  });
+  test("v47 GPU layer: sparks, light and glow on a WebGL canvas screen-blended over the game; Off hides it, and with no WebGL the game plays on", () => {
+    T.setSetting("gpu", "full"); fresh(); T.calm(); T.gpuFrame(1 / 60); let G = T.gpu();
+    if (G.supported) {
+      assert(G.on && !G.hidden && G.blend === "screen", `on, over the picture, screen-blended (${JSON.stringify(G)})`);
+      const e0 = G.emitted; T.freezeRing(0, C.RING_Y); T.throwAt(0, C.RING_Y); T.step(1.1); T.gpuFrame(1 / 60); G = T.gpu();
+      assert(G.emitted >= e0 + 30 && G.alive >= 30 && G.flashes >= 1, `a perfect throws sparks and a flash of light (${JSON.stringify(G)})`);
+      const r = T.ringScreen(0, C.RING_Y, C.RING_Z), px = T.gpuPixel(r.x, r.y); assert(px && px[0] + px[1] + px[2] > 30, `there's light at the ring (${px})`);
+      T.step(2); T.setStreak(8); const e1 = T.gpu().emitted; for (let i = 0; i < 20; i++) { T.step(1 / 30); T.gpuFrame(1 / 30); } assert(T.gpu().emitted > e1 + 5, "a burning ring throws embers");
+      const b0 = T.gpu().bloom; T.setSetting("gpu", "lite"); for (let i = 0; i < 4; i++) T.gpuFrame(1 / 60); assert(T.gpu().bloom === 0 && T.gpu().on, "Lite: no glow pass, still the sparks and the light"); void b0;
+    } else assert(G.hidden && !G.on, "no WebGL here: the layer stays hidden");
+    T.setSetting("gpu", "off"); T.gpuFrame(1 / 60); G = T.gpu(); assert(!G.on && G.hidden, "Off: the painted picture only");
+    T.gpuFake(false); T.setSetting("gpu", "full"); T.gpuFrame(1 / 60); assert(!T.gpu().on && T.gpu().hidden, "no WebGL: it never switches on");
+    T.freezeRing(0, C.RING_Y); assert(throwAndSettle(0, C.RING_Y).lastResult.make, "and the game plays on as it always did");
+    T.openSheet("settings"); assert(/can't draw them/.test($("gpuNote").textContent) && document.querySelector('#set-gpu [data-v="full"]').disabled, "Settings says why"); T.closeSheet();
+    T.gpuFake(true); T.setSetting("gpu", "off"); T.toTitle();
+  });
+
   (async () => {
     for (const q of queue) {
       if (q.step) { q.fn(); continue; }

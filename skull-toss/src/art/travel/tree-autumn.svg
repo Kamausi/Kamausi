@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 440">
+  <!-- Crow Hollow travel: a crooked autumn tree. 100 units = 1 m; its foot is at (160, 432). -->
+  <style>.k{stroke:ink;stroke-width:4;stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}</style>
+  <g id="body">
+    <ellipse class="s" cx="162" cy="431" rx="96" ry="9" fill="#000" opacity=".28"/>
+    <path class="k" d="M150 212 C118 196 96 176 78 148" fill="none" stroke-width="18"/>
+    <path class="s" d="M150 212 C118 196 96 176 78 148" fill="none" stroke="#5A4A5E" stroke-width="9" stroke-linecap="round"/>
+    <path class="k" d="M176 206 C204 188 224 172 244 146" fill="none" stroke-width="16"/>
+    <path class="s" d="M176 206 C204 188 224 172 244 146" fill="none" stroke="#5A4A5E" stroke-width="8" stroke-linecap="round"/>
+    <path class="k" d="M126 432 C140 420 143 400 140 372 C136 330 118 296 130 256 C138 228 150 210 144 180 L174 178 C178 206 166 230 176 258 C190 298 176 334 182 372 C185 402 190 420 204 432 Z" fill="#5A4A5E"/>
+    <path class="s" d="M144 402 C148 372 140 332 136 300 C132 268 146 238 152 212 L158 214 C152 240 142 268 146 298 C150 330 156 372 152 402 Z" fill="#7C6A80"/>
+    <ellipse class="k" cx="96" cy="176" rx="58" ry="48" fill="#A8462A"/>
+    <ellipse class="k" cx="232" cy="170" rx="60" ry="50" fill="#A8462A"/>
+    <ellipse class="k" cx="164" cy="104" rx="76" ry="64" fill="#C8642A"/>
+    <ellipse class="k" cx="112" cy="126" rx="54" ry="46" fill="#D98A3A"/>
+    <ellipse class="k" cx="220" cy="120" rx="52" ry="44" fill="#D98A3A"/>
+    <ellipse class="k" cx="166" cy="172" rx="62" ry="40" fill="#C8642A"/>
+    <ellipse class="s" cx="146" cy="82" rx="30" ry="20" fill="#E0B85C" opacity=".7"/>
+    <ellipse class="s" cx="96" cy="112" rx="20" ry="14" fill="#E0B85C" opacity=".6"/>
+    <ellipse class="s" cx="206" cy="104" rx="20" ry="13" fill="#E0B85C" opacity=".6"/>
+    <path class="s" d="M60 190 C80 214 120 214 140 196 C112 206 84 204 60 190 Z" fill="#7E2A22" opacity=".45"/>
+    <path class="s" d="M196 196 C220 214 260 212 282 188 C256 202 222 204 196 196 Z" fill="#7E2A22" opacity=".45"/>
+    <ellipse class="s" cx="150" cy="318" rx="7" ry="10" fill="#2A1E2C"/>
+    <ellipse class="s" cx="172" cy="318" rx="7" ry="10" fill="#2A1E2C"/>
+    <circle class="s" cx="152" cy="315" r="2.6" fill="cream"/>
+    <circle class="s" cx="174" cy="315" r="2.6" fill="cream"/>
+    <ellipse class="s" cx="162" cy="344" rx="9" ry="12" fill="#2A1E2C"/>
+    <path class="k" d="M58 262 q10 -6 16 2 q-8 8 -16 -2 Z" fill="#C8642A" stroke-width="2.5"/>
+    <path class="k" d="M262 236 q10 -8 17 0 q-8 9 -17 0 Z" fill="#D98A3A" stroke-width="2.5"/>
+    <path class="k" d="M232 300 q9 -6 15 2 q-8 7 -15 -2 Z" fill="#A8462A" stroke-width="2.5"/>
+  </g>
+</svg>

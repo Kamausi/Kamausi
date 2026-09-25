@@ -24,6 +24,7 @@
 </svg>
 
 <canvas id="stage" aria-label="Skull Toss play field. Pull down to aim, release to throw. Arrow keys aim, Space throws, Escape pauses." data-t-aria="ui.skull-toss-play-field-pull"></canvas>
+<canvas id="gpuFx" aria-hidden="true" hidden></canvas>
 <div id="vig" aria-hidden="true"></div>
 
 <header class="hud" id="hud" hidden>
@@ -263,6 +264,8 @@
       <div class="seg" role="radiogroup" aria-label="Film look" data-t-aria="ui.film-look" id="set-film"><button type="button" role="radio" data-v="full" aria-checked="true" data-t="ui.full">Full</button><button type="button" role="radio" data-v="light" aria-checked="false" data-t="ui.light">Light</button><button type="button" role="radio" data-v="off" aria-checked="false" data-t="ui.off">Off</button></div></div>
     <div class="row stack"><div><div class="lbl" data-t="ui.camera">Camera</div><div class="sub" id="cameraNote">Leans with your aim, follows the throw</div></div>
       <div class="seg" role="radiogroup" aria-label="Camera" data-t-aria="ui.camera" id="set-camera"><button type="button" role="radio" data-v="full" aria-checked="true" data-t="ui.full">Full</button><button type="button" role="radio" data-v="gentle" aria-checked="false" data-t="ui.gentle">Gentle</button><button type="button" role="radio" data-v="still" aria-checked="false" data-t="ui.still">Still</button></div></div>
+    <div class="row stack"><div><div class="lbl" data-t="ui.gpu-effects">GPU effects</div><div class="sub" id="gpuNote">Sparks, light and glow, drawn on the graphics chip</div></div>
+      <div class="seg" role="radiogroup" aria-label="GPU effects" data-t-aria="ui.gpu-effects" id="set-gpu"><button type="button" role="radio" data-v="full" aria-checked="true" data-t="ui.full">Full</button><button type="button" role="radio" data-v="lite" aria-checked="false" data-t="ui.lite">Lite</button><button type="button" role="radio" data-v="off" aria-checked="false" data-t="ui.off">Off</button></div></div>
     <div class="row stack"><div><div class="lbl" data-t="ui.morty-s-voice">Morty's voice</div><div class="sub" id="voiceNote">Cartoon mumbles when you grab him</div></div>
       <div class="seg" role="radiogroup" aria-label="Morty's voice" data-t-aria="ui.morty-s-voice" id="set-voice"><button type="button" role="radio" data-v="babble" aria-checked="true" data-t="ui.mumble">Mumble</button><button type="button" role="radio" data-v="spoken" aria-checked="false" data-t="ui.spoken">Spoken</button><button type="button" role="radio" data-v="off" aria-checked="false" data-t="ui.off">Off</button></div></div>
     <div class="row stack" id="row-lang" hidden><div><div class="lbl" data-t="ui.language">Language</div><div class="sub" id="langNote"></div></div><div class="seg" role="radiogroup" aria-label="Language" data-t-aria="ui.language" id="set-lang"></div></div>

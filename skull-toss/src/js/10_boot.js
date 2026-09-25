@@ -22,13 +22,13 @@
     let dt = real;
     if (!manual) { pollPad(); if (game.slowmo > 0 && !paused) { game.slowmo -= dt; dt *= 0.3; } advance(dt * (Replay.play ? Replay.speed : 1)); }
     if (aim.active && !paused) Sound.pull(aim.tension);
-    VisualSystem.render(); drawUI(ts);
+    VisualSystem.render(); gpuFrame(real); drawUI(ts);   // (the GPU layer goes on over the picture: 08j_gpu.js)
     if (visualsOn()) visualTick(raw, performance.now() - t0);
     requestAnimationFrame(frame);
   }
   loadAll(); Flags.load();
   { const q = (location.search.match(/[?&]lang=([\w-]+)/) || [])[1]; if (q || settings.lang !== "en") setLang(q || settings.lang); }   // ?lang=pseudo tries the text-length locale
-  welcomeGift(); ensureDaily(); applyCosmetics(); applyAccess(); layOutProps(); resize(); snapRing(); VisualSystem.init(); showScreen("title", false); updateHud();
+  welcomeGift(); ensureDaily(); applyCosmetics(); applyAccess(); layOutProps(); gpuInit(); resize(); snapRing(); VisualSystem.init(); showScreen("title", false); updateHud();
   // v45: on launch, the studio's logo on black (src/art/logo/logo.png when there is one), then the title with its curtains
   // closed, and they open on the title and the menu. (Not under automation: the spec and the QA tools start straight in.)
   // v45: the studio's logo on a black screen (it fades in, holds, and fades out), then the black fades away on the

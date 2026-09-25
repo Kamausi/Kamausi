@@ -199,6 +199,7 @@
   // near props: a broken headstone, a scrap of iron fence and grass tufts at the edges of the frame, on the ground
   // between the slingshot and the ring. They're anchored to the screen edges so they frame every screen shape.
   function drawNear() {
+    if (TRAVEL.on) { drawTravelNear(); return; }   // (a map that travels: its near edge sweeps past, 06g_travel.js)
     if (nearLayer) { const P = nearLayer; planeXform(ctx, 3.6, "near"); ctx.drawImage(P.c, P.x0, P.y0, P.w, P.h); baseXform(ctx); return; }
     for (const [kind, side, fx, z] of NEAR_SETS[look().props] || NEAR_SETS.graveyard) {
       const s0 = F / (z + CAM_BACK), x = (side * (W / 2 - fx * W)) / s0, p = project(x, 0, z);

@@ -121,7 +121,7 @@
     return kind === "tuft" || kind === "reeds" || kind === "corn" ? "bend" : kind === "stone" || kind === "slab" ? "shake" : null;
   }
   function reactProp(k, dir = 1, strength = 1) {
-    const does = reactionFor(k.kind); if (!does || (k.react && game.time - k.react.t0 < 0.25)) return false;
+    const does = reactionFor(k.fam || k.kind); if (!does || (k.react && game.time - k.react.t0 < 0.25)) return false;
     k.react = { does, t0: game.time, dir: dir < 0 ? -1 : 1, s: clamp(strength, 0.4, 1.4) };
     if (does === "crack") k.cracked = true;
     if (does === "fall") k.fallen = k.react.dir;
@@ -155,7 +155,7 @@
     const P = s.pos;
     for (const k of GY.props) {
       if (k.kind === "digger" || Math.abs(k.z - P.z) > 0.9 || Math.abs(k.x - P.x) > 1.0) continue;
-      const tall = (PROP_SPRITES[k.kind] ? PROP_SPRITES[k.kind][1] : 1.4) * (k.size || 1);
+      const tall = k.tall || (PROP_SPRITES[k.kind] ? PROP_SPRITES[k.kind][1] : 1.4) * (k.size || 1);
       if (P.y < tall) reactProp(k, P.x - prev.x >= 0 ? 1 : -1, 1);
     }
     const A = anchorDef();

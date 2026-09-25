@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 160">
+  <!-- Crow Hollow travel: a split-rail fence, one rail broken. 100 units = 1 m; foot at (200, 154). -->
+  <style>.k{stroke:ink;stroke-width:3.5;stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}</style>
+  <g id="body">
+    <ellipse class="s" cx="200" cy="152" rx="190" ry="7" fill="#000" opacity=".25"/>
+    <path class="k" d="M20 54 L382 44 L382 58 L20 68 Z" fill="wood-l"/>
+    <path class="k" d="M20 100 L190 96 L206 88 L214 104 L200 110 L20 114 Z" fill="wood-l"/>
+    <path class="k" d="M238 108 L250 96 L262 104 L382 98 L382 112 L240 118 Z" fill="wood-l"/>
+    <path class="s" d="M24 56 L378 46 L378 50 L24 60 Z M24 102 L186 98 L186 102 L24 106 Z" fill="#A87A4A"/>
+    <path class="k" d="M30 152 L28 38 C28 32 44 32 44 38 L46 152 Z" fill="wood"/>
+    <path class="k" d="M190 152 L194 30 C194 24 210 24 210 30 L208 152 Z" fill="wood"/>
+    <path class="k" d="M352 152 L360 42 C360 36 376 38 376 44 L368 152 Z" fill="wood"/>
+    <path class="s" d="M32 146 L31 42 L36 42 L37 146 Z M196 146 L198 34 L203 34 L201 146 Z M356 146 L363 46 L368 46 L361 146 Z" fill="#8C6239"/>
+  </g>
+</svg>

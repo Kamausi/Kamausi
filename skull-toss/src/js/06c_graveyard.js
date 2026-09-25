@@ -11,9 +11,8 @@
   function layOutProps() {
     const rnd = mulberry32(1933 + sceneMap * 101), P = [];
     const place = (kind, x, z, extra = {}) => { if (kind === "digger" || clearOfLane(x, z)) P.push({ kind, x, z, ph: rnd(), seed: (rnd() * 1e6) | 0, face: rnd() < 0.3, ...extra }); };
-    PROPSETS[look().props](place, rnd);
-    P.sort((a, b) => b.z - a.z);
-    GY.props = P; GY.sprites = {};
+    if (!travelSetup(P)) { PROPSETS[look().props](place, rnd); P.sort((a, b) => b.z - a.z); }   // (a map that travels lays its props out along its track: 06g_travel.js)
+    GY.props = P; GY.sprites = {}; travelApply();
   }
 
   // ── sprites (painted once per screen size, at the scale they'll usually be seen)
@@ -98,7 +97,7 @@
     else sp = sprite(1.0, 1.9, 0.5, 1.8, S, g => paintStone(g, k));
     return (GY.sprites[key] = sp);
   }
-  function graveyardResize() { GY.sprites = {}; GY.S = projectBase(0, 0, 10).s; }
+  function graveyardResize() { GY.sprites = {}; GY.S = projectBase(0, 0, 10).s; travelResize(); }
 
   // ── drawing a prop in the world: squash on the beat, sway, and the odd wakeful headstone
   function drawProp(k) {
@@ -111,7 +110,7 @@
     if (sway) ctx.transform(1, 0, sway, 1, 0, 0);
     reactXform(k);   // hit by a throw: it moves, bends, rotates, squeaks, shakes or falls (07n_environment.js)
     ctx.scale(sc * (1 - bb * 0.04), sc * (1 + bb * 0.06));
-    const life = PROP_LIFE[k.kind]; if (life) life(k, sp.S, t);   // light, drawn under the sprite so the prop stands in its own glow
+    const life = PROP_LIFE[k.kind]; if (life) { life(k, sp.S, t); const L = PROP_LIGHT[k.kind]; if (L) gpuLight(p.x + L[0] * p.s, p.y - L[1] * p.s * (k.size || 1), L[2] * p.s, L[3], 0.3); }   // light, drawn under the sprite so the prop stands in its own glow (and on the GPU: 08j_gpu.js)
     ctx.drawImage(sp.c, -sp.ax, -sp.ay, sp.w, sp.h); drawCrack(k, sp);
     if (k.kind === "lantern") { const sw = Math.sin(twos(t) * 2 + k.ph) * 0.08; ctx.save(); ctx.translate(0.32 * sp.S, -1.38 * sp.S); ctx.rotate(sw); ctx.strokeStyle = INK; ctx.lineWidth = 0.03 * sp.S; ctx.fillStyle = `rgba(255,${190 + ((Math.sin(t * 13) * 30) | 0)},100,1)`; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, 0.08 * sp.S); ctx.stroke(); ctx.beginPath(); ctx.ellipse(0, 0.2 * sp.S, 0.09 * sp.S, 0.13 * sp.S, 0, 0, TAU); ctx.fill(); ctx.stroke(); ctx.restore(); }
     if (k.face && (k.kind === "stone" || k.kind === "slab")) drawStoneFace(k, sp, t);

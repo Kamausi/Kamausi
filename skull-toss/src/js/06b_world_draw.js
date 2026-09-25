@@ -165,6 +165,7 @@
     planeXform(ctx, 160, "sky");
     for (const c of w.clouds) { const sp = w.sprites[c.s]; if (!sp) continue; ctx.globalAlpha = c.a; ctx.drawImage(sp.c, c.x, c.y, sp.w, sp.h); }
     ctx.globalAlpha = 1;
+    if (moon.r && moon.kind !== "screen") gpuLight(moon.x + camBase.x, moon.y + camBase.y, moon.r * 3.4, "242,231,201", 0.12);   // (the moon's light, on the GPU: 08j_gpu.js)
     if (moonLayer) {   // the clouds pass behind the moon: it is a face in the sky, not weather
       const M = moonLayer; planeXform(ctx, 400, "sky"); ctx.drawImage(M.c, M.x0, M.y0, M.w, M.h);
       const Sc = sceneFX.screen;   // the picture-house screen flickers with the projector (as much as Flashes allows)
@@ -189,8 +190,13 @@
   function drawGroundWorld() {
     // the props are already in back-to-front order; the few wanderers are merged into it
     const ws = world.walkers.length > 1 ? world.walkers.slice().sort((a, b) => b.z - a.z) : world.walkers;
-    let wi = 0;
-    for (const k of GY.props) { while (wi < ws.length && ws[wi].z > k.z) drawWalker(ws[wi++]); drawProp(k); }
+    let wi = 0, hazed = !TRAVEL.on;
+    for (const k of GY.props) {
+      if (k.travel) { if (!travelShows(k)) continue; if (!hazed && k.z < TRAVEL_HAZE_Z) { drawTravelHaze(); hazed = true; } }   // (the far scenery softens behind the haze: 06g_travel.js)
+      while (wi < ws.length && ws[wi].z > k.z) drawWalker(ws[wi++]);
+      if (k.travel) drawTravelProp(k); else drawProp(k);
+    }
+    if (!hazed) drawTravelHaze();
     while (wi < ws.length) drawWalker(ws[wi++]);
     const f = world.fogSprite;
     if (f) for (const b of world.fog) { const A = groundAt(b.y), x = W / 2 + (b.x - W / 2) * A.k + A.ox + camBase.x; ctx.globalAlpha = b.a; ctx.drawImage(f.c, x, A.y + camBase.y - (f.h * A.k) / 2, f.w * A.k, f.h * A.k); }

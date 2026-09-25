@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 200">
+  <!-- Crow Hollow travel: a farm cart piled with hay. 100 units = 1 m; foot at (150, 194). -->
+  <style>.k{stroke:ink;stroke-width:3.5;stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.l{fill:none;stroke:ink;stroke-linecap:round}</style>
+  <g id="body">
+    <ellipse class="s" cx="150" cy="193" rx="130" ry="8" fill="#000" opacity=".28"/>
+    <path class="k" d="M50 108 C60 50 110 40 150 46 C200 38 250 56 256 110 Z" fill="#E0B85C"/>
+    <path class="l" d="M80 70 l-6 -12 M120 52 l0 -12 M170 50 l6 -12 M216 62 l10 -10 M100 96 l8 -14 M150 90 l0 -16 M196 94 l-8 -14" stroke="#B08A38" stroke-width="3"/>
+    <path class="k" d="M40 104 L262 104 L256 138 L46 138 Z" fill="wood"/>
+    <path class="s" d="M46 114 H258 M48 126 H256" stroke="wood-d" stroke-width="3"/>
+    <path class="l" d="M262 122 L296 150" stroke-width="7"/>
+    <path class="l" d="M262 122 L296 150" stroke="wood-l" stroke-width="3.5"/>
+    <circle class="k" cx="94" cy="150" r="42" fill="none" stroke-width="10"/>
+    <circle class="s" cx="94" cy="150" r="42" fill="none" stroke="wood-l" stroke-width="5"/>
+    <path class="l" d="M94 108 V192 M52 150 H136 M64 120 L124 180 M124 120 L64 180" stroke-width="5"/>
+    <circle class="k" cx="94" cy="150" r="10" fill="wood-d"/>
+    <circle class="k" cx="214" cy="160" r="32" fill="none" stroke-width="9"/>
+    <circle class="s" cx="214" cy="160" r="32" fill="none" stroke="wood-l" stroke-width="4.5"/>
+    <path class="l" d="M214 128 V192 M182 160 H246 M191 137 L237 183 M237 137 L191 183" stroke-width="4.5"/>
+    <circle class="k" cx="214" cy="160" r="8" fill="wood-d"/>
+  </g>
+</svg>

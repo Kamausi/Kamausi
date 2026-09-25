@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 580">
+  <!-- Crow Hollow travel: the old farmhouse, a little crooked, its windows lit. 100 units = 1 m; foot at (360, 572). -->
+  <style>.k{stroke:ink;stroke-width:5;stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.l{fill:none;stroke:ink;stroke-linecap:round}</style>
+  <g id="body">
+    <ellipse class="s" cx="366" cy="570" rx="300" ry="16" fill="#000" opacity=".3"/>
+    <g transform="rotate(-1.6 360 570)">
+      <path class="k" d="M438 226 L438 118 L486 116 L488 232 Z" fill="#7E4A3A"/>
+      <path class="s" d="M444 134 H482 M444 156 H482 M444 178 H482 M444 200 H482" stroke="#5A3228" stroke-width="3"/>
+      <rect class="k" x="430" y="104" width="64" height="18" fill="#5A3228"/>
+      <path class="k" d="M150 568 L154 300 L566 296 L570 568 Z" fill="#8E7F70"/>
+      <path class="s" d="M160 330 H560 M160 362 H560 M160 394 H560 M160 426 H560 M160 458 H560 M160 490 H560 M160 522 H560" stroke="#6E6052" stroke-width="3" opacity=".8"/>
+      <path class="s" d="M156 304 L182 304 L178 564 L154 564 Z" fill="#A89A8A" opacity=".7"/>
+      <path class="k" d="M118 314 L360 128 L604 310 L580 318 L360 156 L140 322 Z" fill="#6A2E28"/>
+      <path class="k" d="M140 322 L360 156 L580 318 L566 300 L154 304 Z" fill="#8E7F70"/>
+      <path class="s" d="M178 294 L360 160 L544 292 Z" fill="#7A6C5E"/>
+      <path class="s" d="M150 302 L360 146 L372 154 L162 310 Z" fill="#8E3A30" opacity=".8"/>
+      <path class="k" d="M318 262 L360 226 L402 262 L402 296 L318 296 Z" fill="#6A2E28" stroke-width="4"/>
+      <rect class="k" x="334" y="258" width="52" height="38" fill="#FFD27A" stroke-width="4"/>
+      <path class="l" d="M360 258 V296 M334 277 H386" stroke-width="4"/>
+      <rect class="k" x="196" y="346" width="70" height="78" fill="#FFD27A"/>
+      <rect class="k" x="454" y="346" width="70" height="78" fill="#2A2230"/>
+      <path class="l" d="M231 346 V424 M196 385 H266 M489 346 V424 M454 385 H524" stroke-width="5"/>
+      <path class="k" d="M178 344 L196 344 L196 426 L176 430 Z" fill="#4A5E4A" stroke-width="4"/>
+      <path class="k" d="M266 344 L286 340 L284 422 L266 426 Z" fill="#4A5E4A" stroke-width="4"/>
+      <path class="k" d="M436 344 L454 344 L454 426 L440 436 Z" fill="#4A5E4A" stroke-width="4"/>
+      <path class="k" d="M524 344 L546 352 L540 430 L524 426 Z" fill="#4A5E4A" stroke-width="4"/>
+      <rect class="s" x="202" y="352" width="26" height="30" fill="#FFF0B8" opacity=".7"/>
+      <path class="k" d="M126 470 L360 446 L594 470 L590 484 L130 484 Z" fill="#5A3A2A"/>
+      <path class="k" d="M168 484 L176 484 L176 566 L168 566 Z M544 484 L552 484 L552 566 L544 566 Z M292 484 L300 484 L300 566 L292 566 Z M420 484 L428 484 L428 566 L420 566 Z" fill="wood-l" stroke-width="3"/>
+      <path class="k" d="M324 566 L326 492 C326 484 394 484 394 492 L396 566 Z" fill="#3A2A22"/>
+      <circle class="s" cx="382" cy="530" r="5" fill="gold"/>
+      <path class="k" d="M300 566 H420 L424 578 H296 Z" fill="wood-d" stroke-width="3"/>
+      <path class="l" d="M204 500 C230 520 256 520 282 500 M438 500 C464 520 490 520 516 500" stroke="#5A3A2A" stroke-width="4"/>
+    </g>
+  </g>
+</svg>

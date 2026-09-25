@@ -1,0 +1,22 @@
+{
+  "_doc": "Crow Hollow's travel library (v47, the perceptual travel pilot): each asset is one SVG here with a <g id=\"body\">, drawn at 100 canvas units a metre. The build imports them with svgart.py like the skull and launcher. foot: the point that stands on the ground. layer: which depth band it belongs to (docs/TRAVEL.md). family: which of the map's interactions it answers to (maps/01-hollow.json sheet.interactions). collision is always none: travel scenery is looks only; nothing in it ever touches a throw. lights: points that glow (x, y, radius in canvas units).",
+  "version": "1.0.0",
+  "units": 100,
+  "assets": {
+    "tree-autumn":   { "canvas": [320, 440],  "foot": [160, 432], "layer": "midground",  "family": "tree",      "sway": 0.04, "collision": "none" },
+    "tree-bare":     { "canvas": [320, 460],  "foot": [160, 452], "layer": "midground",  "family": "tree",      "sway": 0.02, "collision": "none" },
+    "farmhouse":     { "canvas": [720, 580],  "foot": [360, 572], "layer": "midground",  "family": "house",     "collision": "none", "lights": [[231, 385, 90], [360, 277, 60]] },
+    "barn":          { "canvas": [820, 640],  "foot": [410, 632], "layer": "midground",  "family": "house",     "collision": "none", "lights": [[212, 362, 70]] },
+    "corn":          { "canvas": [260, 300],  "foot": [130, 294], "layer": "gameplay",   "family": "corn",      "sway": 0.09, "collision": "none" },
+    "fence":         { "canvas": [400, 160],  "foot": [200, 154], "layer": "gameplay",   "family": "rail",      "collision": "none" },
+    "scarecrow":     { "canvas": [260, 320],  "foot": [130, 314], "layer": "gameplay",   "family": "scarecrow", "sway": 0.05, "collision": "none" },
+    "pumpkins":      { "canvas": [260, 150],  "foot": [130, 144], "layer": "gameplay",   "family": "pumpkin",   "collision": "none" },
+    "pumpkin-giant": { "canvas": [340, 280],  "foot": [170, 272], "layer": "midground",  "family": "pumpkin",   "collision": "none" },
+    "haybale":       { "canvas": [200, 130],  "foot": [100, 124], "layer": "gameplay",   "family": "hay",       "collision": "none" },
+    "signpost":      { "canvas": [220, 280],  "foot": [110, 274], "layer": "gameplay",   "family": "rail",      "collision": "none" },
+    "bush":          { "canvas": [240, 150],  "foot": [120, 144], "layer": "foreground", "family": "corn",      "sway": 0.06, "collision": "none" },
+    "king-lair":     { "canvas": [1000, 720], "foot": [500, 710], "layer": "distant",    "family": "landmark",  "collision": "none", "lights": [[500, 555, 150]] },
+    "cart":          { "canvas": [300, 200],  "foot": [150, 194], "layer": "gameplay",   "family": "hay",       "collision": "none" },
+    "crowpost":      { "canvas": [140, 260],  "foot": [70, 254],  "layer": "gameplay",   "family": "crows",     "collision": "none" }
+  }
+}

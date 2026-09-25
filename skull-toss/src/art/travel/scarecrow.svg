@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 320">
+  <!-- Crow Hollow travel: a scarecrow in a patched shirt, a crow on his arm. 100 units = 1 m; foot at (130, 314). -->
+  <style>.k{stroke:ink;stroke-width:3.5;stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.l{fill:none;stroke:ink;stroke-linecap:round}</style>
+  <g id="body">
+    <ellipse class="s" cx="130" cy="313" rx="46" ry="6" fill="#000" opacity=".28"/>
+    <path class="k" d="M125 314 L126 70 L136 70 L137 314 Z" fill="wood"/>
+    <path class="k" d="M22 132 L238 124 L238 136 L22 144 Z" fill="wood"/>
+    <path class="k" d="M84 126 C74 150 76 190 86 214 L176 212 C186 190 186 150 176 124 Z" fill="purple"/>
+    <path class="s" d="M100 128 V212 M124 128 V212 M148 128 V212 M168 128 V210 M86 150 H178 M84 176 H182 M86 198 H180" stroke="#4A3A50" stroke-width="3" opacity=".8"/>
+    <rect class="k" x="136" y="160" width="28" height="24" fill="#C49A42" stroke-width="3" transform="rotate(8 150 172)"/>
+    <path class="l" d="M140 164 l4 3 M146 162 l0 4 M154 166 l3 -3" stroke-width="2"/>
+    <path class="k" d="M84 126 L32 128 L30 146 L86 150 Z M176 124 L228 122 L230 138 L178 146 Z" fill="purple"/>
+    <path class="k" d="M30 132 C18 134 10 142 12 150 C18 146 22 146 24 152 C26 146 30 146 32 150 Z" fill="#E0B85C" stroke-width="3"/>
+    <path class="k" d="M230 126 C242 128 250 136 248 144 C242 140 238 140 236 146 C234 140 230 140 228 144 Z" fill="#E0B85C" stroke-width="3"/>
+    <path class="k" d="M92 212 L96 236 C100 230 104 232 106 238 C110 230 114 232 116 238 L120 212 Z M142 212 L146 238 C150 232 154 234 156 238 C160 230 164 234 166 236 L170 210 Z" fill="#E0B85C" stroke-width="3"/>
+    <path class="k" d="M100 76 C98 44 162 44 160 76 C160 108 100 108 100 76 Z" fill="#D8B87A"/>
+    <path class="l" d="M110 64 l12 12 M122 64 l-12 12 M138 64 l12 12 M150 64 l-12 12" stroke-width="3.5"/>
+    <path class="l" d="M110 90 C122 98 138 98 150 90 M116 88 l0 6 M126 92 l0 6 M136 92 l0 6 M146 88 l0 6" stroke-width="2.5"/>
+    <path class="k" d="M72 56 C100 52 160 50 190 58 C170 64 90 64 72 56 Z" fill="#3A2A1E"/>
+    <path class="k" d="M104 56 C104 30 118 14 144 6 C140 22 148 36 156 54 Z" fill="#3A2A1E"/>
+    <path class="k" d="M106 50 C124 46 140 46 156 50 L156 56 C140 52 124 52 106 56 Z" fill="red" stroke-width="2.5"/>
+    <g transform="translate(206 110)">
+      <path class="k" d="M-16 4 C-26 10 -34 8 -40 12 C-30 14 -22 12 -12 10 Z" fill="#1E1A24" stroke-width="2.5"/>
+      <ellipse class="k" cx="0" cy="0" rx="17" ry="12" fill="#1E1A24" stroke-width="2.5"/>
+      <circle class="k" cx="13" cy="-11" r="9" fill="#1E1A24" stroke-width="2.5"/>
+      <path class="k" d="M20 -13 L33 -10 L20 -6 Z" fill="gold" stroke-width="2"/>
+      <circle class="s" cx="15" cy="-13" r="2.8" fill="cream"/>
+    </g>
+  </g>
+</svg>

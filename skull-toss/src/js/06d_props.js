@@ -199,6 +199,7 @@
     ctx.beginPath(); ctx.moveTo(x - 0.09 * s, y); ctx.quadraticCurveTo(x - 0.1 * s, y - 0.18 * s * f, x + Math.sin(t * 9 + ph) * 0.03 * s, y - 0.3 * s * f); ctx.quadraticCurveTo(x + 0.1 * s, y - 0.16 * s * f, x + 0.09 * s, y); ctx.closePath(); ctx.fill(); ctx.stroke();
     ctx.fillStyle = "#FFE08A"; ctx.beginPath(); ctx.ellipse(x, y - 0.08 * s, 0.035 * s, 0.07 * s * f, 0, 0, TAU); ctx.fill();
   }
+  const PROP_LIGHT = { torch: [0, 1.55, 2.2, "255,160,80"], jack: [0, 0.32, 1.4, "255,190,80"], lamppost: [0, 2.75, 2.6, "255,214,150"], lantern: [0.32, 1.25, 2, "255,200,110"] };   // x, height, radius (metres), colour (the GPU's light pools)
   const PROP_LIFE = {
     torch(k, S, t) { const fl = 0.75 + 0.25 * Math.sin(t * 13 + k.ph * 9) * Math.sin(t * 4.1); propGlow(0, -1.55 * S, 1.5 * S, fl, "255,160,80"); torchFlame(0, -1.5 * S, S, t, k.ph); },
     jack(k, S, t) { const s = k.size || 1, fl = 0.7 + 0.3 * Math.sin(t * 11 + k.ph * 7) * Math.sin(t * 3.3); propGlow(0, -0.32 * S * s, 0.9 * S * s, fl, "255,190,80"); },

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 300">
+  <!-- Crow Hollow travel: a clump of corn, taller than Morty. 100 units = 1 m; foot at (130, 294). -->
+  <style>.k{stroke:ink;stroke-width:3;stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}</style>
+  <defs>
+    <g id="stalk">
+      <path class="k" d="M-4 0 C-6 -90 -2 -180 -3 -250 L3 -250 C4 -180 6 -90 4 0 Z" fill="#A89448"/>
+      <path class="k" d="M0 -60 C-30 -70 -52 -60 -70 -34 C-48 -52 -26 -54 0 -48 Z" fill="#8A9A48"/>
+      <path class="k" d="M0 -110 C30 -124 56 -112 72 -86 C50 -104 26 -104 0 -98 Z" fill="#7A8A3A"/>
+      <path class="k" d="M0 -160 C-26 -176 -50 -170 -64 -148 C-44 -162 -22 -162 0 -150 Z" fill="#8A9A48"/>
+      <path class="k" d="M0 -200 C22 -214 42 -210 54 -192 C38 -202 20 -200 0 -192 Z" fill="#7A8A3A"/>
+      <path class="k" d="M-2 -250 L-12 -276 M1 -250 L2 -282 M3 -250 L14 -274" fill="none" stroke="mustard" stroke-width="3"/>
+      <path class="k" d="M4 -120 C22 -130 26 -104 12 -86 C8 -96 4 -108 4 -120 Z" fill="#E0B85C"/>
+      <path class="k" d="M4 -118 C10 -104 10 -92 12 -86 C18 -100 20 -112 22 -122" fill="#A8B060" stroke-width="2.5"/>
+    </g>
+  </defs>
+  <g id="body">
+    <ellipse class="s" cx="132" cy="293" rx="96" ry="8" fill="#000" opacity=".28"/>
+    <use href="#stalk" transform="translate(86 292) scale(.86)"/>
+    <use href="#stalk" transform="translate(176 292) scale(-.9 .9)"/>
+    <use href="#stalk" transform="translate(130 294)"/>
+    <use href="#stalk" transform="translate(60 294) scale(-.72 .72)"/>
+    <use href="#stalk" transform="translate(206 294) scale(.7)"/>
+  </g>
+</svg>

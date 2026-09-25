@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 280">
+  <!-- Crow Hollow travel: a crooked signpost, a crow painted on one arm and a pumpkin on the other. 100 units = 1 m; foot at (110, 274). -->
+  <style>.k{stroke:ink;stroke-width:3.5;stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}</style>
+  <g id="body">
+    <ellipse class="s" cx="112" cy="273" rx="40" ry="6" fill="#000" opacity=".28"/>
+    <path class="k" d="M104 274 L106 40 C106 32 120 32 120 40 L118 274 Z" fill="wood"/>
+    <path class="k" d="M110 60 L196 50 L214 70 L198 88 L112 94 Z" fill="wood-l" transform="rotate(-4 110 70)"/>
+    <path class="k" d="M114 120 L28 116 L10 136 L28 154 L114 156 Z" fill="wood-l" transform="rotate(5 110 136)"/>
+    <path class="s" d="M140 70 C146 62 160 62 166 68 L178 64 L172 72 C176 80 168 84 160 82 L146 82 C150 78 146 74 140 70 Z" fill="#1E1A24" transform="rotate(-4 110 70)"/>
+    <ellipse class="k" cx="60" cy="136" rx="18" ry="13" fill="#D9692A" stroke-width="2.5" transform="rotate(5 110 136)"/>
+    <path class="s" d="M58 122 C58 116 64 114 68 116 L64 124 Z" fill="#3E5A2A" transform="rotate(5 110 136)"/>
+    <circle class="k" cx="114" cy="42" r="8" fill="wood-d" stroke-width="3"/>
+  </g>
+</svg>

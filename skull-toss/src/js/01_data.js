@@ -259,7 +259,8 @@
     p.schema = Math.max(from, SAVE_SCHEMA);
     return p;
   }
-  const DEFAULT_SETTINGS = { sound: true, music: 45, sfx: 80, amb: 50, vibe: true, shake: true, guide: "full", film: reduceMotion ? "light" : "full", camera: reduceMotion ? "still" : "full", voice: "babble",
+  // (gpu: the GPU effects layer, 08j_gpu.js: Lite on a touch screen, and Off under automation, where the spec turns it on to test it)
+  const DEFAULT_SETTINGS = { sound: true, music: 45, sfx: 80, amb: 50, vibe: true, shake: true, guide: "full", film: reduceMotion ? "light" : "full", camera: reduceMotion ? "still" : "full", gpu: navigator.webdriver ? "off" : window.matchMedia && matchMedia("(pointer: coarse)").matches ? "lite" : "full", voice: "babble",
     flashes: reduceMotion ? "reduced" : "full", text: "normal", cards: "full", lang: "en", mischief: true, soundSet: "classic", analytics: "ask" };   // analytics: ask | yes | no (04g_telemetry.js)   // soundSet: 02e_audio_sets.js   // cards: the reel's title cards (09i_reel.js)   // accessibility: flash strength, text size
   // "best" is the most hits in one run (what older saves called their best score); "bestScore" is the arcade score
   const STAT_KEYS = ["games", "throws", "makes", "perfects", "rims", "bestStreak", "bestPerfStreak", "peakLives", "points", "best", "bonesTotal", "bonks", "misses", "clutch",
@@ -409,6 +410,7 @@
     if (store.get(KEYS.settings, null) === null && store.get(KEYS.mute, "0") === "1") settings.sound = false;
     if (!["full", "light", "off"].includes(settings.film)) settings.film = DEFAULT_SETTINGS.film;
     if (!["full", "gentle", "still"].includes(settings.camera)) settings.camera = DEFAULT_SETTINGS.camera;
+    if (!["full", "lite", "off"].includes(settings.gpu)) settings.gpu = DEFAULT_SETTINGS.gpu;
     if (!["babble", "spoken", "off"].includes(settings.voice)) settings.voice = DEFAULT_SETTINGS.voice;
     if (!["full", "reduced", "off"].includes(settings.flashes)) settings.flashes = DEFAULT_SETTINGS.flashes;
     if (!["normal", "large"].includes(settings.text)) settings.text = "normal";
