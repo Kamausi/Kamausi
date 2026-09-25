@@ -2612,9 +2612,10 @@
     assert(!/rgba\([^)]*,\s*0?\.\d+\)/.test(bg), `no see-through colour in it (${bg.slice(0, 80)})`);
   });
   test("v53 the cat keeps its place in the world as the camera travels", () => {
-    T.setStats(ZERO); fresh(); T.calm(); T.catNow(); const c0 = T.cat(); assert(c0, "a cat");
-    T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); T.step(1.5); const c1 = T.cat();
-    assert(!c1 || c1.z < c0.z - 0.1, `it's passed by, not carried along (${c0.z.toFixed(2)} → ${c1 ? c1.z.toFixed(2) : "gone"})`);
+    T.setStats(ZERO); fresh(); T.calm(); T.step(2); T.catNow(); const c0 = T.cat(), d0 = T.travel().D; assert(c0, "a cat");   // (the world settled first)
+    T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); T.step(1.5); const c1 = T.cat(), d1 = T.travel().D;
+    assert(d1 > d0 + 0.1, `the world travelled on a make (${d0} → ${d1}, ${T.state().hits} hits)`);
+    assert(!c1 || Math.abs(c0.z - c1.z - (d1 - d0)) < 0.03, `the cat is passed by as far as the world moved, not carried along (${c0.z.toFixed(2)} → ${c1 ? c1.z.toFixed(2) : "gone"}; the world ${(d1 - d0).toFixed(2)})`);
     T.toTitle();
   });
   test("v53 underwater: a skull that comes down in open water goes in, slows and sinks, and the throw still ends", () => {
