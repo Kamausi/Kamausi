@@ -1,8 +1,22 @@
-# SKULL TOSS v51
+# SKULL TOSS v52
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)); nothing else ever plays in their place.
+
+## New in v52: knockouts timed, saves audited, Morty's sheet
+
+- **Knockout timing.** The boss's defeat now plays before the reward, not under it:
+  - the hold is 5 drawings on an end boss and 3½ on a mini;
+  - there's one white flash, then one pulse of the boss's colour (it was four bright blinks in under half a second);
+  - the bonus, the fanfare and the map-clear card wait until the defeat has played (about 1.2–1.35 s in; they used to land at 0.27 s, on top of it);
+  - the defeat moves a drawing at a time, like every other character.
+
+  With reduced motion, every defeat is a gentle sink-and-fade. Leaving mid-knockout no longer drops a crown onto the title screen. The whole budget is in `07r_bossdeath.js` and the Notion spec.
+- **Saves.** `tools/persistence.mjs` plays the real build in fresh browsers: first and second launch, a save from every schema, a save cut off mid-write, a code imported three times, storage blocked, storage full mid-run. All 37 checks pass, and it runs in CI. It found that a save code dated in the future kept its bone balance "newest", so a save's date can't be later than now any more.
+- **Regression.** `tools/e2e.mjs` plays a whole session by hand (real taps and drags, in real time, with and without reduced motion): 44 checks, in CI.
+- **Performance.** `tools/perf.mjs` plays on a 3×-DPI phone-sized screen with the CPU slowed 4×. It records frame pacing per scene (title, all eight maps, a boss, a knockout, a burning ring, Adventure+, rotating the phone, reduced motion), input latency, and memory over a long session. The results are in [docs/PERF-AUDIT.md](docs/PERF-AUDIT.md).
+- **Morty's sheet.** `tools/angle-sheet.mjs` exports the front view and all 16 expressions from the game's own rig, plus a landmark sheet and `landmarks.json`, into [docs/art/morty](docs/art/morty). The turned views (¼ to side) don't exist in the game; they need an illustrator.
 
 ## New in v51: a spotlit opening, Adventure+, boss knockouts with a punchline, water that reflects
 
@@ -235,7 +249,24 @@ Story ends at map 8. Seasons are what comes after, a few weeks at a time. **Seas
 
   It found **replays on the balloon map drifting**: the balloons swayed on the absolute clock, so a replay watched later saw them elsewhere. They sway on the run's own time now, and a new check holds it there.
 - **A content audit** (`T.contentAudit()` in the dev build). Every map's bosses exist and appear once, and each end boss has one piece. Every boss, power-up, hazard, target, shot, mode, secret, document, twist and note has its words. Achievements count stats the game keeps, and every challenge has wording and pay.
-- **CI runs all of it** on every push: build, lint, spec, server tests, matrix, soak and the web package.
+- **A persistence audit** (`node tools/persistence.mjs`, v52). Each case opens the game in a fresh browser with real storage:
+  - a first launch and a second launch;
+  - a save from every schema (1 to 4, and a newer build's 9), loaded, played and saved over;
+  - a save cut off mid-write, with and without its backup;
+  - one save code imported three times, an older code over newer progress, and a code dated years ahead;
+  - a browser that blocks storage entirely, and one whose storage fills up mid-run.
+
+  It found that **a save code dated in the future kept its bone balance "newest"** until that date came round, so spending on another device could be undone by a cloud merge. A save's date can't be later than now any more.
+- **An end-to-end regression** (`node tools/e2e.mjs`, v52). A player's session in real time, with real taps and drags on a phone-sized touch screen:
+  - every menu sheet in and out;
+  - Play → Adventure and six hand-aimed throws;
+  - pause and resume;
+  - the mini-boss and end boss knocked out, each reward paid once;
+  - on to map 2, and a turn of the phone;
+  - misses to the results, Again, and Quit (two taps) → Menu.
+
+  At every step: no page errors, nothing left over the play field, no untranslated string. It runs twice, once with reduced motion.
+- **CI runs all of it** on every push: build, lint, spec, server tests, matrix, soak, the persistence audit, the end-to-end regression and the web package.
 - **The QA plan** ([docs/QA.md](docs/QA.md)): the automated layers, a manual pass by device, browser and area, severities, and what makes a launch candidate. **The debug tools** ([docs/DEBUG.md](docs/DEBUG.md)): every item on the roadmap's list, and where to find it.
 
 ## New in v40: ready for the web, the app stores and Steam

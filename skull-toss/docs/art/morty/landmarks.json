@@ -1,0 +1,70 @@
+{
+ "canvas": [
+  1000,
+  1000
+ ],
+ "units": "art pixels (the SVG layers' 1000×1000 space)",
+ "pivot": {
+  "x": 500,
+  "y": 494,
+  "note": "the rig's centre: it scales, stretches and rolls about this point"
+ },
+ "bounds": {
+  "top": 63,
+  "bottom": 925,
+  "note": "the whole skull, jaw shut, plus a 9-px margin; 2.2 skull radii tall"
+ },
+ "radius": 391.8,
+ "cranium": {
+  "x0": 172,
+  "y0": 72,
+  "x1": 828,
+  "y1": 748
+ },
+ "jaw": {
+  "x0": 272,
+  "y0": 572,
+  "x1": 728,
+  "y1": 916
+ },
+ "mouth": {
+  "x0": 308,
+  "y0": 592,
+  "x1": 692,
+  "y1": 752
+ },
+ "teethUpper": {
+  "x0": 308,
+  "y0": 592,
+  "x1": 692,
+  "y1": 672
+ },
+ "teethLower": {
+  "x0": 348,
+  "y0": 688,
+  "x1": 652,
+  "y1": 772
+ },
+ "jawHinge": {
+  "y": 572,
+  "note": "the jaw drops from here"
+ },
+ "noseBottom": 548,
+ "teethTop": 592,
+ "sockets": [
+  {
+   "side": "left",
+   "x": 380,
+   "y": 394,
+   "rx": 104,
+   "ry": 146
+  },
+  {
+   "side": "right",
+   "x": 620,
+   "y": 394,
+   "rx": 104,
+   "ry": 146
+  }
+ ]
+}

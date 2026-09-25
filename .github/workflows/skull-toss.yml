@@ -46,6 +46,10 @@ jobs:
         run: node tools/matrix.mjs
       - name: The soak test
         run: node tools/soak.mjs 4
+      - name: The persistence audit
+        run: node tools/persistence.mjs
+      - name: The end-to-end regression
+        run: node tools/e2e.mjs
       - name: Package the web build
         run: |
           python3 tools/package.py web

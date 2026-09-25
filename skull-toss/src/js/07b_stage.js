@@ -91,8 +91,8 @@
   }
   function hideStageCard() { clearTimeout(stageCard.timer); clearTimeout(stageCard.hide); cardEl.hidden = true; cardEl.className = "stagecard"; }
   // a cut-scene holds the throw while a boss arrives or leaves. pull: how far the camera pulls back.
-  function cine(kind, dur, then, pull = 0) {
-    game.state = "cine"; game.cine = { kind, t: 0, dur, then, pull };
+  function cine(kind, dur, then, pull = 0, mid = null) {   // mid: [seconds in, fn], a beat partway through (v52)
+    game.state = "cine"; game.cine = { kind, t: 0, dur, then, pull, mid };
     VisualSystem.emit("transition", { kind });
     aim.active = false; cvs.classList.remove("aiming"); Sound.pullEnd(); setHint("");
   }
@@ -100,13 +100,14 @@
     const c = game.cine; if (!c) return;
     c.t += dt;
     if (boss && boss.cine) boss.cine(c, dt);
+    if (c.mid && c.t >= c.mid[0]) { const f = c.mid[1]; c.mid = null; f(); }
     if (c.t >= c.dur) { game.cine = null; game.state = "ready"; if (c.then) c.then(); updateHud(); }
   }
 
   // ── the acts
   function stageReset() {
     Object.assign(game, { stage: 1, stageHits: 0, hits: 0, phase: "A", act: 0, cine: null, freeze: 0 });
-    boss = null; seeds.length = 0; setRingMode("line", false); hideStageCard(); clearDirectors();
+    boss = null; seeds.length = 0; deathReset(); setRingMode("line", false); hideStageCard(); clearDirectors();
   }
   // which ten-hit section of the map the run is in: 0–2 the first half's acts, 3 the approach, 4 the end boss
   const actOf = h => (h < STAGE_MINI ? Math.floor(h / ACT_LEN) : h < STAGE_BOSS ? 3 : 4);
@@ -153,14 +154,17 @@
   function miniBossDown() {
     profile.miniKills++; profile.bossLog[boss.kind] = (profile.bossLog[boss.kind] || 0) + 1; if (boss.flawless) profile.miniFlawless++; game.run.bosses++;
     const bonus = Math.round(2500 * stageMult() * (boss.flawless ? 1.5 : 1));
-    game.score += bonus; flyPoints(`+${fmtN(bonus)}`, W / 2, H * 0.36, true); Sound.toon("fanfare"); mortySays("bossdown", { priority: true });
+    mortySays("bossdown", { priority: true });
     // hit 40: he drops the ring and it breaks loose, flying on its own. The approach begins (and the first throw through
     // the loose ring catches it: 07_game.js)
     game.stageHits = Math.max(game.stageHits || 0, STAGE_LOOSE); game.act = 3; game.run.catchDue = 1;
     if (game.mode === "story") sawArea(game.stage, 3);
-    stageCard(t("card.miniDown.k"), t("card.loose.t"), `${t("card.loose.s", { act: actName(3) })}${boss.flawless ? " · " + t("card.flawless") : ""}`, 2.6, "gold");
+    // the reward waits for the defeat to play (07r_bossdeath.js's timing budget): then the bonus, the fanfare, the card
+    const flawless = boss.flawless, REWARD_AT = 0.95;
+    const reward = () => { game.score += bonus; flyPoints(`+${fmtN(bonus)}`, W / 2, H * 0.36, true); Sound.toon("fanfare"); updateHud();
+      stageCard(t("card.miniDown.k"), t("card.loose.t"), `${t("card.loose.s", { act: actName(3) })}${flawless ? " · " + t("card.flawless") : ""}`, 2.6 - REWARD_AT + 0.6, "gold"); };
     // the rules change: the camera pulls back, the ring shakes loose and grows wings, the band changes key
-    cine("mini-out", 2.6, () => { boss = null; game.phase = "B"; snapRing(); setHint(t("hint.catch")); obstaclesSync(); updateHud(); }, 0.55);
+    cine("mini-out", 2.6, () => { boss = null; game.phase = "B"; snapRing(); setHint(t("hint.catch")); obstaclesSync(); updateHud(); }, 0.55, [REWARD_AT, reward]);
     setRingMode(bMode()); snapRing(); ring.morph = 1; Sound.setAct("B");
     checkUnlocks(); persist(); updateHud();
     challenge("bosses", 1);
@@ -205,14 +209,20 @@
     Telemetry.emit("fragment", { id: frag, fresh, stage: game.stage }); mortySays("fragment." + frag, { priority: true });
     const shardCard = then => { stageCard(t("card.shard.k"), FRAGMENTS[frag].name, t("card.shard.s", { n: profile.fragments.length, total: MAP_COUNT }), 2.3, "gold"); Sound.toon("xylo"); cine("reward", 2.3, then, 0.3); };
     if (game.stage >= MAP_COUNT) {   // the last shard: the reward, the shard, and the Black Ring whole
-      stageCard(t("card.reward.k"), partName, t("card.reward.s", { slot: KIND_LABEL[part ? part.kind : "hat"] }), 2.4, "gold");
-      cine("boss-out", 2.4, () => shardCard(() => storyComplete()), 0.4); checkUnlocks(); persist(); updateHud(); return;
+      const card = () => stageCard(t("card.reward.k"), partName, t("card.reward.s", { slot: KIND_LABEL[part ? part.kind : "hat"] }), 2.4 - 1.1 + 0.6, "gold");
+      cine("boss-out", 2.4, () => shardCard(() => storyComplete()), 0.4, [1.1, card]); checkUnlocks(); persist(); updateHud(); return;
     }
     const bonus = Math.round((10000 + (boss.flawless ? 5000 : 0)) * stageMult());
-    game.score += bonus; flyPoints(`+${fmtN(bonus)}`, W / 2, H * 0.36, true);
     const bones = 150 + game.stage * 50; addBones(bones); game.run.bossBones = (game.run.bossBones || 0) + bones;
-    stageCard(t("card.clear.k", { map: M.name }), t("card.clear.t", { piece: partName }), `${t("card.clear.s", { bones })}${boss.flawless ? " · " + t("card.flawless") : ""}`, 2.8, "gold");
-    Sound.toon("fanfare"); changeoverCues(2.8 + 2.3);
+    // the reward waits for the defeat: the boss's own cartoon plays clear first (07r_bossdeath.js's timing budget), then
+    // the bonus flies in, the fanfare, and the map-clear card
+    const flawless = boss.flawless, REWARD_AT = 1.1;
+    const reward = () => {
+      game.score += bonus; flyPoints(`+${fmtN(bonus)}`, W / 2, H * 0.36, true); updateHud();
+      stageCard(t("card.clear.k", { map: M.name }), t("card.clear.t", { piece: partName }), `${t("card.clear.s", { bones })}${flawless ? " · " + t("card.flawless") : ""}`, 2.8 - REWARD_AT + 0.6, "gold");
+      Sound.toon("fanfare");
+    };
+    changeoverCues(2.8 + 2.3);
     const nextMap = () => {
       game.stage++; game.stageHits = 0; game.phase = "A"; game.act = 0; VisualSystem.setStage(game.stage); setScene(game.stage - 1);
       if (game.lives < MAX_LIVES) { game.lives++; game.slots = Math.max(game.slots, game.lives); }
@@ -224,7 +234,7 @@
     // then his body section flies home (07p_body.js), the shard, Can Alley if you want it (07o_bonus.js), and the crossing
     // into the next map, the Challenge Stage (07q_crossing.js)
     const onward = () => (crossingsOn() ? startCrossing(nextMap) : nextMap());
-    cine("boss-out", 2.8, () => { boss = null; seeds.length = 0; obstaclesSync(true); bodyReward(() => shardCard(() => { if (encoreOn()) offerBonus(onward); else onward(); })); }, 0.4);
+    cine("boss-out", 2.8, () => { boss = null; seeds.length = 0; obstaclesSync(true); bodyReward(() => shardCard(() => { if (encoreOn()) offerBonus(onward); else onward(); })); }, 0.4, [REWARD_AT, reward]);
     checkUnlocks(); persist(); updateHud();
     challenge("bosses", 1);
   }

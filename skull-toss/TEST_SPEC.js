@@ -2567,6 +2567,16 @@
     T.step(1.6); assert(T.gags().includes("crown"), `the crown falls, after the hit-stop and the spin-out (${T.gags()})`);
     T.toTitle(); T.setStats(ZERO);
   });
+  test("v52 knockout timing: a short hold (shorter on a mini), one white flash, one colour pulse, then the defeat", () => {
+    T.setStats(ZERO); fresh(); toHit(C.STAGE_MINI); T.step(2.6); T.hurtBoss(99);
+    assert(Math.abs(T.freezeLeft() - 3.5 / 24) < 0.01, `a mini holds 3½ drawings (${T.freezeLeft()})`);
+    assert(T.deathFX().pulses === 1, "one pulse of its colour, not a string of blinks");
+    T.endThrow(); T.step(3.2); toHit(C.STAGE_BOSS); T.step(2.9); T.hurtBoss(99);
+    assert(Math.abs(T.freezeLeft() - 5 / 24) < 0.01, `an end boss holds 5 drawings (${T.freezeLeft()})`);
+    assert(T.deathFX().pulses === 1 && $("flash").dataset.last !== undefined, "one pulse on an end boss too");
+    T.step(1.6); assert(T.gags().length, "the gag's down"); T.toTitle(); assert(!T.gags().length && !T.deathFX().flash, "leaving mid-knockout takes the gag and the pulse with it");
+    T.toTitle(); T.setStats(ZERO);
+  });
   test("v51 Adventure+: opens after the Adventure; a smaller, quicker ring, decoys from map 3, a crosswind from map 2, and a cracked skull costs two", () => {
     T.setStats(ZERO); T.toTitle(); assert(!T.plus().open, "shut until the Adventure's finished");
     T.openSheet("play"); assert($("plusCard").classList.contains("locked"), "its card says so"); T.closeSheet();

@@ -301,6 +301,7 @@
     },
     unfakeBoard() { Board.unwatch(); Object.assign(Board, { db: null, me: null, state: "local", rows: [], mine: null, fake: false, mode: "story", fakeLocal: null }); },
     feel: () => ({ ghost: ghostShot.last ? ghostShot.last.length : 0, near: !!ghostShot.near, antic: { k: antic.k, state: antic.state, predicted: antic.predicted, from: antic.from } }),   // (v51, 08k_feel.js)
+    freezeLeft: () => game.freeze, deathFX: () => ({ ...DEATH_FX }),   // (v52: the knockout timing probe)
     death: () => (boss && boss.death ? { arch: boss.death.arch, word: boss.death.word, gag: boss.death.gag, mat: boss.death.mat } : null), deathTable: () => JSON.parse(JSON.stringify(DEATH)), gags: () => GAGS.map(G => G.kind),   // (v51, 07r_bossdeath.js)
     plus: () => ({ on: !!game.plus, open: plusOpen(), wind: PLUS.wind, cracked: PLUS.cracked, decoys: PLUS.decoys.length, fake: PLUS.fake, k: plusK(), rc: ring.rc, omega: ring.omega }),   // (v51: Adventure+, 07s_plus.js)
     startPlus: () => startGame({ mode: "story", plus: true }),
@@ -316,7 +317,8 @@
     camera: () => ({ x: camS.x, y: camS.y, z: camS.z, on: camOn, live: { x: cam.x, y: cam.y, z: cam.z }, slip: Math.max(...PLANES.map(p => Math.hypot(camS.slip[p].x, camS.slip[p].y))) }),
     parallax: zc => { const c = camAt(zc); return { k: c.k, dx: c.ox, dy: c.oy }; },
     setCamera(v) { settings.camera = v; updateCamera(0); },
-    skullArt: () => ({ layers: Object.fromEntries(Object.entries(SKULL_ART).map(([k, v]) => [k, v.length])), bottom: SKULL_BOTTOM, sockets: SOCK.map(s => ({ x: s.x, y: s.y, rx: s.rx, ry: s.ry })) }),
+    skullArt: () => ({ layers: Object.fromEntries(Object.entries(SKULL_ART).map(([k, v]) => [k, v.length])), bottom: SKULL_BOTTOM, sockets: SOCK.map(s => ({ x: s.x, y: s.y, rx: s.rx, ry: s.ry })),
+      art: { k: ART_K, cx: ART_CX, cy: ART_CY, top: ART_TOP, bot: ART_BOT, box: JSON.parse(JSON.stringify(BOX)), noseBot: NOSE_BOT, upperTop: UPPER_TOP } }),   // (v52: the angle sheet's landmarks, in the 1000-px art space)
     // draws one skull on a fresh canvas: { look, mood, jaw, a, dir, ang, size } → data URL (for visual checks)
     skullCard(o = {}) {
       const n = o.size || 240, cv = document.createElement("canvas"); cv.width = cv.height = n; const c = cv.getContext("2d");

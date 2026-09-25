@@ -1,11 +1,17 @@
   // ───────────────────────── how a boss goes down (v51) ─────────────────────────
   // Every boss's defeat is a short cartoon of its own, on one timeline:
-  //   the final hit → hit-stop and a white flash (the director's K.O. impact) → an accent pulse or two (the boss's
+  //   the final hit → hit-stop and a white flash (the director's K.O. impact) → one accent pulse (the boss's
   //   colour: escalation, not damage) → REALIZATION (it freezes, stiff, for a beat) → ANTICIPATION (the pose that
   //   says what's coming) → its SIGNATURE defeat (one of ten archetypes) with debris in its own material and a knock
   //   to the world around it → the WORDMARK (its own word, stamped and squashed) → a FINAL GAG a beat after it seems
   //   over → the reward. Minis run about 1.2 s; end bosses about 2 s. The boss's own fall is held still (its X eyes
   //   stay) while this plays it; the timings, the words and the gags are data.
+  // The timing budget (v52), from the final hit, measured in the game: hit-stop 5 drawings on an end boss (0.21 s),
+  // 3½ on a mini (0.15 s) · the white K.O. flash, one peak, 2 drawings in, fading over 0.42 s · ONE pulse of the boss's
+  // colour, 2 drawings long, once the white has faded (never a string of blinks) · realization 3 drawings · anticipation
+  // to 6 · the signature to 26 · the gag at 30, lying there until 58 · the reward card about 3 s in, the next map about
+  // 5 s. Every beat sits on the 24-drawings-a-second clock. Reduced motion: no hold, no flashes, and every archetype
+  // becomes a gentle sink-and-fade (no spinning, launching or shattering); a phone on low quality throws fewer bits.
   const DEATH = {
     //            archetype      material   gag        word          accent
     crow:         ["spinout",   "feather", "crown",   "PLUCKED!",   "#E3B64B"],
@@ -25,7 +31,8 @@
     count:        ["smoke",     "bats",    "fang",    "STAKED!",    "#C0392B"],
     reaper:       ["cinematic", "ink",     "scythe",  "REAPED!",    "#B48CFF"]
   };
-  const DEATH_T = { real: 0.1, anti: 0.24, sig: 1.1, gag: 1.25, gagEnd: 2.4 };   // seconds from the hit (a mini's signature is a touch quicker)
+  const DEATH_T = { real: 3 / 24, anti: 6 / 24, sig: 26 / 24, gag: 30 / 24, gagEnd: 58 / 24 };   // seconds from the hit, in drawings (a mini's plays a touch quicker)
+  const KO_HOLD = { end: 5 / 24, mini: 3.5 / 24 };   // the hit-stop
   const MATERIAL = {   // debris: particle kind, colours
     feather: ["feather", ["#2B2B33", "#3C3A4C"]], pumpkin: ["chunk", ["#E8893A", "#C8642A", "#F5C84A"]], cloth: ["scrap", ["#4A3A5A", "#1A1A1E"]],
     stone: ["chunk", ["#8E949F", "#6A707A"]], straw: ["scrap", ["#E3B64B", "#C8A04A"]], wood: ["chunk", ["#6B4526", "#8A5A30"]], water: ["bubble", ["#BFE3DA"]],
@@ -46,13 +53,14 @@
     const draw0 = B.draw;
     B.draw = front => {
       const X = B.death; if (!X) return draw0(front);
-      const u = (B.t - X.t0) * (X.mini ? 1.15 : 1);
+      const u = Math.floor((B.t - X.t0) * (X.mini ? 1.15 : 1) * 24) / 24;   // (drawn on ones: it moves a drawing at a time, like everyone else)
       B.deadAt = B.t;   // (its own fall held still: the archetype moves it now)
       if (u > DEATH_T.gagEnd + 0.4 || X.gone && u > X.gone) return;
-      ctx.save(); const a = deathXform(X, u); if (a > 0.01) { ctx.globalAlpha *= a; if (X.arch === "shatter" && u > DEATH_T.anti) drawShards(X, u, () => draw0(front)); else draw0(front); } ctx.restore();
+      ctx.save(); const a = deathXform(X, u); if (a > 0.01) { ctx.globalAlpha *= a; if (X.arch === "shatter" && u > DEATH_T.anti && !reduceMotion) drawShards(X, u, () => draw0(front)); else draw0(front); } ctx.restore();
     };
     // the accent pulse, the debris, the knock to the world
-    if (settings.flashes !== "off" && !reduceMotion) { DEATH_FX.flash = settings.flashes === "reduced" ? 0.5 : 1; DEATH_FX.col = D[4]; DEATH_FX.t = 0; DEATH_FX.pulses = settings.flashes === "reduced" ? 1 : mini ? 1 : 2; }
+    if (settings.flashes !== "off" && !reduceMotion) { DEATH_FX.flash = (settings.flashes === "reduced" ? 0.5 : 1) * (mini ? 0.75 : 1); DEATH_FX.col = D[4]; DEATH_FX.t = 0; DEATH_FX.pulses = 1; }
+    if (game.freeze > 0) game.freeze = Math.min(game.freeze, mini ? KO_HOLD.mini : KO_HOLD.end);   // (the K.O. recipe's hold, trimmed to the budget)
     return B.death;
   }
   // the whole boss's transform at u seconds since the hit (about its pivot); returns its opacity
@@ -60,6 +68,7 @@
     const { px, py } = X, R = DEATH_T, k = clamp((u - R.anti) / (R.sig - R.anti), 0, 1), e = k * k, H2 = H * 1.3;
     const around = (sx, sy, rot = 0, dx = 0, dy = 0) => { ctx.translate(px + dx, py + dy); if (rot) ctx.rotate(rot); ctx.scale(sx, sy); ctx.translate(-px, -py); };
     if (u < R.real) { around(0.97, 1.06); return 1; }   // realization: stiff, a little taller, eyes gone to X
+    if (reduceMotion) { const q = clamp((u - R.real) / (R.sig - R.real), 0, 1); around(1, 1 - 0.25 * q, 0, 0, X.s * 0.2 * q); return 1 - q; }   // reduced motion: sink and fade, nothing thrown about
     const antic = u < R.anti ? smooth((u - R.real) / (R.anti - R.real)) : 1;
     switch (X.arch) {
       case "collapse": if (u < R.anti) { around(1, 1, -0.12 * antic); return 1; } around(1 + 0.35 * e, 1 - 0.8 * smooth(k), -0.12 + 0.3 * e, 0, X.s * 0.5 * e); return u > R.gagEnd ? Math.max(0, 1 - (u - R.gagEnd) * 3) : 1;
@@ -90,7 +99,7 @@
   const ARCH_SOUND = { collapse: "whistleDown", launch: "whistleUp", deflate: "hiss", smoke: "poof", spinout: "whistleUp", accordion: "boing", shatter: "clang", dropout: "rumble", target: "boing", cinematic: "whistleDown" };
   function deathSignature(X) {
     Sound.toon(ARCH_SOUND[X.arch] || "boing");
-    const M = MATERIAL[X.mat] || MATERIAL.ink, n = X.mini ? 14 : 22;
+    const M = MATERIAL[X.mat] || MATERIAL.ink, n = Math.round((X.mini ? 14 : 22) * QUALITY.particles * (reduceMotion ? 0.5 : 1));
     for (let i = 0; i < n; i++) { const a = rand(0, TAU), sp = rand(0.3, 1) * U * (X.arch === "shatter" ? 1.1 : 0.7);
       particles.push({ kind: M[0], x: X.px, y: X.py, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - U * 0.3, rot: rand(0, TAU), vr: rand(-6, 6), life: rand(0.8, 1.5), max: 1.5, size: rand(5, 11), color: M[1][i % M[1].length], g: M[0] === "bubble" || M[0] === "puff" || M[0] === "bat" ? -0.1 : 0.6, a: 1 }); }
     camJolt("ko", X.mini ? 0.5 : 0.9);   // the world takes the knock too
@@ -113,6 +122,8 @@
     if (X.arch === "smoke" && !X.played.poof && u >= R.anti + (R.sig - R.anti) * 0.5) { X.played.poof = true; deathPoof(X); }
     if (!X.played.gag && u >= R.gag) { X.played.gag = true; deathGagStart(X); }
   }
+  // a run ended or left mid-knockout: nothing of it follows onto the title or into the next run
+  function deathReset() { GAGS.length = 0; DEATH_FX.flash = 0; DEATH_FX.t = 0; }
   function updateDeath(dt) {
     if (boss && boss.death) deathTick(boss);
     if (DEATH_FX.flash > 0) DEATH_FX.t = (DEATH_FX.t || 0) + dt;
@@ -128,8 +139,8 @@
   function drawDeathFX() {
     if (GAGS.length) { ctx.save(); baseXform(ctx); for (const G of GAGS) { ctx.globalAlpha = Math.max(0, Math.min(1, (1.8 - G.t) * 2)); drawGag(G); } ctx.restore(); }
     if (DEATH_FX.flash > 0) {   // the accent: one or two quick pulses of the boss's colour after the white flash
-      const t = DEATH_FX.t, per = 0.12, i = Math.floor((t - 0.08) / per), inPulse = t > 0.08 && i < DEATH_FX.pulses && (t - 0.08) % per < per * 0.5;
-      if (inPulse) { ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalAlpha = 0.18 * DEATH_FX.flash; ctx.fillStyle = DEATH_FX.col; ctx.fillRect(0, 0, W, H); ctx.restore(); }
+      const t = DEATH_FX.t, on = 3 / 24, len = 2 / 24, inPulse = t >= on && t < on + len * DEATH_FX.pulses;   // (after the hold and once the white has mostly gone)
+      if (inPulse) { ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalAlpha = 0.2 * DEATH_FX.flash; ctx.fillStyle = DEATH_FX.col; ctx.fillRect(0, 0, W, H); ctx.restore(); }
     }
   }
   function drawGag(G) {

@@ -307,7 +307,7 @@
     out.pic = out.pic && typeof out.pic === "object" && typeof out.pic.face === "string" && typeof out.pic.frame === "string" ? { face: out.pic.face.slice(0, 12), frame: out.pic.frame.slice(0, 12) } : null;
     const keys = a => Array.isArray(a) ? [...new Set(a.filter(s => typeof s === "string").map(migrateKey))].slice(0, 800) : [];
     out.unlocked = keys(out.unlocked); out.seen = keys(out.seen);
-    out.updatedAt = Number(out.updatedAt) || 0;
+    out.updatedAt = Math.min(Math.max(0, Number(out.updatedAt) || 0), Date.now() + 300e3);   // (v52: never from the future, or a save dated years ahead would stay "newest" and keep its balance over every later one)
     out.bones = num(out.bones);
     for (const k of ["daily", "weekly", "monthly", "seasonal", "event"]) out[k] = out[k] && typeof out[k] === "object" && Array.isArray(out[k].items) ? out[k] : null;
     out.board = !!out.board; out.bestStage = Math.max(1, out.bestStage);
