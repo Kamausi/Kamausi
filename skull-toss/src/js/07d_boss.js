@@ -21,9 +21,21 @@
   // v51: a carried ring hangs off its flyer, not off the flight path. The bird keeps exactly to its path; the ring gets
   // its own small bob beneath it, in time with the wingbeats (a downstroke lifts it a touch, the upstroke lets it
   // sag), and a hair of sideways sway. It's the ring's position, so the ring's hit test follows it too.
-  const wingFlap = (t, tell) => Math.sin(t * (tell ? 26 : 16));   // (the wings' own beat: > 0 up, < 0 down)
-  const RING_HOVER = { y: 0.035, x: 0.01 };
-  const ringHover = (t, tell) => ({ x: Math.sin(t * 8 + 0.6) * RING_HOVER.x, y: -wingFlap(t, tell) * RING_HOVER.y });
+  // v53: a big bird carrying a ring, not a hummingbird. The beat is slower (about 1.45 a second, quicker when he's
+  // about to swoop), and it isn't an even sine: a brief hold with the wings up, a strong downstroke over half the
+  // beat, then a slower recovery. The downstroke lifts him, so his whole body rises a couple of pixels a moment later,
+  // and the ring he carries a moment after that and a little more. Nothing reaches its high point on the same frame,
+  // and none of it moves the path he flies (the spline): it's how he moves along it.
+  const WING = { hz: 1.45, tellHz: 2.3, hold: 0.12, down: 0.5 };
+  function wingFlap(t, tell) {   // +1 wings up, −1 down
+    const p = (((t * (tell ? WING.tellHz : WING.hz)) % 1) + 1) % 1;
+    if (p < WING.hold) return 1;
+    if (p < WING.hold + WING.down) return 1 - 2 * smooth((p - WING.hold) / WING.down);
+    return -1 + 2 * smooth((p - WING.hold - WING.down) / (1 - WING.hold - WING.down));
+  }
+  const BODY_BOB = { y: 0.022, lag: 0.06 }, RING_HOVER = { y: 0.034, x: 0.012, lag: 0.12 };
+  const bodyBob = (t, tell) => -wingFlap(t - BODY_BOB.lag, tell) * BODY_BOB.y;   // (up a little after each downstroke)
+  const ringHover = (t, tell) => ({ x: Math.sin(t * 2.2 + 0.6) * RING_HOVER.x, y: -wingFlap(t - RING_HOVER.lag, tell) * RING_HOVER.y });
   function makeCrowKing(stage) {
     const max = Math.min(5 + (stage - 1), 8), start = { x: ring.x, y: ring.y, z: ring.z };
     const B = { kind: "crow", short: "Crow King", hp: max, max, rc: 0.6, flat: false, flawless: true, dead: false, t: 0, deadAt: 0, hurt: 0, cawAt: -9, start, segs: null,
@@ -48,7 +60,7 @@
       if (u > S.hold + S.tell) { const k = smooth((u - S.hold - S.tell) / S.move); x = A.x + (Bp.x - A.x) * k; y = A.y + (Bp.y - A.y) * k - Math.sin(k * Math.PI) * 0.35; z = A.z + (Bp.z - A.z) * k; }
       else if (u > S.hold) bob = -0.12 * Math.sin(((u - S.hold) / S.tell) * Math.PI);   // the tell: he crouches (ring and all)
       const tell = u > S.hold && u <= S.hold + S.tell ? (u - S.hold) / S.tell : 0, hv = ringHover(t, tell);
-      return { x: x + hv.x, y: y + bob + hv.y, z, ax: x, ay: y + bob, az: z, tell, next: Bp, leg: i };   // (x, y, z: the ring; ax, ay, az: where he is)
+      return { x: x + hv.x, y: y + bob + hv.y, z, ax: x, ay: y + bob + bodyBob(t, tell), az: z, tell, next: Bp, leg: i };   // (x, y, z: the ring; ax, ay, az: where he is, bobbing with his wingbeat)
     };
     B.ringAt = p => { const q = bossPathAt(B, p); return { x: q.x, y: q.y, z: q.z }; };
     B.update = dt => {
@@ -79,6 +91,8 @@
     const p = project(body.x, body.y, body.z), s = p.s, R = 0.5 * s, tt = Math.floor(t * 12) / 12;
     // (no ghost ring at his next perch any more: his crouch and his caw are the only warning he gives)
     ctx.save(); ctx.translate(p.x, p.y); if (B.dead) ctx.rotate(dying * 9);
+    const gust = B.dead ? 0 : clamp(windNow() / 2.2, -1, 1);   // (v53: he leans into the wind, and it streams his feathers: the world tells you the wind)
+    if (gust) { ctx.rotate(-gust * 0.12); ctx.transform(1, 0, gust * 0.1, 1, 0, 0); }
     const sq = q.tell ? 1 - 0.12 * Math.sin(q.tell * Math.PI) : 1, hurtK = B.hurt;
     ctx.scale(1 + (1 - sq) * 0.6 + hurtK * 0.15, sq - hurtK * 0.1);
     ctx.lineJoin = "round"; ctx.lineCap = "round"; ctx.strokeStyle = INK; ctx.lineWidth = Math.max(2, R * 0.09);
@@ -96,6 +110,10 @@
       for (let i = 0; i < 4; i++) ctx.quadraticCurveTo(R * (2.3 - i * 0.35), -R * (0.1 - i * 0.02), R * (2.2 - i * 0.4), R * (0.2 + i * 0.06));
       ctx.quadraticCurveTo(R * 1.1, R * 0.4, R * 0.6, R * 0.3); ctx.closePath(); ctx.fill(); ctx.stroke();
       ctx.strokeStyle = "rgba(190,180,220,.45)"; ctx.lineWidth = Math.max(1, R * 0.05); for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.moveTo(R * 0.8, -R * 0.05); ctx.lineTo(R * (1.9 - i * 0.35), -R * (0.35 - i * 0.12)); ctx.stroke(); }
+      if (Math.abs(gust) > 0.15 && sd === Math.sign(gust)) {   // loose feathers streaming off the downwind wing tip, longer the stronger it blows
+        ctx.strokeStyle = "#3C3A4C"; ctx.lineWidth = Math.max(1.5, R * 0.07);
+        for (let i = 0; i < 3; i++) { const fl = Math.sin(tt * 9 + i * 1.7) * R * 0.08, L = R * (0.5 + Math.abs(gust) * 0.9); ctx.beginPath(); ctx.moveTo(R * (2.3 - i * 0.4), R * (0.05 + i * 0.08)); ctx.quadraticCurveTo(R * (2.3 - i * 0.4) + L * 0.6, R * (0.05 + i * 0.08) + fl, R * (2.3 - i * 0.4) + L, R * (0.12 + i * 0.08) - fl); ctx.stroke(); }
+      }
       ctx.restore();
     }
     // body and head: one fat black bean

@@ -121,3 +121,32 @@
     if (game.state === "flying") circle(skull.pos.x, skull.pos.y, skull.pos.z, SKULL_R, "#FFFFFF");
     ctx.restore();
   }
+
+  // ── under the water (v53): a thrown skull that goes in keeps its momentum, and the water eats it. Studied from ABZÛ
+  // (drift after the push, bled away), Aquaria and Ecco (inertia: the skull's heading lags its velocity), Donkey Kong
+  // Country 2 (a readable pull: down, slowly, then a little lift) and World of Goo (buoyancy as a property: Morty's
+  // bone is a touch lighter than water). Gravity fades in over a quarter-second from full to a quarter, drag ramps up,
+  // the spin dies away, a slight buoyancy lifts it as it slows, and a trail of bubbles follows it. It's still a thrown
+  // thing, not a swimmer: nothing steers it. Only a miss ever gets here, so it changes no score.
+  const UNDER = { g: 0.28, fade: 0.25, dragH: 1.9, dragV: 2.5, ramp: 0.15, lift: 0.045, spin: 5.5, floor: -1.3, dur: 1.5 };
+  function enterWater(s) {
+    const v = velAt(s, s.t);
+    s.sub = { t: 0, v: { x: v.x * 0.8, y: v.y * 0.55, z: v.z * 0.8 }, bub: 0 };   // (the surface takes a bite of it)
+    s.pos = posAt(s, s.t); s.resting = true; s.ax = 0;
+    game.endTimer = Math.max(game.endTimer || 0, UNDER.dur);
+    setMood(rig, "fear", game.time);
+  }
+  function waterStep(s, dt) {
+    const W2 = s.sub; W2.t += dt;
+    const gk = 1 - (1 - UNDER.g) * smooth(clamp(W2.t / UNDER.fade, 0, 1)), dk = smooth(clamp(W2.t / UNDER.ramp, 0, 1));
+    const speed = Math.hypot(W2.v.x, W2.v.y, W2.v.z), lift = UNDER.lift * G * (1 - clamp(speed / 3, 0, 1));   // (floats up a little as it slows)
+    W2.v.y += (-G * gk + lift) * dt;
+    W2.v.x *= Math.exp(-UNDER.dragH * dk * dt); W2.v.z *= Math.exp(-UNDER.dragH * dk * dt); W2.v.y *= Math.exp(-UNDER.dragV * dk * dt);
+    s.pos = { x: s.pos.x + W2.v.x * dt, y: Math.max(UNDER.floor, s.pos.y + W2.v.y * dt), z: s.pos.z + W2.v.z * dt };
+    s.spin *= Math.exp(-UNDER.spin * dt);
+    const heading = Math.atan2(W2.v.x, -W2.v.y); s.angle += (heading * 0.35 - s.angle) * Math.min(1, dt * 3);   // (turns after its velocity, not with it)
+    s.alpha = clamp(1 - (W2.t - UNDER.dur * 0.6) / (UNDER.dur * 0.4), 0, 1) * 0.75;   // (seen through the water, and gone into the murk)
+    W2.bub -= dt;
+    if (W2.bub <= 0 && s.alpha > 0.05) { W2.bub = 0.05 + (1 - clamp(speed / 4, 0, 1)) * 0.12;   // (a wake while it's quick, the odd bubble as it slows)
+      const p = project(s.pos.x, s.pos.y, s.pos.z); spawnBit("bubble", p.x, p.y, SKULL_R * p.s); }
+  }

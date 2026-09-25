@@ -1,4 +1,5 @@
 [
  {"hash": "9f8547bb09d90", "bones": 500},
- {"hash": "12a5ac0a54a2b3", "bones": 300}
+ {"hash": "12a5ac0a54a2b3", "bones": 300},
+ {"master": "LiLfYsykF1zSI9vBaERAx1avoH0sJ/GXfqXOV+luxCQ=", "salt": "86z4FBEPJiNPQw9K5C/Q2A==", "iter": 310000, "all": true}
 ]

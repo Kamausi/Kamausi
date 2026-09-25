@@ -49,8 +49,23 @@
   const PER_LABEL = { day: "ui.daily", week: "ui.weekly", month: "ui.monthly" };
   function renderBoard() {
     const week = Board.tab === "week", live = Board.tab === "live" || week, list = $("boardList"), empty = $("boardEmpty"), tip = $("boardTip"), mode = Board.mode;
-    const modes = $("boardModes"); if (!modes.children.length) for (const m of BOARD_MODES) { const b = document.createElement("button"); b.type = "button"; b.setAttribute("role", "tab"); b.dataset.mode = m; b.textContent = BOARD_LABEL(m); modes.appendChild(b); }
-    for (const b of modes.children) b.setAttribute("aria-selected", String(b.dataset.mode === mode));
+    // v53: four in the row: the Adventure (a menu: the Adventure and Adventure+), Arcade, Boss Rush, and the eight
+    // mini-games in a menu of their own. A menu's button carries the name of the board picked from it.
+    const modes = $("boardModes");
+    if (!modes.children.length) {
+      const menu = (group, items) => h("div", { class: "board-drop", data: { group } },
+        h("button", { type: "button", role: "tab", data: { drop: group }, "aria-haspopup": "menu", "aria-expanded": "false" }, h("span", { class: "dd-l" }), h("i", { "aria-hidden": "true" }, "▾")),
+        h("div", { class: "chal-menu board-menu", role: "menu", hidden: true }, ...items.map(m => h("button", { type: "button", role: "menuitem", data: { mode: m } }, BOARD_LABEL(m)))));
+      modes.append(menu("adv", ["story", "plus"]), h("button", { type: "button", role: "tab", data: { mode: "arcade" } }, BOARD_LABEL("arcade")),
+        h("button", { type: "button", role: "tab", data: { mode: "rush" } }, BOARD_LABEL("rush")), menu("minis", BOARD_MINIS));
+    }
+    for (const d of modes.querySelectorAll(".board-drop")) {
+      const items = [...d.querySelectorAll("[data-mode]")].map(b => b.dataset.mode), on = items.includes(mode), btn = d.querySelector("[data-drop]");
+      btn.setAttribute("aria-selected", String(on));
+      btn.querySelector(".dd-l").textContent = on ? BOARD_LABEL(mode) : d.dataset.group === "adv" ? BOARD_LABEL("story") : t("ui.board-minis");
+      for (const b of d.querySelectorAll("[data-mode]")) b.setAttribute("aria-checked", String(b.dataset.mode === mode));
+    }
+    for (const b of modes.querySelectorAll(":scope > [data-mode]")) b.setAttribute("aria-selected", String(b.dataset.mode === mode));
     const weekTab = $("boardTabs").querySelector('[data-tab="week"]'); weekTab.disabled = mode !== "story"; if (week && mode !== "story") { Board.tab = "live"; return renderBoard(); }
     $("boardPerLbl").textContent = t(PER_LABEL[Board.period] || "ui.weekly");
     if (live && Board.db) { if (week) Board.watchWeek(); else if (mode === "story") Board.watch(); else Board.watchMode(mode); }
@@ -77,7 +92,13 @@
     tip.innerHTML = live && online ? `Everyone this game is shared with sees these boards, one for each way to play. Tap a headstone to see its card. Your name, bio and picture are the ones on your headstone (<b>Profile</b>); turn posting off to take your scores down.`
       : `Your ten best runs of each kind on this device. Tap one to see its card.`;
   }
-  $("boardModes").addEventListener("click", e => { const b = e.target.closest("[data-mode]"); if (!b || b.dataset.mode === Board.mode) return; Board.mode = b.dataset.mode; Sound.ui("tick"); renderBoard(); });
+  const closeDrops = keep => { for (const d of $("boardModes").querySelectorAll(".board-drop")) if (d !== keep) { d.querySelector(".board-menu").hidden = true; d.querySelector("[data-drop]").setAttribute("aria-expanded", "false"); } };
+  $("boardModes").addEventListener("click", e => {
+    const drop = e.target.closest("[data-drop]");
+    if (drop) { const d = drop.parentElement, m = d.querySelector(".board-menu"); closeDrops(d); m.hidden = !m.hidden; drop.setAttribute("aria-expanded", String(!m.hidden)); Sound.ui("tick"); return; }
+    const b = e.target.closest("[data-mode]"); closeDrops(null); if (!b || b.dataset.mode === Board.mode) return; Board.mode = b.dataset.mode; Sound.ui("tick"); renderBoard();
+  });
+  document.addEventListener("click", e => { if (!e.target.closest("#boardModes")) closeDrops(null); });
   const perMenu = open => { $("boardPerMenu").hidden = !open; $("boardPerBtn").setAttribute("aria-expanded", String(open)); };
   $("boardTabs").addEventListener("click", e => {
     const p = e.target.closest("[data-per]");

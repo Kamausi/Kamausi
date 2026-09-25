@@ -310,11 +310,11 @@
     out.updatedAt = Math.min(Math.max(0, Number(out.updatedAt) || 0), Date.now() + 300e3);   // (v52: never from the future, or a save dated years ahead would stay "newest" and keep its balance over every later one)
     out.bones = num(out.bones);
     for (const k of ["daily", "weekly", "monthly", "seasonal", "event"]) out[k] = out[k] && typeof out[k] === "object" && Array.isArray(out[k].items) ? out[k] : null;
-    out.board = !!out.board; out.bestStage = Math.max(1, out.bestStage);
+    out.board = !!out.board; out.bestStage = Math.max(1, out.bestStage); out.allAccess = out.allAccess === true;
     out.achievements = Array.isArray(out.achievements) ? [...new Set(out.achievements.filter(s => typeof s === "string"))].slice(0, 200) : [];
     out.arcade = cleanArcade(out.arcade);
     out.boardBest = cleanRun(out.boardBest);
-    { const bb = {}; if (out.boardBests && typeof out.boardBests === "object") for (const m of ["arcade", "rush", "curtain", "longshot", "gallery"]) { const r = cleanRun(out.boardBests[m]); if (r) bb[m] = r; } out.boardBests = bb; }   // (v45: each scored mode's best, for its board)
+    { const bb = {}; if (out.boardBests && typeof out.boardBests === "object") for (const m of ["plus", "arcade", "rush", "curtain", "longshot", "gallery", "cans", "pitch", "sudden", "gale", "swing"]) { const r = cleanRun(out.boardBests[m]); if (r) bb[m] = r; } out.boardBests = bb; }   // (v45: each scored mode's best, for its board)
     out.bestStage = clamp(Math.floor(out.bestStage), 1, MAP_DATA.length + 1);   // (MAP_COUNT + 1: the story has been finished)
     out.fragments = Array.isArray(out.fragments) ? [...new Set(out.fragments.filter(f => typeof f === "string"))].slice(0, 16) : [];
     out.body = Array.isArray(out.body) ? BODY_SECTIONS.filter(b => out.body.includes(b)) : [];
@@ -395,7 +395,7 @@
     out.seen = [...new Set([...a.seen, ...b.seen])];
     out.modes = JSON.parse(JSON.stringify(a.modes)); for (const [k, v] of Object.entries(b.modes)) { const o = out.modes[k] || (out.modes[k] = {}); for (const [f, n] of Object.entries(v)) o[f] = Math.max(o[f] || 0, n); }
     out.schema = Math.max(a.schema, b.schema);
-    out.gift = a.gift || b.gift ? 1 : 0;
+    out.gift = a.gift || b.gift ? 1 : 0; out.allAccess = !!(a.allAccess || b.allAccess);
     out.updatedAt = Math.max(a.updatedAt, b.updatedAt);
     return out;
   }
@@ -420,7 +420,7 @@
     if (!["full", "lite", "off"].includes(settings.gpu)) settings.gpu = DEFAULT_SETTINGS.gpu;
     if (!["babble", "spoken", "off"].includes(settings.voice)) settings.voice = DEFAULT_SETTINGS.voice;
     if (!["full", "reduced", "off"].includes(settings.flashes)) settings.flashes = DEFAULT_SETTINGS.flashes;
-    if (!["normal", "large"].includes(settings.text)) settings.text = "normal";
+    if (!["normal", "medium", "large"].includes(settings.text)) settings.text = "normal";   // (v53: a medium step between)
     if (!["full", "short", "off"].includes(settings.cards)) settings.cards = "full";
     if (typeof settings.lang !== "string") settings.lang = "en";
     settings.mischief = settings.mischief !== false;

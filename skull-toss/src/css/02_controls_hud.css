@@ -223,7 +223,7 @@ html.hc .rc-text{text-shadow:0 0 2px var(--ink),0 0 4px var(--ink)}
 .stagecard .s{margin-top:3px;font-size:10.5px;line-height:1.25}
 .stagecard.boss{background:rgba(52,20,20,.68)}
 /* v50: the reels' title cards are full size again, a touch see-through over the picture */
-.reelcard[data-kind="title"],.reelcard[data-kind="intermission"]{background:radial-gradient(ellipse at 50% 42%,rgba(42,52,72,.9) 0%,rgba(20,25,37,.92) 70%,rgba(12,15,22,.94) 100%)}
+.reelcard[data-kind="title"],.reelcard[data-kind="intermission"]{background:radial-gradient(ellipse at 50% 42%,#2A3448 0%,#141925 70%,#0C0F16 100%)}   /* v53: fully opaque: nothing of the map shows through */
 
 /* v50: the press crack runs down the button's left edge, clear of its words; the hover skull is for a mouse only,
    so a long press on a phone doesn't pop it up (nor the browser's own callout) */

@@ -5,7 +5,10 @@
   // file, signed out) the board shows the best runs on this device instead.
   const BOARD_LOCAL = "skullToss.runs.v1";
   // v45: a board for every scored mode (the server keeps them in boards/<mode>_<uid>; the Adventure's stays in leaderboard/)
-  const BOARD_MODES = ["story", "arcade", "rush", "curtain", "longshot", "gallery"];
+  // v53: Adventure+ has its own board, and so does every one of the eight mini-games
+  const BOARD_MINIS = ["curtain", "longshot", "gallery", "cans", "pitch", "sudden", "gale", "swing"];
+  const BOARD_MODES = ["story", "plus", "arcade", "rush", ...BOARD_MINIS];
+  const boardModeNow = () => (game.mode === "story" && game.plus ? "plus" : game.mode);
   const cleanName = n => String(n || "").replace(/[\u0000-\u001f<>]/g, "").replace(/\s+/g, " ").trim().slice(0, 16);
   const Board = {
     state: "local",          // local | loading | live | readonly | error
@@ -33,9 +36,9 @@
     // after every run: keep the device's top runs, and (if you've opted in) post a new best to the shared board
     post() {
       if ((sandbox && !this.fake && !this.fakeLocal) || !game.score) return;
-      const list = this.local(); list.push({ mode: game.mode, name: cleanName(profile.name) || "You", title: cos.title, ...this.card(), score: game.score, hits: game.hits, stage: game.stage, at: Date.now(), look: this.look() });
+      const list = this.local(); list.push({ mode: boardModeNow(), name: cleanName(profile.name) || "You", title: cos.title, ...this.card(), score: game.score, hits: game.hits, stage: game.stage, at: Date.now(), look: this.look() });
       list.sort((a, b) => b.score - a.score); this.saveLocal(list);
-      this.push(false, game.mode);
+      this.push(false, boardModeNow());
     },
     // with a server (Firebase): the run goes to submitRun, which checks it and writes the board itself (v34); v45: any
     // scored mode's best goes to that mode's board

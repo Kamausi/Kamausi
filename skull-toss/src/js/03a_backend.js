@@ -44,7 +44,17 @@
         catch (e) { this.error = "app check: " + String((e && e.message) || e); }
       }
       let user = null;
-      try { const auth = app.auth(); user = auth.currentUser || (await auth.signInAnonymously()).user; } catch (e) { this.error = "sign-in: " + String((e && e.message) || e); }
+      // (v53: wait for Firebase to restore the saved session before deciding there isn't one. currentUser is null until
+      // the first auth-state report, so asking straight away signed a returning Google/Apple/email player in as a
+      // brand-new anonymous one on every load, and their sign-in never seemed to stick. A sign-in by redirect (phones)
+      // is finished here too, before anything else looks at the user.)
+      try {
+        const auth = app.auth();
+        if (typeof auth.getRedirectResult === "function") try { const r = await auth.getRedirectResult(); this.redirect = r && r.user ? { ok: true, provider: (r.credential && r.credential.providerId) || (r.additionalUserInfo && r.additionalUserInfo.providerId) || "" } : null; }
+        catch (e) { this.redirect = { ok: false, code: (e && e.code) || "", credential: e && e.credential }; }
+        user = typeof auth.onAuthStateChanged === "function" ? await new Promise(res => { let off = null, got = false; off = auth.onAuthStateChanged(u => { got = true; if (off) off(); res(u); }); if (got && off) off(); }) : auth.currentUser;
+        if (!user) user = (await auth.signInAnonymously()).user;
+      } catch (e) { this.error = "sign-in: " + String((e && e.message) || e); }
       const fns = user && svc.functions ? app.functions(functionsRegion || "us-central1") : null;
       Object.assign(this, { db: user && svc.firestore ? app.firestore() : null, me: user ? { id: user.uid, name: user.displayName || "" } : null,
         call: fns ? (name, data) => fns.httpsCallable(name)(data || {}).then(r => r.data) : null });

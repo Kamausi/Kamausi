@@ -71,3 +71,17 @@
     const a = travelAt(antic.from), b = travelAt(antic.from + 1);
     return b > a ? a + (b - a) * antic.k : -Infinity;
   }
+
+  // ── the wind as a tool (v53, after Paper Toss): a make that only went in because the wind carried it. Aimed off the
+  // ring on purpose, so that thrown straight it would have missed the clean window, and the crosswind bent it through.
+  // A steady wind is an acceleration (the physics doesn't change), so this is a skill, not luck: +150, +300 in a strong one.
+  function windCurve(R) {
+    if (!R.make || Replay.play || !skull.v0) return 0;
+    const ax = skull.ax || 0; if (Math.abs(ax) < 0.6) return 0;
+    const L = skull.launchRing || ring, tc = L.z / skull.v0.z, straight = skull.v0.x * tc, clean = ring.rc - RING_TUBE - SKULL_R;
+    if (Math.abs(straight - L.x) <= clean) return 0;   // (it'd have gone in anyway)
+    const pts = Math.abs(ax) >= 1.4 ? 300 : 150;
+    game.score += pts; flyPoints(`${t("feel.windCurve")} +${pts}`, W / 2, H * 0.27, true); Sound.toon("whistleUp"); updateHud();
+    game.run.windCurves = (game.run.windCurves || 0) + 1;
+    return pts;
+  }

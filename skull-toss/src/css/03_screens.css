@@ -135,7 +135,7 @@
 .splash{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:#000;transition:opacity .6s ease}
 .splash.out{opacity:0;pointer-events:none}
 .splash-logo{opacity:0;transform:scale(.94);animation:splashIn .9s ease-out .2s forwards;transition:opacity .45s ease,transform .45s ease}
-.splash.done .splash-logo{opacity:0 !important;transform:scale(1.02);animation:none}
+.splash.done .splash-logo{transform:scale(1.02)}
 .splash-logo img{display:block;width:min(76vw,52vh,480px);height:auto}
 
 /* v49: the title's six small buttons in two rows of three, icon over label */
@@ -198,3 +198,13 @@
 .title .logo{transition:filter .5s ease}
 .title.lit .logo{filter:brightness(1.18) drop-shadow(0 0 18px rgba(255,220,150,.55))}
 @media (prefers-reduced-motion:reduce){.title.opening .curtain,.title.opening .curtain::before,.title.closed .curtain::before{animation:none}}
+/* v53: while the curtains are shut (and as they open) only the lettering stands in front of them; the menu is behind,
+   and shows as they part. A tap on the closed curtains skips ahead instead of pressing a button nobody can see. */
+.title.closed .col,.title.opening .col{z-index:auto}
+.title.closed .curtain,.title.opening .curtain,.title.closed .valance,.title.opening .valance{z-index:2}
+.title.closed .col>.logo,.title.opening .col>.logo,.title.closed .col>.tagline,.title.opening .col>.tagline{position:relative;z-index:3}
+.title.closed .screen-top,.title.opening .screen-top{z-index:1}
+.title.closed .curtain{pointer-events:auto}
+/* v53: the studio logo fades out instead of stopping dead (taking its animation away used to snap it) */
+.splash.done .splash-logo{animation:splashOut 1.1s cubic-bezier(.4,0,.2,1) forwards !important}
+@keyframes splashOut{0%{opacity:1;transform:scale(1.025)}100%{opacity:0;transform:scale(1.045)}}

@@ -105,6 +105,7 @@
     if (dD) {
       travelApply();
       for (let i = world.walkers.length - 1; i >= 0; i--) { const k = world.walkers[i]; k.z -= dD; if (k.z < 1.5) world.walkers.splice(i, 1); }   // (the wanderers are left behind too)
+      if (GY.cat && Math.abs(dD) <= Math.max(step, CROSS.step) * 2.5) { GY.cat.z -= dD; if (GY.cat.z < 0.4) GY.cat = null; }   // (v53: the cat stays where it was in the world, and is passed by, like everything else; a jump, a new run or a reload, leaves it be)
     }
   }
   // a step has just begun: in the harvest and the crows' country, the crows come up out of the trees

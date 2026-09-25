@@ -284,6 +284,7 @@
     const sink = V.a < 1 && Math.abs(V.dir - Math.PI / 2) < 0.3 ? r * (1 - V.a) * 0.9 : 0;   // squash onto the ground
     const x = p.x + s.pullOff.x * recoil, y = p.y + s.pullOff.y * recoil + sink;
     const ghostly = (powerOn("ghost") || s.ghosted) ? 0.5 + 0.12 * Math.sin(game.time * 20) : 1;
+    if (s.sub) { ctx.save(); ctx.globalAlpha = 0.35 * s.alpha; ctx.fillStyle = "#1F4A52"; ctx.beginPath(); ctx.arc(x, y, r * 1.25, 0, TAU); ctx.fill(); ctx.restore(); }   // (v53: under the water: seen through it)
     if (s.alpha * fade > 0.05) { drawPowerGlow(x, y, r); drawAura(ctx, x, y, r, V.t, false); drawRushWings(ctx, x, y, r, V.t, V.angle); drawPowerAura(ctx, x, y, r, V.t); }
     if (V.smear > 0 && s.alpha * fade > 0.05) drawSmear(ctx, x, y, r, V.mdir == null ? V.dir : V.mdir, V.smear, s.alpha * fade * ghostly, V.t);
     drawSkull(ctx, x, y, r, { ang: V.angle + V.tilt, alpha: s.alpha * fade * ghostly, a: V.a, dir: V.dir, t: V.t, look: cos, face: V.face, jaw: V.jaw });
@@ -367,6 +368,7 @@
     if (flying && behind) drawFlyingSkull();
     if (onStage) { drawDecoys(); drawRing(); drawPickup(); }   // (v51: Adventure+'s decoy rings, behind the real one)
     if (boss) boss.draw(true);
+    if (onStage) drawNearWorld();   // (v53: whatever walks between the ring and the camera passes in front of it and its pole)
     drawSeeds(true); drawTargets(true); drawObstacles(true); drawHazards(true);
     drawImpactStars(ctx, false);   // contact stars: over the ring they hit, behind the skull that hit it
     if (pv) { drawDots(pv.front, false); drawReticle(pv); }

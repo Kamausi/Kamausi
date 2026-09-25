@@ -133,11 +133,14 @@
   };
   let celS = 0, cels = {};
   function walkerCelsResize() { cels = {}; celS = Math.max(14, projectBase(0, 0, 12.5).s * 1.85); }
-  function walkerCel(type, i, howl) {
-    const key = type + (howl ? "h" : "") + i, had = cels[key];
+  // v53: a walker close to the camera was its far-off drawing stretched, and went soft. Each drawing is now kept at a
+  // few sizes (1×, 2×, 4×, 8× the far one) and drawn from the one that covers the size it's seen at, so it stays crisp
+  // however near it comes.
+  function walkerCel(type, i, howl, mult = 1) {
+    const key = type + (howl ? "h" : "") + i + "@" + mult, had = cels[key];
     if (had) return had;
     if (!celS) walkerCelsResize();
-    const S = celS, B = CEL_BOX[type], w = Math.ceil((B.x1 - B.x0) * S), h = Math.ceil((B.y1 - B.y0) * S);
+    const S = celS * mult, B = CEL_BOX[type], w = Math.ceil((B.x1 - B.x0) * S), h = Math.ceil((B.y1 - B.y0) * S);
     const c = document.createElement("canvas"); c.width = Math.ceil(w * DPR); c.height = Math.ceil(h * DPR);
     const g = c.getContext("2d"), u = (i + 0.5) / CELS;
     g.setTransform(DPR * S, 0, 0, DPR * S, -B.x0 * S * DPR, -B.y0 * S * DPR);
@@ -146,7 +149,7 @@
     else if (type === "werewolf") drawWerewolf(g, u * TAU, howl, u * (TAU / 5));
     else drawGhost(g, u * (TAU / 1.6), 0);
     celLight(g, c, type);
-    return (cels[key] = { c, w, h, ax: -B.x0 * S, ay: -B.y0 * S });
+    return (cels[key] = { c, w: w / mult, h: h / mult, ax: -B.x0 * S / mult, ay: -B.y0 * S / mult });   // (in the 1× cel's units, so it draws the same size)
   }
   // v50: every cel gets lit — a warm key from the upper left, a cool shadow to the lower right, the feet in shade,
   // and a thin rim of light on the lit edge — painted only over what's drawn (source-atop), once per cel
@@ -171,7 +174,8 @@
     const a = k.alpha * clamp(1.1 - (k.z - 12) / 40, 0.6, 1);
     if (a <= 0.01) return;
     if (k.type !== "ghost") { ctx.fillStyle = `rgba(0,0,0,${0.3 * a})`; ctx.beginPath(); ctx.ellipse(p.x, p.y, hp * 0.18, hp * 0.035, 0, 0, TAU); ctx.fill(); }
-    const cel = walkerCel(k.type, celIndex(k), k.type === "werewolf" && k.state === "howl"), sc = hp / celS;
+    const need = hp / celS, mult = need <= 1 ? 1 : need <= 2 ? 2 : need <= 4 ? 4 : 8;
+    const cel = walkerCel(k.type, celIndex(k), k.type === "werewolf" && k.state === "howl", mult), sc = hp / celS;
     ctx.save(); ctx.globalAlpha = a; ctx.translate(p.x, p.y); ctx.scale(k.dir * sc, sc);
     ctx.drawImage(cel.c, -cel.ax, -cel.ay, cel.w, cel.h);
     ctx.restore();
@@ -213,9 +217,18 @@
     if (w.witch) { const k = w.witch; drawWitch(ctx, k.x, k.y0 + Math.sin(k.ph * 2) * U * 0.012, U * 0.09, k.dir, t); }
     baseXform(ctx);
   }
+  const walkerNear = k => game.state !== "title" && k.z < ring.z - 0.05;
+  function drawNearWorld() {   // the wanderers and the cat between the ring and the camera, far to near, each with its shadow
+    const ws = world.walkers.filter(walkerNear).sort((a, b) => b.z - a.z);
+    const cat = GY.cat && game.state !== "title" ? GY.cat : null; let catDone = !cat;
+    for (const k of ws) { if (!catDone && cat.z > k.z) { drawCat(); catDone = true; } drawWalker(k); }
+    if (!catDone) drawCat();
+  }
   function drawGroundWorld() {
     // the props are already in back-to-front order; the few wanderers are merged into it
-    const ws = world.walkers.length > 1 ? world.walkers.slice().sort((a, b) => b.z - a.z) : world.walkers;
+    // v53: only the wanderers beyond the ring's depth go in here, behind the ring and its pole; the nearer ones are drawn
+    // after it (drawNearWorld), so one walking between the ring and the camera passes in front of the pole, not behind it
+    const ws = world.walkers.filter(k => !walkerNear(k)).sort((a, b) => b.z - a.z);
     let wi = 0, hazed = !TRAVEL.on;
     for (const k of GY.props) {
       if (k.travel) { if (!travelShows(k)) continue; if (!hazed && k.z < TRAVEL_HAZE_Z) { drawTravelHaze(); hazed = true; } }   // (the far scenery softens behind the haze: 06g_travel.js)

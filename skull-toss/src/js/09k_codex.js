@@ -52,9 +52,11 @@
   const codexUI = { cat: "map" };
   function renderCodex() {
     const tabs = $("codexTabs");
-    if (!tabs.children.length) for (const c of [...CODEX_CATS, "secret", "archive"]) tabs.append(h("button", { type: "button", role: "tab", data: { cat: c }, "aria-selected": "false" }, t(`codex.cat.${c}`)));
-    for (const b of tabs.children) b.setAttribute("aria-selected", String(b.dataset.cat === codexUI.cat));
-    const list = $("codexList"); list.textContent = "";
+    // v53: the parts of the Codex in a menu; the entries one row of book pages that scrolls sideways
+    if (!tabs.children.length) for (const c of [...CODEX_CATS, "secret", "archive"]) tabs.append(h("button", { type: "button", role: "menuitem", data: { cat: c }, "aria-checked": "false" }, t(`codex.cat.${c}`)));
+    for (const b of tabs.children) b.setAttribute("aria-checked", String(b.dataset.cat === codexUI.cat));
+    $("codexCatLbl").textContent = t(`codex.cat.${codexUI.cat}`);
+    const list = $("codexList"); list.textContent = ""; list.scrollLeft = 0;
     if (codexUI.cat === "secret") {   // the secrets (09l_mischief.js): a hint for each still hidden
       const got = realProfile().secrets;
       $("codexCount").textContent = t("codex.secret.count", { n: got.length, total: SECRETS.length });
@@ -78,10 +80,13 @@
     $("codexCount").textContent = t("codex.count", { n: codexCount(), total: codexTotal() });
     for (const id of ids) {
       const on = C.seen(id);
-      list.append(h("div", { class: `entry${on ? "" : " unseen"}`, data: { entry: `${codexUI.cat}:${id}` } },
+      list.append(h("div", { class: `entry${on ? "" : " unseen"}`, data: { entry: `${codexUI.cat}:${id}`, page: String(ids.indexOf(id) + 1) } },
         h("b", {}, on ? C.name(id) : t("codex.unknown")),
         h("p", {}, on ? C.body(id) : t(`codex.how.${codexUI.cat}`)),
         on && C.stat(id) ? h("span", { class: "cx-stat" }, C.stat(id)) : null));
     }
   }
-  $("codexTabs").addEventListener("click", e => { const b = e.target.closest("[data-cat]"); if (!b) return; codexUI.cat = b.dataset.cat; renderCodex(); Sound.ui("tick"); });
+  const codexMenu = open => { $("codexTabs").hidden = !open; $("codexCatBtn").setAttribute("aria-expanded", String(open)); };
+  $("codexCatBtn").addEventListener("click", () => { codexMenu($("codexTabs").hidden); Sound.ui("tick"); });
+  $("codexTabs").addEventListener("click", e => { const b = e.target.closest("[data-cat]"); if (!b) return; codexMenu(false); codexUI.cat = b.dataset.cat; renderCodex(); Sound.ui("tick"); });
+  document.addEventListener("click", e => { if (!e.target.closest(".codex-drop")) codexMenu(false); });

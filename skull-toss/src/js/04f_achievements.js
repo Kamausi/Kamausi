@@ -227,7 +227,7 @@
     achBusy = !sandbox;
     // (v51: a finished challenge drops in here too, in the same spot, so everything you've earned turns up in one place)
     el.classList.toggle("chal", !!A.chal);
-    el.innerHTML = `<span class="medal"><svg><use href="#i-${A.icon}"/></svg></span><span class="t"><span class="k">${A.chal ? A.kicker : "Achievement unlocked"}</span><b>${A.name}</b><span class="s">${A.text}</span></span><span class="r">+${A.bones.toLocaleString("en-US")}<svg><use href="#i-bone"/></svg></span>`;
+    el.innerHTML = `<span class="medal"><svg><use href="#i-${A.icon}"/></svg></span><span class="t"><span class="k">${A.chal ? A.kicker : `Achievement unlocked · ${achTierName(A)}`}</span><b>${A.name}</b><span class="s">${A.text}</span></span><span class="r">+${A.bones.toLocaleString("en-US")}<svg><use href="#i-bone"/></svg></span>`;
     const inPlay = !hud.hidden;   // mid-run it sits just under the score, not over it
     el.classList.toggle("play", inPlay); el.style.top = inPlay ? `${Math.round(bestEl.getBoundingClientRect().bottom + 10)}px` : "";
     el.hidden = false; el.classList.remove("in", "out"); void el.offsetWidth; el.classList.add("in");
@@ -237,6 +237,11 @@
     achTimers.out = setTimeout(() => { el.classList.remove("in"); el.classList.add("out"); }, sandbox ? 60 : 2600);
     achTimers.end = setTimeout(() => { el.hidden = true; el.classList.remove("out"); achBusy = false; achNext(); }, sandbox ? 120 : 3000);
   }
+  // v53: each achievement's difficulty, read from what it pays (the harder it is, the more bones): shown on its card and
+  // in the pop-up, so what you get for it and why is plain
+  const ACH_TIERS = [[1000, "legendary"], [400, "hard"], [150, "medium"], [0, "easy"]];
+  const achTier = A => ACH_TIERS.find(([n]) => A.bones >= n)[1];
+  const achTierName = A => ({ easy: () => t("ach.tier.easy"), medium: () => t("ach.tier.medium"), hard: () => t("ach.tier.hard"), legendary: () => t("ach.tier.legendary") })[achTier(A)]();
   // the sheet
   function renderAchievements() {
     const got = ACHIEVEMENTS.filter(A => achHas(A.id)).length, fmtV = (A, v) => A.time ? (A.n >= 3600 ? `${Math.floor(v / 60)}m` : `${Math.floor(v / 60)}:${String(Math.floor(v) % 60).padStart(2, "0")}`) : Math.floor(v).toLocaleString("en-US");
@@ -247,7 +252,7 @@
       return `<div class="ach${has ? " got" : ""}"><span class="medal"><svg><use href="#i-${has ? A.icon : "lock"}"/></svg></span>`
         + `<div class="ach-t"><b>${A.name}</b><span>${A.text}</span>`
         + (has ? "" : `<div class="ach-prog"><div class="bar"><i style="width:${pct}%"></i></div><em>${fmtV(A, v)}/${fmtV(A, A.n)}</em></div>`)
-        + `</div><span class="ach-r">${has ? "Done" : `+${A.bones.toLocaleString("en-US")}`}</span></div>`;
+        + `</div><span class="ach-tier ${achTier(A)}">${achTierName(A)}</span><span class="ach-r">${has ? "Done" : `+${A.bones.toLocaleString("en-US")}`}</span></div>`;
     }).join("") + "</div>"; }).join("");   // (v50: cards, two across)
     if (profile.achSeen !== profile.achievements.length) { profile.achSeen = profile.achievements.length; persist(2000); updatePips(); }
   }

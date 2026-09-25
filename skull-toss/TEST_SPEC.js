@@ -642,7 +642,7 @@
   test("v45 Leaderboard: a board for each way to play; a tapped headstone opens its card, read-only and as plain text; ten of each kind on the device", () => {
     T.fakeBoard([{ id: "a", name: "<b>Ada</b>", score: 9000, hits: 20, stage: 2, bio: "<img src=x onerror=alert(1)> hi", pic: { face: "happy", frame: "plain" }, rank: "Crypt Keeper", level: 7, ach: 12 }]);
     T.setStats(ZERO); T.openSheet("board");
-    const chips = [...$("boardModes").children].map(b => b.dataset.mode); assert(chips.join() === "story,arcade,rush,curtain,longshot,gallery", chips.join());
+    const chips = [...$("boardModes").querySelectorAll("[data-mode]")].map(b => b.dataset.mode); assert(chips.join() === "story,plus,arcade,rush,curtain,longshot,gallery,cans,pitch,sudden,gale,swing", chips.join());   // (v53: Adventure+ and all eight mini-games)
     $("boardList").querySelector("li").click();
     assert(!$("playerCard").hidden && $("pcName").textContent === "bAda/b" && !$("playerCard").querySelector("img") && /Crypt Keeper/.test($("pcTitle").textContent) && / hi$/.test($("pcBio").textContent), "the card, as plain text");
     assert(!$("playerCard").querySelector("input, textarea, [contenteditable]") && /View only/.test($("playerCard").textContent), "and read-only");
@@ -1203,6 +1203,7 @@
     assert(!$("wind").hidden && /2\.4/.test($("wind").textContent), `the HUD shows the wind (${$("wind").textContent})`);
     throwAndSettle(0, C.RING_Y); const s = T.state();
     assert(s.lastResult.make && Math.abs(s.lastCross.x - drift) < 0.03, `the wind should carry it into the ring (${s.lastResult.kind}, crossed at ${s.lastCross.x.toFixed(3)})`);
+    assert(T.runStats().windCurves === 1, "aimed off the ring and bent in by the wind: a Wind Curve (v53)");
     assert(!$("wind").hidden && T.hz().wind !== 2.4, "and it turns after the throw");
     T.setWind(0); T.toTitle(); assert($("wind").hidden, "no wind sign out of the woods");
   });
@@ -1677,7 +1678,7 @@
   test("The Codex sheet: a tab for each part and the Archive, ??? until found, and the count", () => {
     T.setStats({ ...ZERO, bossLog: { crow: 2 }, fragments: ["hollow"], shots: { longbomb: 1 }, bestStage: 2 }); T.toTitle(); T.openSheet("codex");
     const tabs = [...document.querySelectorAll("#codexTabs [data-cat]")]; assert(tabs.length === 12 && tabs[0].dataset.cat === "area" && tabs[1].dataset.cat === "map", `twelve tabs, Areas first (v50) (${tabs.length})`);
-    assert(getComputedStyle($("codexTabs")).gridTemplateColumns.split(" ").length === 4, "in rows of four");
+    assert($("codexTabs").hidden && $("codexCatBtn"), "in a menu, shut until it's opened (v53)");
     tabs.find(b => b.dataset.cat === "miniboss").click();
     const rows = [...document.querySelectorAll("#codexList .entry")], crow = rows.find(r => r.dataset.entry === "miniboss:crow");
     assert(rows.length === 8 && crow && /Crow King/.test(crow.textContent) && /Beaten 2/.test(crow.textContent), `8 mini-bosses, the Crow King written up (${rows.length})`);
@@ -2512,7 +2513,7 @@
     assert(body.indexOf("chalSet") < body.indexOf("streakLine") && body.indexOf("chalSet") < body.indexOf("chalList") && $("chalSet").querySelector(".chal-set"), `the strip above the streak and the timer (${body})`);
     assert($("chalSet").firstElementChild.getBoundingClientRect().height < 64, `and it's slim (${$("chalSet").firstElementChild.getBoundingClientRect().height})`); T.closeSheet(); T.setStats(ZERO);
   });
-  test("v50 settings: only the categories, a category opens its settings; Account & General has notifications, linking, redeem and support", () => {
+  test("v50 settings: only the categories, a category opens its settings; Account & General has notifications, linking, redeem and support", async () => {
     T.toTitle(); T.openSheet("settings");
     const cats = [...document.querySelectorAll("#setCats .set-cat b")].map(b => b.textContent).join("|");
     assert(cats === "Audio|Graphics|Gameplay|Accessibility|Account & General", cats);
@@ -2528,13 +2529,16 @@
     const btn = $("googleSignIn"); assert(btn && /Sign in with Google/.test(btn.textContent) && btn.disabled, "the Google button (off without the online game)");
     assert(/online game/.test($("accountNote").textContent), $("accountNote").textContent);
     const b0 = T.profile().bones;
-    $("redeemIn").value = "nope nope"; $("redeemBtn").click(); assert(/isn't valid/.test($("redeemNote").textContent) && T.profile().bones === b0, "a bad code pays nothing");
-    $("redeemIn").value = "morty-bones"; $("redeemBtn").click(); assert(T.profile().bones === b0 + 500, `a good code pays (${T.profile().bones - b0})`);
-    $("redeemIn").value = "MORTYBONES"; $("redeemBtn").click(); assert(/already used/.test($("redeemNote").textContent) && T.profile().bones === b0 + 500, "once");
+    const r0 = T.profile().redeemed.length;
+    $("redeemIn").value = "nope nope"; $("redeemBtn").click(); await new Promise(r => { const iv = setInterval(() => { if (!$("redeemBtn").disabled) { clearInterval(iv); r(); } }, 20); });   // (v53: an unknown code waits on the key check)
+    assert(/isn't valid/.test($("redeemNote").textContent) && T.profile().redeemed.length === r0 && !T.profile().allAccess, `a bad code pays nothing (${$("redeemNote").textContent})`);   // (v53: judged by what it redeemed, since other rewards can land while the key is checked)
+    const b1 = T.profile().bones;
+    $("redeemIn").value = "morty-bones"; $("redeemBtn").click(); assert(T.profile().bones === b1 + 500, `a good code pays (${T.profile().bones - b1})`);
+    $("redeemIn").value = "MORTYBONES"; $("redeemBtn").click(); assert(/already used/.test($("redeemNote").textContent) && T.profile().bones === b1 + 500, "once");
     document.querySelector('[data-info="credits"]').click(); assert(T.state().sheet === "info" && /Credits/.test($("h-info").textContent) && $("infoBody").children.length, "credits open");
     $("sheet-info").querySelector("[data-back]").click(); assert(T.state().sheet === "settings" && !document.querySelector('.set-sec[data-sec="account"]').hidden, "back to Account & General");
     T.closeSheet();
-    T.openSheet("profile"); assert(document.querySelector("#sheet-profile .google-btn"), "and on the Profile"); T.closeSheet();
+    T.openSheet("profile"); assert(!document.querySelector("#sheet-profile .google-btn"), "and not on the Profile any more (v53: sign-in is here)"); T.closeSheet();
   });
   test("v51 throw feel: a miss leaves a ghost trail (and a cross if it went close) until a make wipes it", () => {
     T.setStats(ZERO); fresh(); T.calm(); throwAndSettle(2.5, C.RING_Y);
@@ -2551,11 +2555,14 @@
     assert(T.throwAt(2.5, C.RING_Y), "throw"); T.step(0.12); assert(!T.feel().antic.predicted, "a miss isn't");
     T.step(3); T.toTitle(); T.setStats(ZERO);
   });
-  test("v51 the Crow King keeps to his path while the ring bobs under him with his wingbeats", () => {
+  test("v53 the Crow King flies his path: the whole body bobs a little with a slow, uneven wingbeat, the ring more, and not in step", () => {
     T.setStats(ZERO); fresh(); toHit(C.STAGE_MINI); T.step(2.6);
     const B = T.boss(); assert(B && B.kind === "crow", "the Crow King"); const t = 2.0;   // (a moment in his first perch)
-    const qs = [0, 0.05, 0.1, 0.15].map(d => T.bossPath(t + d)), same = qs.every(q => Math.abs(q.ay - qs[0].ay) < 1e-6 || q.tell), bobs = new Set(qs.map(q => (q.y - q.ay).toFixed(3))).size > 1;
-    assert(same && bobs && qs.every(q => Math.abs(q.y - q.ay) <= 0.036), `body steady, ring bobbing (${qs.map(q => (q.y - q.ay).toFixed(3))})`);
+    const ts = Array.from({ length: 28 }, (_, i) => t + i * 0.025), qs = ts.map(u => T.bossPath(u)).filter(q => !q.tell);
+    const body = qs.map(q => q.ay), ring = qs.map(q => q.y - q.ay), span = a => Math.max(...a) - Math.min(...a);
+    assert(span(body) > 0.02 && span(body) < 0.05, `the body bobs a couple of centimetres (${span(body).toFixed(3)})`);
+    assert(span(ring) > 0.03 && span(ring) < 0.09, `the ring bobs more, under him (${span(ring).toFixed(3)})`);
+    const top = a => a.indexOf(Math.max(...a)); assert(top(body) !== top(qs.map(q => q.y)), "body and ring don't peak together");
     T.toTitle(); T.setStats(ZERO);
   });
   test("v51 boss deaths: every boss has its own archetype, word and gag; a knockout plays it, then the gag drops", () => {
@@ -2566,6 +2573,63 @@
     const X = T.death(); assert(X && X.arch === "spinout" && X.word === "PLUCKED!" && X.gag === "crown", JSON.stringify(X));
     T.step(1.6); assert(T.gags().includes("crown"), `the crown falls, after the hit-stop and the spin-out (${T.gags()})`);
     T.toTitle(); T.setStats(ZERO);
+  });
+  // ── v53 ──
+  test("v53 settings: a medium text size; save codes live in Account & General; the notification switches always switch", async () => {
+    T.openSheet("settings"); document.querySelector("#setCats [data-sec=access]").click();
+    const med = document.querySelector('#set-text [data-v="medium"]'); assert(med, "a Medium option"); med.click();
+    assert(document.documentElement.dataset.text === "medium" || T.settings().text === "medium", "medium applies");
+    document.querySelector('#set-text [data-v="normal"]').click();
+    T.closeSheet(); T.openSheet("settings"); document.querySelector("#setCats [data-sec=account]").click();
+    assert($("sheet-settings").contains($("saveCard")) && $("sheet-settings").contains($("copyCodeBtn")), "the save codes are in Settings");
+    assert(!$("sheet-profile").querySelector(".google-btn"), "and the profile has no sign-in button any more");
+    const was = T.settings().notifDaily; $("set-notif-daily").click(); await new Promise(r => setTimeout(r, 50));
+    assert(T.settings().notifDaily === !was && !$("set-notif-daily").disabled, "the switch switches, whatever the browser allows");
+    if (T.settings().notifDaily !== was) $("set-notif-daily").click();
+    T.closeSheet();
+  });
+  test("v53 leaderboard: Adventure (and Adventure+) and the eight mini-games in menus; Arcade and Boss Rush as buttons", () => {
+    T.openSheet("board"); const M = $("boardModes");
+    assert(M.querySelectorAll(":scope > *").length === 4, `four in the row (${M.children.length})`);
+    const minis = M.querySelectorAll('[data-group="minis"] [data-mode]'); assert(minis.length === 8, `all eight mini-games (${minis.length})`);
+    M.querySelector("[data-drop=adv]").click(); M.querySelector('[data-mode="plus"]').click();
+    assert(/Adventure\+/.test(M.querySelector("[data-drop=adv]").textContent), "picking Adventure+ names the menu's button");
+    M.querySelector("[data-drop=minis]").click(); M.querySelector('[data-mode="swing"]').click();
+    assert(/Swing Time/.test(M.querySelector("[data-drop=minis]").textContent) && M.querySelector('[data-group="minis"] .board-menu').hidden, "a mini-game picked, the menu shut");
+    M.querySelector("[data-drop=adv]").click(); M.querySelector('[data-mode="story"]').click(); T.closeSheet();
+  });
+  test("v53 codex: the parts in a menu, the entries one row of book pages; achievements two rows a kind, each marked with its difficulty", () => {
+    T.openSheet("codex"); assert($("codexTabs").hidden, "the menu starts shut"); $("codexCatBtn").click(); assert(!$("codexTabs").hidden, "and opens");
+    $("codexTabs").querySelector('[data-cat="boss"]').click(); assert($("codexTabs").hidden && /boss/i.test($("codexCatLbl").textContent), "a part picked");
+    const L = $("codexList"); assert(getComputedStyle(L).display === "flex" && L.scrollWidth > L.clientWidth, "the pages scroll sideways");
+    T.closeSheet(); T.openSheet("achievements");
+    const g = document.querySelector("#achList .ach-grid"); assert(getComputedStyle(g).gridAutoFlow.startsWith("column") && g.scrollWidth > g.clientWidth, "two rows that scroll sideways");
+    const tiers = [...document.querySelectorAll("#achList .ach-tier")].map(e => e.textContent); assert(tiers.includes("Easy") && tiers.includes("Legendary"), `difficulty on every card (${new Set(tiers).size} kinds)`);
+    T.closeSheet();
+  });
+  test("v53 the map's title card is fully opaque", () => {
+    const el = $("reelCard"); el.dataset.kind = "title"; const bg = getComputedStyle(el).backgroundImage; delete el.dataset.kind;
+    assert(!/rgba\([^)]*,\s*0?\.\d+\)/.test(bg), `no see-through colour in it (${bg.slice(0, 80)})`);
+  });
+  test("v53 the cat keeps its place in the world as the camera travels", () => {
+    T.setStats(ZERO); fresh(); T.calm(); T.catNow(); const c0 = T.cat(); assert(c0, "a cat");
+    T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); T.step(1.5); const c1 = T.cat();
+    assert(!c1 || c1.z < c0.z - 0.1, `it's passed by, not carried along (${c0.z.toFixed(2)} → ${c1 ? c1.z.toFixed(2) : "gone"})`);
+    T.toTitle();
+  });
+  test("v53 underwater: a skull that comes down in open water goes in, slows and sinks, and the throw still ends", () => {
+    T.setStats(ZERO); fresh(); T.setStage(4); T.calm(); T.freezeRing(0, C.RING_Y);
+    assert(T.throwAt(1.6, 0.9), "thrown"); let lowest = 9, under = 0;
+    for (let i = 0; i < 60 && T.state().state === "flying"; i++) { T.step(0.05); const y = T.state().skull.y; lowest = Math.min(lowest, y); if (y < -0.05) under++; }
+    assert(under > 3 && lowest > -1.35, `it went under and stopped short of the bottom (lowest ${lowest.toFixed(2)})`);
+    T.step(3); assert(T.state().state !== "flying", "and the throw ended");
+    T.toTitle();
+  });
+  test("v53 a wrong play-test key opens nothing", async () => {
+    const P0 = T.profile(); T.openSheet("settings"); document.querySelector("#setCats [data-sec=account]").click();
+    $("redeemIn").value = "NOT-THE-KEY-9"; $("redeemBtn").click(); await new Promise(r => { const iv = setInterval(() => { if (!$("redeemBtn").disabled) { clearInterval(iv); r(); } }, 20); });
+    assert(!T.profile().allAccess && T.profile().bones === P0.bones && /isn't valid/.test($("redeemNote").textContent), "refused");
+    T.closeSheet();
   });
   test("v52 knockout timing: a short hold (shorter on a mini), one white flash, one colour pulse, then the defeat", () => {
     T.setStats(ZERO); fresh(); toHit(C.STAGE_MINI); T.step(2.6); T.hurtBoss(99);
@@ -2623,8 +2687,7 @@
     assert(document.querySelectorAll("#history .runs li").length === 5, "the last five runs");
     assert(/0\/8/.test($("profFragN").textContent), "the fragments count");
     const chips = $("careerCard").querySelector(".chips"); assert(getComputedStyle(chips).gridTemplateColumns.split(" ").length === 3 && chips.children.length === 6, "2 rows of 3");
-    const g = document.querySelector("#sheet-profile .google-btn"), body = document.querySelector("#sheet-profile .sheet-body");
-    assert(g && body.lastElementChild.contains(g), "Google at the bottom"); T.closeSheet(); T.setStats(ZERO);
+    assert(!document.querySelector("#sheet-profile .google-btn"), "no sign-in on the profile (v53: it's in Settings)"); T.closeSheet(); T.setStats(ZERO);
   });
   test("v50 Leaderboard: one row of tabs with a Daily/Weekly/Monthly drop-down; ten rows, and See more opens a hundred", () => {
     T.boardLocal(Array.from({ length: 10 }, (_, i) => ({ name: "M" + i, score: 100 + i, hits: 1, stage: 1, at: Date.now() })));

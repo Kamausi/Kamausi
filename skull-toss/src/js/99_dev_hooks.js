@@ -258,6 +258,7 @@
       for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (Math.hypot(x + 0.5 - N / 2, y + 0.5 - N / 2) < k * 0.8) { disc += lum((y * N + x) * 4); n++; }
       return { x: moon.x, y: moon.y, r: moon.r, art: moonState, layer: !!moonLayer, disc: Math.round(disc / n), sky: Math.round(lum(((N - 4) * N + 3) * 4)) };
     },
+    placeWalker(i, x, z) { const k = world.walkers[i]; if (k) { k.x = x; k.z = z; k.v = 0; } return !!k; },   // (v53: for looking at one up close)
     forceSpawn(what) { if (what === "bats") spawnFlock(); else if (what === "witch") spawnWitch(); else if (what === "bolt") spawnBolt(); else spawnWalker(what); },
     settings() { return { ...settings }; },
     setSetting(k, v) { settings[k] = v; persist(); Sound.apply(); applyAccess(); if (sheet === "settings") renderSettings(); },

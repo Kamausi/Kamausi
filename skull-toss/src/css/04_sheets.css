@@ -112,3 +112,4 @@
 .all-stats[open]>summary::after{content:"▴"}
 .all-stats #stats{padding:0 10px 12px}
 #saveCard{margin-top:14px}
+.pb-ring{display:block;width:124px;height:124px;margin:8px 0 0}   /* v53: the Black Ring's shards so far */

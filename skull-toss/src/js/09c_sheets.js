@@ -166,7 +166,7 @@
     const n = $("prof-name"); if (document.activeElement !== n) n.value = profile.name;
     const bio = $("prof-bio"); if (document.activeElement !== bio) bio.value = profile.bio || ""; renderPicPick();
     $("profNameShow").textContent = profile.name || t("profile.nameless"); $("profBioShow").textContent = profile.bio || t("profile.noBio");   // (v50: name and bio beside the picture; the pencil edits them)
-    $("profBioShow").classList.toggle("empty", !profile.bio); $("profFragN").textContent = `${profile.fragments.length}/${MAP_COUNT}`;
+    $("profBioShow").classList.toggle("empty", !profile.bio); $("profFragN").textContent = `${profile.fragments.length}/${MAP_COUNT}`; drawFragRing($("profFragCv"), profile.fragments);
     const r = rankFor(profile.makes);
     $("rankName").textContent = r.name;
     $("profTitle").textContent = titleName();
@@ -247,3 +247,20 @@
   $("prof-name").addEventListener("input", e => { profile.name = e.target.value.replace(/\s+/g, " ").trimStart().slice(0, 16); persist(2500); });
   $("prof-name").addEventListener("change", e => secretName(e.target.value));   // (a secret: 09l_mischief.js)
   $("prof-name").addEventListener("change", e => { profile.name = profile.name.trim(); e.target.value = profile.name; persist(800); });
+
+  // v53: the Black Ring under the fragment count: one shard for each map, in map order round the ring, found ones solid
+  // black with a gold edge and a glint, the rest dashed outlines where they'll go
+  function drawFragRing(cv, have) {
+    const css = 124, dpr = Math.min(2, window.devicePixelRatio || 1); cv.width = cv.height = css * dpr; cv.style.width = cv.style.height = css + "px";
+    const c = cv.getContext("2d"); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, css, css);
+    const cx = css / 2, cy = css / 2, R = css * 0.4, w = css * 0.13, n = MAP_DATA.length, gap = 0.06;
+    MAP_DATA.forEach((M, i) => {
+      const a0 = -Math.PI / 2 + (i / n) * TAU + gap / 2, a1 = a0 + TAU / n - gap, on = have.includes(M.fragment);
+      c.beginPath(); c.arc(cx, cy, R + w / 2, a0, a1); c.arc(cx, cy, R - w / 2, a1, a0, true); c.closePath();
+      if (on) { c.fillStyle = "#16121C"; c.fill(); c.lineWidth = 2; c.strokeStyle = "#E3B64B"; c.setLineDash([]); c.stroke();
+        const am = (a0 + a1) / 2; c.fillStyle = "rgba(242,231,201,.55)"; c.beginPath(); c.arc(cx + Math.cos(am - 0.12) * (R + w * 0.18), cy + Math.sin(am - 0.12) * (R + w * 0.18), w * 0.12, 0, TAU); c.fill(); }
+      else { c.lineWidth = 1.5; c.strokeStyle = "rgba(242,231,201,.35)"; c.setLineDash([3, 3]); c.stroke(); c.setLineDash([]); }
+    });
+    c.font = `${Math.round(css * 0.16)}px "Bebas Neue", sans-serif`; c.textAlign = "center"; c.textBaseline = "middle"; c.fillStyle = have.length ? "#E3B64B" : "rgba(242,231,201,.5)";
+    c.fillText(`${have.length}/${n}`, cx, cy + 1);
+  }

@@ -12,7 +12,7 @@
     voice.quiet = game.time; voice.idleSaid = false;
     const v = aimVelocity(AX, AY);
     Object.assign(skull, { launchRing: { x: ring.x, y: ring.y, z: ring.z }, ax0: windNow(), close: false, shots: [] });   // (what the signature shots read: 07h_shots.js)
-    Object.assign(skull, { p0: { x: 0, y: START_Y, z: 0 }, v0: v, t: 0, crossed: false, resting: false, bounces: 0, ax: windNow(), tHit: false,
+    Object.assign(skull, { sub: null, p0: { x: 0, y: START_Y, z: 0 }, v0: v, t: 0, crossed: false, resting: false, bounces: 0, ax: windNow(), tHit: false,
       spin: (1.3 + Math.abs(v.x) * 0.5) * (v.x < 0 ? -1 : 1), hang: 0, take: 0, alpha: 1, flightTime: 0, trail: [], spawn: 1, emit: 0, missed: false });
     skull.pos = { ...skull.p0 };
     game.state = "flying"; game.result = null; game.endTimer = 0; game.throws++; ghostLaunch();
@@ -59,7 +59,7 @@
       if (s.hang <= 0) { const v = velAt(s, s.t); s.p0 = posAt(s, s.t); s.v0 = { x: v.x * 0.1, y: -2.5, z: v.z * 0.1 }; s.t = 0; s.spin = 0; Sound.toon("whistleDown"); }
     }
     obstaclePush(s, dt);   // fans and lodestones push the flight (07m_obstacles.js)
-    let remaining = s.hang > 0 ? 0 : dt, elapsed = 0, guard = 0;
+    let remaining = s.hang > 0 || s.sub ? 0 : dt, elapsed = 0, guard = 0;   // (v53: under the water it's the water's own step, not the arc)
     while (remaining > 1e-9 && guard++ < 10) {
       let tE = Infinity, kind = null;
       if (!s.crossed && s.v0.z > 0) { const e0 = elapsed, t0 = s.t, tc = crossTime(s, remaining, tau => phase0 + ring.omega * (e0 + tau - t0)); if (tc < Infinity) { tE = tc; kind = "ring"; } }
@@ -69,7 +69,7 @@
       if (kind === "ring") hitRing(s, ringAt(phase0 + ring.omega * elapsed)); else hitGround(s);
       if (s.hang > 0) break;
     }
-    const prevPos = s.pos; s.pos = posAt(s, s.t); ghostRecord(s);   // (v51: for the next throw's ghost trail, 08k_feel.js)
+    const prevPos = s.pos; if (s.sub) waterStep(s, dt); else s.pos = posAt(s, s.t); ghostRecord(s);   // (v51: for the next throw's ghost trail, 08k_feel.js)
     if (!game.result && !s.crossed && seeds.length) seedCheck(s, prevPos);
     if (!game.result && !s.crossed) hazardCheck(s, prevPos);
     if (!game.result && !s.crossed) obstacleCheck(s, prevPos);   // the map's obstacles: bumpers bounce, fans and lodestones push, the rest block (07m_obstacles.js)
@@ -78,8 +78,8 @@
     if (cans.length) canCheck(s, prevPos);   // Can Alley (07o_bonus.js)
     if (s.pos.z < -CAM_BACK + 0.9 || s.pos.z > 48) s.alpha = 0;
     const fade = game.result ? clamp(game.endTimer / 0.3, 0, 1) : 1;
-    const v = velAt(s, s.t);
-    const still = s.resting || s.hang > 0;
+    const v = s.sub ? s.sub.v : velAt(s, s.t);
+    const still = (s.resting && !s.sub) || s.hang > 0;
     Sound.flightUpdate(still ? 0 : Math.hypot(v.x, v.y, v.z), s.pos.z + CAM_BACK, s.pos.x, s.spin, s.alpha * fade * (still ? 0 : 1));
     if (game.result) {
       game.endTimer -= dt;
@@ -123,6 +123,9 @@
     const p = s.p0, at = project(p.x, 0, p.z), first = s.bounces === 0;
     const short = !s.crossed && !game.result;
     if (short) { s.crossed = true; resolve("short", project(p.x, p.y + 0.4, p.z)); }
+    // v53: down in open water, it goes in rather than bouncing: ripples on the surface, and under it the throw carries on
+    // through the water, slowed and floated (underwater physics, 08l_water.js)
+    if (first && overWater(p.x, p.z)) { waterRipple(p.x, p.z, clamp(Math.abs(s.v0.y) / GROUND_REF, 0.3, 1.4)); s.bounces++; enterWater(s); return; }
     s.bounces++; if (first) envImpact(p.x, p.z, clamp(Math.abs(s.v0.y) / GROUND_REF, 0.5, 1.3));   // the ground shakes what's near
     waterRipple(p.x, p.z, clamp(Math.abs(s.v0.y) / GROUND_REF, 0.3, 1.4) * (first ? 1 : 0.5));   // (v51: down in the water: ripples, 08l_water.js)
     // FLAT SKULL, then BOING back into shape (how flat depends on how fast it came down)
@@ -166,7 +169,7 @@
   function resolve(kind, at, hitAt, d = null, ghosted = false) {
     const R = RESULT[kind], run = game.run;
     Telemetry.emit("throw", { result: kind, make: !!R.make, stage: game.stage, stageHits: game.stageHits, lives: game.lives, boss: boss ? boss.kind : null, n: game.throws });
-    game.result = { kind, make: R.make, at: game.time, bonked: false, pts: 0 }; ghostResolve(!!R.make); plusResolve(R, kind);
+    game.result = { kind, make: R.make, at: game.time, bonked: false, pts: 0 }; ghostResolve(!!R.make); plusResolve(R, kind); windCurve(R);
     game.endTimer = R.make ? 0.95 : R.hit ? 1.0 : 1.45;
     const x = at ? at.x : W / 2, y = at ? at.y - ring.rc * at.s - U * 0.05 : H * 0.3;
     if (R.make) {
@@ -267,7 +270,7 @@
     mischiefAfterThrow();   // now and then the old print acts up (09l_mischief.js)
   }
   function resetSkull() {
-    Object.assign(skull, { p0: { x: 0, y: START_Y, z: 0 }, v0: { x: 0, y: 0, z: 0 }, t: 0, crossed: false, resting: true, missed: false, ghosted: 0,
+    Object.assign(skull, { sub: null, p0: { x: 0, y: START_Y, z: 0 }, v0: { x: 0, y: 0, z: 0 }, t: 0, crossed: false, resting: true, missed: false, ghosted: 0,
       bounces: 0, angle: 0, spin: 0, spawn: 0, alpha: 1, flightTime: 0, pullOff: { x: 0, y: 0 }, trail: [], emit: 0 });
     skull.pos = { ...skull.p0 };
     kick(rig, 1, 0, Math.PI / 2); rig.tilt = 0; rig.dots = 0; setMood(rig, "idle", game.time);
@@ -324,12 +327,13 @@
       game.newBest = game.score > profile.bestScore;
       if (game.newBest) profile.bestScore = game.score;
       profile.bestStage = Math.max(profile.bestStage, game.stage);
-      if (!game.run.continues && game.score > (profile.boardBest ? profile.boardBest.score : 0)) profile.boardBest = { score: game.score, hits: game.hits, stage: game.stage, at: Date.now(),   // what the leaderboard posts
+      if (!game.plus && !game.run.continues && game.score > (profile.boardBest ? profile.boardBest.score : 0)) profile.boardBest = { score: game.score, hits: game.hits, stage: game.stage, at: Date.now(),   // what the leaderboard posts
         throws: game.throws, secs: Math.ceil(game.run.secs), perfects: game.run.perfects, bosses: game.run.bosses, targets: game.run.targets || 0, shots: (game.run.shots || []).length, fragments: (game.run.fragments || []).length, continues: 0 };
     }
-    if (BOARD_MODES.includes(game.mode) && game.mode !== "story" && !game.run.continues && !inPractice() && !Replay.play && game.score > ((profile.boardBests || {})[game.mode] || { score: 0 }).score)   // v45: every scored mode's board
-      (profile.boardBests = profile.boardBests || {})[game.mode] = { score: game.score, hits: game.hits, stage: game.stage, at: Date.now(), throws: game.throws, secs: Math.ceil(game.run.secs), perfects: game.run.perfects,
-        bosses: game.run.bosses, targets: game.run.targets || 0, shots: (game.run.shots || []).length, fragments: 0, continues: 0 };
+    const bm = boardModeNow();   // (v53: an Adventure+ run goes to its own board)
+    if (BOARD_MODES.includes(bm) && bm !== "story" && !game.run.continues && !inPractice() && !Replay.play && game.score > ((profile.boardBests || {})[bm] || { score: 0 }).score)   // v45: every scored mode's board
+      (profile.boardBests = profile.boardBests || {})[bm] = { score: game.score, hits: game.hits, stage: game.stage, at: Date.now(), throws: game.throws, secs: Math.ceil(game.run.secs), perfects: game.run.perfects,
+        bosses: game.run.bosses, targets: game.run.targets || 0, shots: (game.run.shots || []).length, fragments: bm === "plus" ? (game.run.fragments || []).length : 0, continues: 0 };
     profile.games++;
     profile.best = Math.max(profile.best, game.hits);
     if (game.hits === 0) profile.zeroRuns++;
@@ -341,7 +345,7 @@
     profile.bones += game.run.bones; profile.bonesTotal += game.run.bones;
     checkUnlocks(); persist(300);
     showCombo(0); setHint(""); Sound.over(); Sound.setAct("menu"); VisualSystem.emit("death"); updateHud();
-    renderResults(); if (BOARD_MODES.includes(game.mode) && !Replay.play && !inPractice()) Board.post();
+    renderResults(); if (BOARD_MODES.includes(boardModeNow()) && !Replay.play && !inPractice()) Board.post();
     Telemetry.emit("run_end", { mode: game.mode, map: game.map, score: game.score, hits: game.hits, stage: game.stage, phase: game.phase, tier: tierNow().id, secs: Math.round(game.run.secs), throws: game.throws,
       misses: game.run.misses, perfects: game.run.perfects, continues: game.run.continues, powerups: game.run.powerups, bosses: game.run.bosses, quit: !card });
     if (!Replay.play) PlayData.runs++;

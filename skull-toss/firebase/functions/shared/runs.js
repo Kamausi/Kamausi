@@ -26,7 +26,7 @@
       return o;
     }
     // v45: the boards: the Adventure's (leaderboard/, and the week's), and one for each scored mode (boards/<mode>_<uid>)
-    const MODES = ["story", "arcade", "rush", "curtain", "longshot", "gallery"];
+    const MODES = ["story", "plus", "arcade", "rush", "curtain", "longshot", "gallery", "cans", "pitch", "sudden", "gale", "swing"];   // (v53: Adventure+ and all eight mini-games)
     function cleanName(n) { return String(n || "").replace(/[\u0000-\u001f<>]/g, "").replace(/\s+/g, " ").trim().slice(0, L.maxNameLen) || "Nameless soul"; }
     const ceiling = r => {
       const perMake = L.perfectPts * L.comboMax * L.stageMultMax * L.powerMax, makes = r.hits;
@@ -37,7 +37,7 @@
       const r = clean(raw), bad = why => ({ ok: false, why });
       for (const k of ["score", "hits", "stage", "throws", "secs", "perfects", "bosses", "targets", "shots", "continues", "fragments"]) if (!Number.isFinite(r[k]) || r[k] < 0) return bad("not-a-number:" + k);
       if (!MODES.includes(r.mode)) return bad("no-such-board");
-      if (r.mode !== "story" && r.fragments > 0) return bad("fragments");   // (only the Adventure wins shards)
+      if (r.mode !== "story" && r.mode !== "plus" && r.fragments > 0) return bad("fragments");   // (only the Adventure and Adventure+ win shards)
       if (r.continues > 0) return bad("continued");
       if (r.throws < 1 || r.throws > L.maxThrows) return bad("throws");
       if (r.hits > r.throws + L.encoreMakes) return bad("more-hits-than-throws");   // (encore makes are throws too; the margin is for rounding in old saves)

@@ -69,7 +69,7 @@
           if (u > S.hold + S.tell) { const k = smooth((u - S.hold - S.tell) / S.move); q = lerp3(A, P, k); q.y -= Math.sin(k * Math.PI) * 0.35; }
           else if (u > S.hold) { tell = (u - S.hold) / S.tell; q.y -= 0.12 * Math.sin(tell * Math.PI); }
           const hv = B.def.hang ? ringHover(t, tell) : { x: 0, y: Math.sin(t * 5) * 0.05 * (u <= S.hold ? 1 : 0) };   // (v51: a flyer's ring bobs under it with its wingbeats)
-          return { x: q.x + hv.x, y: q.y + hv.y, z: q.z, ax: q.x, ay: q.y, az: q.z, tell, leg: i }; },
+          return { x: q.x + hv.x, y: q.y + hv.y, z: q.z, ax: q.x, ay: q.y + (B.def.hang ? bodyBob(t, tell) : 0), az: q.z, tell, leg: i }; },   // (v53: the flyer's body bobs with its beat too)
         update: () => { const S = B.seg, len = S.hold + S.tell + S.move; if (!B.dead && B.t >= S.t0 + len) B.seg = { i: S.i + 1, t0: S.t0 + len, ...plan() }; } };
     },
     loop(B, C) {   // round and round a set of points, smooth (the Pumpkin King's vine)

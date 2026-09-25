@@ -244,4 +244,4 @@
 
   // ── hooks for the rest of the game
   function updateGraveyard(dt) { const A = look().ambient; if (A.digger) updateDigger(dt); if (A.cat) updateCat(dt); else GY.cat = null; }
-  function drawPlayWorld() { drawCat(); }
+  function drawPlayWorld() { if (game.state === "title") drawCat(); }   // (v53: in play the cat is drawn by depth with the near wanderers, in front of the ring: drawNearWorld)

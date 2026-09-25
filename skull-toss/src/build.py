@@ -40,7 +40,10 @@ PLAT["serviceWorker"] = "--pwa" in sys.argv
 js = "  const PLATFORM_CONFIG = " + json.dumps(PLAT) + ";\n" + js
 # promo codes (v50, src/promo.json): only each code's salted hash ships (tools/promo.py makes them)
 PR = root / "promo.json"
-PROMO = [p for p in (json.loads(PR.read_text()) if PR.exists() else []) if isinstance(p, dict) and re.fullmatch(r"[0-9a-f]{6,16}", str(p.get("hash", "")))]
+_ok_hash = lambda p: re.fullmatch(r"[0-9a-f]{6,16}", str(p.get("hash", "")))
+# v53: a master key ships as a PBKDF2-SHA-256 digest and its salt (base64) and round count, never the code
+_ok_master = lambda p: re.fullmatch(r"[A-Za-z0-9+/]{43}=", str(p.get("master", ""))) and re.fullmatch(r"[A-Za-z0-9+/]{22}==", str(p.get("salt", ""))) and isinstance(p.get("iter"), int) and p["iter"] >= 100000
+PROMO = [p for p in (json.loads(PR.read_text()) if PR.exists() else []) if isinstance(p, dict) and (_ok_hash(p) or _ok_master(p))]
 js = "  const PROMO_CODES = " + json.dumps(PROMO, separators=(",", ":")) + ";\n" + js
 # the build's number (src/version.json): the live config can ask anything older to update (build.min)
 VERSION = json.loads((root / "version.json").read_text())

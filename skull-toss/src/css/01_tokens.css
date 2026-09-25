@@ -63,6 +63,7 @@ body[data-reel="bootleg"] #stage,body[data-reel="bootleg"] #gpuFx,[data-reel="bo
 @keyframes flashsoft{0%{opacity:.1}100%{opacity:0}}
 /* accessibility (Settings): large text zooms the UI */
 html[data-text="large"] .sheet,html[data-text="large"] .screen .col,html[data-text="large"] .hud,html[data-text="large"] #hint{zoom:1.15}
+html[data-text="medium"] .sheet,html[data-text="medium"] .screen .col,html[data-text="medium"] .hud,html[data-text="medium"] #hint{zoom:1.07}
 @keyframes flashko{0%{opacity:.55}30%{opacity:.16}100%{opacity:0}}   /* v52: one peak, no second blink: the boss's colour pulse follows it */
 
 /* toast: a paper slip */

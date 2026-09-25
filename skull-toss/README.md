@@ -1,8 +1,47 @@
-# SKULL TOSS v52
+# SKULL TOSS v53
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)); nothing else ever plays in their place.
+
+## New in v53: settings that work, menus that scroll sideways, a world that holds together
+
+- **Sign-in.** A returning player stayed signed in to Google, Apple or email only until the next load: the game asked Firebase for the user before it had restored the session, and started a new anonymous one over it. It now waits for the saved session.
+  - Phones, installed apps and in-app browsers sign in by redirect, not a popup that gets blocked.
+  - A failure shows its reason.
+  - A downloaded copy says plainly that sign-in needs the website.
+- **Settings.**
+  - Sign-in buttons are centred.
+  - Notifications always switch: on a device that won't show them, the reminders appear in the game instead, and Android goes through the service worker.
+  - The promo code field is wide and the button fits its word.
+  - Save codes (copy and load) moved from the profile to Account & General; the profile's sign-in button is gone.
+  - Support and credits come after Your data.
+  - A Medium text size.
+  - The category buttons fill the screen.
+- **Menus.**
+  - The Black Ring's shards are drawn under the profile's fragment count.
+  - The Codex is a category menu and a row of book pages.
+  - Achievements run in two sideways rows a kind, each marked Easy, Medium, Hard or Legendary by what it pays.
+  - The Cart's shelves are single sideways rows.
+  - The bones and Souls boxes are smaller and one size everywhere.
+  - Challenges fit a small phone without scrolling.
+  - Pause lists Profile above Settings.
+  - The leaderboard's modes are four: Adventure (a menu with Adventure+), Arcade, Boss Rush, and all eight mini-games in a menu. Adventure+ and each mini-game have their own board, server included.
+- **The world.**
+  - The map's title card is fully opaque.
+  - Skeletons and zombies stay crisp up close: each drawing is kept at 1×, 2×, 4× and 8×.
+  - The cat is passed by as the world travels instead of riding along.
+  - Anything walking between the ring and the camera passes in front of the ring and its pole, with its shadow on the ground at its feet.
+- **The opening.** The studio logo fades out. While the curtains are shut, only the lettering stands in front of them; the menu is behind and shows as they part.
+- **The Raven King** beats his wings slower and unevenly: a hold at the top, a strong downstroke, a slower recovery. His whole body bobs a little a moment after each downstroke, and the ring a moment later and a little more. In a wind he leans into it and his wing feathers stream.
+- **Wind.** A make that only went in because you aimed off the ring and let the crosswind bend it through is a **Wind Curve**: +150, or +300 in a strong wind.
+- **Water.** A skull that comes down in open water goes in:
+  - it keeps its momentum and the water bleeds it away;
+  - gravity fades to about a quarter, with a little buoyancy;
+  - the spin dies and its heading lags its velocity;
+  - it leaves a bubble trail.
+- **Mini-games** are carnival booths in the menu, each with an awning in its own colours and its verb: React, Smash, Reach, Time, Place, Compensate, Survive, Synchronize.
+- **A play-test key** (a promo code that opens everything: every look, map and mode, and bones). The build carries only a PBKDF2-SHA-256 digest of it (random salt, 310,000 rounds), never the code. `python3 tools/promo.py --master` replaces it.
 
 ## New in v52: knockouts timed, saves audited, Morty's sheet
 

@@ -114,7 +114,8 @@
     const box = $("miniModes"); box.textContent = "";
     for (const m of MINI_IDS.filter(m => !Flags.modeOff(m))) {
       const R = modeRec(m), rec = R.runs ? t("mode.best", { v: modeValueText(m, R.best) }) : t("mode.none");
-      box.append(h("button", { class: `mode-tile m-${m} m-mini`, type: "button", data: { mode: m } }, h("b", {}, t(`mode.${m}.name`)), h("span", { class: "d" }, t(`mode.${m}.rule`)), h("span", { class: "rec" }, rec)));
+      // v53: each one a booth of the carnival, with its own paint, an awning and the one thing it asks of you (its verb)
+      box.append(h("button", { class: `mode-tile m-${m} m-mini booth`, type: "button", data: { mode: m } }, h("span", { class: "awning", "aria-hidden": "true" }), h("span", { class: "verb" }, t(`mode.${m}.verb`)), h("b", {}, t(`mode.${m}.name`)), h("span", { class: "d" }, t(`mode.${m}.rule`)), h("span", { class: "rec" }, rec)));
     }
   }
   $("modePick").addEventListener("click", e => { if (e.target.closest("[data-open=minis]")) { Sound.ui("flick"); renderPlay("minis"); const f = $("miniModes").querySelector("button"); if (f && ui.kbd) f.focus({ preventScroll: true }); } });

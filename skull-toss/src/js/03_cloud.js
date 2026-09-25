@@ -16,6 +16,7 @@
         this.me = B.me; this.ref = B.db.doc("data/users/" + B.me.id + "/save");
         Board.init(B.db, B.me); Presence.start(B.db, B.me);   // (v45: the players-online count on the board)
         await this.pull();
+        Account.finishRedirect();   // (v53: back from a sign-in by redirect)
       } catch (e) { this.state = "error"; renderSave(); }
     },
     async pull() {
@@ -91,6 +92,9 @@
           else await auth.signInWithEmailAndPassword(email, pass);
         } else {
           const provider = this.provider(id);
+          // (v53: phones, installed apps and in-app browsers block or lose popups: they go by redirect instead, and the
+          // page comes back signed in; Backend finishes it on load and finishRedirect() below picks it up)
+          if (this.redirectOnly()) { await Cloud.push().catch(() => {}); if (u) await u.linkWithRedirect(provider); else await auth.signInWithRedirect(provider); return; }
           if (u && u.isAnonymous) {
             try { await u.linkWithPopup(provider); }   // same id: nothing moves, the save simply gains a way back in
             catch (e) {
@@ -107,10 +111,27 @@
         const box = $("emailBox"); if (box) box.hidden = true;
       } catch (e) {
         const code = (e && e.code) || "";
+        if (id !== "password" && (code === "auth/popup-blocked" || code === "auth/operation-not-supported-in-this-environment" || code === "auth/web-storage-unsupported")) {
+          try { const auth2 = this.auth(), u2 = auth2.currentUser, pr = this.provider(id); if (u2) await u2.linkWithRedirect(pr); else await auth2.signInWithRedirect(pr); return; } catch (e2) { /* fall through to the message */ }
+        }
         this.error = code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request" ? "" : code === "auth/operation-not-allowed" ? t("acct.notEnabled", { who: PROVIDERS[id] }) : code === "auth/unauthorized-domain" ? t("acct.domain") : code === "auth/popup-blocked" ? t("acct.popup")
-          : code === "auth/wrong-password" || code === "auth/invalid-credential" || code === "auth/user-not-found" || code === "auth/invalid-login-credentials" ? t("acct.badLogin") : code === "auth/weak-password" ? t("acct.weak") : code === "auth/invalid-email" ? t("acct.badEmail") : t("acct.failed");
+          : code === "auth/wrong-password" || code === "auth/invalid-credential" || code === "auth/user-not-found" || code === "auth/invalid-login-credentials" ? t("acct.badLogin") : code === "auth/weak-password" ? t("acct.weak") : code === "auth/invalid-email" ? t("acct.badEmail") : code === "auth/network-request-failed" ? t("acct.offline") : `${t("acct.failed")} (${code || "unknown"})`;   // (v53: the code, so a setup problem can be told apart)
       }
       this.busy = false; renderAccount(); renderSave();
+    },
+    redirectOnly() {
+      const standalone = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+      const inApp = /FBAN|FBAV|Instagram|Line\/|; wv\)|GSA\//.test(navigator.userAgent || "");
+      return standalone || inApp || !!window.Capacitor || (window.matchMedia && matchMedia("(pointer: coarse)").matches);
+    },
+    // back from a redirect sign-in (Backend.useFirebase caught the result): welcome them, or adopt an existing account
+    async finishRedirect() {
+      const R = Backend.redirect; if (!R) return; Backend.redirect = null;
+      const auth = this.auth(); if (!auth) return;
+      if (R.ok) { const g = this.user(); if (g && !profile.name && g.displayName) { profile.name = g.displayName.split(" ")[0].slice(0, 16); persist(); }
+        toast(`<b>${t("acct.signedIn")}</b> · your progress now follows you`); Sound.ui("claim"); renderAccount(); renderSave(); return; }
+      if (R.code === "auth/credential-already-in-use" && R.credential) { try { await auth.signInWithCredential(R.credential); await this.adopt(); } catch (e) { this.error = `${t("acct.failed")} (${(e && e.code) || "unknown"})`; renderAccount(); } return; }
+      if (R.code) { this.error = R.code === "auth/operation-not-allowed" ? t("acct.notEnabled", { who: "that" }) : R.code === "auth/unauthorized-domain" ? t("acct.domain") : `${t("acct.failed")} (${R.code})`; renderAccount(); }
     },
     // the account already had a save: this device's progress goes into it, then a clean start as that account
     async adopt() {
@@ -139,6 +160,7 @@
       btn.classList.toggle("out", on);
     }
     const note = $("accountNote");
+    if (location.protocol === "file:") { for (const btn of document.querySelectorAll(".google-btn, .link-btn")) btn.disabled = true; if (note) note.textContent = t("acct.fileCopy"); return; }   // (v53: a downloaded copy can't sign in: Firebase only allows its authorised web addresses)
     if (note) note.textContent = Account.error || (u ? t("acct.as", { who: u.email || u.displayName || "you" }) : ok ? t("acct.why") : Cloud.state === "connecting" ? t("acct.connecting") : t("acct.offline"));
   }
   document.addEventListener("click", e => {
