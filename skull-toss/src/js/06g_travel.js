@@ -95,9 +95,10 @@
   }
   function updateTravel(dt) {
     if (!TRAVEL.on) return;
-    const goal = travelGoal(), was = TRAVEL.D, step = TRAVEL.def.step;
-    if (goal > TRAVEL.lastGoal + 0.01 && goal - TRAVEL.lastGoal <= Math.max(step, CROSS.step) * 1.01) travelStepped(goal);
-    TRAVEL.lastGoal = goal; TRAVEL.goal = goal;
+    updateAnticipation(dt);   // (v51: a make on its way starts the world moving before it lands, 08k_feel.js)
+    const base = travelGoal(), goal = Math.max(base, anticipatedGoal()), was = TRAVEL.D, step = TRAVEL.def.step;
+    if (base > TRAVEL.lastGoal + 0.01 && base - TRAVEL.lastGoal <= Math.max(step, CROSS.step) * 1.01) travelStepped(base);
+    TRAVEL.lastGoal = base; TRAVEL.goal = goal;
     if (Math.abs(goal - TRAVEL.D) > Math.max(step, CROSS.step) * 2.5 || reduceMotion) TRAVEL.D = goal;   // a jump (a new run, a reload, a reduced-motion player): straight there
     else { TRAVEL.D += (goal - TRAVEL.D) * (1 - Math.exp(-dt * TRAVEL_EASE)); if (Math.abs(goal - TRAVEL.D) < 0.003) TRAVEL.D = goal; }
     const dD = TRAVEL.D - was; TRAVEL.v = dt > 0 ? dD / dt : 0;

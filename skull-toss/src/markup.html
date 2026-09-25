@@ -43,9 +43,11 @@
   <div class="rc-text"><p class="rc-k" id="rcK"></p><p class="rc-reel" id="rcReel"></p><h2 class="rc-t" id="rcTitle"></h2><p class="rc-s" id="rcSub"></p><p class="rc-n" id="rcNote"></p></div>
   <p class="rc-skip" data-t="ui.tap-to-skip">Tap to skip</p></div>
 
+<div class="plus-intro" id="plusIntro" hidden aria-hidden="true"><p class="pi-end">THE END</p><div class="pi-burn"></div><div class="pi-card"><p class="pi-k">Skull Toss</p><h2 class="pi-t">Adventure+</h2><p class="pi-s" data-t="ui.you-ve-done-this-before">"You've done this before."</p></div></div>
 <div class="splash" id="splash" hidden aria-hidden="true"><div class="splash-logo" id="splashLogo"></div></div>
 <section class="screen title" id="title">
   <div class="curtain left"></div><div class="curtain right"></div><div class="valance"></div><div class="footlights"></div>
+  <canvas class="intro-cv" id="introCv" hidden aria-hidden="true"></canvas>
   <div class="screen-top"><span></span><span class="bones" id="bonesTitle"><svg><use href="#i-bone"/></svg><span>0</span></span></div>
   <div class="col">
     <h1 class="logo" aria-label="Skull Toss"><span class="w1" aria-hidden="true"><i style="--i:0">S</i><i style="--i:1">K</i><i style="--i:2">U</i><i style="--i:3">L</i><i style="--i:4">L</i></span><span class="w2" aria-hidden="true"><i style="--i:5">T</i><span class="mascot" id="mascot" role="img" aria-label="Morty (poke him)" data-t-aria="ui.morty-poke-him"><canvas class="m-back" id="mascotBack"></canvas><canvas class="m-front" id="mascotFront"></canvas></span><i style="--i:7">S</i><i style="--i:8">S</i></span></h1>
@@ -172,6 +174,7 @@
   <div class="sheet-body">
     <div class="modes" id="modePick">
       <button class="mode-card story" type="button" data-mode="story"><span class="mode-ic"><svg><use href="#i-crow"/></svg></span><span class="mode-t"><span class="k" data-t="ui.story-mode">Adventure mode</span><b data-t="ui.story">Adventure</b><span class="mode-s" data-t="ui.eight-maps-a-mini-boss">Eight maps, a mini-boss and an end boss on each. Every end boss holds one of Morty's missing pieces: win them all back to end the reel.</span><span class="mode-best" id="storyBest"></span></span></button>
+      <button class="mode-card plus" type="button" id="plusCard" data-plus="1"><span class="mode-ic"><svg><use href="#i-skull"/></svg></span><span class="mode-t"><span class="k" data-t="ui.plus-mode">You've done this before</span><b data-t="ui.adventure-plus">Adventure+</b><span class="mode-s" data-t="ui.plus-sub">The same eight maps, gone wrong: a quicker ring that fakes you out, decoys, a crosswind, a skull that cracks, meaner bosses.</span><span class="mode-best" id="plusBest"></span></span></button>
       <button class="mode-card arcade" type="button" data-mode="arcade"><span class="mode-ic"><svg><use href="#i-retry"/></svg></span><span class="mode-t"><span class="k" data-t="ui.arcade-mode">Arcade mode</span><b data-t="ui.arcade">Arcade</b><span class="mode-s" data-t="ui.any-map-you-ve-reached">Any map you've reached in Adventure. No bosses, no end: the ring keeps speeding up. Survive as long as you can and beat your best.</span><span class="mode-best" id="arcadeBest"></span></span></button>
       <button class="mode-card minis" type="button" data-open="minis"><span class="mode-ic"><svg><use href="#i-star"/></svg></span><span class="mode-t"><span class="k" data-t="ui.mini-games-mode">Mini-games</span><b data-t="ui.mini-games">Mini Games</b><span class="mode-s" data-t="ui.minis-sub-8">Eight short, sharp, scored games: Curtain Call, Longshot, Target Gallery, Can Alley, Perfect Pitch, Sudden Death, Gale Force and Swing Time.</span><span class="mode-best" id="minisBest"></span></span></button>
       <p class="map-k" data-t="ui.more-ways-to-play">More ways to play</p>

@@ -190,16 +190,16 @@
   // the launcher, from its SVG asset (src/art/launcher). sx, sy: where the skull rests; r: the skull's radius there;
   // off: where the pouch is (the pull, or the twang); fy: the frame's jump after a shot; sq: how hard the pull
   // squeezes the fork. The bands are drawn here because they stretch, tip to pouch, between the asset's anchors.
-  function drawLauncher(sx, sy, r, off, fy = 0, sq = 0) {
-    if (LAUNCHERS[cos.launcher]) { drawFrameLauncher(sx, sy, r, off, fy, cos.launcher); return; }   // a launcher from the Vault (08i_body.js)
-    const A = ASSETS.launcher; if (!A) { drawSling(sx, sy, r, off, fy); return; }
+  function drawLauncher(sx, sy, r, off, fy = 0, sq = 0, c = ctx, L = cos, t = game.time) {   // (v51: any canvas, any look: the Vault draws it too)
+    if (LAUNCHERS[L.launcher]) { drawFrameLauncher(sx, sy, r, off, fy, L.launcher, c, L.band, t); return; }   // a launcher from the Vault (08i_body.js)
+    const A = ASSETS.launcher; if (!A) { drawSling(sx, sy, r, off, fy, c); return; }
     const M = A.meta, N = M.anchors, k = r / M.unit, [ax, ay] = N.seat, fx = k * (1 - sq), fyk = k * (1 + sq * 0.35);
     const onFrame = ([x, y]) => ({ x: sx + (x - ax) * fx, y: sy + fy + (y - ay) * fyk }), onPouch = ([x, y]) => ({ x: sx + off.x + (x - ax) * k, y: sy + off.y + (y - ay) * k });
-    const frame = layer => { ctx.save(); ctx.translate(sx, sy + fy); ctx.scale(fx, fyk); ctx.translate(-ax, -ay); drawLayer(ctx, "launcher", layer); ctx.restore(); };
-    const pouch = layer => { ctx.save(); ctx.translate(sx + off.x, sy + off.y); ctx.scale(k, k); ctx.translate(-ax, -ay); drawLayer(ctx, "launcher", layer); ctx.restore(); };
+    const frame = layer => { c.save(); c.translate(sx, sy + fy); c.scale(fx, fyk); c.translate(-ax, -ay); drawLayer(c, "launcher", layer); c.restore(); };
+    const pouch = layer => { c.save(); c.translate(sx + off.x, sy + off.y); c.scale(k, k); c.translate(-ax, -ay); drawLayer(c, "launcher", layer); c.restore(); };
     frame("shadow"); frame("frame");
     const tl = onFrame(N.bandL), tr = onFrame(N.bandR), pl = onPouch(N.pouchL), pr = onPouch(N.pouchR), B = M.bands;
-    drawBands(ctx, [[tl, pl], [tr, pr]], Math.max(3.5, B.width * k), Math.max(1.8, B.core * k), B, cos.band, game.time);
+    drawBands(c, [[tl, pl], [tr, pr]], Math.max(3.5, B.width * k), Math.max(1.8, B.core * k), B, L.band, t);
     frame("tips"); pouch("pouch");
   }
   // the band's look (the Vault's Bands, v29): colours, a stripe, a shine, a glow, or barbs along it
@@ -242,19 +242,19 @@
     ctx.beginPath(); ctx.arc(x, y, R, 0, TAU); ctx.stroke(); ctx.restore();
   }
   // a wooden slingshot, inked, with a leather pouch: the coded stand-in when there's no launcher asset
-  function drawSling(sx, sy, r, off, fy = 0) {
+  function drawSling(sx, sy, r, off, fy = 0, c = ctx) {
     const kx = sx + off.x, ky = sy + off.y; sy += fy;
     const aL = { x: sx - r * 1.6, y: sy - r * 0.15 }, aR = { x: sx + r * 1.6, y: sy - r * 0.15 }, fork = { x: sx, y: sy + r * 1.35 };
-    ctx.lineCap = "round"; ctx.lineJoin = "round";
-    const wood = w => { ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(sx, sy + r * 2.8); ctx.lineTo(fork.x, fork.y); ctx.lineTo(aL.x, aL.y); ctx.moveTo(fork.x, fork.y); ctx.lineTo(aR.x, aR.y); ctx.stroke(); };
-    ctx.strokeStyle = INK; wood(Math.max(6, r * 0.34)); ctx.strokeStyle = "#7A5230"; wood(Math.max(3.5, r * 0.22));
-    ctx.strokeStyle = "rgba(242,231,201,.25)"; ctx.lineWidth = Math.max(1, r * 0.05); ctx.beginPath(); ctx.moveTo(sx - r * 0.05, sy + r * 2.7); ctx.lineTo(fork.x - r * 0.05, fork.y); ctx.lineTo(aL.x + 1, aL.y); ctx.stroke();
-    const band = w => { ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(aL.x, aL.y); ctx.lineTo(kx - r * 0.8, ky + r * 0.35); ctx.moveTo(aR.x, aR.y); ctx.lineTo(kx + r * 0.8, ky + r * 0.35); ctx.stroke(); };
-    ctx.strokeStyle = INK; band(Math.max(3.5, r * 0.16)); ctx.strokeStyle = RED; band(Math.max(1.8, r * 0.08));
-    ctx.fillStyle = "#5A3A22"; ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1.5, r * 0.07);
-    ctx.beginPath(); ctx.ellipse(kx, ky + r * 0.72, r * 0.85, r * 0.3, 0, 0, TAU); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = CREAM; for (const a of [aL, aR]) { ctx.beginPath(); ctx.arc(a.x, a.y, Math.max(2.5, r * 0.11), 0, TAU); ctx.fill(); ctx.stroke(); }
-    ctx.lineCap = "butt";
+    c.lineCap = "round"; c.lineJoin = "round";
+    const wood = w => { c.lineWidth = w; c.beginPath(); c.moveTo(sx, sy + r * 2.8); c.lineTo(fork.x, fork.y); c.lineTo(aL.x, aL.y); c.moveTo(fork.x, fork.y); c.lineTo(aR.x, aR.y); c.stroke(); };
+    c.strokeStyle = INK; wood(Math.max(6, r * 0.34)); c.strokeStyle = "#7A5230"; wood(Math.max(3.5, r * 0.22));
+    c.strokeStyle = "rgba(242,231,201,.25)"; c.lineWidth = Math.max(1, r * 0.05); c.beginPath(); c.moveTo(sx - r * 0.05, sy + r * 2.7); c.lineTo(fork.x - r * 0.05, fork.y); c.lineTo(aL.x + 1, aL.y); c.stroke();
+    const band = w => { c.lineWidth = w; c.beginPath(); c.moveTo(aL.x, aL.y); c.lineTo(kx - r * 0.8, ky + r * 0.35); c.moveTo(aR.x, aR.y); c.lineTo(kx + r * 0.8, ky + r * 0.35); c.stroke(); };
+    c.strokeStyle = INK; band(Math.max(3.5, r * 0.16)); c.strokeStyle = RED; band(Math.max(1.8, r * 0.08));
+    c.fillStyle = "#5A3A22"; c.strokeStyle = INK; c.lineWidth = Math.max(1.5, r * 0.07);
+    c.beginPath(); c.ellipse(kx, ky + r * 0.72, r * 0.85, r * 0.3, 0, 0, TAU); c.fill(); c.stroke();
+    c.fillStyle = CREAM; for (const a of [aL, aR]) { c.beginPath(); c.arc(a.x, a.y, Math.max(2.5, r * 0.11), 0, TAU); c.fill(); c.stroke(); }
+    c.lineCap = "butt";
   }
   function drawPower(x, y, r, p) {
     const R = r * 1.55, end = -Math.PI / 2 + TAU * Math.max(0.02, p);
@@ -340,6 +340,7 @@
     drawSkyLife();
     drawGroundPlane(ctx, groundLayer);
     if (midLayer) L(midLayer, 30, "world");
+    drawWaterReflections(); drawRipples(); baseXform(ctx);   // (v51: what stands over the water, mirrored in it, and its ripples: 08l_water.js)
     drawGroundWorld();
     drawTravelTone();   // the travel zone's colour (06g_travel.js)
     const tint = game.state !== "title" && stageDef().tint;   // each map's colour grade, washed over the graveyard (not the ring or the skull)
@@ -361,9 +362,10 @@
     const flying = game.state === "flying" || (game.state === "over" && skull.flightTime > 0);
     const behind = flying && skull.pos.z > ring.z;
     const pv = aim.active && aim.valid && game.state === "ready" ? buildPreview(aim.AX, aim.AY, settings.guide) : null;
+    drawGhostShot();   // (v51: the last miss, faint, 08k_feel.js)
     if (pv) drawDots(pv.back, true);
     if (flying && behind) drawFlyingSkull();
-    if (onStage) { drawRing(); drawPickup(); }
+    if (onStage) { drawDecoys(); drawRing(); drawPickup(); }   // (v51: Adventure+'s decoy rings, behind the real one)
     if (boss) boss.draw(true);
     drawSeeds(true); drawTargets(true); drawObstacles(true); drawHazards(true);
     drawImpactStars(ctx, false);   // contact stars: over the ring they hit, behind the skull that hit it
@@ -406,9 +408,12 @@
     }
     ctx.globalAlpha = 1;
     drawBursts();
+    drawDeathFX();   // (v51: a boss's final gag and its colour's pulse, 07r_bossdeath.js)
+    drawPlusPrint();   // (v51: Adventure+'s damaged print)
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     const fa = flashAlpha();
     if (fa > 0) { ctx.fillStyle = `rgba(242,231,201,${fa * 0.2})`; ctx.fillRect(0, 0, W, H); }
     drawBodyShow();   // his body section coming home, over everything (07p_body.js)
     if (visualsOn()) drawVisualDebug();
+    drawCollisionDebug();   // (v51: ?collisions, 08l_water.js)
   }

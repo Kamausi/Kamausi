@@ -79,10 +79,17 @@
     const w = r.width, h = r.height, S = h * 1.6, look = previewLook(), kind = shop.cat, V = vault, R = V.R;
     cv.parentElement.dataset.reel = look.reel;
     const onStand = kind === "ring" || kind === "aim" || kind === "pole" || kind === "ringwings", flying = kind === "trail";
+    const inSling = kind === "launcher" || kind === "band";   // (v51: launchers and bands: Morty sits in the launcher, drawn back and let off gently)
     const hs = Math.min(h, w * 0.95);   // (sizes follow the smaller side, so the tall try-on stage never crops the stand)
     const sr = hs * (onStand ? 0.16 : 0.23), px = onStand ? w * 0.26 : w / 2, floor = h - h * 0.2 - sr * (SKULL_BOTTOM + 0.04);
     // pedestal
-    if (!flying) {
+    if (inSling) {
+      const ss = hs * 0.19, sx = w / 2, sy = h * 0.3, pull = Math.max(0, Math.sin(T * 1.3)) ** 2, off = { x: Math.sin(T * 0.7) * ss * 0.25 * pull, y: ss * 0.9 * pull };
+      V.y = 0; V.vy = 0; V.trail.length = 0; setMood(R, pull > 0.6 ? "excited" : "idle", T); const f = faceFor(R.mood, T, { ly: -0.2 }); R.jawT = f.jawT; stepRig(R, dt);
+      drawLauncher(sx, sy, ss, off, 0, 0, c, look, T);
+      drawAura(c, sx + off.x, sy + off.y, ss, T, false, look.aura); drawSkull(c, sx + off.x, sy + off.y, ss, { t: T, look, face: f, jaw: R.jaw, a: 1 - pull * 0.08 }); drawAura(c, sx + off.x, sy + off.y, ss, T, true, look.aura);
+      drawHat(c, sx + off.x, sy + off.y, ss, 0, T, null, 1, hatOf(look));
+    } else if (!flying) {
       const pw = sr * 1.7, ph = h * 0.2, py = h - ph;
       c.fillStyle = INK; c.fillRect(px - pw / 2 - 2, py - 2, pw + 4, ph + 4);
       c.fillStyle = PAPER; c.fillRect(px - pw / 2, py, pw, ph); c.fillStyle = "rgba(23,19,15,.15)"; c.fillRect(px + pw * 0.2, py, pw * 0.3, ph);
@@ -95,7 +102,7 @@
       const TT = TRAILS[look.trail]; if (TT.emit && Math.random() < TT.rate * dt * 60) spawnBit(TT.emit, x, y, rr2, V.parts);
       const dir = Math.atan2(Math.cos(q * 2) * 2 * h * 0.2, -Math.sin(q) * w * 0.33);
       drawAura(c, x, y, rr2, T, false, look.aura); drawSkull(c, x, y, rr2, { ang: V.loop * 2.2, a: 1.12, dir, t: T, look, face: faceFor("fear", T), jaw: 0.55 }); drawAura(c, x, y, rr2, T, true, look.aura); drawHat(c, x, y, rr2, V.loop * 2.2, T, null, 1, look.hat, 1.12, dir);
-    } else {
+    } else if (!inSling) {
       V.trail.length = 0;
       V.vy += 2400 * dt; V.y += V.vy * dt;
       if (V.y >= 0) { if (V.vy > 160) { kick(R, clamp(1 - V.vy / 1300, 0.45, 0.85), 0, Math.PI / 2, 280, 7); if (kind === "impact") { const I = IMPACTS[look.impact]; V.side = -(V.side || 1); const bx = px + V.side * sr * 1.75; V.bursts.push(makeBurst(I.word, bx, floor - sr * 0.55, I, { scale: 0.8 }, S)); flourish(I.bits, px, floor + sr * 0.6, 0.7, V.parts, S * 0.6); } } V.y = 0; V.vy = V.vy > 160 ? -V.vy * 0.25 : 0; }

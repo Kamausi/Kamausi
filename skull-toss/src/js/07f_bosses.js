@@ -67,8 +67,9 @@
       return { at: t => { const S = B.seg, n = C.spots.length; let i = S.i, t0 = S.t0; const len = S.hold + S.tell + S.move; while (t >= t0 + len) { t0 += len; i++; }
           const A = C.spots[i % n], P = C.spots[(i + 1) % n], u = t - t0; let q = lerp3(A, A, 0), tell = 0;
           if (u > S.hold + S.tell) { const k = smooth((u - S.hold - S.tell) / S.move); q = lerp3(A, P, k); q.y -= Math.sin(k * Math.PI) * 0.35; }
-          else if (u > S.hold) { tell = (u - S.hold) / S.tell; q.y -= 0.12 * Math.sin(tell * Math.PI); } else q.y += Math.sin(t * 5) * 0.05;
-          return { ...q, tell, leg: i }; },
+          else if (u > S.hold) { tell = (u - S.hold) / S.tell; q.y -= 0.12 * Math.sin(tell * Math.PI); }
+          const hv = B.def.hang ? ringHover(t, tell) : { x: 0, y: Math.sin(t * 5) * 0.05 * (u <= S.hold ? 1 : 0) };   // (v51: a flyer's ring bobs under it with its wingbeats)
+          return { x: q.x + hv.x, y: q.y + hv.y, z: q.z, ax: q.x, ay: q.y, az: q.z, tell, leg: i }; },
         update: () => { const S = B.seg, len = S.hold + S.tell + S.move; if (!B.dead && B.t >= S.t0 + len) B.seg = { i: S.i + 1, t0: S.t0 + len, ...plan() }; } };
     },
     loop(B, C) {   // round and round a set of points, smooth (the Pumpkin King's vine)
@@ -215,10 +216,10 @@
   // ── the mini-bosses
   function drawBatBaron(B, front) {
     const q = B.pathAt(B.t), dying = B.dead ? B.t - B.deadAt : 0, hang = B.def.hang;
-    const P = B.dead ? { x: B.frozen.x + dying, y: B.frozen.y + hang + dying * 2 - dying * dying * 6, z: B.frozen.z, rot: dying * 9 } : { x: q.x, y: q.y + hang, z: q.z };
+    const P = B.dead ? { x: B.frozen.x + dying, y: B.frozen.y + hang + dying * 2 - dying * dying * 6, z: B.frozen.z, rot: dying * 9 } : { x: q.ax == null ? q.x : q.ax, y: (q.ay == null ? q.y : q.ay) + hang, z: q.az == null ? q.z : q.az };
     if (!sideOK(P.z, front)) return;
     if (!B.dead) rope(P, ringTopOf(q), "#E3B64B", 0.02, 0);
-    const flap = B.dead ? 1 : Math.sin(bt(B) * (q.tell ? 26 : 15)), tell = q.tell || 0;
+    const flap = B.dead ? 1 : wingFlap(bt(B), q.tell), tell = q.tell || 0;   // (v51: the same beat the ring bobs to)
     withBody(B, { ...P, alpha: 1 }, c => {
       for (const sd of [-1, 1]) { c.save(); c.scale(sd, 1); c.rotate(-0.25 - flap * 0.35); c.beginPath(); c.moveTo(0.2, -0.1);
         c.quadraticCurveTo(0.7, -0.75, 1.3, -0.55); c.quadraticCurveTo(1.15, -0.25, 1.2, -0.05); c.quadraticCurveTo(0.95, -0.2, 0.85, 0.08); c.quadraticCurveTo(0.6, -0.1, 0.5, 0.15); c.quadraticCurveTo(0.35, 0.0, 0.2, 0.15); c.closePath(); inkF(c, "#3A2A4A"); c.restore(); }
@@ -233,7 +234,7 @@
   }
   function drawOwl(B, front) {
     const q = B.pathAt(B.t), dying = B.dead ? B.t - B.deadAt : 0, hang = B.def.hang;
-    const P = B.dead ? { x: B.frozen.x - dying, y: B.frozen.y + hang + dying * 2 - dying * dying * 6, z: B.frozen.z, rot: -dying * 8 } : { x: q.x, y: q.y + hang, z: q.z };
+    const P = B.dead ? { x: B.frozen.x - dying, y: B.frozen.y + hang + dying * 2 - dying * dying * 6, z: B.frozen.z, rot: -dying * 8 } : { x: q.ax == null ? q.x : q.ax, y: (q.ay == null ? q.y : q.ay) + hang, z: q.az == null ? q.z : q.az };
     if (!sideOK(P.z, front)) return;
     if (!B.dead) for (const sd of [-1, 1]) rope({ x: P.x + sd * 0.15, y: P.y - 0.3, z: P.z }, { x: q.x + sd * 0.25, y: q.y + ring.rc * 0.9, z: q.z }, "#E4DAC4", 0.03, 0);
     const hoot = q.tell ? Math.sin(q.tell * Math.PI * 2) : 0;

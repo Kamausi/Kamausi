@@ -170,3 +170,31 @@
 .results #bestLine{margin-top:-6px;font-size:18px}
 .res-bones{gap:5px;padding:3px 8px 2px;margin:-1px -2px 4px 10px;border-width:2px;font-size:0.8em}
 .res-bones b{font-size:18px}.res-bones svg{width:15px;height:15px}.res-bones > span{font-size:10px}
+/* v51: the curtains are pulled, not slid: each one pivots from its top outer corner as it goes out to the side,
+   bunches at its inner edge, overshoots and settles; closed, the fabric stirs a little. The title stands in front. */
+.title{--strip:clamp(16px,7vw,130px)}
+.curtain{width:51%;background:none;border:0;transition:none;transform-origin:top left;filter:drop-shadow(3px 0 0 var(--ink)) drop-shadow(0 8px 12px rgba(0,0,0,.45));will-change:transform}
+.curtain::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.35),transparent 30%,rgba(0,0,0,.25) 55%,transparent 70%,rgba(0,0,0,.35)) 0 0/34px 100%,linear-gradient(var(--red-d),#5E1F18)}
+.curtain.left{left:0;transform:translateX(calc(-100% + var(--strip))) rotate(-1.5deg)}
+.curtain.right{right:0;transform-origin:top right;transform:translateX(calc(100% - var(--strip))) rotate(1.5deg);filter:drop-shadow(-3px 0 0 var(--ink)) drop-shadow(0 8px 12px rgba(0,0,0,.45))}
+.curtain.left::before{clip-path:polygon(0 0,100% 0,calc(100% - 6px) 18%,100% 36%,calc(100% - 9px) 55%,calc(100% - 2px) 72%,calc(100% - 12px) 88%,calc(100% - 5px) 100%,0 100%)}
+.curtain.right::before{clip-path:polygon(0 0,100% 0,100% 100%,5px 100%,12px 88%,2px 72%,9px 55%,0 36%,6px 18%)}
+.title.closed .curtain.left,.title.closed .curtain.right{transform:none}
+.title.closed .curtain.left::before{clip-path:polygon(0 0,100% 0,100% 18%,100% 36%,100% 55%,100% 72%,100% 88%,100% 100%,0 100%);animation:stir 3.4s ease-in-out infinite alternate}
+.title.closed .curtain.right::before{clip-path:polygon(0 0,100% 0,100% 100%,0 100%,0 88%,0 72%,0 55%,0 36%,0 18%);animation:stir 3.1s ease-in-out infinite alternate-reverse}
+@keyframes stir{0%{transform:skewX(0) scaleY(1)}100%{transform:skewX(.6deg) scaleY(1.004)}}
+.title.opening .curtain.left{animation:pullL 1.8s cubic-bezier(.5,0,.3,1) forwards}
+.title.opening .curtain.right{animation:pullR 1.8s cubic-bezier(.5,0,.3,1) forwards}
+.title.opening .curtain.left::before{animation:bunchL 1.8s ease-out forwards}
+.title.opening .curtain.right::before{animation:bunchR 1.8s ease-out forwards}
+@keyframes pullL{0%{transform:none}10%{transform:translateX(1.5%) translateY(0) rotate(.8deg)}60%{transform:translateX(calc(-100% + var(--strip) - 3%)) translateY(-.6%) rotate(-12deg)}80%{transform:translateX(calc(-100% + var(--strip))) rotate(1deg)}92%{transform:translateX(calc(-100% + var(--strip))) rotate(-2.4deg)}100%{transform:translateX(calc(-100% + var(--strip))) rotate(-1.5deg)}}
+@keyframes pullR{0%{transform:none}10%{transform:translateX(-1.5%) translateY(0) rotate(-.8deg)}60%{transform:translateX(calc(100% - var(--strip) + 3%)) translateY(-.6%) rotate(12deg)}80%{transform:translateX(calc(100% - var(--strip))) rotate(-1deg)}92%{transform:translateX(calc(100% - var(--strip))) rotate(2.4deg)}100%{transform:translateX(calc(100% - var(--strip))) rotate(1.5deg)}}
+@keyframes bunchL{0%{clip-path:polygon(0 0,100% 0,100% 18%,100% 36%,100% 55%,100% 72%,100% 88%,100% 100%,0 100%)}55%{clip-path:polygon(0 0,100% 0,calc(100% - 14px) 18%,100% 36%,calc(100% - 20px) 55%,calc(100% - 4px) 72%,calc(100% - 26px) 88%,calc(100% - 10px) 100%,0 100%)}100%{clip-path:polygon(0 0,100% 0,calc(100% - 6px) 18%,100% 36%,calc(100% - 9px) 55%,calc(100% - 2px) 72%,calc(100% - 12px) 88%,calc(100% - 5px) 100%,0 100%)}}
+@keyframes bunchR{0%{clip-path:polygon(0 0,100% 0,100% 100%,0 100%,0 88%,0 72%,0 55%,0 36%,0 18%)}55%{clip-path:polygon(0 0,100% 0,100% 100%,10px 100%,26px 88%,4px 72%,20px 55%,0 36%,14px 18%)}100%{clip-path:polygon(0 0,100% 0,100% 100%,5px 100%,12px 88%,2px 72%,9px 55%,0 36%,6px 18%)}}
+/* the dark, the spotlights and the lettering they find; the buttons stay live under it all */
+.intro-cv{position:absolute;inset:0;width:100%;height:100%;z-index:5;pointer-events:none}
+.title.closed .col,.title.closed .screen-top{opacity:1}
+.title.dim .col{transition:none}
+.title .logo{transition:filter .5s ease}
+.title.lit .logo{filter:brightness(1.18) drop-shadow(0 0 18px rgba(255,220,150,.55))}
+@media (prefers-reduced-motion:reduce){.title.opening .curtain,.title.opening .curtain::before,.title.closed .curtain::before{animation:none}}

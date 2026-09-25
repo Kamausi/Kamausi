@@ -2536,6 +2536,47 @@
     T.closeSheet();
     T.openSheet("profile"); assert(document.querySelector("#sheet-profile .google-btn"), "and on the Profile"); T.closeSheet();
   });
+  test("v51 throw feel: a miss leaves a ghost trail (and a cross if it went close) until a make wipes it", () => {
+    T.setStats(ZERO); fresh(); T.calm(); throwAndSettle(2.5, C.RING_Y);
+    const F = T.feel(); assert(F.ghost > 5 && T.state().lastResult !== undefined, `a miss leaves its path (${F.ghost})`);
+    throwAndSettle(0, C.RING_Y); assert(T.feel().ghost === 0, "a make wipes it");
+    T.toTitle(); T.setStats(ZERO);
+  });
+  test("v51 the world starts moving on a predicted make, and doesn't on a predicted miss", () => {
+    T.setStats(ZERO); fresh(); T.calm(); T.step(0.1); const tr0 = T.travel(); if (!tr0.on) { T.toTitle(); return; }
+    assert(T.throwAt(0, C.RING_Y), "throw"); T.step(0.12);
+    const a = T.feel().antic; assert(a.predicted && a.k > 0, `a make on its way is foreseen (${JSON.stringify(a)})`);
+    const g = T.travel().goal; assert(g > tr0.goal, `and the world leads off before it lands (${g} > ${tr0.goal})`);
+    T.step(3); T.freezeRing(0, C.RING_Y);
+    assert(T.throwAt(2.5, C.RING_Y), "throw"); T.step(0.12); assert(!T.feel().antic.predicted, "a miss isn't");
+    T.step(3); T.toTitle(); T.setStats(ZERO);
+  });
+  test("v51 the Crow King keeps to his path while the ring bobs under him with his wingbeats", () => {
+    T.setStats(ZERO); fresh(); toHit(C.STAGE_MINI); T.step(2.6);
+    const B = T.boss(); assert(B && B.kind === "crow", "the Crow King"); const t = 2.0;   // (a moment in his first perch)
+    const qs = [0, 0.05, 0.1, 0.15].map(d => T.bossPath(t + d)), same = qs.every(q => Math.abs(q.ay - qs[0].ay) < 1e-6 || q.tell), bobs = new Set(qs.map(q => (q.y - q.ay).toFixed(3))).size > 1;
+    assert(same && bobs && qs.every(q => Math.abs(q.y - q.ay) <= 0.036), `body steady, ring bobbing (${qs.map(q => (q.y - q.ay).toFixed(3))})`);
+    T.toTitle(); T.setStats(ZERO);
+  });
+  test("v51 boss deaths: every boss has its own archetype, word and gag; a knockout plays it, then the gag drops", () => {
+    const D = T.deathTable(), ARCH = ["collapse", "launch", "deflate", "spinout", "accordion", "shatter", "smoke", "dropout", "target", "cinematic"];
+    assert(Object.keys(D).length === 16 && Object.values(D).every(d => ARCH.includes(d[0]) && d[3].length > 2), "sixteen, each with an archetype and a word");
+    assert(new Set(Object.values(D).map(d => d[0])).size >= 9, "and they don't all go the same way");
+    T.setStats(ZERO); fresh(); toHit(C.STAGE_MINI); T.step(2.6); T.hurtBoss(99);
+    const X = T.death(); assert(X && X.arch === "spinout" && X.word === "PLUCKED!" && X.gag === "crown", JSON.stringify(X));
+    T.step(1.6); assert(T.gags().includes("crown"), `the crown falls, after the hit-stop and the spin-out (${T.gags()})`);
+    T.toTitle(); T.setStats(ZERO);
+  });
+  test("v51 Adventure+: opens after the Adventure; a smaller, quicker ring, decoys from map 3, a crosswind from map 2, and a cracked skull costs two", () => {
+    T.setStats(ZERO); T.toTitle(); assert(!T.plus().open, "shut until the Adventure's finished");
+    T.openSheet("play"); assert($("plusCard").classList.contains("locked"), "its card says so"); T.closeSheet();
+    T.start(); T.calm(); T.setHits(5); T.step(0.2); const normal = T.plus();
+    T.setStats({ ...ZERO, storyClears: 1 }); T.startPlus(); T.calm(); T.setHits(5); T.step(0.2); const P = T.plus();
+    assert(P.on && P.open && P.k === 1.25 && P.rc < normal.rc && P.omega > normal.omega, `harder on map 1 (${JSON.stringify(P)} vs ${JSON.stringify(normal)})`);
+    T.setStage(3); T.startPlus(); T.setStage(3); assert(T.plus().k > 1.4, "harder on later maps");
+    T.setStats({ ...ZERO, storyClears: 1 }); T.startPlus(); T.setStage(2); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); assert(T.plus().wind !== 0, `a crosswind from map 2 (${T.plus().wind})`);
+    T.toTitle(); T.setStats(ZERO);
+  });
   test("v50 Vault: 21 shelves in three rows of seven (masks among them); a slot is picked and worn, only Save look saves", () => {
     T.setStats({ ...ZERO, unlocked: ["mask:paperbag"] }); T.toTitle(); T.openSheet("customize");
     const tabs = [...document.querySelectorAll("#catTabs [data-cat]")]; assert(tabs.length === 21 && getComputedStyle($("catTabs")).gridTemplateColumns.split(" ").length === 7, `21 shelves, seven across (${tabs.length})`);
@@ -2671,6 +2712,21 @@
     X = T.crossing(); assert(X.n === 10 && X.makes === 9 && Math.abs(X.goal) < 0.01, `ten throws, and the road arrives (${JSON.stringify(X)})`);
     T.step(3); s = T.state(); assert(s.stage === 2 && s.phase === "A" && s.stageHits === 0 && !T.crossing().on && T.profile().crossings === 1 && !T.profile().cleanCrossings, `then map 2 itself (${JSON.stringify(s).slice(0, 160)})`);
     T.crossings(false); T.toTitle(); T.setStats(ZERO);
+  });
+  test("v51 save corruption: any garbage in comes out a sound profile; broken save codes are refused", () => {
+    const bad = [{}, null, [], "garbage", 42, { bones: NaN, bestScore: Infinity, makes: -5, name: "x".repeat(400), unlocked: ["skull:bone", "skull:bone", "nope:nope", 7, null], seen: "no", bio: { a: 1 } },
+      { bones: 1e300, xp: "9999", achievements: [1, 2, 3], history: "x", fragments: [{}], mastery: null, modes: [], pic: { face: "<script>", frame: 9 }, name: "Mört 💀 \u0000\u202e" }];
+    for (const b of bad) {
+      const P = T.cleanProfile(b); assert(P && typeof P === "object", `a profile from ${JSON.stringify(b)}`);
+      for (const k of ["bones", "bestScore", "makes", "xp"]) assert(Number.isFinite(P[k]) && P[k] >= 0, `${k} is a sane number (${P[k]})`);
+      assert(Array.isArray(P.unlocked) && new Set(P.unlocked).size === P.unlocked.length && P.unlocked.every(k => typeof k === "string"), "unlocked: strings, once each");
+      assert(typeof P.name === "string" && P.name.length <= 16 && !/[\u0000-\u001f\u202e]/.test(P.name), `a short, clean name (${JSON.stringify(P.name)})`);
+      assert(Array.isArray(P.history) && Array.isArray(P.fragments) && typeof P.modes === "object" && !Array.isArray(P.modes), "the lists and maps are the right shape");
+    }
+    for (const code of ["", "SKULL1.", "SKULL1.!!!!", "SKULL0.abc", "garbage", "SKULL1." + btoa("{not json")]) assert(!T.importCode(code), `refused: ${code.slice(0, 20)}`);
+  });
+  test("v51 the run's state machine: nothing so far has moved it a way it doesn't know", () => {
+    const W = window.SkullToss.debug.warnings().filter(w => w.cat === "STATE"); assert(!W.length, W.map(w => w.msg).join(" | "));
   });
   test("v47 GPU layer: sparks, light and glow on a WebGL canvas screen-blended over the game; Off hides it, and with no WebGL the game plays on", () => {
     T.setSetting("gpu", "full"); fresh(); T.calm(); T.gpuFrame(1 / 60); let G = T.gpu();

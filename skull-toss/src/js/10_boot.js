@@ -22,7 +22,7 @@
     let dt = real;
     if (!manual) { pollPad(); if (game.slowmo > 0 && !paused) { game.slowmo -= dt; dt *= 0.3; } advance(dt * (Replay.play ? Replay.speed : 1)); }
     if (aim.active && !paused) Sound.pull(aim.tension);
-    VisualSystem.render(); gpuFrame(real); drawUI(ts);   // (the GPU layer goes on over the picture: 08j_gpu.js)
+    if (!plusPrintHold(real)) VisualSystem.render(); gpuFrame(real); drawUI(ts);   // (v51: in Adventure+ a frame sticks in the gate now and then)   // (the GPU layer goes on over the picture: 08j_gpu.js)
     if (visualsOn()) visualTick(raw, performance.now() - t0);
     requestAnimationFrame(frame);
   }
@@ -32,7 +32,7 @@
   // v45: on launch, the studio's logo on black (src/art/logo/logo.png when there is one), then the title with its curtains
   // closed, and they open on the title and the menu. (Not under automation: the spec and the QA tools start straight in.)
   // v45: the studio's logo on a black screen (it fades in, holds, and fades out), then the black fades away on the
-  // title with its red curtains closed, and they open on the lettering and the buttons. A tap skips ahead.
+  // title with its red curtains closed. v51: two spotlights find the lettering, then the curtains are pulled open.
   function openingCurtains() {
     const sp = $("splash"), T = $("title"), fast = reduceMotion;
     if (navigator.webdriver || /[?&]test\b/.test(location.search)) return;
@@ -41,7 +41,8 @@
     sp.hidden = false; sp.classList.remove("out", "done");
     const timers = [], at = (ms, fn) => timers.push(setTimeout(fn, ms));
     let over = false;
-    const open = () => { if (over) return; over = true; timers.forEach(clearTimeout); sp.classList.add("done", "out"); setTimeout(() => { sp.hidden = true; }, 1300); setTimeout(() => { T.classList.remove("closed"); Sound.ui("claim"); }, fast ? 80 : 1100); };
+    // v51: the black lifts on the title in the dark, curtains closed, and the spotlights find it (09q_intro.js)
+    const open = () => { if (over) return; over = true; timers.forEach(clearTimeout); sp.classList.add("done", "out"); setTimeout(() => { sp.hidden = true; }, 1300); playIntro(); };
     at(fast ? 1000 : 3500, () => sp.classList.add("done"));   // (v49: slower) the logo holds, then fades out; the screen stays black a beat
     at(fast ? 1300 : 4600, open);                              // then the black lifts on the closed curtains, and they glide open
     sp.addEventListener("pointerdown", open, { once: true });
@@ -60,6 +61,8 @@
   window.SkullToss = {
     debug: {
       visuals,
+      collisions: (on = !COLL.on) => (COLL.on = !!on),   // (v51: the collision view, colour-coded: 08l_water.js)
+      warnings: () => Debug.log.slice(),                  // (v51: what the game shrugged off, by category: 00_debug.js)
       // the animation side under the names the plan uses: the pose library, the FX recipes and their timeline
       visualAnimation: {
         poseLibrary: () => Object.keys(POSES), pose: () => VPOSE.id, samplePose: (id, t = 0) => { const f = poseFace(id, t); return { ...POSES[id], mood: f.mood, glyph: f.glyph, jaw: f.jawT }; },

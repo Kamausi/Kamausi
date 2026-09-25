@@ -13,7 +13,7 @@
 
   // ───────────────────────── DOM ─────────────────────────
   const cvs = document.getElementById("stage");
-  const ctx = cvs.getContext("2d");
+  let ctx = cvs.getContext("2d");   // (let: v51's water draws its reflections through the same drawing code into its own layer, 08l_water.js)
   const $ = id => document.getElementById(id);
   const hud = $("hud"), scoreEl = $("score"), hitsEl = $("hits"), livesEl = $("lives"), bestEl = $("best"), hintEl = $("hint");
   const comboEl = $("combo"), comboN = $("comboN"), comboWordEl = $("comboWord");
@@ -39,6 +39,13 @@
   const game = { state: "title", mode: "story", map: 0, score: 0, hits: 0, stage: 1, stageHits: 0, phase: "A", cine: null, freeze: 0,
     lives: START_LIVES, slots: START_LIVES, streak: 0, perfStreak: 0, peakLives: START_LIVES, throws: 0,
     time: 0, endTimer: 0, overAt: 0, result: null, lastCross: null, newBest: false, shake: 0, slowmo: 0, run: freshRun() };
+  // v51: the run's state is a small machine with known ways between its states. A move it doesn't know (a skull thrown
+  // from the title, a continue offered after the game's over) is noted (Debug.warn "STATE"), never thrown: the
+  // spec and the soak bot read the notes, and a player never sees them.
+  const STATE_NEXT = { title: ["ready", "cine"], ready: ["flying", "cine", "over", "title", "continue"], flying: ["ready", "over", "cine", "continue", "title"],
+    cine: ["ready", "over", "title", "continue"], continue: ["ready", "over", "title", "cine"], over: ["title", "ready", "cine"] };
+  { let st = game.state; Object.defineProperty(game, "state", { enumerable: true, configurable: true, get: () => st,
+      set: v => { if (v !== st && !(STATE_NEXT[st] || []).includes(v)) Debug.warn("STATE", `${st} → ${v}`, "a move the run's state machine doesn't know"); st = v; } }); }
   const ring = { phase: 0, amp: 0.55, omega: 0.6, rc: RC_START, bob: 0, x: 0, y: RING_Y, z: RING_Z, wobble: 0, flash: 0, frozen: null,
     mode: "line", tri: { a: 1.25, seq: [0, 1, 2] }, glide: null };
   let boss = null;           // the Crow King or the Pumpkin King, while one is on stage

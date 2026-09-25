@@ -14,7 +14,7 @@
     owns(key) { return !!this.wallet && this.wallet.owned.includes(key); },
     available() { return Backend.hasFunctions() && !Flags.on("kill.souls"); },   // (a kill switch can close the shop: 03d_flags.js)
     async connect() {
-      if (this.unsub) { try { this.unsub(); } catch (e) {} this.unsub = null; }
+      if (this.unsub) { try { this.unsub(); } catch (e) { Debug.warn("ECONOMY", e, "09m_souls:17"); } this.unsub = null; }
       if (!Backend.hasFunctions()) {   // no server at all: nothing can be Soul-bound, so no Soul look stays on
         this.state = "off"; this.wallet = null;
         for (const k of KINDS) { const it = findItem(k, cos[k]); if (it && it.souls) cos[k] = DEFAULT_COS[k]; }

@@ -31,8 +31,8 @@
     // a buzz: the shell's haptic engine where there is one (iOS has no navigator.vibrate), else the browser's
     haptic(ms) {
       const H = this.plugin("Haptics");
-      if (H) { const n = Array.isArray(ms) ? ms[0] : ms; try { (n >= 16 ? H.impact({ style: n >= 24 ? "HEAVY" : "MEDIUM" }) : H.impact({ style: "LIGHT" })).catch(() => {}); } catch (e) {} return true; }
-      try { if (navigator.vibrate) { navigator.vibrate(ms); return true; } } catch (e) {}
+      if (H) { const n = Array.isArray(ms) ? ms[0] : ms; try { (n >= 16 ? H.impact({ style: n >= 24 ? "HEAVY" : "MEDIUM" }) : H.impact({ style: "LIGHT" })).catch(() => {}); } catch (e) { Debug.warn("PLATFORM", e, "03e_platform:34"); } return true; }
+      try { if (navigator.vibrate) { navigator.vibrate(ms); return true; } } catch (e) { Debug.warn("PLATFORM", e, "03e_platform:35"); }
       return false;
     },
     isFullscreen() { const D = this.desk(); return D && D.isFullscreen ? !!D.isFullscreen() : !!(document.fullscreenElement || document.webkitFullscreenElement); },
@@ -48,7 +48,7 @@
     quit() { const D = this.desk(); if (D && D.quit) D.quit(); else { const A = this.plugin("App"); if (A && A.exitApp) A.exitApp(); } },
     // an achievement reached: the storefront hears too (Steam's API names are the game's ids, upper-cased with
     // underscores: first-toss → FIRST_TOSS; platforms/electron/steam-achievements.csv lists them)
-    achievement(id) { const D = this.desk(); if (D && D.steam && D.steam.ok && D.steam.activate) try { D.steam.activate(steamName(id)); } catch (e) {} },
+    achievement(id) { const D = this.desk(); if (D && D.steam && D.steam.ok && D.steam.activate) try { D.steam.activate(steamName(id)); } catch (e) { Debug.warn("PLATFORM", e, "03e_platform:51"); } },
     // the shell's lifecycle, fed into the same handling a browser tab gets (09a_input.js: pause and keep the run)
     wire() {
       const A = this.plugin("App");
@@ -57,7 +57,7 @@
         A.addListener("backButton", () => backButton());
       }
       const SO = this.plugin("ScreenOrientation"), SB = this.plugin("StatusBar");   // a phone plays upright, edge to edge; a tablet turns freely
-      try { if (SO && Math.min(screen.width, screen.height) < 600) SO.lock({ orientation: "portrait" }).catch(() => {}); if (SB) SB.hide().catch(() => {}); } catch (e) {}
+      try { if (SO && Math.min(screen.width, screen.height) < 600) SO.lock({ orientation: "portrait" }).catch(() => {}); if (SB) SB.hide().catch(() => {}); } catch (e) { Debug.warn("PLATFORM", e, "03e_platform:60"); }
       const D = this.desk(); if (D && D.onBlur) D.onBlur(hidden => onBackground(hidden));
     },
     init() {

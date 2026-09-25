@@ -18,6 +18,12 @@
     { x: -1.2, y: 2.05, z: 7.1 }, { x: 1.0, y: 2.65, z: 5.3 }, { x: 0.0, y: 2.2, z: 7.8 }
   ];
   const CROW_HANG = 1.18;   // from the crow's body down to the centre of the ring it carries
+  // v51: a carried ring hangs off its flyer, not off the flight path. The bird keeps exactly to its path; the ring gets
+  // its own small bob beneath it, in time with the wingbeats (a downstroke lifts it a touch, the upstroke lets it
+  // sag), and a hair of sideways sway. It's the ring's position, so the ring's hit test follows it too.
+  const wingFlap = (t, tell) => Math.sin(t * (tell ? 26 : 16));   // (the wings' own beat: > 0 up, < 0 down)
+  const RING_HOVER = { y: 0.035, x: 0.01 };
+  const ringHover = (t, tell) => ({ x: Math.sin(t * 8 + 0.6) * RING_HOVER.x, y: -wingFlap(t, tell) * RING_HOVER.y });
   function makeCrowKing(stage) {
     const max = Math.min(5 + (stage - 1), 8), start = { x: ring.x, y: ring.y, z: ring.z };
     const B = { kind: "crow", short: "Crow King", hp: max, max, rc: 0.6, flat: false, flawless: true, dead: false, t: 0, deadAt: 0, hurt: 0, cawAt: -9, start, segs: null,
@@ -38,10 +44,11 @@
       let i = S.i, t0 = S.t0; const len = S.hold + S.tell + S.move;
       while (t >= t0 + len) { t0 += len; i++; }        // a look-ahead into the next leg keeps the same timing
       const A = CROW_PERCHES[i % n], Bp = CROW_PERCHES[(i + 1) % n], u = t - t0;
-      let x = A.x, y = A.y, z = A.z, bob = Math.sin(t * 5) * 0.05;
-      if (u > S.hold + S.tell) { const k = smooth((u - S.hold - S.tell) / S.move); x = A.x + (Bp.x - A.x) * k; y = A.y + (Bp.y - A.y) * k - Math.sin(k * Math.PI) * 0.35; z = A.z + (Bp.z - A.z) * k; bob = 0; }
-      else if (u > S.hold) bob = -0.12 * Math.sin(((u - S.hold) / S.tell) * Math.PI);   // the tell: he crouches
-      return { x, y: y + bob, z, tell: u > S.hold && u <= S.hold + S.tell ? (u - S.hold) / S.tell : 0, next: Bp, leg: i };
+      let x = A.x, y = A.y, z = A.z, bob = 0;
+      if (u > S.hold + S.tell) { const k = smooth((u - S.hold - S.tell) / S.move); x = A.x + (Bp.x - A.x) * k; y = A.y + (Bp.y - A.y) * k - Math.sin(k * Math.PI) * 0.35; z = A.z + (Bp.z - A.z) * k; }
+      else if (u > S.hold) bob = -0.12 * Math.sin(((u - S.hold) / S.tell) * Math.PI);   // the tell: he crouches (ring and all)
+      const tell = u > S.hold && u <= S.hold + S.tell ? (u - S.hold) / S.tell : 0, hv = ringHover(t, tell);
+      return { x: x + hv.x, y: y + bob + hv.y, z, ax: x, ay: y + bob, az: z, tell, next: Bp, leg: i };   // (x, y, z: the ring; ax, ay, az: where he is)
     };
     B.ringAt = p => { const q = bossPathAt(B, p); return { x: q.x, y: q.y, z: q.z }; };
     B.update = dt => {
@@ -65,7 +72,7 @@
   }
   function drawCrow(B, front) {
     const q = B.pathAt(B.t), t = B.t, dying = B.dead ? B.t - B.deadAt : 0;
-    let body = q.body || { x: q.x, y: q.y + CROW_HANG, z: q.z };
+    let body = q.body || { x: q.ax == null ? q.x : q.ax, y: (q.ay == null ? q.y : q.ay) + CROW_HANG, z: q.az == null ? q.z : q.az };
     if (B.dead) body = { x: B.frozen.x + dying * 0.8, y: B.frozen.y + CROW_HANG + dying * 2.2 - dying * dying * 6.5, z: B.frozen.z + dying * 1.5 };
     const behind = body.z > ring.z + 0.01;
     if (front === behind) return;   // drawn with whichever side of the ring it's on
@@ -82,7 +89,7 @@
         ctx.strokeStyle = "#E3B64B"; ctx.lineWidth = Math.max(1.5, R * 0.07); ctx.stroke(); }
     }
     // wings, flapping on twos
-    const flap = B.dead ? 1 : Math.sin(tt * (q.tell ? 26 : 16)) * 0.6;
+    const flap = B.dead ? 1 : wingFlap(tt, q.tell) * 0.6;
     for (const sd of [-1, 1]) {
       ctx.save(); ctx.scale(sd, 1); ctx.rotate(-0.2 - flap * 0.5); ctx.fillStyle = "#3C3A4C"; ctx.strokeStyle = INK; ctx.lineWidth = Math.max(2, R * 0.08);
       ctx.beginPath(); ctx.moveTo(R * 0.6, -R * 0.2); ctx.bezierCurveTo(R * 1.5, -R * 1.3, R * 2.4, -R * 0.9, R * 2.5, -R * 0.4);
@@ -346,11 +353,12 @@
     B.frozen = { ...B.ringAt(ring.phase) }; B.dead = true; B.deadAt = B.t;
     Telemetry.emit("boss_down", { kind: B.kind, stage: game.stage, flawless: !!B.flawless });
     VisualSystem.triggerImpact("ko", { at });   // doonk, the knockout bell, the hold, the big flash: the director's
+    const X = deathBegin(B, at);   // (v51: its own defeat, its own word, its own gag: 07r_bossdeath.js)
     const p = at || { x: W / 2, y: H * 0.35 };
-    impact("K.O.!", p.x, p.y - U * 0.18, { fill: GOLD, text: INK, scale: 1.35, sub: `${B.short} is down${B.flawless ? " · flawless" : ""}` });
+    impact(X.word, p.x, p.y - U * 0.18, { fill: GOLD, text: INK, scale: 1.35, sub: `${B.short} is down${B.flawless ? " · flawless" : ""}` });
     seeds.length = 0;
   }
-  function updateBoss(dt) { if (boss) boss.update(dt); }
+  function updateBoss(dt) { if (boss) boss.update(dt * (plusOn() && !boss.dead ? (1 + 0.25 * (plusK() - 1)) * (boss.end && (boss.phase || 0) >= 2 ? 1.15 : 1) : 1)); }   // (v51: Adventure+'s bosses are quicker, quicker still at the last)
   // a boss by id (see BOSS_INFO): the Crow King and the Pumpkin King are hand-made here, every other one is built from its
   // definition (07f_bosses.js)
   function makeBoss(id, stage) {

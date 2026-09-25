@@ -154,7 +154,7 @@
         if (it.id !== id || it.claimed) continue;
         const was = chalDone(it), def = chalDef(id);
         it.have = def.mode === "max" ? Math.max(it.have, value) : it.have + value;
-        if (!was && chalDone(it) && !sandbox) { toast(`<b>${PERIODS[per].label} challenge done</b> · claim ${it.reward.toLocaleString("en-US")} bones`); Sound.ui("claim"); }
+        if (!was && chalDone(it) && !sandbox) chalPop(per, it);   // (v51: where the achievements drop in: 04f_achievements.js)
       }
     }
     updatePips();

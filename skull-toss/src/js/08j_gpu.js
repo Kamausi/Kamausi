@@ -123,6 +123,7 @@
   }
   // lay the scene's fire into the 2D picture here (08c_scene.js calls it just before the ring)
   function gpuSceneComposite() {
+    if (WATER.reflecting) return;   // (v51: a reflection is drawn, not lit or set alight again: 08l_water.js)
     if (!Gpu.on || !gpuSceneInit()) return;
     const gl = GpuS.gl, cv = GpuS.cv, w = Math.max(1, Math.round(W * Gpu.dpr)), h = Math.max(1, Math.round(H * Gpu.dpr));
     if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
@@ -138,6 +139,7 @@
     Gpu.stats.scene = (Gpu.stats.scene || 0) + 1;
   }
   function gpuFlameEmit(x, y, vx, vy, life, size, rise, sway, tint, a, scene = false) {
+    if (WATER.reflecting) return;   // (v51: a reflection is drawn, not lit or set alight again: 08l_water.js)
     const R = scene && gpuSceneInit() ? GpuS : null, D = R ? R.data : Gpu.fdata, i = R ? R.head : Gpu.fhead, o = i * GPU_STRIDE;
     D[o] = x; D[o + 1] = y; D[o + 2] = vx; D[o + 3] = vy; D[o + 4] = Gpu.t; D[o + 5] = life; D[o + 6] = size; D[o + 7] = rise; D[o + 8] = Math.random() * 100; D[o + 9] = sway; D[o + 10] = tint; D[o + 11] = a;
     if (R) { R.dirty[0] = Math.min(R.dirty[0], i); R.dirty[1] = Math.max(R.dirty[1], i); R.head = (i + 1) % GPU_FLAMES; }
@@ -149,6 +151,7 @@
   // a fire at a point in the canvas's own space (c's current transform: a prop's or a skull's local units): w wide at
   // its root, flames h tall. Returns false when the GPU isn't drawing, so the caller paints its 2D fire instead.
   function gpuFireAt(c, key, lx, ly, w, h, heat = 1, tint = 0, scene = false) {
+    if (WATER.reflecting) return true;   // (v51: a reflection is drawn, not lit or set alight again: 08l_water.js)
     if (!Gpu.on || c !== ctx) return false;
     const m = c.getTransform(), sc = Math.hypot(m.a, m.b) / DPR, x = (m.a * lx + m.c * ly + m.e) / DPR, y = (m.b * lx + m.d * ly + m.f) / DPR, W2 = w * sc, H2 = h * sc;
     if (x < -H2 * 2 || x > W + H2 * 2 || y < -H2 * 2 || y > H + H2 * 2) return true;
@@ -159,6 +162,7 @@
   }
   // the burning ring (08c_scene.js): tongues all round the top of its band, outward and up, hotter as the streak climbs
   function gpuRingFire(x, y, E, lw, heat) {
+    if (WATER.reflecting) return true;   // (v51: a reflection is drawn, not lit or set alight again: 08l_water.js)
     if (!Gpu.on) return false;
     const n = gpuDue("ring", (260 + E * 3) * heat), k = heat;
     for (let i = 0; i < n; i++) {
@@ -222,6 +226,7 @@
   }
   // ── light: soft pools, gathered while the frame is drawn (gpuLight), and flashes that fade (gpuFlash)
   function gpuLight(x, y, r, rgb, a) {
+    if (WATER.reflecting) return;   // (v51: a reflection is drawn, not lit or set alight again: 08l_water.js)
     if (!Gpu.on || Gpu.lights.length >= GPU_LIGHTS || a <= 0.004 || r < 2) return;
     if (x + r < 0 || x - r > W || y + r < 0 || y - r > H) return;
     Gpu.lights.push([x, y, r, a, rgb]);

@@ -277,7 +277,7 @@
   let sandbox = null;   // while the spec runs, nothing is written to the player's storage or cloud
   let settings, profile, cos;
   function readJSON(k, d) {
-    let v = null; try { v = JSON.parse(store.get(k, "null")); } catch (e) {}
+    let v = null; try { v = JSON.parse(store.get(k, "null")); } catch (e) { Debug.warn("SAVE", e, "01_data:280"); }
     return v && typeof v === "object" ? { ...d, ...v } : { ...d };
   }
   // The profile and the cosmetics keep a copy of the last version that loaded cleanly (<key>.bak). If the main copy
@@ -286,10 +286,10 @@
   function readSaved(k, st = store) {
     const raw = st.get(k, null);
     if (raw !== null) {
-      try { const v = JSON.parse(raw); if (v && typeof v === "object") { st.set(k + ".bak", raw); return v; } } catch (e) {}
+      try { const v = JSON.parse(raw); if (v && typeof v === "object") { st.set(k + ".bak", raw); return v; } } catch (e) { Debug.warn("SAVE", e, "01_data:289"); }
       st.set(k + ".corrupt", raw);
     }
-    try { const v = JSON.parse(st.get(k + ".bak", "null")); if (v && typeof v === "object") return v; } catch (e) {}
+    try { const v = JSON.parse(st.get(k + ".bak", "null")); if (v && typeof v === "object") return v; } catch (e) { Debug.warn("SAVE", e, "01_data:292"); }
     return null;
   }
   const migrateKey = key => { const [k, id] = String(key).split(":"); const m = MIGRATE[k] && MIGRATE[k][id]; return m ? k + ":" + m : key; };
@@ -300,14 +300,15 @@
     ? { score: Math.floor(Number(r.score)), stage: Math.max(1, Math.floor(Number(r.stage) || 1)), at: Number(r.at) || 0, ...Object.fromEntries(RUN_FIELDS.map(k => [k, Math.max(0, Math.floor(Number(r[k]) || 0))])) } : null;
   function cleanProfile(p) {
     const out = { ...DEFAULT_PROFILE, ...migrateProfile(p && typeof p === "object" ? { ...p } : {}) };
-    for (const k of STAT_KEYS) out[k] = Math.max(0, Math.floor(Number(out[k]) || 0));
-    out.name = String(out.name || "").slice(0, 16);
+    const num = v => { const n = Math.floor(Number(v)); return Number.isFinite(n) ? Math.max(0, Math.min(n, 1e12)) : 0; };   // (v51: never NaN, never Infinity, never absurd)
+    for (const k of STAT_KEYS) out[k] = num(out[k]);
+    out.name = String(out.name || "").replace(/[\u0000-\u001f\u007f\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, "").slice(0, 16);   // (v51: no control or direction-flipping characters)
     out.bio = String(out.bio || "").replace(/[<>]/g, "").slice(0, 120);   // (v44: the profile's bio and picture)
     out.pic = out.pic && typeof out.pic === "object" && typeof out.pic.face === "string" && typeof out.pic.frame === "string" ? { face: out.pic.face.slice(0, 12), frame: out.pic.frame.slice(0, 12) } : null;
     const keys = a => Array.isArray(a) ? [...new Set(a.filter(s => typeof s === "string").map(migrateKey))].slice(0, 800) : [];
     out.unlocked = keys(out.unlocked); out.seen = keys(out.seen);
     out.updatedAt = Number(out.updatedAt) || 0;
-    out.bones = Math.max(0, Math.floor(Number(out.bones) || 0));
+    out.bones = num(out.bones);
     for (const k of ["daily", "weekly", "monthly", "seasonal", "event"]) out[k] = out[k] && typeof out[k] === "object" && Array.isArray(out[k].items) ? out[k] : null;
     out.board = !!out.board; out.bestStage = Math.max(1, out.bestStage);
     out.achievements = Array.isArray(out.achievements) ? [...new Set(out.achievements.filter(s => typeof s === "string"))].slice(0, 200) : [];
@@ -324,7 +325,7 @@
     out.shots = sh;
     const md = {}; if (out.modes && typeof out.modes === "object") for (const [k, v] of Object.entries(out.modes)) if (/^[a-z]{2,16}$/.test(k) && v && typeof v === "object") { md[k] = {}; for (const [f, n] of Object.entries(v)) if (/^[a-z]{2,12}$/i.test(f)) md[k][f] = Math.max(0, Math.floor(Number(n) || 0)); }
     out.modes = md;
-    out.mastery = Array.isArray(out.mastery) ? [...new Set(out.mastery.filter(k => typeof k === "string" && /^[a-z]{2,6}:[a-z0-9]{1,16}:[0-2]$/.test(k)))].slice(0, 300) : [];
+    out.mastery = Array.isArray(out.mastery) ? [...new Set(out.mastery.filter(k => typeof k === "string" && /^[a-z]{2,6}:[a-z0-9]{1,16}:[0-3]$/.test(k)))].slice(0, 300) : [];
     for (const f of ["flawless", "mapMakes"]) { const o = {}; if (out[f] && typeof out[f] === "object") for (const [k, v] of Object.entries(out[f])) if (/^[a-z0-9]{1,16}$/.test(k)) o[k] = Math.max(0, Math.floor(Number(v) || 0)); out[f] = o; }
     const tabs = {}; if (out.arcadeTables && typeof out.arcadeTables === "object") for (const [k, list] of Object.entries(out.arcadeTables)) if (/^\d{1,2}$/.test(k) && Array.isArray(list))
       tabs[k] = list.filter(e => e && /^[A-Z]{3}$/.test(e.ini) && Number(e.score) > 0).map(e => ({ ini: e.ini, score: Math.floor(Number(e.score)), secs: Math.max(0, Math.floor(Number(e.secs) || 0)), at: Number(e.at) || 0 })).sort((a, b) => b.score - a.score).slice(0, 5);

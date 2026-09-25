@@ -620,3 +620,24 @@ details.row.sent{display:block}details.row.sent summary{cursor:pointer;font:700 
 /* v50: small screens — the shelf, codex and mastery tabs shrink their type and wrap rather than cut a word */
 #sheet-customize .cat-tabs button{font-size:clamp(8px,2.55vw,12px)!important;padding:7px 0 5px}
 #codexTabs button,#masteryTabs button{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.05;font-size:clamp(10px,3.1vw,13px);overflow-wrap:normal;hyphens:none}
+/* v51: a finished challenge drops in where the achievements do, on its own ticket colour */
+.ach-pop.chal{background:#EAD9A6}
+.ach-pop.chal .medal{background:var(--teal);color:var(--cream)}
+/* v51: Adventure+ — its card (red, cracked), and its way in: THE END, the reel burns through, the title, the line */
+.mode-card.plus{background:linear-gradient(160deg,#5A1A20,#2A0A10);color:var(--cream)}
+.mode-card.plus .mode-ic{background:#C0392B;color:var(--cream)}
+.mode-card.plus b{color:#FFD6C8}
+.mode-card.plus.locked{filter:grayscale(.85) brightness(.7)}
+.plus-intro{position:fixed;inset:0;z-index:70;background:#000;display:grid;place-items:center;overflow:hidden;cursor:pointer}
+.plus-intro .pi-end{position:absolute;font:clamp(42px,12vw,80px)/1 var(--display);letter-spacing:.1em;color:var(--cream);text-shadow:var(--outline);opacity:0}
+.plus-intro .pi-burn{position:absolute;inset:0;opacity:0;background:radial-gradient(circle at 48% 46%,#FFF3C0 0,#F58A3A 12%,#7E2A22 22%,#000 34%)}
+.plus-intro .pi-card{position:relative;text-align:center;opacity:0}
+.plus-intro .pi-k{margin:0;font:800 13px/1 var(--ui);letter-spacing:.4em;text-transform:uppercase;color:var(--mustard-l)}
+.plus-intro .pi-t{margin:8px 0 12px;font:clamp(46px,14vw,92px)/1 var(--display);letter-spacing:.04em;color:#FF6A5A;text-shadow:var(--outline),0 0 22px rgba(255,80,60,.5)}
+.plus-intro .pi-s{margin:0;font:italic 700 clamp(16px,4.6vw,22px)/1.3 var(--ui);color:var(--cream)}
+.plus-intro.go .pi-end{animation:piEnd 1s ease forwards}
+.plus-intro.go .pi-burn{animation:piBurn 1s ease .85s forwards}
+.plus-intro.go .pi-card{animation:piCard 2.2s ease 1.5s forwards}
+@keyframes piEnd{0%{opacity:0}25%,70%{opacity:1;transform:none}85%{opacity:1;transform:translateX(3px) skewX(-6deg)}100%{opacity:0;transform:translateX(-6px) skewX(10deg)}}
+@keyframes piBurn{0%{opacity:0;transform:scale(.2)}40%{opacity:1;transform:scale(1.2)}100%{opacity:0;transform:scale(4)}}
+@keyframes piCard{0%{opacity:0;transform:scale(1.2)}12%{opacity:1;transform:scale(.97)}20%{transform:scale(1)}45%{transform:translateX(-4px)}47%{transform:translateX(5px)}49%{transform:none}90%{opacity:1}100%{opacity:1;transform:scale(1.04)}}

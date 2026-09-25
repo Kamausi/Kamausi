@@ -116,7 +116,7 @@
     env(g, t, peak, dur, o.att); s.connect(f); f.connect(g); g.connect(out(o.pan, o.bus));
     s.start(t, Math.random() * 1.5); s.stop(t + (o.att || 0.006) + dur + 0.05);
   }
-  const stopAt = (nodes, t) => nodes.forEach(n => { try { n.stop(t); } catch (e) {} });
+  const stopAt = (nodes, t) => nodes.forEach(n => { try { n.stop(t); } catch (e) { Debug.warn("AUDIO", e, "02a_audio_core:119"); } });
 
   // ── slingshot: leather grab, then short rubber creaks that fire ONLY while the band is moving
   // (no sustained tone, so nothing hums or oscillates while you hold still), ratchet clicks each
@@ -226,6 +226,9 @@
       else if (kind === "meow") { tone(620, "sine", 0.34, 0.05, 0, 820, { ...o, vib: [7, 30], att: 0.06 }); tone(1240, "sine", 0.3, 0.012, 0.05, 1600, o); }
       else if (kind === "hiss") noise(0.45, 0.08, "highpass", 3500, 5000, 0, 1, o);
       else if (kind === "screech") { tone(2300, "sawtooth", 0.28, 0.025, 0, 3400, { ...o, vib: [31, 140], lp: 5000 }); noise(0.2, 0.04, "highpass", 4200, null, 0, 1, o); }
+      else if (kind === "splash") { noise(0.35, 0.16, "bandpass", 900, 300, 0, 1.6, o); tone(220, "sine", 0.12, 0.08, 0, 90, o); noise(0.12, 0.06, "highpass", 3000, null, 0.05, 1, o); }   // (v51: into the water)
+      else if (kind === "switch") { noise(0.02, 0.28, "bandpass", 2200, null, 0, 5, o); tone(150, "square", 0.06, 0.08, 0, 90, { ...o, lp: 700 }); tone(60, "sawtooth", 0.35, 0.04, 0.03, 60, { ...o, lp: 240, att: 0.02 }); }   // (v51: a stage light's knife switch, and its hum)
+      else if (kind === "stab") { for (const f of [261.6, 329.6, 392, 523.3]) tone(f, "sawtooth", 0.5, 0.05, 0, f * 0.99, { lp: 2400, att: 0.005 }); tone(65.4, "sine", 0.6, 0.3, 0, 50); noise(0.9, 0.07, "highpass", 5200, 3000, 0, 1.1); }   // (v51: the band's hit as the curtains part)
       else if (kind === "tick") { tone(2600, "square", 0.02, 0.02, 0, null, { ...o, lp: 4000 }); noise(0.015, 0.05, "bandpass", 3000, null, 0, 6, o); }
       else if (kind === "gust") noise(0.9, 0.05, "bandpass", 420, 1300, 0, 0.8, { att: 0.3 });
       else if (kind === "clang") [330, 495, 742].forEach((f, i) => tone(f, "triangle", 0.7 - i * 0.15, 0.08, 0, null, o));

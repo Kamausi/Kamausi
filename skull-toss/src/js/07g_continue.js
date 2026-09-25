@@ -75,7 +75,7 @@
     const cross = game.phase === "crossing" || game.phase === "encore";   // (between maps: a reload picks up at the next one's start)
     const phase = game.phase === "mini" ? "A" : game.phase === "boss" ? "B" : cross ? "A" : game.phase;
     const stageHits = game.phase === "mini" ? STAGE_MINI : game.phase === "boss" ? STAGE_BOSS : cross ? 0 : game.stageHits;
-    const S = { v: 1, at: Date.now(), mode: game.mode, map: game.map, stage: game.stage + (cross ? 1 : 0), phase, stageHits, hits: game.hits, score: game.score,
+    const S = { v: 1, at: Date.now(), mode: game.mode, plus: game.plus ? 1 : 0, map: game.map, stage: game.stage + (cross ? 1 : 0), phase, stageHits, hits: game.hits, score: game.score,
       lives: cont ? 0 : game.lives, slots: game.slots, streak: game.streak, perfStreak: game.perfStreak, peakLives: game.peakLives, throws: game.throws,
       run: { ...game.run, t0: undefined }, secs: game.time - (game.run.t0 || 0), powers: JSON.parse(JSON.stringify(powers)), seed: game.seed, wind: HZ.wind, cont };
     const txt = JSON.stringify(S); if (sandbox) sandbox.snap = txt; else store.set(RUN_KEY, txt);
@@ -87,7 +87,7 @@
   }
   function resumeRunSnapshot() {
     const S = readRunSnapshot(); if (!S) return false;
-    startGame({ mode: S.mode, map: S.map, seed: (S.seed ^ S.throws) >>> 0, quiet: true });
+    startGame({ mode: S.mode, map: S.map, seed: (S.seed ^ S.throws) >>> 0, quiet: true, plus: !!S.plus });
     Object.assign(game, { stage: S.stage, phase: S.phase === "A" || S.phase === "B" ? S.phase : "A", stageHits: S.stageHits, hits: S.hits, score: S.score, lives: Math.max(0, S.lives),
       slots: S.slots, streak: S.streak, perfStreak: S.perfStreak, peakLives: S.peakLives, throws: S.throws });
     Object.assign(game.run, S.run || {}); game.run.t0 = game.time - (S.secs || 0);

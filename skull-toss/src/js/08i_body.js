@@ -138,19 +138,19 @@
   // the launcher's frames: wood, bone, iron, candy, gold, neon (the classic is the drawn asset)
   const LAUNCHERS = { branch: { wood: "#6A4A2E", hi: "rgba(242,231,201,.25)" }, bone: { wood: "#E4DAC4", hi: "#FFF8EA" }, iron: { wood: "#3A3E46", hi: "#8A8E96" },
     candy: { wood: "#F4ECDA", stripe: "#C0392B", hi: "#FFFFFF" }, gold: { wood: "#C49A42", hi: "#FFF3C4" }, neon: { wood: "#B48CFF", hi: "#F2ECFF", glow: "rgba(180,140,255,.9)" } };
-  function drawFrameLauncher(sx, sy, r, off, fy, id) {
+  function drawFrameLauncher(sx, sy, r, off, fy, id, c = ctx, band = cos.band, t = game.time) {
     const L = LAUNCHERS[id], kx = sx + off.x, ky = sy + off.y; sy += fy;
     const aL = { x: sx - r * 1.6, y: sy - r * 0.15 }, aR = { x: sx + r * 1.6, y: sy - r * 0.15 }, fork = { x: sx, y: sy + r * 1.35 };
-    ctx.save(); ctx.lineCap = "round"; ctx.lineJoin = "round";
-    const wood = w => { ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(sx, sy + r * 2.8); ctx.lineTo(fork.x, fork.y); ctx.lineTo(aL.x, aL.y); ctx.moveTo(fork.x, fork.y); ctx.lineTo(aR.x, aR.y); ctx.stroke(); };
-    if (L.glow) { ctx.shadowColor = L.glow; ctx.shadowBlur = 10; }
-    ctx.strokeStyle = INK; wood(Math.max(6, r * 0.36)); ctx.shadowBlur = 0; ctx.strokeStyle = L.wood; wood(Math.max(3.5, r * 0.24));
-    if (L.stripe) { ctx.strokeStyle = L.stripe; ctx.setLineDash([r * 0.2, r * 0.2]); wood(Math.max(3, r * 0.2)); ctx.setLineDash([]); }
-    ctx.strokeStyle = L.hi; ctx.lineWidth = Math.max(1, r * 0.05); ctx.beginPath(); ctx.moveTo(sx - r * 0.05, sy + r * 2.7); ctx.lineTo(fork.x - r * 0.05, fork.y); ctx.lineTo(aL.x + 1, aL.y); ctx.stroke();
-    drawBands(ctx, [[aL, { x: kx - r * 0.8, y: ky + r * 0.35 }], [aR, { x: kx + r * 0.8, y: ky + r * 0.35 }]], Math.max(3.5, r * 0.16), Math.max(1.8, r * 0.08), { color: "#A94332", outline: INK }, cos.band, game.time);
-    ctx.fillStyle = "#5A3A22"; ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1.5, r * 0.07); ctx.beginPath(); ctx.ellipse(kx, ky + r * 0.72, r * 0.85, r * 0.3, 0, 0, TAU); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = L.hi; for (const a of [aL, aR]) { ctx.beginPath(); ctx.arc(a.x, a.y, Math.max(2.5, r * 0.11), 0, TAU); ctx.fill(); ctx.stroke(); }
-    ctx.restore();
+    c.save(); c.lineCap = "round"; c.lineJoin = "round";
+    const wood = w => { c.lineWidth = w; c.beginPath(); c.moveTo(sx, sy + r * 2.8); c.lineTo(fork.x, fork.y); c.lineTo(aL.x, aL.y); c.moveTo(fork.x, fork.y); c.lineTo(aR.x, aR.y); c.stroke(); };
+    if (L.glow) { c.shadowColor = L.glow; c.shadowBlur = 10; }
+    c.strokeStyle = INK; wood(Math.max(6, r * 0.36)); c.shadowBlur = 0; c.strokeStyle = L.wood; wood(Math.max(3.5, r * 0.24));
+    if (L.stripe) { c.strokeStyle = L.stripe; c.setLineDash([r * 0.2, r * 0.2]); wood(Math.max(3, r * 0.2)); c.setLineDash([]); }
+    c.strokeStyle = L.hi; c.lineWidth = Math.max(1, r * 0.05); c.beginPath(); c.moveTo(sx - r * 0.05, sy + r * 2.7); c.lineTo(fork.x - r * 0.05, fork.y); c.lineTo(aL.x + 1, aL.y); c.stroke();
+    drawBands(c, [[aL, { x: kx - r * 0.8, y: ky + r * 0.35 }], [aR, { x: kx + r * 0.8, y: ky + r * 0.35 }]], Math.max(3.5, r * 0.16), Math.max(1.8, r * 0.08), { color: "#A94332", outline: INK }, band, t);
+    c.fillStyle = "#5A3A22"; c.strokeStyle = INK; c.lineWidth = Math.max(1.5, r * 0.07); c.beginPath(); c.ellipse(kx, ky + r * 0.72, r * 0.85, r * 0.3, 0, 0, TAU); c.fill(); c.stroke();
+    c.fillStyle = L.hi; for (const a of [aL, aR]) { c.beginPath(); c.arc(a.x, a.y, Math.max(2.5, r * 0.11), 0, TAU); c.fill(); c.stroke(); }
+    c.restore();
   }
 
   // ── v45: glasses, over the sockets (their centres and sizes are the skull art's own, 08a_skull.js: SOCK), left then right

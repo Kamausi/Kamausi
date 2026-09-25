@@ -211,6 +211,12 @@
     achNext();
     return fresh;
   }
+  // a challenge done (04b_economy.js): its card, queued with the medals
+  function chalPop(per, it) {
+    const def = chalDef(it.id);
+    achQueue.push({ chal: true, icon: "tomb", kicker: t("chal.popK", { what: PERIODS[per].label }), name: def ? def.text(it.n) : "", text: t("chal.popS"), bones: it.reward });
+    achNext();
+  }
   // the medal: drops in at the top, holds, and makes way for the next one
   const achQueue = [], achTimers = {};
   let achBusy = false;
@@ -219,12 +225,14 @@
     if (sandbox) achQueue.splice(0, achQueue.length - 1);   // tests don't wait on timers: the newest medal shows at once
     const A = achQueue.shift(), el = $("achPop");
     achBusy = !sandbox;
-    el.innerHTML = `<span class="medal"><svg><use href="#i-${A.icon}"/></svg></span><span class="t"><span class="k">Achievement unlocked</span><b>${A.name}</b><span class="s">${A.text}</span></span><span class="r">+${A.bones.toLocaleString("en-US")}<svg><use href="#i-bone"/></svg></span>`;
+    // (v51: a finished challenge drops in here too, in the same spot, so everything you've earned turns up in one place)
+    el.classList.toggle("chal", !!A.chal);
+    el.innerHTML = `<span class="medal"><svg><use href="#i-${A.icon}"/></svg></span><span class="t"><span class="k">${A.chal ? A.kicker : "Achievement unlocked"}</span><b>${A.name}</b><span class="s">${A.text}</span></span><span class="r">+${A.bones.toLocaleString("en-US")}<svg><use href="#i-bone"/></svg></span>`;
     const inPlay = !hud.hidden;   // mid-run it sits just under the score, not over it
     el.classList.toggle("play", inPlay); el.style.top = inPlay ? `${Math.round(bestEl.getBoundingClientRect().bottom + 10)}px` : "";
     el.hidden = false; el.classList.remove("in", "out"); void el.offsetWidth; el.classList.add("in");
-    Sound.sample("achievement", () => Sound.unlock()); buzz([10, 40, 10]);
-    srEl.textContent = `Achievement unlocked: ${A.name}. ${A.text}. ${A.bones} bones.`;
+    if (A.chal) { Sound.ui("claim"); buzz(12); } else { Sound.sample("achievement", () => Sound.unlock()); buzz([10, 40, 10]); }
+    srEl.textContent = `${A.chal ? A.kicker : "Achievement unlocked"}: ${A.name}. ${A.text}. ${A.bones} bones.`;
     clearTimeout(achTimers.out); clearTimeout(achTimers.end);
     achTimers.out = setTimeout(() => { el.classList.remove("in"); el.classList.add("out"); }, sandbox ? 60 : 2600);
     achTimers.end = setTimeout(() => { el.hidden = true; el.classList.remove("out"); achBusy = false; achNext(); }, sandbox ? 120 : 3000);

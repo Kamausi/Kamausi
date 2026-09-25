@@ -15,7 +15,7 @@
     Object.assign(skull, { p0: { x: 0, y: START_Y, z: 0 }, v0: v, t: 0, crossed: false, resting: false, bounces: 0, ax: windNow(), tHit: false,
       spin: (1.3 + Math.abs(v.x) * 0.5) * (v.x < 0 ? -1 : 1), hang: 0, take: 0, alpha: 1, flightTime: 0, trail: [], spawn: 1, emit: 0, missed: false });
     skull.pos = { ...skull.p0 };
-    game.state = "flying"; game.result = null; game.endTimer = 0; game.throws++;
+    game.state = "flying"; game.result = null; game.endTimer = 0; game.throws++; ghostLaunch();
     profile.throws++; challenge("throws", 1);
     aim.active = false; cvs.classList.remove("aiming");
     setMood(rig, "fear", game.time);
@@ -69,7 +69,7 @@
       if (kind === "ring") hitRing(s, ringAt(phase0 + ring.omega * elapsed)); else hitGround(s);
       if (s.hang > 0) break;
     }
-    const prevPos = s.pos; s.pos = posAt(s, s.t);
+    const prevPos = s.pos; s.pos = posAt(s, s.t); ghostRecord(s);   // (v51: for the next throw's ghost trail, 08k_feel.js)
     if (!game.result && !s.crossed && seeds.length) seedCheck(s, prevPos);
     if (!game.result && !s.crossed) hazardCheck(s, prevPos);
     if (!game.result && !s.crossed) obstacleCheck(s, prevPos);   // the map's obstacles: bumpers bounce, fans and lodestones push, the rest block (07m_obstacles.js)
@@ -124,6 +124,7 @@
     const short = !s.crossed && !game.result;
     if (short) { s.crossed = true; resolve("short", project(p.x, p.y + 0.4, p.z)); }
     s.bounces++; if (first) envImpact(p.x, p.z, clamp(Math.abs(s.v0.y) / GROUND_REF, 0.5, 1.3));   // the ground shakes what's near
+    waterRipple(p.x, p.z, clamp(Math.abs(s.v0.y) / GROUND_REF, 0.3, 1.4) * (first ? 1 : 0.5));   // (v51: down in the water: ripples, 08l_water.js)
     // FLAT SKULL, then BOING back into shape (how flat depends on how fast it came down)
     VisualSystem.triggerImpact(!first ? "bounce" : short ? "short" : "ground", { at, strength: Math.abs(s.v0.y) / GROUND_REF, pan: panOf(p.x) });
     if (first && game.result && !game.result.make) {
@@ -165,7 +166,7 @@
   function resolve(kind, at, hitAt, d = null, ghosted = false) {
     const R = RESULT[kind], run = game.run;
     Telemetry.emit("throw", { result: kind, make: !!R.make, stage: game.stage, stageHits: game.stageHits, lives: game.lives, boss: boss ? boss.kind : null, n: game.throws });
-    game.result = { kind, make: R.make, at: game.time, bonked: false, pts: 0 };
+    game.result = { kind, make: R.make, at: game.time, bonked: false, pts: 0 }; ghostResolve(!!R.make); plusResolve(R, kind);
     game.endTimer = R.make ? 0.95 : R.hit ? 1.0 : 1.45;
     const x = at ? at.x : W / 2, y = at ? at.y - ring.rc * at.s - U * 0.05 : H * 0.3;
     if (R.make) {
@@ -216,7 +217,7 @@
       const saved = !onTarget && powerOn("second");   // Second Chance: this miss is on the house
       if (onTarget) game.result.target = true;
       else if (saved) { usePower("second"); profile.saves++; impact(t("result.saved"), W / 2, H * 0.3, { fill: TEAL, text: CREAM, scale: 0.7, delay: 0.25, bits: false }); Sound.life(); }
-      else if (!freeMiss() && !R.safe) game.lives--;   // (an eye poke costs nothing)   // (Practice, Curtain Call and the encore: misses are free)
+      else if (!freeMiss() && !R.safe) { const extra = plusExtraLoss(R); game.lives = Math.max(0, game.lives - 1 - extra); if (extra) { PLUS.cracked = false; impact(t("plus.shattered"), W / 2, H * 0.3, { fill: RED, text: CREAM, scale: 0.7, delay: 0.2, bits: false }); } }   // (an eye poke costs nothing; v51: a cracked skull in Adventure+ costs two)   // (Practice, Curtain Call and the encore: misses are free)
       if (!onTarget) {
         game.streak = 0; game.perfStreak = 0; run.misses++; profile.misses++;
         if (MISS_STAT[kind]) profile[MISS_STAT[kind]]++;
@@ -255,7 +256,7 @@
   }
   // the throw is over and the run goes on: the next skull, the power-ups' clocks, the act, the directors
   function settleThrow() {
-    game.state = "ready"; resetSkull();
+    game.state = "ready"; resetSkull(); if (game.plus) { PLUS.readyAt = game.time; plusGust(); }
     powersAfterThrow();
     if (boss && boss.after) boss.after();
     if (!modeCheck() && !stageCheck()) {
@@ -275,18 +276,19 @@
   // two ways to play. Story: the stages in order, each with its two bosses. Arcade: one map (any stage), no bosses
   // and no end: the ring keeps getting quicker, and the run lasts as long as your skulls do.
   function startGame(opts = {}) {
+    ghostReset();
     if (Replay.play && !opts.replay) Replay.stop(false);   // (a real run ends any replay: 07j_replay.js)
     const mode = !MODES[opts.mode] ? "story" : opts.replay || (!Flags.modeOff(opts.mode) && (!MODES[opts.mode].open || MODES[opts.mode].open())) ? opts.mode : "story";   // (the live config can take a mode off: 03d_flags.js)
     modeStart(mode);   // (Practice swaps in a copy of the profile here: 07i_modes.js)
     const pick = clamp(opts.map | 0, 0, STAGES.length - 1), map = opts.replay ? pick : mode === "director" ? directorNow().map : mode === "feature" ? featureMap() : MODES[mode].maps ? (mapUnlocked(pick) ? pick : 0) : MODES[mode].mini ? miniMap(mode) : 0;
     if (mode === "director" && opts.seed == null) opts = { ...opts, seed: directorNow().seed };   // (everyone plays the same run this week)
     Object.assign(game, { state: "ready", score: 0, hits: 0, lives: START_LIVES, slots: START_LIVES, streak: 0, perfStreak: 0, peakLives: START_LIVES, throws: 0,
-      result: null, lastCross: null, newBest: false, shake: 0, slowmo: 0, run: freshRun(), mode, map });
+      result: null, lastCross: null, newBest: false, shake: 0, slowmo: 0, run: freshRun(), mode, map, plus: mode === "story" && !!opts.plus && (!!opts.replay || plusOpen()) });   // plus: Adventure+ (07s_plus.js)
     game.run.t0 = game.time; Object.assign(voice, { said: 0, text: "", quiet: game.time, idleSaid: false });
     seedRun(opts.seed != null ? opts.seed : sandbox ? 1933 : (Date.now() ^ (Math.random() * 0x7fffffff)) >>> 0);   // the run's dice (07e_directors.js)
     setScene(map);   // Story starts on map 1; Arcade on the map picked
     ring.frozen = null; ring.flash = 0; ring.wobble = 0; ring.morph = 0;
-    stageReset(); clearPowers(); clearPickups(); powerDirectorReset();
+    stageReset(); clearPowers(); clearPickups(); powerDirectorReset(); plusReset();
     if (mode !== "story") { game.stage = map + 1; VisualSystem.setStage(game.stage); }
     snapRing();
     VisualSystem.emit("start");
@@ -302,7 +304,7 @@
     if (opts.quiet || (mode !== "story" && mode !== "arcade" && mode !== "practice")) setHint(game.mode === "rush" ? "" : t("hint.start")); else introReel(mode, map);   // the leader and the reel's title card (09i_reel.js)
     Replay.begin(opts);   // record what the player does, for a replay (07j_replay.js)
     updateHud();
-    Telemetry.emit("run_start", { mode, map, stage: game.stage, career: profile.games });   // career: runs finished before this one
+    Telemetry.emit("run_start", { mode, map, stage: game.stage, career: profile.games, plus: game.plus ? 1 : 0 });   // career: runs finished before this one
   }
   const arcadeSecs = () => Math.max(0, game.time - (game.run.t0 || 0));
   const arcadeRec = (map = game.map) => profile.arcade[String(map)] || { score: 0, secs: 0, hits: 0, runs: 0 };
@@ -387,7 +389,7 @@
     ring.amp += (L.amp - ring.amp) * k; ring.omega += (L.omega - ring.omega) * k;
     ring.rc += (L.rc - ring.rc) * k; ring.bob += (L.bob - ring.bob) * k;
     const phase0 = ring.phase;
-    if (!ring.frozen) ring.phase += ring.omega * dt;
+    if (!ring.frozen) ring.phase += ring.omega * dt * plusPhaseRate(dt);   // (v51: Adventure+'s fake-outs, 07s_plus.js)
     const rp = ringAt(ring.phase);
     if (ring.glide) {   // after a change of act the ring glides from where it was onto its new path
       const g = ring.glide; g.t += dt; const e = smooth(clamp(g.t / g.dur, 0, 1));
@@ -396,6 +398,7 @@
     }
     ring.x = rp.x; ring.y = rp.y; ring.z = rp.z;
     if (boss) updateBoss(dt);
+    updateDeath(dt);   // (v51: the accent pulse and the final gags, 07r_bossdeath.js)
     updateSeeds(dt); updatePickup(dt); updatePowers(dt); updateTargets(dt); updateCans(dt); updateBonusOffer(dt); updateHazards(dt); updateObstacles(dt);
 
     if (game.state === "flying") updateFlight(dt, phase0);

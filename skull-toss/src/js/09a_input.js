@@ -14,7 +14,7 @@
       aim.nx = m.nx; aim.ny = m.ny; aim.valid = m.valid; aim.upward = m.upward;
       aim.tension = aim.upward ? 0 : clamp(Math.hypot(aim.cx - aim.sx, aim.cy - aim.sy) / pullMax(), 0, 1);
     } else { aim.valid = true; aim.upward = false; aim.tension = clamp(Math.hypot(aim.nx * 0.8, aim.ny), 0, 1); }
-    const a = aimPoint(aim.nx, aim.ny); aim.AX = a.AX; aim.AY = a.AY;
+    const a = aimPoint(aim.nx, aim.ny); aim.AX = a.AX; aim.AY = a.AY; pullHaptics();
     if (aim.upward) setHint(t("hint.pullDown"), true);
     else if (hintEl.textContent === t("hint.pullDown")) setHint("");
   }

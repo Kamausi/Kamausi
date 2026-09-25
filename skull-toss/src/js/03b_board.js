@@ -71,7 +71,7 @@
     watchMode(mode) {
       if (!this.db || typeof this.db.collection !== "function") return;
       if (this.unsubMode && this.unsubMode.mode === mode) return;
-      if (this.unsubMode) { try { this.unsubMode(); } catch (e) {} this.unsubMode = null; }
+      if (this.unsubMode) { try { this.unsubMode(); } catch (e) { Debug.warn("LEADERBOARD", e, "03b_board:74"); } this.unsubMode = null; }
       const holder = () => {}; holder.mode = mode; this.unsubMode = holder;
       try {
         const u = this.db.collection("boards").where("mode", "==", mode).orderBy("score", "desc").limit(100).onSnapshot(snap => {
@@ -80,7 +80,7 @@
         if (this.unsubMode === holder) { u.mode = mode; this.unsubMode = u; }
       } catch (e) { this.unsubMode = null; }
     },
-    unwatch() { if (this.unsub) { try { this.unsub(); } catch (e) {} this.unsub = null; } if (this.unsubWeek) { try { this.unsubWeek(); } catch (e) {} this.unsubWeek = null; } if (this.unsubMode) { try { this.unsubMode(); } catch (e) {} this.unsubMode = null; } },
+    unwatch() { if (this.unsub) { try { this.unsub(); } catch (e) { Debug.warn("LEADERBOARD", e, "03b_board:83"); } this.unsub = null; } if (this.unsubWeek) { try { this.unsubWeek(); } catch (e) { Debug.warn("LEADERBOARD", e, "03b_board:83"); } this.unsubWeek = null; } if (this.unsubMode) { try { this.unsubMode(); } catch (e) { Debug.warn("LEADERBOARD", e, "03b_board:83"); } this.unsubMode = null; } },
     // this week's board (v34): the server keeps weekly/<week>_<uid> beside the all-time entry. v50: and the day's
     // (daily/<day>_<uid>) and the month's (monthly/<month>_<uid>); one watched at a time
     weekRows: [], unsubWeek: null,
@@ -88,7 +88,7 @@
       const P = { day: ["daily", "day", Runs.dayOf], week: ["weekly", "week", Runs.weekOf], month: ["monthly", "month", Runs.monthOf] }[this.period] || null;
       if (!P || !this.db || typeof this.db.collection !== "function") return;
       if (this.unsubWeek && this.unsubWeek.period === this.period) return;
-      if (this.unsubWeek) { try { this.unsubWeek(); } catch (e) {} this.unsubWeek = null; }
+      if (this.unsubWeek) { try { this.unsubWeek(); } catch (e) { Debug.warn("LEADERBOARD", e, "03b_board:91"); } this.unsubWeek = null; }
       const holder = () => {}; holder.period = this.period; this.unsubWeek = holder; this.weekRows = [];
       try {
         const u = this.db.collection(P[0]).where(P[1], "==", P[2](Date.now())).orderBy("score", "desc").limit(100).onSnapshot(snap => {
@@ -110,7 +110,7 @@
     },
     beat() {
       if (!this.db || document.visibilityState === "hidden" || Flags.on("kill.presence")) return;
-      try { this.db.doc("presence/" + this.me.id).set({ at: window.firebase.firestore.FieldValue.serverTimestamp() }).catch(() => {}); } catch (e) {}
+      try { this.db.doc("presence/" + this.me.id).set({ at: window.firebase.firestore.FieldValue.serverTimestamp() }).catch(() => {}); } catch (e) { Debug.warn("LEADERBOARD", e, "03b_board:113"); }
     },
     refresh() {
       if (!this.db || Date.now() - this.at < 30000) return;
@@ -118,6 +118,6 @@
       try {
         const since = window.firebase.firestore.Timestamp.fromMillis(Date.now() - 5 * 60000);
         this.db.collection("presence").where("at", ">", since).limit(999).get().then(snap => { this.count = snap.size; if (sheet === "board") renderBoard(); }, () => {});
-      } catch (e) {}
+      } catch (e) { Debug.warn("LEADERBOARD", e, "03b_board:121"); }
     }
   };

@@ -300,6 +300,12 @@
       return { writes, docs };
     },
     unfakeBoard() { Board.unwatch(); Object.assign(Board, { db: null, me: null, state: "local", rows: [], mine: null, fake: false, mode: "story", fakeLocal: null }); },
+    feel: () => ({ ghost: ghostShot.last ? ghostShot.last.length : 0, near: !!ghostShot.near, antic: { k: antic.k, state: antic.state, predicted: antic.predicted, from: antic.from } }),   // (v51, 08k_feel.js)
+    death: () => (boss && boss.death ? { arch: boss.death.arch, word: boss.death.word, gag: boss.death.gag, mat: boss.death.mat } : null), deathTable: () => JSON.parse(JSON.stringify(DEATH)), gags: () => GAGS.map(G => G.kind),   // (v51, 07r_bossdeath.js)
+    plus: () => ({ on: !!game.plus, open: plusOpen(), wind: PLUS.wind, cracked: PLUS.cracked, decoys: PLUS.decoys.length, fake: PLUS.fake, k: plusK(), rc: ring.rc, omega: ring.omega }),   // (v51: Adventure+, 07s_plus.js)
+    startPlus: () => startGame({ mode: "story", plus: true }),
+    bossPath: t => (boss && boss.pathAt ? boss.pathAt(t == null ? boss.t : t) : null),
+    intro(at = 0) { playIntro(); INTRO.t0 = performance.now() - at * 1000; return INTRO.on; }, introState: () => ({ on: INTRO.on, open: INTRO.open, lights: INTRO.lights.map(L => L.on), cls: $("title").className }),   // (v51: the spotlit opening, 09q_intro.js)
     boardLocal(list) { Board.fakeLocal = list; }, boardMode(m) { Board.mode = m; if (sheet === "board") renderBoard(); },
     boardPush: () => Board.push(true), boardState: () => Board.state, boardInit() { Board.state = "local"; Board.db = null; Board.init(Backend.db, Backend.me); },
     sandbox(on) {

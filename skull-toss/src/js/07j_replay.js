@@ -13,7 +13,7 @@
     rec: null, last: null, play: null, speed: 1,
     begin(opts) {
       if (this.play) return;
-      this.rec = { v: REPLAY_V, mode: game.mode, map: game.map, seed: game.seed, rm: reduceMotion ? 1 : 0, set: { cards: cardsMode(), mischief: mischiefOn() ? 1 : 0 },
+      this.rec = { v: REPLAY_V, mode: game.mode, map: game.map, seed: game.seed, plus: game.plus ? 1 : 0, rm: reduceMotion ? 1 : 0, set: { cards: cardsMode(), mischief: mischiefOn() ? 1 : 0 },
         practice: game.mode === "practice" ? { ...practice } : null, leader: reelSt.introLeader ? 1 : 0, rush: game.mode === "rush" ? modeSt.rush.map(b => b.id) : null, dir: game.mode === "director" && game.director ? JSON.parse(JSON.stringify(game.director)) : null, feat: game.mode === "feature" && game.feature ? JSON.parse(JSON.stringify(game.feature)) : null, ev: [], at: Date.now() };
     },
     step: () => Math.round((game.time - (game.run.t0 || 0)) / SIM_STEP),
@@ -35,7 +35,7 @@
       this.play = { R, i: 0, keep };
       settings.cards = R.set.cards; settings.mischief = !!R.set.mischief;
       if (R.practice) Object.assign(practice, R.practice);
-      startGame({ mode: R.mode, map: R.map, seed: R.seed, replay: true });
+      startGame({ mode: R.mode, map: R.map, seed: R.seed, replay: true, plus: !!R.plus });
       $("replayBadge").hidden = false; renderReplayBadge();
       Telemetry.emit("replay_watch", { mode: R.mode, score: R.score || 0 });
       return true;

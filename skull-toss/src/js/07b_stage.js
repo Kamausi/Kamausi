@@ -55,7 +55,8 @@
   const A_TOP = 16.25, B_RISE = 6.25, B_SLOW = 1.05;
   const aLevel = h => A_TOP * Math.min(h, STAGE_MINI) / STAGE_MINI;
   const bHits = h => Math.max(0, h - (arcadeLike() ? STAGE_MINI : STAGE_LOOSE)), bPace = () => (arcadeLike() ? 25 : STAGE_BOSS - STAGE_LOOSE);
-  function ringTargets() {
+  const ringTargets = () => plusTargets(ringTargets0());   // (v51: Adventure+ pushes the ring: 07s_plus.js)
+  function ringTargets0() {
     const MR = modeRing(); if (MR && game.state !== "title") return MR;   // Curtain Call, the encore, a slow Practice ring
     const st = game.stage || 1, S = stageDef(st), h = game.stageHits || 0, cursed = powerOn("cursed") ? 1.5 : 1, T = tierNow();
     if (game.state === "title") { const L = level(0); return { mode: "line", ...L }; }
@@ -190,6 +191,7 @@
     updateHud();
   }
   function mainBossDown() {
+    plusMapDone();   // (v51: Adventure+'s Perfect Map, 07s_plus.js)
     profile.bossKills++; if (boss.flawless) { profile.bossFlawless++; profile.flawless[boss.kind] = 1; } game.run.bosses++;
     profile.bossLog[boss.kind] = (profile.bossLog[boss.kind] || 0) + 1;
     profile.bestStage = Math.max(profile.bestStage, game.stage + 1); game.stageHits = Math.max(game.stageHits || 0, STAGE_END);
@@ -229,7 +231,8 @@
   // the last end boss: THE END. Morty is whole again and the run is over, won.
   function storyComplete() {
     boss = null; seeds.length = 0;
-    profile.storyClears++; game.run.story = true;
+    const firstClear = !profile.storyClears; profile.storyClears++; game.run.story = true;
+    if (firstClear && !game.plus && !sandbox) setTimeout(() => toast(`<b>${t("plus.kicker")}</b> · ${t("plus.unlocked")}`), 2500);   // (v51: the way back in, 07s_plus.js)
     Sound.toon("fanfare"); Telemetry.emit("story_complete", { score: game.score, secs: Math.round(game.time - (game.run.t0 || 0)) });
     const done = card => { gameOver(card); };
     if (cardsMode() === "off") { stageCard(t("reel.theEnd"), t("reel.whole"), t("reel.restored"), 3.4, "gold"); cine("boss-out", 3.4, () => done(true), 0.4); }

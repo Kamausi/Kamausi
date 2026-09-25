@@ -6,14 +6,28 @@
   function musicStop() { reelHush(); }
 
   // ── public face of the audio engine
+  // v51: the browser voice nearest Morty's brief: an American English man's voice by name if there is one, else any
+  // American English voice, else the default (the list fills in after page load on some browsers)
+  const MORTY_VOICES = [/guy/i, /david/i, /alex/i, /fred/i, /aaron/i, /tom\b/i, /male/i, /google us english/i];
+  let mortyVoiceCache = null;
+  function mortyVoice() {
+    if (mortyVoiceCache) return mortyVoiceCache;
+    const all = (window.speechSynthesis && speechSynthesis.getVoices()) || []; if (!all.length) return null;
+    const us = all.filter(v => /^en[-_]US/i.test(v.lang));
+    for (const re of MORTY_VOICES) { const v = us.find(x => re.test(x.name)); if (v) return (mortyVoiceCache = v); }
+    return (mortyVoiceCache = us[0] || all.find(v => /^en/i.test(v.lang)) || null);
+  }
   const Sound = {
     init: audioInit, apply: audioApply,
     pullStart, pull, pullEnd, release: snapRelease, slack,
     flightStart, flightUpdate, flightStop,
     ...SFX, voice: VOICE,
     setTension(on) { tension = !!on; }, setAct, musicScene, sample: samplePlay, motif: playMotif, sting: playSting,
-    speak(text) {   // "Spoken" voice setting: the browser's own speech, pitched up into a cartoon
-      try { if (!window.speechSynthesis || sandbox || !settings.sound) return; const u = new SpeechSynthesisUtterance(text); u.pitch = 1.7; u.rate = 1.12; u.volume = clamp(settings.sfx / 100, 0, 1); speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) {}
+    // "Spoken" voice setting: the browser's own speech. v51: cast to the brief (docs/VOICE.md) as near as a browser
+    // voice allows: an American man, medium-low, quick and crisp, a showman rather than a chipmunk
+    speak(text) {
+      try { if (!window.speechSynthesis || sandbox || !settings.sound) return; const u = new SpeechSynthesisUtterance(text); const v = mortyVoice(); if (v) u.voice = v;
+        u.pitch = 0.82; u.rate = 1.08; u.volume = clamp(settings.sfx / 100, 0, 1); speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) { Debug.warn("AUDIO", e, "speech"); }
     },
     setPaused(p) {
       audioPaused = p; musicScene("pause", p);   // the reel plays its pause track

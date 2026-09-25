@@ -55,7 +55,7 @@
     showScreen("title"); updateHud();
   }
   $("play").addEventListener("click", () => openSheet("play"));   // Adventure or Arcade?
-  $("again").addEventListener("click", () => startGame({ mode: game.mode, map: game.map }));   // the same again (the same map, in Arcade and Practice)
+  $("again").addEventListener("click", () => startGame({ mode: game.mode, map: game.map, plus: game.plus }));   // the same again (the same map, in Arcade and Practice)
 
   // ───────────────────────── Play: Story or Arcade, and Arcade's map ─────────────────────────
   const clockStr = s => `${Math.floor(s / 60)}:${String(Math.floor(s) % 60).padStart(2, "0")}`;
@@ -69,6 +69,7 @@
     $("mapPickK").textContent = pickFor === "practice" ? t("play.pickPractice") : t("play.pickArcade");
     $("practiceOpts").hidden = pickFor !== "practice";
     segValue($("prac-ring"), practice.ring); segValue($("prac-half"), practice.half); segValue($("prac-hz"), practice.hazards ? "on" : "off");
+    $("plusCard").classList.toggle("locked", !plusOpen()); $("plusBest").textContent = plusOpen() ? t("plus.open") : t("plus.locked");
     renderMoreModes(); renderDirectorCard(); $("directorCard").hidden = Flags.modeOff("director");
     for (const b of $("modePick").querySelectorAll(".mode-card[data-mode]")) b.hidden = Flags.modeOff(b.dataset.mode);
     const reached = Math.min(profile.bestStage, MAP_COUNT), done = profile.storyClears > 0;
@@ -82,6 +83,11 @@
       return `<button class="map-card prac${open ? "" : " locked"}" type="button" data-map="${i}"${open ? "" : ' aria-disabled="true"'} style="--tint:${S.map.look.sky[1]}"><span class="n">Map ${i + 1}${lock}</span><b>${S.name}</b></button>`;
     }).join("");
   }
+  // v51: Adventure+ (07s_plus.js): open once the Adventure's been finished; the reel breaks first
+  $("plusCard").addEventListener("click", () => {
+    if (!plusOpen()) { Sound.ui("deny"); toast(t("plus.locked")); return; }
+    closeSheet(false); plusIntro(() => startGame({ mode: "story", plus: true }));
+  });
   $("modePick").addEventListener("click", e => {
     const b = e.target.closest("[data-mode]"); if (!b) return;
     const m = b.dataset.mode, M = MODES[m];

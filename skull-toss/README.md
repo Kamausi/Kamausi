@@ -1,8 +1,18 @@
-# SKULL TOSS v50
+# SKULL TOSS v51
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)); nothing else ever plays in their place.
+
+## New in v51: a spotlit opening, Adventure+, boss knockouts with a punchline, water that reflects
+
+- **The opening.** After the studio logo, the real title screen sits in the dark behind closed curtains, the lettering in front of them. Two stage lights in the bottom corners click on, hunt about the stage, find SKULL TOSS one after the other and hold on it; the band hits, the curtains are pulled open (each pivots from its top outer corner, bunches at its edge, overshoots and settles), and the lights switch off and slide out of the corners. The buttons work throughout, and a tap skips ahead.
+- **Adventure+** opens once the Adventure is finished (the reel breaks: *"You've done this before."*). The same eight maps, climbing from about 1.25× to 2× — a quicker, smaller ring that fakes you out, decoy rings from map 3, a crosswind from map 2, a skull that cracks on the rim (a miss while cracked costs two), quicker bosses — with Speed Toss, Trick Shot and Perfect Map bonuses, and a darker, damaged print.
+- **Boss knockouts.** Every boss goes down its own way: a hit-stop and white flash, a pulse of its colour, a beat of realization, the anticipation, then one of ten defeats (collapse, launch, deflate, spin-out, accordion, shatter, smoke, the ground giving way, springing away, a slow fall back), debris in its own material, its own stamped word (PLUCKED!, SMASHED!, TIMBER!, CUT!…) and a final gag a beat later (the Crow King's crown drops onto the ring).
+- **The throw.** The last miss stays on the stage as faint ink dots (a red cross where it passed the ring, if it went close) until a make wipes it. The pull buzzes at each quarter of the draw. The flight is predicted with the game's own physics from release (and every frame after), so a make on its way starts the world travelling before it lands, and a miss lets it settle back. The Crow King (and the Bat Baron and the Owl) keep to their paths while the ring they carry bobs beneath them in time with their wingbeats.
+- **Water.** On the Drowned Theater and the Black Marsh, the ring, its post, the skull, the bosses and the scenery are mirrored in the water (never on the boardwalk), wavering; a skull that lands in the water sets off ripples.
+- **Smaller things.** A finished challenge drops in where the achievements do. Launchers and bands show on the Vault's pedestal (Morty sits in the launcher, drawn back). The Spoken voice is cast to Morty's brief ([docs/VOICE.md](docs/VOICE.md)).
+- **Under the hood.** `?collisions` (or `SkullToss.debug.collisions(true)`) shows every hit test, colour-coded. The run's state is a checked machine: a move it doesn't know is noted, never thrown. Failures the game shrugs off are noted by category (`SkullToss.debug.warnings()`). Saves are hardened against garbage (and Diamond mastery claims now survive a reload).
 
 ## New in v50: Settings by category, four more mini-games, masks, and a lot of fixes
 

@@ -37,7 +37,7 @@
   function showReelCard(c) {
     reelSt.card = c; reelSt.t0 = game.time; reelSt.rotAt = null; reelEl.style.opacity = ""; reelSt.shown.push(c.kind + (c.n ? ":" + c.n : "")); reelSt.lastN = -1;
     reelEl.dataset.kind = c.kind; reelEl.hidden = false;
-    $("rcK").textContent = c.k || ""; $("rcReel").textContent = c.reel || ""; $("rcTitle").textContent = c.title || ""; $("rcSub").textContent = c.sub || ""; $("rcNote").textContent = c.note || "";
+    $("rcK").textContent = (game.plus && c.kind === "title" ? t("plus.kicker") + " · " : "") + (c.k || ""); $("rcReel").textContent = c.reel || ""; $("rcTitle").textContent = c.title || ""; $("rcSub").textContent = c.sub || ""; $("rcNote").textContent = c.note || "";
     reelEl.classList.remove("in"); void reelEl.offsetWidth; reelEl.classList.add("in");
     srEl.textContent = c.kind === "leader" ? t("reel.countdown") : [c.reel, c.title, c.sub].filter(Boolean).join(". ");
     if (c.kind === "title" && c.n) Sound.motif("map" + c.n); else Sound.toon(c.kind === "end" ? "fanfare" : c.kind === "leader" ? "tick" : "brass");   // each reel's own phrase (02e_audio_sets.js) if (c.kind === "end") mortySays("end", { priority: true });
