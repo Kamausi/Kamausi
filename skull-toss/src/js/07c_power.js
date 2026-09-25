@@ -9,9 +9,28 @@
     ghost:   { name: "Ghost Toss",    uses: 2, throws: 8, color: "#BFE3DA", tip: "Slip through the rim and seeds" },
     magnet:  { name: "Bone Magnet",   throws: 5, color: "#9BC53D", tip: "+20 bones on every make" },
     second:  { name: "Second Chance", uses: 1, throws: 10, color: "#4FA39C", tip: "Your next miss is free" },
-    cursed:  { name: "Cursed Skull",  throws: 5, color: "#9A6BC0", tip: "Ring ×1.5 speed · score ×3" }
+    cursed:  { name: "Cursed Skull",  throws: 5, color: "#9A6BC0", tip: "Ring ×1.5 speed · score ×3" },
+    // v54: the Adventure adds one new prop a map from the second on, each one changing what a throw can survive or do,
+    // and Adventure+ adds one that breaks the rules (map: the map it's introduced on; plus: Adventure+ only)
+    lucky:    { name: "Lucky Skull",  uses: 2, throws: 8, color: "#3FAE5A", tip: "A clank off the rim can still drop in", map: 2 },
+    ricochet: { name: "Ricochet",     uses: 1, throws: 8, color: "#D98CE0", tip: "Bonk something and bounce: no skull lost", map: 3 },
+    heavy:    { name: "Heavy Skull",  uses: 3, throws: 8, color: "#8C929C", tip: "Smash straight through what's in the way", map: 4 },
+    time:     { name: "Time Bone",    throws: 5, color: "#6FB7D8", tip: "The ring and the hazards slow to half speed", map: 5 },
+    combo:    { name: "Combo Bone",   throws: 6, color: "#E86A9A", tip: "Every make in a row adds ×0.25", map: 6 },
+    chaos:    { name: "Chaos Skull",  throws: 5, color: "#FF6A3D", tip: "Every make rolls the score: ×1 to ×4", plus: true }
   };
   const POWER_IDS = Object.keys(POWERS);
+  // which props can drop here: the seven from the start, each map's new one from that map on (every one in Arcade's
+  // maps from there on too), and the rule-breaker only in Adventure+
+  function powersHere() {
+    const st = game.stage || 1;
+    return POWER_IDS.filter(id => { const P = POWERS[id]; return P.plus ? !!game.plus : P.map ? st >= P.map || !!game.plus : true; });
+  }
+  // v54: some props are better together. A make while both of a pair are on is a synergy: its name comes up and it
+  // pays half as much again
+  const SYNERGIES = [["heavy", "ricochet", "pinball"], ["ghost", "deadeye", "phantom"], ["time", "combo", "slowburn"], ["lucky", "second", "charmed"], ["rush", "time", "warp"], ["chaos", "cursed", "doom"]];
+  const synergyNow = () => SYNERGIES.find(([a, b]) => powerOn(a) && powerOn(b)) || null;
+  const synergyName = id => ({ pinball: () => t("syn.pinball"), phantom: () => t("syn.phantom"), slowburn: () => t("syn.slowburn"), charmed: () => t("syn.charmed"), warp: () => t("syn.warp"), doom: () => t("syn.doom") })[id]();
   // ── the Power-Up Director (v45, to the drop rules as written). Drops are rare and fair:
   //   · per hit: a flat 2% on every successful ring hit (a little more each map, +12%, and the tier's powerRate);
   //   · milestones: each stage (a map's first half, and its second after the mini-boss) sets score milestones from
@@ -30,8 +49,8 @@
   const POWER_RULES = { perHit: 0.02, stageScale: 0.12, milestone: 2000, milestoneScale: 1.35, milestoneChance: 0.6, pityStep: 0.1, pityHit: 0.004, certain: 0.3, perStage: 4, fromHit: 3, exclude: 5 };
   const PD = { acc: 0, bag: [], last: "", key: "", n: 0, halves: 0, step: 0, next: 0, gone: {} };   // gone: prop → the throw it ran out on
   function powerDirectorReset() { Object.assign(PD, { acc: 0, bag: [], last: "", key: "", n: 0, halves: 0, step: 0, next: 0, gone: {} }); }
-  function dealBag() {   // every prop once, in a fresh order (and never starting on the one just dealt)
-    const b = POWER_IDS.slice();
+  function dealBag() {   // every prop once, in a fresh order (and never starting on the one just dealt); v54: the map's new one twice
+    const b = powersHere(), st = game.stage || 1; for (const id of b.slice()) if (POWERS[id].map === st && game.mode === "story") b.push(id);
     for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(runRand() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; }
     if (b[0] === PD.last) [b[0], b[b.length - 1]] = [b[b.length - 1], b[0]];
     return b;
@@ -41,7 +60,7 @@
     if (!PD.bag.length) PD.bag = dealBag();
     let i = PD.bag.findIndex(ok), id;
     if (i >= 0) id = PD.bag.splice(i, 1)[0];
-    else { const any = POWER_IDS.filter(ok); id = any.length ? any[Math.floor(runRand() * any.length)] : POWER_IDS.find(x => x !== PD.last && x !== "cursed") || "deadeye"; }   // (nothing left in the bag fits just now)
+    else { const any = powersHere().filter(ok); id = any.length ? any[Math.floor(runRand() * any.length)] : powersHere().find(x => x !== PD.last && x !== "cursed") || "deadeye"; }   // (nothing left in the bag fits just now)
     PD.last = id; return id;
   }
   // the stage the drops are counted in: a map's first half or its second (Arcade's endless climb: each 30 hits)
@@ -122,11 +141,29 @@
   const powerCardEl = $("powerCard");
   // v50: a card that pops up in play goes below the ring's lowest reach on this map (or above its highest), never on it
   function placeClearOfRing(el) {
-    el.style.top = ""; if (screen !== "play" || !ring) return;
-    const Z = mapData(game.stage || 1).sheet.zones.ring, low = project(0, Z.y[0] - ring.rc, Z.z[0]), cur = project(ring.x, ring.y, ring.z);
-    const bottom = Math.max(low.y + ring.rc * low.s * 0.2, cur.y + ring.rc * cur.s * (ringFlies() ? 1.6 : 1.1)), r = el.getBoundingClientRect(), h = r.height || 110;
-    if (bottom + h + 12 < H * 0.86) el.style.top = `${Math.round(bottom + 12 + h / 2)}px`;
-    else { const top = cur.y - ring.rc * cur.s * 1.4; el.style.top = `${Math.round(Math.max(H * 0.2, top - 12 - h / 2))}px`; }
+    el.style.top = ""; let down = 1;
+    if (screen === "play" && ring) {
+      const Z = mapData(game.stage || 1).sheet.zones.ring, low = project(0, Z.y[0] - ring.rc, Z.z[0]), cur = project(ring.x, ring.y, ring.z);
+      const bottom = Math.max(low.y + ring.rc * low.s * 0.2, cur.y + ring.rc * cur.s * (ringFlies() ? 1.6 : 1.1)), h = el.offsetHeight || 110;
+      if (bottom + h + 12 < H * 0.86) el.style.top = `${Math.round(bottom + 12 + h / 2)}px`;
+      else { const top = cur.y - ring.rc * cur.s * 1.4; el.style.top = `${Math.round(Math.max(H * 0.2, top - 12 - h / 2))}px`; down = -1; }
+    }
+    clearOfPopups(el, down);
+  }
+  // v54: the act or area card and the power-up card could come up at once, in the same place, one over the other. The
+  // one arriving now stacks against the one already up: further from the ring if there's room, the other side if not.
+  const POPUP_IDS = ["stagecard", "powerCard"];
+  const popupBox = e => { const c = parseFloat(e.style.top || getComputedStyle(e).top); return { c: isFinite(c) ? c : H / 2, h: e.offsetHeight || 110 }; };
+  function clearOfPopups(el, down = 1) {
+    const me = popupBox(el), gap = 10;
+    for (const id of POPUP_IDS) {
+      const o = $(id); if (!o || o === el || o.hidden || o.classList.contains("out")) continue;
+      const B = popupBox(o); if (Math.abs(me.c - B.c) >= (me.h + B.h) / 2 + gap) continue;
+      const along = B.c + down * ((B.h + me.h) / 2 + gap), back = B.c - down * ((B.h + me.h) / 2 + gap);
+      const fits = c => c - me.h / 2 > H * 0.12 && c + me.h / 2 < H * 0.96;
+      me.c = fits(along) ? along : fits(back) ? back : along;
+      el.style.top = `${Math.round(me.c)}px`;
+    }
   }
   let powerCardT = 0;
   function powerCard(id) {
@@ -154,15 +191,31 @@
     caption("+20 bones", at.x, at.y + U * 0.12);
   }
 
-  // ── the HUD badges: which props you're carrying, and for how long
+  // ── the HUD cards: which props you're carrying, and for how long. v54: each is a card of its own: the prop in a frame
+  // with room round it (nothing clipped), and under it, separate, a plain capsule gauge of the throws it has left that
+  // drains smoothly, pulses when a quarter is left and faster on the last throw. A prop with uses (Ghost Toss, Second
+  // Chance, BONK Blast) shows them as ×n on the frame; one that lasts the whole run (the Cursed Reel's) has no gauge.
   const powEl = $("powers");
   function renderPowers() {
     if (!powEl) return;
     const ids = POWER_IDS.filter(id => powers[id]);
     powEl.hidden = !ids.length;
-    powEl.innerHTML = ids.map(id => { const p = powers[id], n = POWERS[id].uses ? p.uses : p.left;
-      return `<span class="pw" style="--c:${POWERS[id].color}" title="${POWERS[id].name}: ${POWERS[id].tip}"><canvas data-pw="${id}" width="44" height="44"></canvas><b>${n}</b></span>`; }).join("");
-    for (const cv of powEl.querySelectorAll("canvas")) { const c = cv.getContext("2d"); c.clearRect(0, 0, 44, 44); drawPowerIcon(c, cv.dataset.pw, 22, 23, 15, 0.4); }
+    for (const el of [...powEl.children]) if (!powers[el.dataset.pw]) el.remove();
+    for (const id of ids) {
+      const P = POWERS[id], p = powers[id], passive = !P.throws || p.left > 999;
+      let el = powEl.querySelector(`[data-pw="${id}"]`);
+      if (!el) {
+        el = document.createElement("span"); el.className = "pw"; el.dataset.pw = id; el.style.setProperty("--c", P.color); el.title = `${P.name}: ${P.tip}`;
+        el.innerHTML = `<span class="pw-ic"><canvas width="96" height="96"></canvas></span><span class="pw-t"><i></i></span><b></b>`;
+        const cv = el.querySelector("canvas"), c = cv.getContext("2d"); drawPowerIcon(c, id, 48, 49, 25, 0.4);
+      }
+      powEl.append(el);   // (in the props' own order)
+      const frac = passive ? 1 : clamp(p.left / P.throws, 0, 1);
+      el.querySelector(".pw-t").hidden = passive; el.querySelector(".pw-t i").style.width = `${(frac * 100).toFixed(1)}%`;
+      el.classList.toggle("low", !passive && frac <= 0.25); el.classList.toggle("crit", !passive && p.left <= 1);
+      const b = el.querySelector("b"); b.hidden = !P.uses; b.textContent = P.uses ? `×${p.uses}` : "";
+      el.setAttribute("aria-label", passive ? P.name : t("power.left", { name: P.name, n: p.left }));
+    }
   }
 
   // ── the props themselves: cartoon objects with ink outlines, bouncing on twos
@@ -215,6 +268,37 @@
       c.fillStyle = "rgba(255,230,220,.5)"; c.beginPath(); c.ellipse(-r * 0.5, -r * 0.35, r * 0.2, r * 0.12, -0.6, 0, TAU); c.fill();
       c.save(); c.rotate(-0.6); c.fillStyle = "#E8D8B4"; c.beginPath(); rr(c, -r * 0.75, -r * 0.2, r * 1.5, r * 0.4, r * 0.16); ink(); c.fillStyle = "#C9B58E"; c.fillRect(-r * 0.2, -r * 0.2, r * 0.4, r * 0.4); c.restore();
       c.fillStyle = INK; c.beginPath(); c.arc(-r * 0.3, -r * 0.05, r * 0.09, 0, TAU); c.arc(r * 0.35, -r * 0.1, r * 0.09, 0, TAU); c.fill();
+    } else if (id === "lucky") {      // a horseshoe, points up (to hold the luck in), with a four-leaf clover in it
+      c.lineWidth = r * 0.34 + lw * 2; c.strokeStyle = INK; c.beginPath(); c.arc(0, r * 0.1, r * 0.72, Math.PI * 0.85, Math.PI * 2.15); c.stroke();
+      c.lineWidth = r * 0.34; c.strokeStyle = "#C9CED6"; c.stroke(); c.lineWidth = lw; c.strokeStyle = INK;
+      for (let i = 0; i < 6; i++) { const a = Math.PI * (0.95 + i * 0.22); c.fillStyle = INK; c.beginPath(); c.arc(Math.cos(a) * r * 0.72, r * 0.1 + Math.sin(a) * r * 0.72, r * 0.05, 0, TAU); c.fill(); }
+      c.save(); c.translate(0, r * 0.05); c.rotate(Math.sin(tt * 3) * 0.15); c.fillStyle = "#3FAE5A";
+      for (let i = 0; i < 4; i++) { c.save(); c.rotate(i * Math.PI / 2 + Math.PI / 4); c.beginPath(); c.moveTo(0, 0); c.bezierCurveTo(-r * 0.28, -r * 0.2, -r * 0.2, -r * 0.48, 0, -r * 0.34); c.bezierCurveTo(r * 0.2, -r * 0.48, r * 0.28, -r * 0.2, 0, 0); ink(); c.restore(); }
+      c.strokeStyle = "#2E7A40"; c.beginPath(); c.moveTo(0, 0); c.quadraticCurveTo(r * 0.1, r * 0.3, r * 0.05, r * 0.5); c.stroke(); c.restore();
+    } else if (id === "ricochet") {   // a rubber skull mid-bounce off a wall, with the arcs of its path
+      c.fillStyle = "#8A6A44"; c.beginPath(); c.rect(-r * 1.05, -r * 0.9, r * 0.28, r * 1.8); ink();
+      c.strokeStyle = "#D98CE0"; c.lineWidth = lw * 0.8; c.setLineDash([r * 0.12, r * 0.1]); c.beginPath(); c.moveTo(r * 1.1, -r * 0.9); c.quadraticCurveTo(-r * 0.3, -r * 0.5, -r * 0.75, -r * 0.05); c.quadraticCurveTo(-r * 0.2, r * 0.5, r * 0.9, r * 0.8); c.stroke(); c.setLineDash([]);
+      const sq = 1 + Math.sin(tt * 10) * 0.08; c.save(); c.translate(-r * 0.35, 0); c.scale(1 / sq, sq); drawSkull(c, 0, 0, r * 0.52, { t, look: { ...DEFAULT_COS }, face: faceFor("dizzy", t), jaw: 0.2 }); c.restore();
+      c.strokeStyle = INK; c.lineWidth = lw;
+    } else if (id === "heavy") {      // an iron skull with rivets, a crack in the ground under it
+      const b = Math.abs(Math.sin(tt * 4)) * r * 0.08;
+      c.fillStyle = "#4A4E56"; c.beginPath(); c.ellipse(0, r * 0.95, r * 0.9, r * 0.14, 0, 0, TAU); c.fill();
+      c.strokeStyle = INK; c.beginPath(); c.moveTo(-r * 0.5, r * 0.95); c.lineTo(-r * 0.2, r * 0.85); c.lineTo(0, r * 1.02); c.lineTo(r * 0.3, r * 0.88); c.stroke();
+      drawSkull(c, 0, -b, r * 0.8, { t, look: { ...DEFAULT_COS, skull: "iron" }, face: faceFor("excited", t), jaw: 0.1 });
+      c.fillStyle = "#C9CED6"; for (const [bx, by] of [[-0.45, -0.45], [0.45, -0.45], [0, -0.75]]) { c.beginPath(); c.arc(bx * r, by * r - b, r * 0.07, 0, TAU); ink(); }
+      c.fillStyle = INK; c.font = `900 ${Math.round(r * 0.42)}px ${DISPLAY}`; c.textAlign = "center"; c.fillText("1T", 0, -r * 1.05 - b);
+    } else if (id === "time") {       // an hourglass of bone, the sand running
+      c.rotate(Math.sin(tt * 1.5) * 0.08);
+      c.fillStyle = "#F2E7C9"; for (const sy of [-1, 1]) { c.beginPath(); rr(c, -r * 0.8, sy * r * 0.95 - r * 0.12, r * 1.6, r * 0.24, r * 0.1); ink(); }
+      c.fillStyle = "rgba(210,236,245,.85)"; c.beginPath(); c.moveTo(-r * 0.62, -r * 0.83); c.lineTo(r * 0.62, -r * 0.83); c.quadraticCurveTo(r * 0.1, -r * 0.1, r * 0.08, 0); c.quadraticCurveTo(r * 0.1, r * 0.1, r * 0.62, r * 0.83); c.lineTo(-r * 0.62, r * 0.83); c.quadraticCurveTo(-r * 0.1, r * 0.1, -r * 0.08, 0); c.quadraticCurveTo(-r * 0.1, -r * 0.1, -r * 0.62, -r * 0.83); c.closePath(); ink();
+      const run = (tt * 0.25) % 1; c.fillStyle = "#E3B64B"; c.beginPath(); c.moveTo(-r * 0.45 * (1 - run), -r * 0.35 - r * 0.4 * run); c.lineTo(r * 0.45 * (1 - run), -r * 0.35 - r * 0.4 * run); c.lineTo(0, -r * 0.05); c.closePath(); c.fill();
+      c.beginPath(); c.moveTo(-r * 0.5 * run, r * 0.8); c.lineTo(r * 0.5 * run, r * 0.8); c.lineTo(0, r * 0.8 - r * 0.45 * run); c.closePath(); c.fill(); c.fillRect(-r * 0.03, 0, r * 0.06, r * 0.8);
+    } else if (id === "combo") {      // three bones chained, a big ×
+      for (let i = 0; i < 3; i++) { c.save(); c.translate((i - 1) * r * 0.62, (i - 1) * -r * 0.18 + Math.sin(tt * 6 + i) * r * 0.05); c.rotate(-0.5); c.fillStyle = "#F2E7C9"; c.beginPath(); rr(c, -r * 0.34, -r * 0.08, r * 0.68, r * 0.16, r * 0.06); for (const bx of [-0.34, 0.34]) for (const by of [-0.08, 0.08]) { c.moveTo(bx * r + r * 0.1, by * r); c.arc(bx * r, by * r, r * 0.1, 0, TAU); } ink(); c.restore(); }
+      c.fillStyle = "#E86A9A"; c.font = `900 ${Math.round(r * 0.9)}px ${DISPLAY}`; c.textAlign = "center"; c.lineWidth = lw * 1.5; c.strokeText("×", r * 0.2, r * 1.0); c.fillText("×", r * 0.2, r * 1.0); c.lineWidth = lw;
+    } else if (id === "chaos") {      // a die on fire, tumbling
+      c.rotate(tt * 2); c.fillStyle = "#FF6A3D"; c.beginPath(); rr(c, -r * 0.7, -r * 0.7, r * 1.4, r * 1.4, r * 0.25); ink();
+      c.fillStyle = CREAM; for (const [dx, dy] of [[-0.35, -0.35], [0.35, 0.35], [0, 0], [0.35, -0.35], [-0.35, 0.35]]) { c.beginPath(); c.arc(dx * r, dy * r, r * 0.12, 0, TAU); c.fill(); }
     } else if (id === "cursed") {     // a purple skull with horns, grinning through green flame (v49: the GPU's green fire, when it's on)
       if (!gpuFireAt(c, "cursed", 0, -r * 0.55, r * 1.6, r * 1.1, 1, 1)) for (let i = 0; i < 7; i++) { const a = -Math.PI / 2 + (i - 3) * 0.38, fl = 1 + 0.25 * Math.sin(tt * 14 + i * 2); c.fillStyle = i % 2 ? "#9BC53D" : "#6FA02A"; c.beginPath(); c.moveTo(Math.cos(a - 0.2) * r * 0.7, Math.sin(a - 0.2) * r * 0.7); c.quadraticCurveTo(Math.cos(a) * r * 1.7 * fl, Math.sin(a) * r * 1.7 * fl, Math.cos(a + 0.2) * r * 0.7, Math.sin(a + 0.2) * r * 0.7); c.fill(); }
       for (const sd of [-1, 1]) { c.fillStyle = "#3A2240"; c.beginPath(); c.moveTo(sd * r * 0.35, -r * 0.55); c.quadraticCurveTo(sd * r * 1.05, -r * 0.8, sd * r * 0.95, -r * 1.35); c.quadraticCurveTo(sd * r * 0.75, -r * 0.8, sd * r * 0.15, -r * 0.7); c.closePath(); ink(); }

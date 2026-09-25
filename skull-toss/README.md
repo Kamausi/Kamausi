@@ -1,8 +1,64 @@
-# SKULL TOSS v53
+# SKULL TOSS v54
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)); nothing else ever plays in their place.
+
+## New in v54: a world with depth, music you can see, and a way on through a portal
+
+- **Fixes.**
+  - A ghost's glow is soft all round up close (it used to be cut off square by its drawing's edges).
+  - The act card and a power-up card coming up together stack instead of overlapping.
+  - The ring has no dark halo round it or dark rim inside it: a soft glow in its own colour instead.
+- **Signature shots** focus instead of blacking out:
+  - the picture behind Morty softens a touch while he stays sharp;
+  - a thin soft ring and a faint vignette;
+  - under half a second, and nothing is darkened.
+- **Power-up cards.** Each carried prop is a card:
+  - the prop in its own frame, nothing clipped;
+  - a separate capsule gauge of the throws left that drains smoothly, pulses at a quarter and faster on the last throw;
+  - ×n for its uses;
+  - no gauge for one that lasts the run.
+- **The Raven King is angry, not sad.**
+  - Heavy lids slope down to the middle and the brows press down with a furrow between them.
+  - A front-on beak whose lower half hinges down over a dark mouth.
+  - Every caw goes squeeze, snap open, hold, then snaps shut with an overshoot.
+  - Knocked out, his face breaks into shock.
+- **Targets ride beside the ring** on iron arms, 1.25–1.6× its drawn size out, instead of waiting in the corners. The
+  arms swing upright as the ring nears a screen edge, so targets stay on screen and in reach. They squash and stretch a
+  little and flash when hit.
+- **The Pumpkin King (and every boss's lair) reveals himself.**
+  - Far off, a small dark shape in the haze; then his colour; then his crown.
+  - Full size only as you arrive.
+  - Nothing stands in front of him.
+- **The land is a field.**
+  - Clusters of the zone's scenery (copses, knots of stones, patches) out across the land, with open stretches between.
+  - Big dark masses far out.
+  - Low dressing by the lane, and flat detail (grass, pebbles, twigs, leaves) across it.
+  - A frame of big trees round each boss's ground.
+  - The extra pieces are the first to go when a phone is busy.
+- **The world moves to the music.**
+  - A musical clock follows the actual recording through each loop's beat map. Every kind of scenery has its own
+    rhythm, and nothing moves on every beat.
+  - Songs hand over on the bar, and bosses come in on the beat.
+  - A boss's fight adds a drum under half his health.
+  - The music holds for the knockout.
+- **The gravedigger digs like a man with a shovel.**
+  - Eight phases with their own timing.
+  - A shovel on a spring that lags and overshoots.
+  - A puff at contact, and earth that flies, spins and lands on his mound.
+  - Heavy, tired, stuck and double digs now and then. A bar to each dig.
+- **Portals.** When the end boss goes down, the stage empties and a black portal opens. Throw Morty through it and the
+  camera follows him down the rift to the next place. The route is the boss, Can Alley, then the next map. A miss at a
+  portal costs nothing.
+- **New power-ups**, one a map from map 2: Lucky Skull, Ricochet, Heavy Skull, Time Bone and Combo Bone, plus the
+  Chaos Skull in Adventure+. Six **synergies** (Pinball, Phantom Eye, Slow Burn, Charmed, Warp Speed, Doom Roll) pay
+  half as much again.
+- **Docs.**
+  - [docs/ASSET-BIBLE.md](docs/ASSET-BIBLE.md): how an asset is constructed, and the checklist.
+  - [docs/WORLD-SYSTEMS.md](docs/WORLD-SYSTEMS.md): the clock, the scenery, the reveal, the portals and the power-ups,
+    and what isn't done yet.
+- **A new run starts at the start of the track at once.** It used to keep the last run's place for a frame.
 
 ## New in v53: settings that work, menus that scroll sideways, a world that holds together
 

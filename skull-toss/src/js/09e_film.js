@@ -65,13 +65,31 @@
     if (film.spot) drawSpot(c, now);
   }
   // the iris spot: the picture closes to a circle round one thing, holds, and opens again (a signature shot's hold)
-  function irisSpot(x, y, dur = 0.9) { film.spot = { t0: performance.now(), x, y, dur: dur * 1000 }; }
+  // v54: a focus, not a blackout. The picture behind Morty goes a little soft (a 2-px blur on #shotFocus, masked clear
+  // round him), a faint vignette gathers the eye, a thin soft ring of light sits round him and he's lifted a touch.
+  // Nothing is darkened, and it's over in under half a second.
+  const focusEl = $("shotFocus");
+  function irisSpot(x, y, dur = 0.45) {
+    const r = Math.max(34, U * 0.12);
+    film.spot = { t0: performance.now(), x, y, r, dur: dur * 1000 };
+    if (!focusEl) return;
+    for (const [k, v] of [["--x", x + "px"], ["--y", y + "px"], ["--r", r * 1.15 + "px"], ["--d", dur + "s"]]) focusEl.style.setProperty(k, v);
+    focusEl.hidden = false; focusEl.classList.remove("on"); void focusEl.offsetWidth; focusEl.classList.add("on");
+    clearTimeout(focusEl._t); focusEl._t = setTimeout(() => { focusEl.hidden = true; focusEl.classList.remove("on"); }, dur * 1000 + 80);
+  }
+  const spotEnv = u => (u < 0.18 ? u / 0.18 : u < 0.7 ? 1 : 1 - (u - 0.7) / 0.3);   // in, hold, out
   function drawSpot(c, now) {
     const S = film.spot, u = (now - S.t0) / S.dur; if (u >= 1) { film.spot = null; return; }
-    const max = Math.hypot(W, H), small = U * 0.3, k = u < 0.25 ? 1 - Math.pow(u / 0.25, 1.4) : u < 0.7 ? 0 : Math.pow((u - 0.7) / 0.3, 1.3);
-    const r = small + (max - small) * k;
-    c.fillStyle = "rgba(23,19,15,.88)"; c.beginPath(); c.rect(0, 0, W, H); c.arc(S.x, S.y, r, 0, TAU, true); c.fill();
-    c.strokeStyle = "rgba(242,231,201,.3)"; c.lineWidth = 2; c.beginPath(); c.arc(S.x, S.y, r, 0, TAU); c.stroke();
+    const k = clamp(spotEnv(u), 0, 1), r = S.r * (1.25 - 0.1 * Math.min(1, u / 0.18));
+    c.save();
+    const v = c.createRadialGradient(S.x, S.y, Math.max(W, H) * 0.35, S.x, S.y, Math.hypot(W, H) * 0.75);   // the vignette: barely there
+    v.addColorStop(0, "rgba(23,19,15,0)"); v.addColorStop(1, `rgba(23,19,15,${0.14 * k})`); c.fillStyle = v; c.fillRect(0, 0, W, H);
+    const lift = c.createRadialGradient(S.x, S.y, 0, S.x, S.y, r);   // Morty, a touch brighter
+    lift.addColorStop(0, `rgba(255,244,222,${0.1 * k})`); lift.addColorStop(1, "rgba(255,244,222,0)"); c.fillStyle = lift; c.beginPath(); c.arc(S.x, S.y, r, 0, TAU); c.fill();
+    const w = Math.max(3, r * 0.14), glow = c.createRadialGradient(S.x, S.y, r - w, S.x, S.y, r + w);   // the ring: thin, soft, glowing
+    glow.addColorStop(0, "rgba(255,226,150,0)"); glow.addColorStop(0.5, `rgba(255,226,150,${0.5 * k})`); glow.addColorStop(1, "rgba(255,226,150,0)");
+    c.fillStyle = glow; c.beginPath(); c.arc(S.x, S.y, r + w, 0, TAU); c.arc(S.x, S.y, Math.max(0, r - w), 0, TAU, true); c.fill();
+    c.restore();
   }
   // the iris: the picture closes to a circle and opens on the next scene
   function irisTo(fn, cx = W / 2, cy = H / 2) {

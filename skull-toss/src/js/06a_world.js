@@ -78,6 +78,7 @@
 
   function updateWorld(dt) {
     const w = world; w.t += dt;
+    musicClockUpdate(w.t); bossBandUpdate(); updatePortal(dt);   // (v54: the musical clock the scenery moves to, 02f_music_clock.js; the portal, 07t_portal.js)
     updateTravel(dt);   // (06g_travel.js)
     updateWater(dt);    // (v51: ripples, 08l_water.js)
     updateGraveyard(dt); updateWeather(dt);

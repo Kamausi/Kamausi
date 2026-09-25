@@ -129,7 +129,7 @@
     zombie:   { x0: -0.27, y0: -1.11, x1: 0.65, y1: 0.15 },
     skeleton: { x0: -0.31, y0: -1.08, x1: 0.36, y1: 0.10 },
     werewolf: { x0: -0.53, y0: -1.23, x1: 0.71, y1: 0.13 },
-    ghost:    { x0: -0.41, y0: -1.13, x1: 0.47, y1: -0.23 }
+    ghost:    { x0: -0.66, y0: -1.38, x1: 0.72, y1: 0.02 }   // (v54: room all round for its glow, which fades out well inside the edge)
   };
   let celS = 0, cels = {};
   function walkerCelsResize() { cels = {}; celS = Math.max(14, projectBase(0, 0, 12.5).s * 1.85); }
@@ -161,7 +161,14 @@
     if (type !== "ghost") { const v = g.createLinearGradient(0, 0, 0, h); v.addColorStop(0.72, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(0,0,0,.3)"); g.fillStyle = v; g.fillRect(0, 0, w, h); }
     g.globalCompositeOperation = "source-atop"; g.globalAlpha = 0.35; g.drawImage(c, -Math.max(1, w * 0.012), -Math.max(1, h * 0.008));   // (a faint offset copy: a rim on the lit edge)
     g.restore();
-    if (type === "ghost") { g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = "destination-over"; const r = g.createRadialGradient(w / 2, h * 0.45, 0, w / 2, h * 0.45, Math.max(w, h) * 0.6); r.addColorStop(0, "rgba(200,235,255,.28)"); r.addColorStop(1, "rgba(200,235,255,0)"); g.fillStyle = r; g.fillRect(0, 0, w, h); g.restore(); }
+    // the ghost's glow: an oval around its body that has faded to nothing before the cel's edge. (v54: it was a circle
+    // wider than the cel, cut off by the cel's sides, and showed as a square up close.)
+    if (type === "ghost") {
+      g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = "destination-over";
+      const rx = w * 0.46, ry = h * 0.46; g.translate(w / 2, h * 0.5); g.scale(1, ry / rx);
+      const r = g.createRadialGradient(0, 0, 0, 0, 0, rx); r.addColorStop(0, "rgba(200,235,255,.3)"); r.addColorStop(0.45, "rgba(200,235,255,.14)"); r.addColorStop(1, "rgba(200,235,255,0)");
+      g.fillStyle = r; g.beginPath(); g.arc(0, 0, rx, 0, TAU); g.fill(); g.restore();
+    }
   }
   const celIndex = k => {
     const ph = k.type === "ghost" ? world.t * 1.6 + k.ph : k.ph;
@@ -230,6 +237,7 @@
     // after it (drawNearWorld), so one walking between the ring and the camera passes in front of the pole, not behind it
     const ws = world.walkers.filter(k => !walkerNear(k)).sort((a, b) => b.z - a.z);
     let wi = 0, hazed = !TRAVEL.on;
+    drawTravelDecals();   // (v54: flat detail on the ground, under everything that stands on it: 06g_travel.js)
     for (const k of GY.props) {
       if (k.travel) { if (!travelShows(k)) continue; if (!hazed && k.z < TRAVEL_HAZE_Z) { drawTravelHaze(); hazed = true; } }   // (the far scenery softens behind the haze: 06g_travel.js)
       while (wi < ws.length && ws[wi].z > k.z) drawWalker(ws[wi++]);

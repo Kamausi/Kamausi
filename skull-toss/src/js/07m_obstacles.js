@@ -158,6 +158,7 @@
       if (near && !hit && !game.result) s.close = true;   // a near pass (Thread the Needle)
       if (!hit) continue;
       if (powerOn("ghost")) { if (!I.ghosted || OB.t - I.ghosted > 1) { I.ghosted = OB.t; usePower("ghost"); s.ghosted = 1; const p = project(P.x, P.y, P.z); caption(t("result.ghost.caption"), p.x, p.y - U * 0.06); Sound.toon("poof"); } continue; }
+      if (powerOn("heavy")) { if (!I.smashed || OB.t - I.smashed > 1) { I.smashed = OB.t; I.hitAt = OB.t; usePower("heavy"); const p = project(P.x, P.y, P.z); impact(t("result.smash"), p.x, p.y - U * 0.06, { fill: "#8C929C", text: CREAM, scale: 0.55, bits: true }); Sound.toon("kaboom"); VisualSystem.triggerImpact("blast", { at: p }); } continue; }   // (v54: the Heavy Skull goes straight through)
       obstacleKnock(s, I, at || P);
       return true;
     }

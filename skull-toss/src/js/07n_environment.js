@@ -169,8 +169,13 @@
   // ── lighting: the ring's backing and rim (readable on any map), the boss's dimmed scenery and spot
   function drawRingLight(x, y, r, lw) {
     const Lt = LIGHT(), a = Lt.ring;
-    ctx.save(); ctx.lineWidth = lw * 2.6; ctx.strokeStyle = `rgba(8,6,10,${a * 0.75})`; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.stroke();   // a dark backing, so a bright sky never swallows it
-    ctx.restore();
+    // v54: no dark backing any more (it read as a see-through black halo round the ring and a dark rim inside it). What
+    // keeps the ring clear of the sky now is its own ink line and a soft glow in its own colour, outside it only: the
+    // hole stays clear and nothing round the ring is darkened.
+    const R = RINGS[cos.ring] || RINGS.hoop, E = ringOuter(r, lw, cos.ring), G = E + Math.max(4, lw * 1.2);
+    const g = ctx.createRadialGradient(x, y, E * 0.98, x, y, G);
+    g.addColorStop(0, `rgba(${R.rgb},${0.28 * a})`); g.addColorStop(1, `rgba(${R.rgb},0)`);
+    ctx.save(); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, G, 0, TAU); ctx.arc(x, y, E * 0.98, 0, TAU, true); ctx.fill(); ctx.restore();
     return () => {   // the rim light on the side the key comes from, drawn over the ring
       const ang = Math.atan2(-Lt.y, Lt.x);
       ctx.save(); ctx.lineCap = "round"; ctx.strokeStyle = Lt.rim; ctx.lineWidth = Math.max(1.5, lw * 0.35); ctx.beginPath(); ctx.arc(x, y, r + lw * 0.55, ang - 0.7, ang + 0.7); ctx.stroke(); ctx.restore();

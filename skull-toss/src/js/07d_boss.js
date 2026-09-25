@@ -82,6 +82,75 @@
     B.draw = (front) => drawCrow(B, front);
     return B;
   }
+  // ── his face (v54). He read as sad: his brows rose towards the middle. Now he's angry even standing still, and the
+  // same face goes further when he attacks, then breaks when he's beaten:
+  //   · eyes narrowed under heavy upper lids that slope down towards the middle; small pupils, fixed on you;
+  //   · brows angled down towards the middle (↘ ↙), pressing on the lids, with a furrow between them;
+  //   · rest: a held scowl · attack (the caw before a swoop): brows lower, eyes narrower, the head dips, the beak gapes
+  //     · hurt: the eyes squeeze and he squawks · beaten: shocked, brows up, eyes wide, beak hanging open.
+  // The beak is drawn from the front: a diamond, the upper half fixed to his face and the lower half hinged at the seam,
+  // dropping down and towards you over a dark mouth. A caw runs anticipation (a squeeze), open (a snap), a hold, and a
+  // close that overshoots shut, on the 0.5-s tell: about 60, 100, 190 and 140 ms.
+  const CROW_EYE = { x: 0.3, y: -0.3, rx: 0.22, ry: 0.27 };
+  function crowJaw(u) {   // the caw across the tell: <0 is the squeeze, 1 wide open
+    if (u <= 0 || u >= 1) return 0;
+    if (u < 0.12) return -0.12 * Math.sin((u / 0.12) * Math.PI / 2);
+    if (u < 0.32) return -0.12 + 1.12 * smooth((u - 0.12) / 0.2);
+    if (u < 0.7) return 1 - 0.07 * (1 - Math.cos((u - 0.32) * 42)) / 2;
+    const k = (u - 0.7) / 0.3; return k < 0.75 ? 1 - 1.14 * smooth(k / 0.75) : -0.14 * (1 - smooth((k - 0.75) / 0.25));
+  }
+  function crowFace(B, q, R, hurtK, dying) {
+    const tellK = q.tell ? Math.sin(q.tell * Math.PI) : 0, shock = B.dead ? 1 : 0;
+    const anger = shock ? 0 : clamp(0.65 + 0.35 * (1 - B.hp / B.max) + 0.45 * tellK, 0, 1.3), squint = shock ? 0 : Math.max(hurtK > 0.3 ? 0.85 : 0, 0.18 + 0.2 * anger);
+    const dip = tellK * R * 0.05, lw = Math.max(1.5, R * 0.06);
+    ctx.save(); ctx.translate(0, dip);   // (enraged, the head tips forward a touch: the face drops)
+    for (const sd of [-1, 1]) {
+      const ex = sd * R * CROW_EYE.x, ey = R * CROW_EYE.y, rx = R * CROW_EYE.rx, ry = R * (CROW_EYE.ry + shock * 0.05);
+      const eye = () => { ctx.beginPath(); ctx.ellipse(ex, ey, rx, ry, 0, 0, TAU); };
+      ctx.fillStyle = CREAM; eye(); ctx.fill();
+      if (B.dead && dying > 0.7) {   // (out cold, at last: X eyes)
+        ctx.strokeStyle = INK; ctx.lineWidth = lw; ctx.beginPath(); ctx.moveTo(ex - rx * 0.5, ey - ry * 0.4); ctx.lineTo(ex + rx * 0.5, ey + ry * 0.4); ctx.moveTo(ex + rx * 0.5, ey - ry * 0.4); ctx.lineTo(ex - rx * 0.5, ey + ry * 0.4); ctx.stroke();
+      } else {   // the pupil: small, a little in and down, on you; a pin-prick when he's shocked
+        const pr = R * (shock ? 0.045 : 0.075), px = ex - sd * R * 0.03, py = ey + R * (shock ? 0 : 0.07);
+        ctx.fillStyle = INK; ctx.beginPath(); ctx.ellipse(px, py, pr, pr * 1.3, 0, 0, TAU); ctx.fill();
+        ctx.fillStyle = CREAM; ctx.beginPath(); ctx.moveTo(px, py); ctx.arc(px, py, pr * 1.2, -1.3, -0.6); ctx.closePath(); ctx.fill();
+      }
+      // the heavy upper lid, sloping down towards the middle (and nearly shut when he's hurt)
+      if (squint > 0) {
+        const top = ey - ry, outerY = top + ry * 2 * squint * 0.55, innerY = top + ry * 2 * Math.min(0.92, squint * (1.1 + 0.45 * anger));
+        ctx.save(); eye(); ctx.clip();
+        ctx.fillStyle = "#2B2B33"; ctx.beginPath(); ctx.moveTo(ex + sd * rx * 1.2, top - ry); ctx.lineTo(ex + sd * rx * 1.2, outerY); ctx.lineTo(ex - sd * rx * 1.2, innerY); ctx.lineTo(ex - sd * rx * 1.2, top - ry); ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = INK; ctx.lineWidth = lw * 1.6; ctx.beginPath(); ctx.moveTo(ex + sd * rx * 1.2, outerY); ctx.lineTo(ex - sd * rx * 1.2, innerY); ctx.stroke();
+        ctx.restore();
+      }
+      ctx.strokeStyle = INK; ctx.lineWidth = lw; eye(); ctx.stroke();
+      // the brow: a feathered wedge, heavy at the middle end and pressed down there, lifted at the outside
+      const ix = ex - sd * R * 0.2, ox = ex + sd * R * 0.27;
+      const iy = shock ? ey - ry - R * 0.2 : ey - ry + R * (0.05 + 0.06 * anger), oy = shock ? ey - ry - R * 0.13 : ey - ry - R * (0.15 + 0.03 * anger);
+      const ti = R * 0.1, to = R * 0.05;
+      ctx.fillStyle = "#4C4860"; ctx.strokeStyle = INK; ctx.lineWidth = lw;
+      ctx.beginPath(); ctx.moveTo(ix, iy + ti * 0.5); ctx.lineTo(ix + sd * R * 0.02, iy - ti * 0.7); ctx.quadraticCurveTo((ix + ox) / 2, (iy + oy) / 2 - ti * 0.9, ox, oy - to); ctx.lineTo(ox + sd * R * 0.05, oy + to * 0.2); ctx.quadraticCurveTo((ix + ox) / 2, (iy + oy) / 2 + ti * 0.3, ix, iy + ti * 0.5); ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+    if (anger > 0.7) {   // the furrow between the brows
+      ctx.strokeStyle = "#57536C"; ctx.lineWidth = Math.max(1, R * 0.035); const k = Math.min(1, (anger - 0.7) / 0.4);
+      ctx.beginPath(); for (const sd of [-1, 1]) { ctx.moveTo(sd * R * 0.045, -R * 0.62); ctx.quadraticCurveTo(sd * R * 0.02, -R * (0.62 - 0.07 * k), sd * R * 0.05, -R * (0.62 - 0.13 * k)); } ctx.stroke();
+    }
+    // the beak, from the front
+    const open = shock ? 0.75 : q.tell ? crowJaw(q.tell) : hurtK * 0.45, seam = R * 0.13, hw = R * 0.22;
+    const gap = Math.max(0, open) * R * 0.32, press = Math.min(0, open), lhw = hw * 0.86 * (1 + Math.max(0, open) * 0.1), L = R * 0.25 * (1 + Math.max(0, open) * 0.3);
+    const top = -R * 0.15 - press * R * 0.1, lowTop = seam + gap + press * R * 0.12;
+    if (gap > R * 0.01) {   // the mouth
+      ctx.fillStyle = "#1C0B10"; ctx.strokeStyle = INK; ctx.lineWidth = lw;
+      ctx.beginPath(); ctx.moveTo(-hw * 0.94, seam - R * 0.01); ctx.quadraticCurveTo(-hw * 0.9, lowTop + gap * 0.2, -lhw * 0.9, lowTop + R * 0.01); ctx.lineTo(lhw * 0.9, lowTop + R * 0.01); ctx.quadraticCurveTo(hw * 0.9, lowTop + gap * 0.2, hw * 0.94, seam - R * 0.01); ctx.closePath(); ctx.fill(); ctx.stroke();
+      if (gap > R * 0.05) { ctx.fillStyle = "#B0405A"; ctx.beginPath(); ctx.ellipse(0, lowTop - gap * 0.18, hw * 0.45, gap * 0.28, 0, Math.PI, TAU); ctx.fill(); }
+    }
+    ctx.lineWidth = lw * 1.1; ctx.strokeStyle = INK;
+    ctx.fillStyle = "#C99A3A"; ctx.beginPath(); ctx.moveTo(-lhw, lowTop); ctx.lineTo(lhw, lowTop); ctx.quadraticCurveTo(lhw * 0.55, lowTop + L * 0.6, 0, lowTop + L); ctx.quadraticCurveTo(-lhw * 0.55, lowTop + L * 0.6, -lhw, lowTop); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#E3B64B"; ctx.beginPath(); ctx.moveTo(0, top); ctx.quadraticCurveTo(hw * 0.7, top + (seam - top) * 0.35, hw, seam); ctx.lineTo(-hw, seam); ctx.quadraticCurveTo(-hw * 0.7, top + (seam - top) * 0.35, 0, top); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "rgba(255,240,190,.55)"; ctx.beginPath(); ctx.moveTo(-R * 0.02, top + R * 0.06); ctx.quadraticCurveTo(-hw * 0.45, seam - R * 0.1, -hw * 0.7, seam - R * 0.03); ctx.lineTo(-hw * 0.4, seam - R * 0.03); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = INK; ctx.beginPath(); ctx.ellipse(-R * 0.045, top + R * 0.11, R * 0.018, R * 0.028, 0.3, 0, TAU); ctx.ellipse(R * 0.045, top + R * 0.11, R * 0.018, R * 0.028, -0.3, 0, TAU); ctx.fill();
+    ctx.restore();
+  }
   function drawCrow(B, front) {
     const q = B.pathAt(B.t), t = B.t, dying = B.dead ? B.t - B.deadAt : 0;
     let body = q.body || { x: q.ax == null ? q.x : q.ax, y: (q.ay == null ? q.y : q.ay) + CROW_HANG, z: q.az == null ? q.z : q.az };
@@ -120,20 +189,7 @@
     ctx.strokeStyle = INK; ctx.lineWidth = Math.max(2, R * 0.09);
     ctx.fillStyle = "#2B2B33"; ctx.beginPath(); ctx.ellipse(0, 0, R * 0.85, R, 0, 0, TAU); ctx.fill(); ctx.stroke();
     ctx.fillStyle = "#3A3A46"; ctx.beginPath(); ctx.ellipse(-R * 0.25, -R * 0.35, R * 0.3, R * 0.2, -0.5, 0, TAU); ctx.fill();
-    // pie eyes (X eyes when he's done for)
-    for (const sd of [-1, 1]) {
-      const ex = sd * R * 0.3, ey = -R * 0.3;
-      ctx.fillStyle = CREAM; ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1.5, R * 0.06); ctx.beginPath(); ctx.ellipse(ex, ey, R * 0.24, R * (hurtK > 0.3 ? 0.08 : 0.3), 0, 0, TAU); ctx.fill(); ctx.stroke();
-      if (B.dead) { ctx.beginPath(); ctx.moveTo(ex - R * 0.12, ey - R * 0.12); ctx.lineTo(ex + R * 0.12, ey + R * 0.12); ctx.moveTo(ex + R * 0.12, ey - R * 0.12); ctx.lineTo(ex - R * 0.12, ey + R * 0.12); ctx.stroke(); }
-      else if (hurtK < 0.3) { const px = ex + sd * R * 0.04, py = ey + R * 0.06; ctx.fillStyle = INK; ctx.beginPath(); ctx.ellipse(px, py, R * 0.1, R * 0.15, 0, 0, TAU); ctx.fill(); ctx.fillStyle = CREAM; ctx.beginPath(); ctx.moveTo(px, py); ctx.arc(px, py, R * 0.16, -1.3, -0.6); ctx.closePath(); ctx.fill(); }
-      // angry brows
-      ctx.strokeStyle = INK; ctx.lineWidth = Math.max(2, R * 0.1); ctx.beginPath(); ctx.moveTo(ex - sd * R * 0.22, ey - R * 0.4); ctx.lineTo(ex + sd * R * 0.2, ey - R * (B.hp < B.max / 2 ? 0.22 : 0.3)); ctx.stroke();
-    }
-    // beak, open on the squawk
-    const open = q.tell ? 0.4 * Math.sin(q.tell * Math.PI) : hurtK * 0.5;
-    ctx.fillStyle = "#E3B64B"; ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1.5, R * 0.07);
-    ctx.beginPath(); ctx.moveTo(-R * 0.2, R * 0.02); ctx.quadraticCurveTo(0, -R * 0.08, R * 0.2, R * 0.02); ctx.lineTo(0, R * (0.45 - open * 0.3)); ctx.closePath(); ctx.fill(); ctx.stroke();
-    if (open > 0.05) { ctx.beginPath(); ctx.moveTo(-R * 0.16, R * 0.1 + open * R * 0.3); ctx.lineTo(R * 0.16, R * 0.1 + open * R * 0.3); ctx.lineTo(0, R * (0.4 + open * 0.5)); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+    crowFace(B, q, R, hurtK, dying);
     // the crown, knocked crooked by every hit
     ctx.save(); ctx.translate(R * 0.05, -R * 0.95); ctx.rotate(-0.15 + (1 - B.hp / B.max) * 0.5 + (B.dead ? dying * 3 : 0)); if (B.dead) ctx.translate(0, -dying * R * 3);
     ctx.fillStyle = GOLD; ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1.5, R * 0.07);
@@ -336,6 +392,7 @@
       const d = Math.hypot(a.x + e.x * u, a.y + e.y * u, a.z + e.z * u);
       if (d > SKULL_R + SEED_R) { if (d < SKULL_R + SEED_R + NEAR_PASS && !game.result) s.close = true; continue; }
       if (powerOn("ghost")) { if (!sd.ghosted) { sd.ghosted = true; usePower("ghost"); s.ghosted = 1; const p = project(sd.x, sd.y, sd.z); caption(t("result.ghost.caption"), p.x, p.y - U * 0.06); Sound.toon("poof"); } continue; }
+      if (powerOn("heavy")) { usePower("heavy"); sd.live = false; const q = project(sd.x, sd.y, sd.z); impact(t("result.smash"), q.x, q.y - U * 0.06, { fill: "#8C929C", text: CREAM, scale: 0.5, bits: true }); Sound.toon("kaboom"); continue; }   // (v54: the Heavy Skull smashes a seed and flies on)
       const p = project(s.pos.x, s.pos.y, s.pos.z);
       s.p0 = { ...s.pos }; s.t = 0; s.v0 = { x: (s.pos.x - sd.x) * 8 + sd.vx * 0.4, y: 2.5, z: -2.2 }; s.crossed = true; s.spin *= -2;
       VisualSystem.triggerImpact("seed", { at: project(ring.x, ring.y, ring.z), hit: p, strength: 1, pan: panOf(s.pos.x) });
@@ -371,6 +428,7 @@
     B.frozen = { ...B.ringAt(ring.phase) }; B.dead = true; B.deadAt = B.t;
     Telemetry.emit("boss_down", { kind: B.kind, stage: game.stage, flawless: !!B.flawless });
     VisualSystem.triggerImpact("ko", { at });   // doonk, the knockout bell, the hold, the big flash: the director's
+    musicHold();   // (v54: the music drops away on the next beat under the knockout, then comes back: 02f_music_clock.js)
     const X = deathBegin(B, at);   // (v51: its own defeat, its own word, its own gag: 07r_bossdeath.js)
     const p = at || { x: W / 2, y: H * 0.35 };
     impact(X.word, p.x, p.y - U * 0.18, { fill: GOLD, text: INK, scale: 1.35, sub: `${B.short} is down${B.flawless ? " · flawless" : ""}` });

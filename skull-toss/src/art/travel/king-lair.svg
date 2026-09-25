@@ -19,18 +19,21 @@
     <path class="k" d="M318 500 C380 540 460 552 500 548 C540 552 620 540 682 500 C640 560 560 580 500 578 C440 580 360 560 318 500 Z" fill="#2A1206"/>
     <path class="l" d="M360 520 l20 22 l22 -20 l22 24 l24 -22 l24 24 l24 -24 l24 22 l22 -24 l24 22" stroke="#FFB84A" stroke-width="5" opacity=".6"/>
     <path class="k" d="M470 140 C460 96 480 70 520 76 C508 96 506 116 510 140 Z" fill="#5A6B2A"/>
-    <g transform="rotate(-9 500 120)">
-      <path class="k" d="M380 150 L372 50 L430 100 L470 30 L500 96 L540 26 L574 100 L630 50 L620 150 Z" fill="gold"/>
-      <circle class="k" cx="500" cy="118" r="14" fill="red" stroke-width="5"/>
-      <circle class="k" cx="424" cy="126" r="9" fill="#356B68" stroke-width="4"/>
-      <circle class="k" cx="578" cy="126" r="9" fill="#356B68" stroke-width="4"/>
-      <path class="s" d="M392 138 L386 70 L402 84 Z" fill="#FFE08A" opacity=".6"/>
-    </g>
     <ellipse class="k" cx="130" cy="672" rx="60" ry="42" fill="#D9692A" stroke-width="6"/>
     <ellipse class="k" cx="870" cy="676" rx="54" ry="38" fill="#E07A30" stroke-width="6"/>
     <ellipse class="k" cx="220" cy="690" rx="40" ry="28" fill="#EE8A3E" stroke-width="5"/>
     <ellipse class="k" cx="790" cy="692" rx="38" ry="26" fill="#D9692A" stroke-width="5"/>
     <path class="k" d="M280 640 C262 606 298 590 314 606 C326 584 356 594 350 620 C368 630 354 656 334 650 Z" fill="#5E7A36" stroke-width="5"/>
     <path class="k" d="M690 632 C676 600 708 588 722 604 C736 584 764 596 756 620 C772 632 756 654 738 646 Z" fill="#5E7A36" stroke-width="5"/>
+  </g>
+  <!-- v54: his crown on its own, so it can come into view only once he's near enough to make it out -->
+  <g id="reveal">
+      <g transform="rotate(-9 500 120)">
+        <path class="k" d="M380 150 L372 50 L430 100 L470 30 L500 96 L540 26 L574 100 L630 50 L620 150 Z" fill="gold"/>
+        <circle class="k" cx="500" cy="118" r="14" fill="red" stroke-width="5"/>
+        <circle class="k" cx="424" cy="126" r="9" fill="#356B68" stroke-width="4"/>
+        <circle class="k" cx="578" cy="126" r="9" fill="#356B68" stroke-width="4"/>
+        <path class="s" d="M392 138 L386 70 L402 84 Z" fill="#FFE08A" opacity=".6"/>
+      </g>
   </g>
 </svg>

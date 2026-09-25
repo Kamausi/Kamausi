@@ -55,10 +55,10 @@
   const A_TOP = 16.25, B_RISE = 6.25, B_SLOW = 1.05;
   const aLevel = h => A_TOP * Math.min(h, STAGE_MINI) / STAGE_MINI;
   const bHits = h => Math.max(0, h - (arcadeLike() ? STAGE_MINI : STAGE_LOOSE)), bPace = () => (arcadeLike() ? 25 : STAGE_BOSS - STAGE_LOOSE);
-  const ringTargets = () => plusTargets(ringTargets0());   // (v51: Adventure+ pushes the ring: 07s_plus.js)
+  const ringTargets = () => portalRingSpec() || plusTargets(ringTargets0());   // (v51: Adventure+ pushes the ring: 07s_plus.js; v54: a portal's open: 07t_portal.js)
   function ringTargets0() {
     const MR = modeRing(); if (MR && game.state !== "title") return MR;   // Curtain Call, the encore, a slow Practice ring
-    const st = game.stage || 1, S = stageDef(st), h = game.stageHits || 0, cursed = powerOn("cursed") ? 1.5 : 1, T = tierNow();
+    const st = game.stage || 1, S = stageDef(st), h = game.stageHits || 0, cursed = (powerOn("cursed") ? 1.5 : 1) * (powerOn("time") ? 0.5 : 1), T = tierNow();
     if (game.state === "title") { const L = level(0); return { mode: "line", ...L }; }
     if (ringFlies()) {   // the second half: the map's path, legs per second (the carousel's circle runs in radians: three legs a lap)
       const b = bHits(h) / bPace(), L = level(16 + b * B_RISE + (st - 1) * 4), lap = RING_PATHS[ring.mode].lap || 1;
@@ -195,6 +195,7 @@
     updateHud();
   }
   function mainBossDown() {
+    clearStageForDefeat();   // (v54: the ring, its pole and the targets go at once; the defeat plays on an empty stage, 07t_portal.js)
     plusMapDone();   // (v51: Adventure+'s Perfect Map, 07s_plus.js)
     profile.bossKills++; if (boss.flawless) { profile.bossFlawless++; profile.flawless[boss.kind] = 1; } game.run.bosses++;
     profile.bossLog[boss.kind] = (profile.bossLog[boss.kind] || 0) + 1;
@@ -224,7 +225,7 @@
     };
     changeoverCues(2.8 + 2.3);
     const nextMap = () => {
-      game.stage++; game.stageHits = 0; game.phase = "A"; game.act = 0; VisualSystem.setStage(game.stage); setScene(game.stage - 1);
+      game.stage++; game.stageHits = 0; game.phase = "A"; game.act = 0; game.ringHidden = false; VisualSystem.setStage(game.stage); setScene(game.stage - 1);
       if (game.lives < MAX_LIVES) { game.lives++; game.slots = Math.max(game.slots, game.lives); }
       setRingMode("line"); snapRing(); Sound.setAct("A"); hazardsReset(); refillTargets();
       nextReel();   // the next reel's title card (and the intermission, halfway): 09i_reel.js
@@ -234,7 +235,9 @@
     // then his body section flies home (07p_body.js), the shard, Can Alley if you want it (07o_bonus.js), and the crossing
     // into the next map, the Challenge Stage (07q_crossing.js)
     const onward = () => (crossingsOn() ? startCrossing(nextMap) : nextMap());
-    cine("boss-out", 2.8, () => { boss = null; seeds.length = 0; obstaclesSync(true); bodyReward(() => shardCard(() => { if (encoreOn()) offerBonus(onward); else onward(); })); }, 0.4, [REWARD_AT, reward]);
+    // v54: the way on is a portal you throw Morty through (07t_portal.js): into Can Alley if you take it, and from there
+    // (or straight away if you don't) on towards the next map
+    cine("boss-out", 2.8, () => { boss = null; seeds.length = 0; obstaclesSync(true); bodyReward(() => shardCard(() => { if (encoreOn()) offerBonus(onward); else portalTo("map", onward); })); }, 0.4, [REWARD_AT, reward]);
     checkUnlocks(); persist(); updateHud();
     challenge("bosses", 1);
   }

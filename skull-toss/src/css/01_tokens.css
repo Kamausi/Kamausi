@@ -26,6 +26,12 @@ button{font-family:inherit;color:inherit}
 #stage.aiming{cursor:grabbing}
 #gpuFx{position:fixed;inset:0;width:100%;height:100%;display:block;pointer-events:none;mix-blend-mode:screen}
 #gpuFx[hidden]{display:none}
+/* v54: a signature shot's focus: the picture behind Morty goes a little soft (no darkening), he stays sharp */
+#shotFocus{position:fixed;inset:0;pointer-events:none;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);opacity:0;
+  -webkit-mask-image:radial-gradient(circle at var(--x,50%) var(--y,50%),transparent var(--r,60px),#000 calc(var(--r,60px) * 1.7));mask-image:radial-gradient(circle at var(--x,50%) var(--y,50%),transparent var(--r,60px),#000 calc(var(--r,60px) * 1.7))}
+#shotFocus[hidden]{display:none}
+#shotFocus.on{animation:shotFocus var(--d,.45s) ease both}
+@keyframes shotFocus{0%{opacity:0}18%{opacity:1}70%{opacity:1}100%{opacity:0}}
 #vig{position:fixed;inset:0;z-index:1;pointer-events:none}
 #film{position:fixed;inset:0;width:100%;height:100%;z-index:30;pointer-events:none}
 [hidden]{display:none!important}

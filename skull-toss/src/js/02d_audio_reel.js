@@ -26,7 +26,7 @@
     if (!ac || sandbox || !REEL_SRC[name]) return null;
     let t = reel.tracks[name];
     if (t) return t;
-    t = reel.tracks[name] = { el: null, gain: null, live: null, off: 0 };   // live: null until it settles
+    t = reel.tracks[name] = { name, el: null, gain: null, live: null, off: 0 };   // live: null until it settles
     try {
       const el = new Audio(); el.src = reelURL(name); el.loop = true; el.preload = "auto";
       el.addEventListener("canplay", () => { t.live = true; if (reel.want === name) musicStart(); }, { once: true });
@@ -38,21 +38,21 @@
     return t;
   }
   // keep: an act fading out under a place keeps its spot, so it picks up again where it stopped
-  function reelFade(t, to, keep = false) {
+  function reelFade(t, to, keep = false, dur = REEL_FADE) {
     if (!t || !t.gain || !ac) return;
     const now = ac.currentTime, g = t.gain.gain;
-    g.cancelScheduledValues(now); g.setValueAtTime(g.value, now); g.linearRampToValueAtTime(to, now + REEL_FADE);
+    g.cancelScheduledValues(now); g.setValueAtTime(g.value, now); g.linearRampToValueAtTime(to, now + dur);
     clearTimeout(t.off);
-    if (!to) t.off = setTimeout(() => { try { t.el.pause(); if (!keep) t.el.currentTime = 0; } catch (e) {} }, REEL_FADE * 1000 + 80);
+    if (!to) t.off = setTimeout(() => { try { t.el.pause(); if (!keep) t.el.currentTime = 0; } catch (e) {} }, dur * 1000 + 80);
   }
   // returns true when the recorded act is playing, false when nothing can play yet
-  function reelStart() {
+  function reelStart(dur = REEL_FADE) {
     if (!ac || sandbox || !settings.sound || !settings.music) return false;
     const t = reelTrack(reel.want);
     if (!t || t.live !== true) return false;    // still loading (it starts on canplay), or missing
     const toPlace = !!REEL_PLACES[reel.want];
-    for (const [k, o] of Object.entries(reel.tracks)) if (k !== reel.want && o !== t) reelFade(o, 0, toPlace && !REEL_PLACES[k]);
-    reel.cur = t; reel.on = true; reelFade(t, 1);
+    for (const [k, o] of Object.entries(reel.tracks)) if (k !== reel.want && o !== t) reelFade(o, 0, toPlace && !REEL_PLACES[k], dur);
+    reel.cur = t; reel.on = true; reelFade(t, 1, false, dur);
     if (t.el.paused) { const p = t.el.play(); if (p && p.catch) p.catch(() => {}); }
     reelSoon();
     return true;
@@ -61,11 +61,22 @@
     reel.on = false; reel.cur = null;
     for (const t of Object.values(reel.tracks)) reelFade(t, 0);
   }
+  // v54: one act hands over to the next on the music's own boundaries, not the moment the game asks: an ordinary change
+  // (the menu into the first act, the first act into the second) waits for the next bar and crosses over two beats; a
+  // boss comes in on the next beat, quickly, under the brass. The pause menu and the Cart still come in at once (you
+  // asked for them), and a track that isn't playing yet just starts.
   function reelWant(name) {                     // the acts, and "menu" for the title and the results
     if (!REEL_SRC[name]) name = "menu";
     if (reel.want === name) return;
     reel.want = name;
     if (!ac || sandbox) return;
+    clearTimeout(reel.sched); reel.sched = 0;
+    const cur = reel.on && reel.cur, placed = REEL_PLACES[name] || (cur && REEL_PLACES[cur.name]);
+    if (cur && !placed && cur.el && !cur.el.paused) {
+      const boss = name === "boss", wait = musicWaitTo(boss ? "beat" : "bar"), beat = 60 / (MusicClock.bpm || 104);
+      if (wait > 0.02 && wait < 3) { reel.sched = setTimeout(() => { reel.sched = 0; if (reel.want === name) reelStart(boss ? 0.28 : beat * 2); }, wait * 1000); return; }
+      reelStart(boss ? 0.28 : beat * 2); return;
+    }
     reelStart();
   }
   // the next act is fetched while the current one plays, so a change of act never waits on the line

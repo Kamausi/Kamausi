@@ -1666,7 +1666,7 @@
   });
   // ── v27: the Codex and the Production Archive ──
   test("The Codex notes things as they turn up: a boss when you meet it, a power-up when you grab it, each map's hazard and target", () => {
-    T.setStats(ZERO); let K = T.codex(); assert(K.total === 107 && K.count === 2, `107 entries (v50: 32 areas), only Crow Hollow and its first act known at first (${K.count}/${K.total})`);
+    T.setStats(ZERO); let K = T.codex(); assert(K.total === 113 && K.count === 2, `113 entries (v50: 32 areas; v54: six more power-ups), only Crow Hollow and its first act known at first (${K.count}/${K.total})`);
     fresh(); toHit(C.STAGE_MINI); assert(T.codex().seen.includes("boss:crow"), "meeting the Crow King notes him");
     T.givePower("rush"); assert(T.codex().seen.includes("power:rush"), "grabbing a power-up notes it");
     fresh(); T.setStage(2); T.setHits(10); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y);
@@ -1687,7 +1687,7 @@
     assert(ends.length === 8 && ends.every(r => r.classList.contains("unseen")) && ends.find(r => r.dataset.entry === "boss:reaper").textContent.startsWith("???"), "8 end bosses, none met");
     tabs.find(b => b.dataset.cat === "area").click(); const areas = [...document.querySelectorAll("#codexList .entry")];
     assert(areas.length === 32 && areas.filter(r => !r.classList.contains("unseen")).length === 5, `32 areas, map 1's four and map 2's first seen (${areas.filter(r => !r.classList.contains("unseen")).length})`);
-    assert(/of 107 found/.test($("codexCount").textContent), $("codexCount").textContent);
+    assert(/of 113 found/.test($("codexCount").textContent), $("codexCount").textContent);
     T.closeSheet(); T.setStats(ZERO); T.toTitle();
   });
   test("The Production Archive unseals the studio's paperwork as the story goes on", () => {
@@ -2375,18 +2375,21 @@
     fresh(); T.setStage(4); T.calm(); T.spawnTargetType("popup"); let up = 0, down = 0; for (let i = 0; i < 40; i++) { T.step(0.1); if (T.targetLive(0)) up++; else down++; } assert(up > 5 && down > 5, `it ducks and comes back (${up}/${down})`);
     fresh(); T.setStage(8); T.calm(); const b = T.bones(); T.spawnTargetType("golden"); T.hitTargetNow(0); assert(T.bones() >= b + 25, "gold pays bones");
     const secrets = T.profile().secretTargets || 0; T.spawnTargetType("secret"); T.hitTargetNow(1); assert((T.profile().secretTargets || 0) === secrets + 1, "a secret found counts");
-    fresh(); T.setStage(3); T.calm(); T.freezeRing(0, C.RING_Y); const { a, q } = pathAt(3.6); const d = T.spawnTargetType("decoy"); assert(d.corner != null, "v49: a decoy keeps to a corner like the rest");
+    fresh(); T.setStage(3); T.calm(); T.freezeRing(0, C.RING_Y); const { a, q } = pathAt(3.6); const d = T.spawnTargetType("decoy"); assert(d.corner != null && d.arm, "v54: a decoy rides on an arm beside the ring like the rest");
     void a; void q; T.toTitle();
   });
-  test("v49: targets are bullseyes in the corners, never in front of the ring or behind it on screen; a throw straight at one hits it and isn't a miss (v50)", () => {
+  test("v54: targets ride beside the ring on arms, 1.25–1.6× its drawn size out, never on it, on screen and within reach wherever it goes; a throw straight at one hits it and isn't a miss (v50)", () => {
     for (const n of [2, 4, 6, 8]) {
-      fresh(); T.setStage(n); T.calm(); for (let i = 0; i < 4; i++) T.spawnTargetType("standard");
       const R = T.maps()[n - 1].sheet.zones.ring;
-      const Ts = T.targetsFull(); assert(new Set(Ts.map(q => q.corner)).size === 4, `map ${n}: one in each corner (${Ts.map(q => q.corner)})`);
-      for (const q of Ts) {
-        assert(q.y - 0.26 > R.y[1] + C.RC_START || q.y + 0.26 < R.y[0] - C.RC_START, `map ${n}: above the ring's highest reach or below its lowest (${q.y.toFixed(2)})`);
-        assert(Math.abs(q.x) > 1 && Math.abs(q.x) < 2, `map ${n}: off to one side, on screen even on a phone (${q.x.toFixed(2)})`);
-        const a = T.aimFor(q.x, q.y, q.z); assert(Math.abs(a.AX) <= 2.8 && a.AY <= 5 && a.AY >= 0.35, `map ${n}: within a throw's aim (${JSON.stringify(a)})`);
+      for (const [rx, ry] of [[0, C.RING_Y], [R.x[0], R.y[1]], [R.x[1], R.y[0]]]) {
+        fresh(); T.setStage(n); T.calm(); T.freezeRing(rx, ry); for (let i = 0; i < 4; i++) T.spawnTargetType("standard");
+        const Ts = T.targetsFull(), O = T.armOuter(); assert(new Set(Ts.map(q => q.corner)).size === 4, `map ${n}: four slots of their own (${Ts.map(q => q.corner)})`);
+        for (const q of Ts) {
+          const d = Math.hypot(q.x - rx, q.y - ry);
+          assert(d >= O + 0.26 && d <= O * 1.6 + 0.3, `map ${n}, ring at ${rx},${ry}: beside the ring, clear of its drawn edge (${d.toFixed(2)} from its centre; drawn ${O.toFixed(2)})`);
+          assert(Math.abs(q.x) <= 1.95 * q.z / 6 + 0.01, `map ${n}: on screen even on a phone (${q.x.toFixed(2)})`);
+          const a = T.aimFor(q.x, q.y, q.z); assert(Math.abs(a.AX) <= 2.8 && a.AY <= 5 && a.AY >= 0.35, `map ${n}: within a throw's aim (${JSON.stringify(a)})`);
+        }
       }
     }
     fresh(); T.setStage(3); T.calm(); T.spawnTargetType("standard"); const q = T.targetsFull()[0], a = T.aimFor(q.x, q.y, q.z), lives = T.state().lives, pts = T.profile().targetHits || 0;
@@ -2631,6 +2634,77 @@
     $("redeemIn").value = "NOT-THE-KEY-9"; $("redeemBtn").click(); await new Promise(r => { const iv = setInterval(() => { if (!$("redeemBtn").disabled) { clearInterval(iv); r(); } }, 20); });
     assert(!T.profile().allAccess && T.profile().bones === P0.bones && /isn't valid/.test($("redeemNote").textContent), "refused");
     T.closeSheet();
+  });
+  // ── v54 ──
+  test("v54 a ghost's glow fades out inside its drawing (no square edge up close); the act card and a power-up card never overlap", () => {
+    assert(T.celEdge("ghost") <= 2, `nothing at the cel's edge (alpha ${T.celEdge("ghost")})`);
+    fresh(); T.calm(); T.stageCardNow("Act II", "The Harvest", "a test"); T.powerCardNow("rush");
+    const [A, B] = T.popupsNow(); assert(!A.hidden && !B.hidden, "both up");
+    assert(Math.abs(A.c - B.c) >= (A.h + B.h) / 2, `stacked, not on top of each other (${JSON.stringify([A, B])})`);
+    T.toTitle();
+  });
+  test("v54 a signature shot's focus: the picture behind softens, nothing goes dark; power-up cards with a gauge that drains", () => {
+    fresh(); T.calm(); const f = T.shotFocus(195, 400); assert(f.spot && f.blur, "the blur layer and the ring come up");
+    assert(T.filmSpot().dur <= 500, `short (${T.filmSpot().dur} ms)`);
+    T.givePower("rush"); T.givePower("ghost"); let P = T.powerCards();
+    assert(P.length === 2 && P.every(c => c.gauge && c.w === 100) && P.find(c => c.id === "ghost").uses === "×2", JSON.stringify(P));
+    for (let i = 0; i < 3; i++) { T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); }
+    P = T.powerCards(); const r = P.find(c => c.id === "rush"); assert(r && r.w === 25 && r.low && r.crit, `Skull Rush's last throw: a quarter left, pulsing (${JSON.stringify(r)})`);
+    T.toTitle();
+  });
+  test("v54 the Raven King's caw: a squeeze, a snap open, a hold, a close that overshoots shut", () => {
+    const J = T.crowJaw; assert(J(0.06) < 0 && J(0.5) > 0.9 && J(0.93) < 0 && J(0) === 0 && J(1) === 0, [0.06, 0.5, 0.93].map(J).join());
+  });
+  test("v54 the lair on the horizon reveals itself: small and dark far off, colour, then the crown, full size only close", () => {
+    const L = T.landmark; assert(T.hasReveal("king-lair"), "the Pumpkin King's crown is its own part");
+    assert(L(150).scale < 0.35 && L(150).sil === 1 && L(150).rev === 0, `far: small, a silhouette, no crown (${JSON.stringify(L(150))})`);
+    assert(L(90).sil > 0 && L(90).sil < 1 && L(65).rev > 0 && L(65).rev < 1 && L(40).scale === 1 && L(40).sil === 0 && L(40).rev === 1, "then colour, then the crown, then the thing itself");
+    fresh(); const V = T.travel(), spans = T.travelSpans();
+    assert(V.props > 400, `the land is full (${V.props} pieces)`);
+    const lairD = V.lair + V.D; assert(lairD > 100, "the lair is far down the track");
+    const inFront = spans.filter(q => q.d > lairD - 32 && q.d < lairD + 8 && q.x1 > -6 && q.x0 < 6 && !q.lm);
+    assert(!inFront.length, `nothing stands in front of the lair (${JSON.stringify(inFront.slice(0, 3))})`);
+    T.toTitle();
+  });
+  test("v54 the scenery moves to the music: a clock on the beat, hops on alternate beats, beat maps for all six loops", () => {
+    const B = T.musicBeats(); assert(Object.keys(B).length === 6 && Object.values(B).every(b => b.n > 150 && b.bpm > 80 && b.bpm < 140), JSON.stringify(B));
+    fresh(); T.calm(); const c0 = T.musicClock(); T.step(60 / 104 * 4); const c1 = T.musicClock();
+    assert(Math.abs(c1.beat - c0.beat - 4) < 0.05 && c1.bar === c0.bar + 1, `a bar of the free clock is four beats (${c0.beat.toFixed(2)} → ${c1.beat.toFixed(2)})`);
+    let hopsA = 0, hopsB = 0; for (let i = 0; i < 96; i++) { T.step(60 / 104 / 12); const g0 = T.groove(0.2), g1 = T.groove(0.8); if (g0.hop) hopsA++; if (g1.hop) hopsB++; }
+    assert(hopsA > 4 && hopsB > 4 && hopsA < 60 && hopsB < 60, `each half hops, not all the time (${hopsA}, ${hopsB})`);
+    T.toTitle();
+  });
+  test("v54 the gravedigger digs to the bar: a contact, a throw of earth that flies and lands, and not every dig the same", () => {
+    fresh(); T.calm(); const kinds = new Set(); let thrown = 0, maxDirt = 0;
+    for (let i = 0; i < 16 * 24; i++) { T.step(60 / 104 / 6); const d = T.diggerState(); if (!d) continue; kinds.add(d.kind); maxDirt = Math.max(maxDirt, d.dirt); if (d.dirt) thrown++; }
+    assert(maxDirt >= 4 && thrown > 10, `earth in the air (${maxDirt})`);
+    assert(kinds.size >= 3 && kinds.has("rest"), `a few kinds of dig, and a rest (${[...kinds]})`);
+    T.toTitle();
+  });
+  test("v54 portals: the end boss goes down, the stage empties, a portal opens; a miss costs nothing, a make goes through the rift to the next map", () => {
+    T.setStats(ZERO); T.portalsOn(true); fresh(); T.calm();
+    toHit(C.STAGE_MINI); T.step(2.6); T.hurtBoss(99); T.endThrow(); for (let i = 0; i < 200 && (T.boss() || T.state().state !== "ready"); i++) T.step(0.1);
+    T.calm(); T.setHits(C.STAGE_BOSS - 1); T.freezeRing(0, C.RING_Y); T.throwAt(0, C.RING_Y); for (let i = 0; i < 200 && !(T.boss() && T.boss().kind === "pumpkin" && T.state().state === "ready"); i++) T.step(0.1); T.unfreezeRing();
+    T.hurtBoss(99); T.endThrow(); T.step(0.3); assert(T.portal().hidden && !T.targets().length, "the ring and the targets go at once");
+    for (let i = 0; i < 300 && T.portal().phase !== "open"; i++) { T.step(0.05); const sk = $("bonusSkip"); if (sk && sk.offsetParent) sk.click(); }
+    assert(T.portal().phase === "open" && T.state().state === "ready", `a portal, and the launcher back (${JSON.stringify(T.portal())})`);
+    const lives = T.state().lives; T.throwAt(2.4, 4.6); T.step(3); assert(T.state().lives === lives && T.portal().phase === "open", "a miss: nothing lost, try again");
+    T.throwAt(0, T.portal().y); for (let i = 0; i < 60 && T.portal().phase === "open"; i++) T.step(0.05);
+    assert(T.portal().phase === "rift" && T.state().state === "cine", "through: the rift");
+    T.step(3.5); assert(T.state().stage === 2 && T.state().state === "ready" && !T.portal().phase, `and out on the next map (${JSON.stringify(T.portal())}, stage ${T.state().stage})`);
+    T.portalsOn(false); T.toTitle();
+  });
+  test("v54 power-ups: the seven from the start, one new a map, a rule-breaker in Adventure+; Lucky, Ricochet, Time, Combo and synergies work", () => {
+    fresh(); assert(T.powersHere().length === 7, `map 1: the seven (${T.powersHere()})`);
+    T.setStage(4); assert(["lucky", "ricochet", "heavy"].every(id => T.powersHere().includes(id)) && !T.powersHere().includes("time") && !T.powersHere().includes("chaos"), `map 4 (${T.powersHere()})`);
+    fresh(); T.calm(); T.givePower("ricochet"); const lives = T.state().lives; T.freezeRing(0, C.RING_Y);
+    throwAndSettle(C.RC_START + C.RING_TUBE, C.RING_Y); assert(T.state().lives === lives && !T.powers().ricochet, `a clank off the rim, bounced for free (${T.state().lastResult.kind})`);
+    fresh(); T.calm(); const w0 = T.state().ring.omega; T.givePower("time"); T.step(3); assert(T.state().ring.omega < w0 * 0.6, `Time Bone: the ring at half speed (${w0.toFixed(2)} → ${T.state().ring.omega.toFixed(2)})`);
+    fresh(); T.calm(); T.setStreak(4); T.freezeRing(0, C.RING_Y); let s0 = T.state().score; throwAndSettle(0, C.RING_Y); const plain = T.state().score - s0;
+    fresh(); T.calm(); T.setStreak(4); T.givePower("combo"); T.freezeRing(0, C.RING_Y); s0 = T.state().score; throwAndSettle(0, C.RING_Y); const combo = T.state().score - s0;
+    assert(combo >= plain * 1.9, `Combo Bone: the fifth in a row pays double (${plain} → ${combo})`);
+    fresh(); T.calm(); T.givePower("time"); T.givePower("combo"); assert(T.synergy() && T.synergy()[2] === "slowburn", "Time Bone and Combo Bone: Slow Burn");
+    T.toTitle();
   });
   test("v52 knockout timing: a short hold (shorter on a mini), one white flash, one colour pulse, then the defeat", () => {
     T.setStats(ZERO); fresh(); toHit(C.STAGE_MINI); T.step(2.6); T.hurtBoss(99);

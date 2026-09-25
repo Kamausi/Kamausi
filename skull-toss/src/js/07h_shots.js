@@ -66,22 +66,22 @@
   // ───────────────────────── the cartoon camera ─────────────────────────
   // Moves the rostrum camera (04c_camera.js) can't make, because they move the whole painted frame rather than the
   // planes: a crash zoom (the frame punches in and springs back), a whip pan (a fast slide, the picture smeared), a
-  // Dutch tilt (the frame leans for a beat, scaled up so no corner shows) and a hold (the reel stops and an iris
-  // spot closes round the skull, then opens). A boss walks on to a Dutch tilt. They're done on the canvas element
+  // Dutch tilt (the frame leans for a beat, scaled up so no corner shows) and a hold (the reel stops and the picture
+  // behind the skull goes soft for a moment while he stays sharp). A boss walks on to a Dutch tilt. They're done on the canvas element
   // itself, so the HUD stays level.
   // Camera: Gentle halves them; Still, or reduced motion, leaves them out (the hold still holds, without the iris).
   const CAMFX = {
     crash: { dur: 0.55, at: u => ({ s: 1 + 0.08 * Math.sin(Math.min(1, u / 0.25) * Math.PI / 2) * (u < 0.25 ? 1 : Math.max(0, 1 - (u - 0.25) / 0.75)) }) },
     whip:  { dur: 0.45, at: u => ({ x: 0.05 * Math.sin(u * TAU) * (1 - u), blur: 2.5 * Math.sin(u * Math.PI) }) },
     dutch: { dur: 1.3,  at: u => { const e = Math.sin(Math.min(1, u / 0.2, (1 - u) / 0.3) * Math.PI / 2); return { r: 3 * e, s: 1 + 0.11 * e }; } },
-    hold:  { dur: 0.6,  at: () => ({}) }
+    hold:  { dur: 0.45, at: () => ({}) }
   };
   const camfx = { kind: null, t0: 0, dur: 0, amp: 1, applied: "", log: [] };
   const camFxAmp = () => (reduceMotion || settings.camera === "still" ? 0 : settings.camera === "gentle" ? 0.5 : 1);
   function camMove(kind, at) {
     const M = CAMFX[kind]; if (!M) return;
     camfx.log.push(kind); if (camfx.log.length > 12) camfx.log.shift();
-    if (kind === "hold") { freezeFrame(0.5); if (camFxAmp() && at) irisSpot(at.x, at.y, 0.9); }
+    if (kind === "hold") { freezeFrame(0.45); if (camFxAmp() && at) irisSpot(at.x, at.y, 0.45); }   // (v54: a soft focus round him, not an iris closing)
     if (!camFxAmp()) return;
     Object.assign(camfx, { kind, t0: game.time, dur: M.dur, amp: camFxAmp() });
   }

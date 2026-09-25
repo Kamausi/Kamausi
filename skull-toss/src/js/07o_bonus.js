@@ -110,7 +110,7 @@
     Replay.note("b", play ? 1 : 0, 0);
     game.bonus = null; bonusEl.hidden = true; game.cine = null; game.state = "ready";
     Telemetry.emit(play ? "bonus_take" : "bonus_skip", { stage: game.stage });
-    if (play) startEncore(B.then); else B.then();
+    if (play) portalTo("bonus", () => startEncore(() => portalTo("map", B.then))); else portalTo("map", B.then);   // (v54: through a portal each way, 07t_portal.js)
     updateHud(); return true;
   }
   $("bonusPlay").addEventListener("click", () => takeBonus(true));

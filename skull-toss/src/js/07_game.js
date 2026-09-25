@@ -116,6 +116,10 @@
     } else {
       const hit = project(rp.x + ux * rc, rp.y + uy * rc, zr);
       if (d < rc) { s.v0 = { x: s.v0.x - ux * 1.1, y: s.v0.y - uy * 1.1, z: s.v0.z * 0.8 }; VisualSystem.triggerImpact("rim", { at, hit, strength, pan }); resolve("rim", at, null, d); }
+      else if (powerOn("lucky") && runRand() < 0.6) {   // v54: Lucky Skull: a clank off the outside of the rim that drops in anyway
+        usePower("lucky"); s.v0 = { x: s.v0.x - ux * 1.1, y: s.v0.y - uy * 1.1, z: s.v0.z * 0.8 }; VisualSystem.triggerImpact("rim", { at, hit, strength, pan });
+        caption(t("result.lucky"), at.x, at.y - rc * at.s - U * 0.04); resolve("rim", at, null, d);
+      }
       else { s.v0 = { x: s.v0.x + ux * 1.6, y: s.v0.y + uy * 1.6 + 0.4, z: -Math.abs(s.v0.z) * 0.32 }; VisualSystem.triggerImpact("clank", { at, hit, strength, pan }); resolve("clank", at, hit); }
     }
   }
@@ -167,6 +171,7 @@
   // the words are strings: result.<kind>.word for a make, result.<kind>.call and .sub for a miss; coach.<kind> the tip after one
   const MISS_STAT = { wide: "wides", over: "overs", low: "lows", post: "posts", short: "shorts", clank: "clanks", seed: "seeds" };
   function resolve(kind, at, hitAt, d = null, ghosted = false) {
+    if (portalOpen()) { portalResolve(kind, RESULT[kind]); return; }   // (v54: a throw at a portal: through it, or try again for nothing, 07t_portal.js)
     const R = RESULT[kind], run = game.run;
     Telemetry.emit("throw", { result: kind, make: !!R.make, stage: game.stage, stageHits: game.stageHits, lives: game.lives, boss: boss ? boss.kind : null, n: game.throws });
     game.result = { kind, make: R.make, at: game.time, bonked: false, pts: 0 }; ghostResolve(!!R.make); plusResolve(R, kind); windCurve(R);
@@ -176,7 +181,11 @@
       if (game.lives === 1) profile.clutch++;
       game.streak++; game.hits++; game.stageHits++;   // (every make counts, boss hits too: the map is 80 of them)
       // SCORE: base × combo × stage, and the power-ups that gamble on it
-      const blast = powerOn("blast"), mult = comboMult(game.streak) * stageMult() * (powerOn("cursed") ? 3 : 1) * (blast ? 3 : 1);
+      const blast = powerOn("blast"), syn = synergyNow(), chaos = powerOn("chaos") ? 1 + Math.floor(runRand() * 4) : 1;
+      const mult = comboMult(game.streak) * stageMult() * (powerOn("cursed") ? 3 : 1) * (blast ? 3 : 1)
+        * (powerOn("combo") ? 1 + 0.25 * Math.min(8, game.streak - 1) : 1) * chaos * (syn ? 1.5 : 1);   // (v54: Combo Bone, Chaos Skull, a synergy)
+      if (syn) { impact(t("syn.k"), x, y - U * 0.2, { fill: "#6B3FA0", text: CREAM, scale: 0.6, delay: 0.3, bits: false, sub: synergyName(syn[2]) }); profile.synergies = (profile.synergies || 0) + 1; }
+      if (chaos > 1) caption(`×${chaos}!`, x + U * 0.12, y - U * 0.02);
       const pts = Math.max(5, Math.round((BASE_PTS[kind] * mult) / 5) * 5);
       game.score += pts; game.result.pts = pts; profile.scoreTotal += pts;
       game.perfStreak = kind === "perfect" ? game.perfStreak + 1 : 0;
@@ -218,9 +227,11 @@
     } else {
       const onTarget = !!skull.tHit;   // v50: a throw that hit a bullseye isn't a miss: no skull lost, the streak stands
       const saved = !onTarget && powerOn("second");   // Second Chance: this miss is on the house
+      const bounced = !onTarget && !saved && R.hit && powerOn("ricochet");   // (v54: Ricochet: a bonk off something is on the house too)
+      if (bounced) { usePower("ricochet"); impact(t("result.ricochet"), W / 2, H * 0.3, { fill: "#D98CE0", text: INK, scale: 0.7, delay: 0.2, bits: false }); Sound.toon("boing"); }
       if (onTarget) game.result.target = true;
       else if (saved) { usePower("second"); profile.saves++; impact(t("result.saved"), W / 2, H * 0.3, { fill: TEAL, text: CREAM, scale: 0.7, delay: 0.25, bits: false }); Sound.life(); }
-      else if (!freeMiss() && !R.safe) { const extra = plusExtraLoss(R); game.lives = Math.max(0, game.lives - 1 - extra); if (extra) { PLUS.cracked = false; impact(t("plus.shattered"), W / 2, H * 0.3, { fill: RED, text: CREAM, scale: 0.7, delay: 0.2, bits: false }); } }   // (an eye poke costs nothing; v51: a cracked skull in Adventure+ costs two)   // (Practice, Curtain Call and the encore: misses are free)
+      else if (!bounced && !freeMiss() && !R.safe) { const extra = plusExtraLoss(R); game.lives = Math.max(0, game.lives - 1 - extra); if (extra) { PLUS.cracked = false; impact(t("plus.shattered"), W / 2, H * 0.3, { fill: RED, text: CREAM, scale: 0.7, delay: 0.2, bits: false }); } }   // (an eye poke costs nothing; v51: a cracked skull in Adventure+ costs two)   // (Practice, Curtain Call and the encore: misses are free)
       if (!onTarget) {
         game.streak = 0; game.perfStreak = 0; run.misses++; profile.misses++;
         if (MISS_STAT[kind]) profile[MISS_STAT[kind]]++;
@@ -253,6 +264,7 @@
   }
 
   function endThrow() {
+    if (portalEndThrow()) return;   // (v54: a miss at a portal just comes back)
     Sound.flightStop();
     if (game.lives <= 0) { if (!offerContinue()) gameOver(); return; }   // out of skulls: one more, perhaps (07g_continue.js)
     settleThrow();
@@ -291,7 +303,7 @@
     seedRun(opts.seed != null ? opts.seed : sandbox ? 1933 : (Date.now() ^ (Math.random() * 0x7fffffff)) >>> 0);   // the run's dice (07e_directors.js)
     setScene(map);   // Story starts on map 1; Arcade on the map picked
     ring.frozen = null; ring.flash = 0; ring.wobble = 0; ring.morph = 0;
-    stageReset(); clearPowers(); clearPickups(); powerDirectorReset(); plusReset();
+    stageReset(); clearPowers(); clearPickups(); powerDirectorReset(); plusReset(); portalReset(); travelSnap();
     if (mode !== "story") { game.stage = map + 1; VisualSystem.setStage(game.stage); }
     snapRing();
     VisualSystem.emit("start");
@@ -403,7 +415,8 @@
     ring.x = rp.x; ring.y = rp.y; ring.z = rp.z;
     if (boss) updateBoss(dt);
     updateDeath(dt);   // (v51: the accent pulse and the final gags, 07r_bossdeath.js)
-    updateSeeds(dt); updatePickup(dt); updatePowers(dt); updateTargets(dt); updateCans(dt); updateBonusOffer(dt); updateHazards(dt); updateObstacles(dt);
+    const slow = powerOn("time") ? 0.5 : 1;   // (v54: the Time Bone: the hazards, the machinery and the targets at half speed)
+    updateSeeds(dt * slow); updatePickup(dt); updatePowers(dt); updateTargets(dt * slow); updateCans(dt); updateBonusOffer(dt); updateHazards(dt * slow); updateObstacles(dt * slow);
 
     if (game.state === "flying") updateFlight(dt, phase0);
     else if (game.state === "cine") { updateCine(dt); skull.spawn = Math.min(1, skull.spawn + dt / 0.3); }

@@ -80,7 +80,10 @@ if (TRAVEL_DIR / "library.json").exists():
         if not (0 <= fx <= cw and ch * 0.85 <= fy <= ch): sys.exit(f"build refused: art/travel/{aid}: the foot must sit at the bottom of its canvas")
         if m.get("layer") not in TRAVEL_LAYERS: sys.exit(f"build refused: art/travel/{aid}: layer must be one of {', '.join(TRAVEL_LAYERS)}")
         if m.get("collision") != "none": sys.exit(f"build refused: art/travel/{aid}: travel scenery never collides (collision must be \"none\")")
-        ART_ASSETS["travel/" + aid] = {"meta": {"id": aid, "version": LIB.get("version", "1.0.0"), "shapes": len(shapes), **m}, "layers": {"body": shapes}}
+        layers = {"body": shapes}
+        rv = doc.find_layer("reveal")   # (v54: an optional part that shows only once it's near: a lair's crown)
+        if rv is not None and doc.shapes(rv): layers["reveal"] = doc.shapes(rv)
+        ART_ASSETS["travel/" + aid] = {"meta": {"id": aid, "version": LIB.get("version", "1.0.0"), "shapes": len(shapes), **m}, "layers": layers}
 # ── optional scene planes: src/art/scene/{sky,far,mid,near,foreground} — an SVG (viewBox 0 0 2000 1000) or a painted
 #    plate as WebP/PNG at 2:1 (3200×1600 is a good size). Either way the horizon sits 35% of the way down. ──
 def image_size(data, suffix):   # width, height of a PNG or WebP, read from its header (no imaging library needed)
@@ -390,6 +393,20 @@ if embed_music:
         if not f.exists(): sys.exit(f"build refused: --with-music but music/{fn} is missing")
         MUSIC[key] = base64.b64encode(f.read_bytes()).decode()
 js = "  const MUSIC_EMBED = " + (json.dumps(MUSIC, separators=(",", ":")) if MUSIC else "null") + ";\n" + js
+# ── v54: the score's beat maps (src/audio/beats.json, made by tools/beatmap.mjs from the loops): every beat's time in each
+#    track, so the game's musical clock follows the recording itself. Keyed by act (the files' names, a.mp3 → A). ──
+BEATS = {}
+BF = root / "audio" / "beats.json"
+if BF.exists():
+    raw = json.loads(BF.read_text())
+    for fn, key in [("menu", "menu"), ("a", "A"), ("b", "B"), ("boss", "boss"), ("pause", "pause"), ("shop", "shop")]:
+        m = raw.get(fn)
+        if not m: continue
+        b = m.get("beats") or []
+        if len(b) < 16 or any(b[i + 1] <= b[i] for i in range(len(b) - 1)) or not (40 <= m.get("bpm", 0) <= 240) or m.get("down") not in (0, 1, 2, 3):
+            sys.exit(f"build refused: audio/beats.json's {fn} isn't a usable beat map")
+        BEATS[key] = {"bpm": m["bpm"], "down": m["down"], "beats": b}
+js = "  const MUSIC_BEATS = " + json.dumps(BEATS, separators=(",", ":")) + ";\n" + js
 # ── the recorded sound effects are small, so every build carries them (src/sfx/<name>.mp3 → SFX_EMBED[name]) ──
 SFX = {}
 for f in sorted((root / "sfx").glob("*.mp3")):

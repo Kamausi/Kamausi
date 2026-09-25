@@ -68,6 +68,8 @@
     ctx.restore();
   }
   function drawRing() {
+    if (portalOpen()) { const q = project(ring.x, ring.y, ring.z); drawPortalRing(q, PORTAL.r * q.s); return; }   // (v54: the way on, 07t_portal.js)
+    if (game.ringHidden) return;   // (v54: a beaten boss's stage is empty)
     const p = project(ring.x, ring.y, ring.z), T = VENT.ring || { t: game.time, sq: 0, dir: 0 };
     const wob = ring.wobble > 0 ? Math.sin(T.t * 38) * 0.035 * ring.wobble : 0, morph = ring.morph || 0;
     const r = ring.rc * p.s * (1 + wob + morph * 0.25 * Math.sin(morph * 18)), lw = RING_TUBE * 2 * p.s;
@@ -82,7 +84,7 @@
     const now = performance.now() / 1000, dtH = clamp(now - ringHeatAt, 0, 0.1); ringHeatAt = now;
     ringHeat += (ringHeatGoal() - ringHeat) * Math.min(1, dtH * (ringHeatGoal() > ringHeat ? 4 : 2.5));
     if (ringHeat > 0.02) { const E = ringOuter(r, lw, cos.ring); if (!gpuRingFire(p.x, p.y, E, lw, ringHeat)) drawRingFire(p.x, p.y, r, lw, ringHeat, T.t); Gpu.fire = { x: p.x, y: p.y, r: E, heat: ringHeat }; }   // (v49: the GPU draws the fire when it's on, and its embers: 08j_gpu.js)
-    const rim = drawRingLight(p.x, p.y, r, lw);   // the backing that keeps it readable on any background, and its rim light
+    const rim = drawRingLight(p.x, p.y, r, lw);   // a soft glow in its own colour outside it (v54: no dark backing), and its rim light
     drawRingShape(ctx, p.x, p.y, r, lw, cos.ring, T.t, ring.flash); rim();
     if (crossOn() && crossGolden()) {   // the crossing's golden rings (07q_crossing.js): a gilt band and a light
       ctx.strokeStyle = GOLD; ctx.lineWidth = Math.max(2, lw * 0.45); ctx.globalAlpha = 0.75 + 0.25 * Math.sin(game.time * 6); ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, TAU); ctx.stroke(); ctx.globalAlpha = 1;
@@ -352,11 +354,11 @@
       g.addColorStop(0, "rgba(232,137,58,.12)"); g.addColorStop(1, "rgba(8,6,20,.38)"); ctx.fillStyle = g; ctx.fillRect(-20, -20, W + 40, H + 40); ctx.restore();
     }
     drawBossLight();   // a boss fight: the scenery dims and a spot finds the ring (07n_environment.js)
-    drawAnchorSupport();   // the branch, arch, signpost, batten or rail the ring hangs from
+    if (!game.ringHidden) drawAnchorSupport();   // the branch, arch, signpost, batten or rail the ring hangs from
     if (boss) boss.draw(false);
     drawSeeds(false); drawTargets(false); drawCans(); drawObstacles(false); drawHazards(false);
     const onStage = game.state !== "title";
-    if (onStage) drawTrackAndShadow();
+    if (onStage && !game.ringHidden) drawTrackAndShadow();
     drawPlayWorld();
     drawSkullShadow();
     drawImpactStars(ctx, true);   // a contact further off than the ring: its star goes behind the ring
@@ -416,6 +418,7 @@
     const fa = flashAlpha();
     if (fa > 0) { ctx.fillStyle = `rgba(242,231,201,${fa * 0.2})`; ctx.fillRect(0, 0, W, H); }
     drawBodyShow();   // his body section coming home, over everything (07p_body.js)
+    drawRift();   // (v54: through the portal, the camera goes with him: 07t_portal.js)
     if (visualsOn()) drawVisualDebug();
     drawCollisionDebug();   // (v51: ?collisions, 08l_water.js)
   }
