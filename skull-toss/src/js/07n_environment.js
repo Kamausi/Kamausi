@@ -25,7 +25,7 @@
   const anchorShake = () => { const u = game.time - ENV.anchor.t; return u < 0 || u > 1.4 ? 0 : ENV.anchor.s * Math.exp(-u * 3.2) * Math.sin(u * 26); };
   // the overhead supports: a gnarled branch, a gilded arch, a signpost's arm, the fly batten, the gear rail, the dark
   function drawAnchorSupport() {
-    const k = anchorKind(), A = anchorDef(); if (A.support !== "overhead" || game.state === "title") return;
+    const k = anchorKind(), A = anchorDef(); if (A.support !== "overhead" || game.state === "title" || game.phase === "crossing") return;   // (on the road between maps there's nothing to hang from)
     const z = ringZ0(), y = A.y, sh = anchorShake(), P = (x, yy) => project(x, yy, z);
     const L = P(-3.4, y), R = P(3.4, y), s = P(0, y).s;
     ctx.save(); ctx.lineCap = "round"; ctx.lineJoin = "round";
@@ -71,7 +71,7 @@
     }
     const topY = A.y, sway = anchorShake();
     if (!holds) {   // snapped: a short end left swinging from the support over the lane
-      if (game.state === "title" || ring.mode === "boss") return false;
+      if (game.state === "title" || ring.mode === "boss" || game.phase === "crossing") return false;
       const t = game.time, top = project(0, topY, ringZ0()), end = project(Math.sin(t * 1.6) * 0.25, topY - 0.55, ringZ0());
       hangerLine(k, top, end, top.s); return false;
     }

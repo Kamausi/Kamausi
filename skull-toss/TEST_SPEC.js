@@ -217,7 +217,7 @@
   });
 
   // ── Cosmetics ─────────────────────────────────────────────
-  const ZERO = { ringCatches: 0, eyePokes: 0, canAlley: {}, canClears: 0, cansDown: 0, bonusRounds: 0, bones: 0, bonks: 0, misses: 0, clutch: 0, bonesTotal: 0, makes: 0, best: 0, perfects: 0, rims: 0, bestStreak: 0, bestPerfStreak: 0, peakLives: 0, games: 0, points: 0, throws: 0, unlocked: [], boardBest: null, fragments: [], bossLog: {} };
+  const ZERO = { body: [], crossings: 0, cleanCrossings: 0, crossThrows: 0, ringCatches: 0, eyePokes: 0, canAlley: {}, canClears: 0, cansDown: 0, bonusRounds: 0, bones: 0, bonks: 0, misses: 0, clutch: 0, bonesTotal: 0, makes: 0, best: 0, perfects: 0, rims: 0, bestStreak: 0, bestPerfStreak: 0, peakLives: 0, games: 0, points: 0, throws: 0, unlocked: [], boardBest: null, fragments: [], bossLog: {} };
   for (const [k, v] of Object.entries(T.profile())) if (typeof v === "number" && !(k in ZERO) && k !== "updatedAt" && k !== "schema") ZERO[k] = k === "bestStage" ? 1 : 0;   // every other counter too
   ZERO.achievements = T.achievements().map(a => a.id); ZERO.arcade = {};   // (all achievements in hand, so none pays out in the middle of a bones test)
   ZERO.shots = {}; ZERO.modes = {}; ZERO.met = []; ZERO.secrets = []; ZERO.history = []; ZERO.mastery = []; ZERO.flawless = {}; ZERO.mapMakes = {}; ZERO.arcadeTables = {}; ZERO.lastIni = ""; ZERO.streakLast = ""; ZERO.firsts = [];   // (v25–v27: signature shots, mode records, what the Codex has noted)
@@ -574,7 +574,7 @@
     beatCrow(1); toHit(C.STAGE_BOSS); T.step(2.9); const s0 = T.state(), bones = T.bones();
     T.hurtBoss(99); T.endThrow(); T.step(6); const s = T.state();
     assert(s.stage === 2 && s.phase === "A" && s.stageHits === 0, `stage ${s.stage}, phase ${s.phase}`);
-    assert(T.profile().unlocked.includes("hair:vines") && T.profile().fragments.includes("hollow"), "the Pumpkin-Vine Curls and the Hollow Shard");
+    assert(T.profile().unlocked.includes("hair:vines") && T.profile().fragments.includes("hollow") && T.profile().body.includes("leftArm"), "the Pumpkin-Vine Curls, Morty's Left Arm and the Hollow Shard");
     assert(s.score >= s0.score + 10000 && T.bones() > bones, "no bonus");
     assert(s.lives === Math.min(C.MAX_LIVES, s0.lives + 1), "no skull back"); assert(T.profile().bossKills >= 1 && T.profile().bestStage >= 2 && T.profile().bossLog.pumpkin >= 1, "boss not recorded");
   });
@@ -2477,9 +2477,51 @@
     toHit(C.STAGE_MINI); const Dm = T.travel().D; T.step(2.6); T.hurtBoss(4); T.step(1); assert(T.travel().D === Dm && T.travel().zone === "crows", "the Crow King's arena stands still");
     const half = 2.4, far = T.travelEnd(), bad = T.travelSpans().filter(s => s.x1 > -half && s.x0 < half && s.d - far < 16);
     assert(!bad.length, `no scenery ever stands in the throw corridor (${JSON.stringify(bad.slice(0, 3))})`);
-    fresh(); T.setStage(2); assert(!T.travel().on, "the other maps don't travel yet");
+    fresh(); T.setStage(2); assert(T.travel().on && T.travel().D === 0, "and so does the next map (all eight do: the v48 test)");
     T.startArcade(0); T.setHits(20); T.step(0.5); assert(T.travel().on && T.travel().D === 0, "Arcade on Crow Hollow stands at the start");
     T.toTitle(); T.setStats(ZERO);
+  });
+  // ── v48: travel on every map, Morty's body section by section, and the Challenge Stage between maps ──
+  test("v48 travel: all eight maps travel, each toward its own end boss's lair, and none of it ever stands in the lane", () => {
+    const half = 2.4;
+    for (let n = 1; n <= 8; n++) {
+      fresh(); T.setStage(n); T.snapTravel(); const V = T.travel(), far = T.travelEnd();
+      assert(V.on && V.D === 0 && V.props > 60 && V.near > 10, `map ${n} travels, from its start (${JSON.stringify(V)})`);
+      assert(V.lair > far + 20 && V.table[3] > V.table[1] && V.table[6] === V.table[5], `map ${n}: a lair far ahead, a road that runs on, still through the end boss (${JSON.stringify(V.table)} lair ${V.lair})`);
+      const bad = T.travelSpans().filter(s => s.x1 > -half && s.x0 < half && s.d - far < 16);
+      assert(!bad.length, `map ${n}: no scenery in the throw corridor (${JSON.stringify(bad.slice(0, 3))})`);
+      T.setHits(25); T.snapTravel(); assert(T.travel().D === T.travelAt(25) && T.travel().shown > 5, `map ${n}: the world comes from the hits (${JSON.stringify(T.travel())})`);
+    }
+    T.toTitle();
+  });
+  test("v48 body: each of the first seven end bosses gives back a section of Morty; it flies home and snaps on, stays his, and the Profile shows it", () => {
+    const B = T.body(); assert(B.sections.length === 7 && [1, 2, 3, 4, 5, 6, 7].map(B.of).join() === B.sections.join() && B.of(8) === null, `seven sections, one a map, none from the last (${[1, 2, 3, 4, 5, 6, 7, 8].map(B.of)})`);
+    T.setStats({ ...ZERO, body: [] }); T.bodyShow(true); beatCrow(1); toHit(C.STAGE_BOSS); T.step(2.9);
+    T.hurtBoss(99); T.endThrow(); T.step(3.2); let b = T.body();
+    assert(b.cine === "body" && b.show === "leftArm" && b.have.includes("leftArm") && b.run.includes("leftArm"), `the Pumpkin King gives back his Left Arm (${JSON.stringify(b)})`);
+    assert(/Left Arm/.test($("stagecard").textContent), "and the card says so");
+    T.step(2.8); b = T.body(); assert(b.cine === "reward" && !b.show, `then the shard (${JSON.stringify(b)})`);
+    T.step(3); assert(T.state().stage === 2, "then map 2");
+    assert(T.cleanBody(["spine", "leftArm", "tail", 7, "leftArm"]).join() === "leftArm,spine", "a save keeps only real sections, once each");
+    assert(T.mergeBody(["leftArm"], ["ribs"]).join() === "leftArm,ribs", "and two saves merge to what both have");
+    assert(T.drawBodyTo(["leftArm", "ribs"]) > 2000, "his bones draw");
+    T.openSheet("profile"); assert(/1 of 7/.test($("profBodyN").textContent), `the Profile shows his bones (${$("profBodyN").textContent})`); T.closeSheet();
+    T.bodyShow(false); T.toTitle(); T.setStats(ZERO);
+  });
+  test("v48 Challenge Stage: after an end boss, ten throws on the road into the next map; rings pay bones, gold ones more, misses are free, and it arrives at the map's start", () => {
+    T.setStats(ZERO); T.crossings(true); beatCrow(1); toHit(C.STAGE_BOSS); T.step(2.9);
+    T.hurtBoss(99); T.endThrow(); T.step(7.5); let X = T.crossing(), s = T.state();
+    assert(X.on && s.stage === 1 && X.map === 2 && X.n === 0 && X.frozen && s.state === "ready", `the crossing, dressed as map 2 (${JSON.stringify(X)}, stage ${s.stage}, ${s.state})`);
+    assert(Math.abs(X.goal + 66) < 0.5 && X.rc < C.RC_START + 0.07, `the road starts ten steps before the map (${X.goal})`);
+    const lives = s.lives, bones = T.bones(), p0 = X.frozen;
+    T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); X = T.crossing();
+    assert(X.n === 1 && X.makes === 1 && T.bones() >= bones + 5 && Math.abs(X.goal + 59.4) < 0.5, `a ring: bones and a step along the road (${JSON.stringify(X)})`);
+    assert(X.frozen && (X.frozen.x !== p0.x || X.frozen.y !== p0.y), "and the next ring waits somewhere new");
+    T.freezeRing(0, C.RING_Y); throwAndSettle(3, C.RING_Y); X = T.crossing(); assert(X.n === 2 && X.makes === 1 && T.state().lives === lives && T.state().state === "ready", `a miss is free: a step on, no skull lost (${JSON.stringify(X)} ${T.state().state} ${T.state().lives}/${lives})`);
+    for (let i = 2; i < 10; i++) { const g = T.crossing().gold, b0 = T.bones(); T.freezeRing(0, C.RING_Y); assert(T.state().state === "ready", `throw ${i + 1}: ${T.state().state} ${JSON.stringify(T.crossing())}`); throwAndSettle(0, C.RING_Y); if (g) assert(T.bones() >= b0 + 20, "a gold ring pays more"); }
+    X = T.crossing(); assert(X.n === 10 && X.makes === 9 && Math.abs(X.goal) < 0.01, `ten throws, and the road arrives (${JSON.stringify(X)})`);
+    T.step(3); s = T.state(); assert(s.stage === 2 && s.phase === "A" && s.stageHits === 0 && !T.crossing().on && T.profile().crossings === 1 && !T.profile().cleanCrossings, `then map 2 itself (${JSON.stringify(s).slice(0, 160)})`);
+    T.crossings(false); T.toTitle(); T.setStats(ZERO);
   });
   test("v47 GPU layer: sparks, light and glow on a WebGL canvas screen-blended over the game; Off hides it, and with no WebGL the game plays on", () => {
     T.setSetting("gpu", "full"); fresh(); T.calm(); T.gpuFrame(1 / 60); let G = T.gpu();

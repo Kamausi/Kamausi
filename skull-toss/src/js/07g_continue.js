@@ -11,7 +11,7 @@
   const contEl = $("continueBox");
   function continueRule() {
     if (Replay.play) return Replay.contRule();   // (a replay offers one exactly when the recording decided one)
-    if ((sandbox && !sandbox.contOn) || !modeOf().cont || game.phase === "encore") return { ok: false };   // (older tests expect the last skull to end the run)
+    if ((sandbox && !sandbox.contOn) || !modeOf().cont || game.phase === "encore" || game.phase === "crossing") return { ok: false };   // (older tests expect the last skull to end the run)
     const used = game.run.continues || 0, maps = game.run.contMaps || [];
     if (game.mode === "arcade" ? used >= 1 : used >= CONTINUE.perRun || maps.includes(game.stage)) return { ok: false };
     const cost = CONTINUE.costs[Math.min(used, CONTINUE.costs.length - 1)], pay = profile.bones >= cost, ad = Ads.available();
@@ -72,9 +72,10 @@
   const RUN_KEY = "skullToss.run.v1", RUN_MAX_AGE = 24 * 3600 * 1000;
   function saveRunSnapshot(cont = false) {
     if ((sandbox && !sandbox.snapOn) || !modeOf().cont || Replay.play) return;   // (the spec keeps its snapshots apart from the player's)
-    const phase = game.phase === "mini" ? "A" : game.phase === "boss" ? "B" : game.phase;
-    const stageHits = game.phase === "mini" ? STAGE_MINI : game.phase === "boss" ? STAGE_BOSS : game.stageHits;
-    const S = { v: 1, at: Date.now(), mode: game.mode, map: game.map, stage: game.stage, phase, stageHits, hits: game.hits, score: game.score,
+    const cross = game.phase === "crossing" || game.phase === "encore";   // (between maps: a reload picks up at the next one's start)
+    const phase = game.phase === "mini" ? "A" : game.phase === "boss" ? "B" : cross ? "A" : game.phase;
+    const stageHits = game.phase === "mini" ? STAGE_MINI : game.phase === "boss" ? STAGE_BOSS : cross ? 0 : game.stageHits;
+    const S = { v: 1, at: Date.now(), mode: game.mode, map: game.map, stage: game.stage + (cross ? 1 : 0), phase, stageHits, hits: game.hits, score: game.score,
       lives: cont ? 0 : game.lives, slots: game.slots, streak: game.streak, perfStreak: game.perfStreak, peakLives: game.peakLives, throws: game.throws,
       run: { ...game.run, t0: undefined }, secs: game.time - (game.run.t0 || 0), powers: JSON.parse(JSON.stringify(powers)), seed: game.seed, wind: HZ.wind, cont };
     const txt = JSON.stringify(S); if (sandbox) sandbox.snap = txt; else store.set(RUN_KEY, txt);

@@ -6,7 +6,7 @@
     <path class="k" d="M125 314 L126 70 L136 70 L137 314 Z" fill="wood"/>
     <path class="k" d="M22 132 L238 124 L238 136 L22 144 Z" fill="wood"/>
     <path class="k" d="M84 126 C74 150 76 190 86 214 L176 212 C186 190 186 150 176 124 Z" fill="purple"/>
-    <path class="s" d="M100 128 V212 M124 128 V212 M148 128 V212 M168 128 V210 M86 150 H178 M84 176 H182 M86 198 H180" stroke="#4A3A50" stroke-width="3" opacity=".8"/>
+    <path d="M100 128 V212 M124 128 V212 M148 128 V212 M168 128 V210 M86 150 H178 M84 176 H182 M86 198 H180" stroke="#4A3A50" stroke-width="3" opacity=".8"/>
     <rect class="k" x="136" y="160" width="28" height="24" fill="#C49A42" stroke-width="3" transform="rotate(8 150 172)"/>
     <path class="l" d="M140 164 l4 3 M146 162 l0 4 M154 166 l3 -3" stroke-width="2"/>
     <path class="k" d="M84 126 L32 128 L30 146 L86 150 Z M176 124 L228 122 L230 138 L178 146 Z" fill="purple"/>

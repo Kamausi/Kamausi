@@ -6,7 +6,7 @@
     <path class="k" d="M50 108 C60 50 110 40 150 46 C200 38 250 56 256 110 Z" fill="#E0B85C"/>
     <path class="l" d="M80 70 l-6 -12 M120 52 l0 -12 M170 50 l6 -12 M216 62 l10 -10 M100 96 l8 -14 M150 90 l0 -16 M196 94 l-8 -14" stroke="#B08A38" stroke-width="3"/>
     <path class="k" d="M40 104 L262 104 L256 138 L46 138 Z" fill="wood"/>
-    <path class="s" d="M46 114 H258 M48 126 H256" stroke="wood-d" stroke-width="3"/>
+    <path d="M46 114 H258 M48 126 H256" stroke="wood-d" stroke-width="3"/>
     <path class="l" d="M262 122 L296 150" stroke-width="7"/>
     <path class="l" d="M262 122 L296 150" stroke="wood-l" stroke-width="3.5"/>
     <circle class="k" cx="94" cy="150" r="42" fill="none" stroke-width="10"/>

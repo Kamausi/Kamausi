@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 1000">
+  <!-- The Clockwork Caves' destination: the Clock King's tower, its great face lit, gears turning in its sides. 100 units = 1 m; foot at (350, 990). -->
+  <style>.k{stroke:ink;stroke-width:8;stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}</style>
+  <g id="body">
+    <ellipse class="s" cx="352" cy="986" rx="320" ry="20" fill="#000" opacity=".35"/>
+    <path class="k" d="M150 986 L170 300 L530 300 L550 986 Z" fill="#5A4A3A"/>
+    <path class="s" d="M180 320 L220 320 L204 980 L162 980 Z" fill="#7A6A56" opacity=".6"/>
+    <path class="k" d="M130 310 L350 90 L570 310 Z" fill="#3A2E24"/>
+    <path class="k" d="M340 90 L350 20 L360 90 Z" fill="gold"/>
+    <circle class="k" cx="350" cy="440" r="150" fill="#F2E7C9"/>
+    <circle class="s" cx="350" cy="440" r="130" fill="#FFE8B0"/>
+    <path d="M350 320 V340 M350 540 V560 M230 440 H250 M450 440 H470 M265 355 L279 369 M421 511 L435 525 M435 355 L421 369 M279 511 L265 525" stroke="ink" stroke-width="10"/>
+    <path class="k" d="M350 440 L350 350 M350 440 L420 470" fill="none" stroke-width="12"/>
+    <circle class="k" cx="350" cy="440" r="14" fill="gold" stroke-width="5"/>
+    <circle class="k" cx="350" cy="440" r="150" fill="none" stroke="gold" stroke-width="12"/>
+    <path class="k" d="M350 600 L350 820" fill="none" stroke-width="10"/>
+    <circle class="k" cx="350" cy="850" r="44" fill="gold"/>
+    <path class="k" d="M100 700 L112 660 L140 668 L150 640 L180 652 L176 682 L200 700 L184 726 L196 752 L168 764 L156 792 L128 780 L106 800 L88 776 L60 780 L60 750 L36 734 L50 708 L38 682 L66 674 Z" fill="#C49A42" stroke-width="6"/>
+    <circle class="k" cx="118" cy="728" r="22" fill="#6A4A2E" stroke-width="5"/>
+    <path class="k" d="M600 640 L612 606 L636 614 L648 590 L672 604 L666 630 L688 646 L672 668 L682 690 L656 700 L644 724 L620 712 L600 728 L584 706 L560 708 L562 682 L542 668 L558 646 L548 622 L574 616 Z" fill="#C49A42" stroke-width="6"/>
+    <circle class="k" cx="614" cy="660" r="18" fill="#6A4A2E" stroke-width="5"/>
+  </g>
+</svg>

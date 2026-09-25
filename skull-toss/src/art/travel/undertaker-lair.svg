@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 760">
+  <!-- The Bone Desert's destination: the Undertaker's yard, a coffin propped on a mound, a spade stuck in, a great cross. 100 units = 1 m; foot at (500, 750). -->
+  <style>.k{stroke:ink;stroke-width:8;stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}</style>
+  <g id="body">
+    <ellipse class="s" cx="502" cy="746" rx="470" ry="22" fill="#000" opacity=".35"/>
+    <path class="k" d="M60 746 C140 560 320 500 500 500 C680 500 860 560 940 746 Z" fill="#9A5A36"/>
+    <path class="s" d="M140 700 C220 600 340 560 460 556 C360 580 250 620 170 720 Z" fill="#B87848" opacity=".7"/>
+    <path class="k" d="M470 520 L470 150 L530 150 L530 520 Z M380 240 L620 240 L620 300 L380 300 Z" fill="#6A6056"/>
+    <path class="s" d="M480 160 L492 160 L492 510 L480 510 Z" fill="#8A8076"/>
+    <path class="k" d="M640 520 L610 250 L680 200 L760 250 L740 520 Z" fill="#4A2E1E"/>
+    <path class="k" d="M652 480 L630 270 L684 232 L744 270 L728 480 Z" fill="#6A4430" stroke-width="5"/>
+    <path d="M684 300 V420 M654 340 H716" stroke="gold" stroke-width="10"/>
+    <path class="k" d="M250 520 L310 250" fill="none" stroke-width="16"/>
+    <path d="M250 520 L310 250" fill="none" stroke="wood-l" stroke-width="8"/>
+    <path class="k" d="M280 250 L340 250 L346 200 L320 190 L300 190 L276 200 Z" fill="#8A8E96"/>
+    <path class="k" d="M150 640 q10 -30 40 -24 q-6 30 -40 24 Z M820 650 q-6 -30 -40 -26 q8 30 40 26 Z" fill="#E4DAC4" stroke-width="5"/>
+  </g>
+</svg>

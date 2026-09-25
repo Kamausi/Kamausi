@@ -443,3 +443,4 @@ details.row.sent{display:block}details.row.sent summary{cursor:pointer;font:700 
 .mode-card.minis .mode-ic{background:#2A2040;color:#FFE36A}
 .minis .mode-grid{margin-top:12px}
 .mode-tile.m-cans{background:repeating-linear-gradient(90deg,#7A2A22 0 12px,#652018 12px 24px)}
+.prof-body{display:flex;gap:12px;align-items:center}.prof-body canvas{width:112px;height:176px;flex:none;border-radius:8px;background:rgba(20,15,12,.08)}.pb-text{min-width:0;flex:1}.pb-n{font:800 20px var(--display,inherit);margin:4px 0}

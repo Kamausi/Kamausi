@@ -199,6 +199,7 @@
       if (kind !== "eye") judgeShots(kind, x, y);   // a signature shot? (07h_shots.js; a poke in the eye isn't a throw through a ring)
       directorMake();           // the Shrinking Ring (07k_director.js)
       encoreMake();             // the encore pays bones for every make (07i_modes.js)
+      crossingMake();           // and so does the Challenge Stage (07q_crossing.js)
       showCombo(game.streak);
       if (game.streak === 6) { Sound.toon("ignite"); caption(t("fire.on"), x, y - U * 0.1); profile.fireRings++; }   // the ring catches fire (08c_scene.js)
       else if (game.streak > 6) profile.fireMakes++;   // (a make into a burning ring)

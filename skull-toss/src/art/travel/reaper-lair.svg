@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 900">
+  <!-- The Black Abyss's destination: the Reel Reaper's projector, two great reels and a beam of cold light. 100 units = 1 m; foot at (500, 890). -->
+  <style>.k{stroke:ink;stroke-width:8;stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.l{fill:none;stroke-linecap:round}</style>
+  <g id="body">
+    <ellipse class="s" cx="502" cy="886" rx="420" ry="22" fill="#000" opacity=".4"/>
+    <path class="k" d="M380 886 L420 640 L580 640 L620 886 Z" fill="#26222E"/>
+    <path class="k" d="M220 660 L220 480 L780 480 L780 660 Z" fill="#3A3444"/>
+    <path class="s" d="M232 490 L300 490 L300 650 L232 650 Z" fill="#5A5266" opacity=".7"/>
+    <path class="k" d="M780 520 L900 490 L900 650 L780 620 Z" fill="#26222E"/>
+    <circle class="k" cx="900" cy="570" r="44" fill="#DDEBFF"/>
+    <circle class="k" cx="330" cy="290" r="180" fill="#1E1A24"/>
+    <circle class="k" cx="670" cy="290" r="180" fill="#1E1A24"/>
+    <g fill="#3A3444" stroke="none">
+      <circle cx="330" cy="200" r="42"/><circle cx="252" cy="335" r="42"/><circle cx="408" cy="335" r="42"/>
+      <circle cx="670" cy="200" r="42"/><circle cx="592" cy="335" r="42"/><circle cx="748" cy="335" r="42"/>
+    </g>
+    <circle class="k" cx="330" cy="290" r="26" fill="#8A8E96"/><circle class="k" cx="670" cy="290" r="26" fill="#8A8E96"/>
+    <path class="l" d="M330 470 C360 520 420 500 450 480 M670 470 C640 520 580 500 550 480" stroke="ink" stroke-width="22"/>
+    <path class="l" d="M330 470 C360 520 420 500 450 480 M670 470 C640 520 580 500 550 480" stroke="#4A4454" stroke-width="12"/>
+    <path d="M320 540 H700 M320 600 H700" stroke="#5A5266" stroke-width="6"/>
+    <circle class="k" cx="500" cy="570" r="24" fill="#E8503A" stroke-width="5"/>
+  </g>
+</svg>

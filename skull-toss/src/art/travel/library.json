@@ -3,20 +3,367 @@
   "version": "1.0.0",
   "units": 100,
   "assets": {
-    "tree-autumn":   { "canvas": [320, 440],  "foot": [160, 432], "layer": "midground",  "family": "tree",      "sway": 0.04, "collision": "none" },
-    "tree-bare":     { "canvas": [320, 460],  "foot": [160, 452], "layer": "midground",  "family": "tree",      "sway": 0.02, "collision": "none" },
-    "farmhouse":     { "canvas": [720, 580],  "foot": [360, 572], "layer": "midground",  "family": "house",     "collision": "none", "lights": [[231, 385, 90], [360, 277, 60]] },
-    "barn":          { "canvas": [820, 640],  "foot": [410, 632], "layer": "midground",  "family": "house",     "collision": "none", "lights": [[212, 362, 70]] },
-    "corn":          { "canvas": [260, 300],  "foot": [130, 294], "layer": "gameplay",   "family": "corn",      "sway": 0.09, "collision": "none" },
-    "fence":         { "canvas": [400, 160],  "foot": [200, 154], "layer": "gameplay",   "family": "rail",      "collision": "none" },
-    "scarecrow":     { "canvas": [260, 320],  "foot": [130, 314], "layer": "gameplay",   "family": "scarecrow", "sway": 0.05, "collision": "none" },
-    "pumpkins":      { "canvas": [260, 150],  "foot": [130, 144], "layer": "gameplay",   "family": "pumpkin",   "collision": "none" },
-    "pumpkin-giant": { "canvas": [340, 280],  "foot": [170, 272], "layer": "midground",  "family": "pumpkin",   "collision": "none" },
-    "haybale":       { "canvas": [200, 130],  "foot": [100, 124], "layer": "gameplay",   "family": "hay",       "collision": "none" },
-    "signpost":      { "canvas": [220, 280],  "foot": [110, 274], "layer": "gameplay",   "family": "rail",      "collision": "none" },
-    "bush":          { "canvas": [240, 150],  "foot": [120, 144], "layer": "foreground", "family": "corn",      "sway": 0.06, "collision": "none" },
-    "king-lair":     { "canvas": [1000, 720], "foot": [500, 710], "layer": "distant",    "family": "landmark",  "collision": "none", "lights": [[500, 555, 150]] },
-    "cart":          { "canvas": [300, 200],  "foot": [150, 194], "layer": "gameplay",   "family": "hay",       "collision": "none" },
-    "crowpost":      { "canvas": [140, 260],  "foot": [70, 254],  "layer": "gameplay",   "family": "crows",     "collision": "none" }
+    "tree-autumn": {
+      "canvas": [
+        320,
+        440
+      ],
+      "foot": [
+        160,
+        432
+      ],
+      "layer": "midground",
+      "family": "tree",
+      "sway": 0.04,
+      "collision": "none"
+    },
+    "tree-bare": {
+      "canvas": [
+        320,
+        460
+      ],
+      "foot": [
+        160,
+        452
+      ],
+      "layer": "midground",
+      "family": "tree",
+      "sway": 0.02,
+      "collision": "none"
+    },
+    "farmhouse": {
+      "canvas": [
+        720,
+        580
+      ],
+      "foot": [
+        360,
+        572
+      ],
+      "layer": "midground",
+      "family": "house",
+      "collision": "none",
+      "lights": [
+        [
+          231,
+          385,
+          90
+        ],
+        [
+          360,
+          277,
+          60
+        ]
+      ]
+    },
+    "barn": {
+      "canvas": [
+        820,
+        640
+      ],
+      "foot": [
+        410,
+        632
+      ],
+      "layer": "midground",
+      "family": "house",
+      "collision": "none",
+      "lights": [
+        [
+          212,
+          362,
+          70
+        ]
+      ]
+    },
+    "corn": {
+      "canvas": [
+        260,
+        300
+      ],
+      "foot": [
+        130,
+        294
+      ],
+      "layer": "gameplay",
+      "family": "corn",
+      "sway": 0.09,
+      "collision": "none"
+    },
+    "fence": {
+      "canvas": [
+        400,
+        160
+      ],
+      "foot": [
+        200,
+        154
+      ],
+      "layer": "gameplay",
+      "family": "rail",
+      "collision": "none"
+    },
+    "scarecrow": {
+      "canvas": [
+        260,
+        320
+      ],
+      "foot": [
+        130,
+        314
+      ],
+      "layer": "gameplay",
+      "family": "scarecrow",
+      "sway": 0.05,
+      "collision": "none"
+    },
+    "pumpkins": {
+      "canvas": [
+        260,
+        150
+      ],
+      "foot": [
+        130,
+        144
+      ],
+      "layer": "gameplay",
+      "family": "pumpkin",
+      "collision": "none"
+    },
+    "pumpkin-giant": {
+      "canvas": [
+        340,
+        280
+      ],
+      "foot": [
+        170,
+        272
+      ],
+      "layer": "midground",
+      "family": "pumpkin",
+      "collision": "none"
+    },
+    "haybale": {
+      "canvas": [
+        200,
+        130
+      ],
+      "foot": [
+        100,
+        124
+      ],
+      "layer": "gameplay",
+      "family": "hay",
+      "collision": "none"
+    },
+    "signpost": {
+      "canvas": [
+        220,
+        280
+      ],
+      "foot": [
+        110,
+        274
+      ],
+      "layer": "gameplay",
+      "family": "rail",
+      "collision": "none"
+    },
+    "bush": {
+      "canvas": [
+        240,
+        150
+      ],
+      "foot": [
+        120,
+        144
+      ],
+      "layer": "foreground",
+      "family": "corn",
+      "sway": 0.06,
+      "collision": "none"
+    },
+    "king-lair": {
+      "canvas": [
+        1000,
+        720
+      ],
+      "foot": [
+        500,
+        710
+      ],
+      "layer": "distant",
+      "family": "landmark",
+      "collision": "none",
+      "lights": [
+        [
+          500,
+          555,
+          150
+        ]
+      ]
+    },
+    "cart": {
+      "canvas": [
+        300,
+        200
+      ],
+      "foot": [
+        150,
+        194
+      ],
+      "layer": "gameplay",
+      "family": "hay",
+      "collision": "none"
+    },
+    "crowpost": {
+      "canvas": [
+        140,
+        260
+      ],
+      "foot": [
+        70,
+        254
+      ],
+      "layer": "gameplay",
+      "family": "crows",
+      "collision": "none"
+    },
+    "count-lair": {
+      "canvas": [
+        900,
+        820
+      ],
+      "foot": [
+        450,
+        810
+      ],
+      "layer": "distant",
+      "family": "landmark",
+      "collision": "none",
+      "lights": [
+        [
+          450,
+          330,
+          140
+        ]
+      ]
+    },
+    "marrow-lair": {
+      "canvas": [
+        1000,
+        860
+      ],
+      "foot": [
+        500,
+        850
+      ],
+      "layer": "distant",
+      "family": "landmark",
+      "collision": "none"
+    },
+    "bigtop-lair": {
+      "canvas": [
+        1100,
+        800
+      ],
+      "foot": [
+        550,
+        790
+      ],
+      "layer": "distant",
+      "family": "landmark",
+      "collision": "none",
+      "lights": [
+        [
+          550,
+          660,
+          160
+        ]
+      ]
+    },
+    "parlour-lair": {
+      "canvas": [
+        900,
+        820
+      ],
+      "foot": [
+        450,
+        810
+      ],
+      "layer": "distant",
+      "family": "landmark",
+      "collision": "none",
+      "lights": [
+        [
+          330,
+          400,
+          120
+        ],
+        [
+          550,
+          470,
+          90
+        ],
+        [
+          760,
+          420,
+          60
+        ]
+      ]
+    },
+    "undertaker-lair": {
+      "canvas": [
+        1000,
+        760
+      ],
+      "foot": [
+        500,
+        750
+      ],
+      "layer": "distant",
+      "family": "landmark",
+      "collision": "none"
+    },
+    "clock-lair": {
+      "canvas": [
+        700,
+        1000
+      ],
+      "foot": [
+        350,
+        990
+      ],
+      "layer": "distant",
+      "family": "landmark",
+      "collision": "none",
+      "lights": [
+        [
+          350,
+          440,
+          200
+        ]
+      ]
+    },
+    "reaper-lair": {
+      "canvas": [
+        1000,
+        900
+      ],
+      "foot": [
+        500,
+        890
+      ],
+      "layer": "distant",
+      "family": "landmark",
+      "collision": "none",
+      "lights": [
+        [
+          900,
+          570,
+          110
+        ]
+      ]
+    }
   }
 }

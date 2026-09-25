@@ -24,7 +24,7 @@
   const arcadeLike = () => game.mode === "arcade" || game.mode === "director" || game.mode === "feature";   // (no bosses; the ring goes 3D at 30 hits and keeps winding up)
   const MODE_IDS = Object.keys(MODES), MINI_IDS = MODE_IDS.filter(m => MODES[m].mini);
   const modeOf = () => MODES[game.mode] || MODES.story;
-  const freeMiss = () => !!modeOf().free || game.phase === "encore";   // a miss that costs no skull
+  const freeMiss = () => !!modeOf().free || game.phase === "encore" || game.phase === "crossing";   // a miss that costs no skull
   const LONGSHOT = { z0: 4.6, step: 0.4, zMax: 14 };
   const practice = { ring: "full", half: "A", hazards: true };   // the Practice options (the Play sheet sets them)
   const modeSt = { real: null, rush: [], rushI: 0, clock: 0, far: 0, targetsHit: 0 };
@@ -33,7 +33,8 @@
   const modeRec = m => realProfile().modes[m] || { best: 0, runs: 0 };
   // the most reached map a mini-game can use (each has a home map it prefers)
   const miniMap = m => Math.min(MODES[m].map || 0, Math.max(0, Math.min(profile.bestStage, MAP_COUNT) - 1));
-  const encoreOn = () => !(sandbox && !sandbox.encoreOn);   // (older tests expect the next reel straight after a boss)
+  const encoreOn = () => !(sandbox && !sandbox.encoreOn);
+  const crossingsOn = () => !(sandbox && !sandbox.crossOn);   // (older tests expect the next reel straight after a boss)
 
   // ── starting and leaving
   function leavePractice() {
@@ -67,6 +68,7 @@
   // ── the ring, mode by mode (ringTargets asks first)
   function modeRing() {
     if (game.phase === "encore") return { amp: 0, omega: 0, rc: RC_START + CANS.rc, bob: 0 };   // Can Alley: a still, generous ring
+    if (game.phase === "crossing") return { amp: 0, omega: 0, rc: game.run.crossRc || RC_START, bob: 0 };   // the Challenge Stage: rings on the road (07q_crossing.js)
     if (game.mode === "curtain") { const L = level(24); return { amp: 1.35, omega: 1.5, rc: L.rc + 0.02, bob: 0.14 }; }
     if (game.mode === "practice" && practice.ring === "slow") { const L = level(aLevel(game.stageHits || 0)); return { ...L, omega: L.omega * 0.5 }; }
     return null;
@@ -74,6 +76,7 @@
   // ── after each throw has settled: true if the mode moved the run on (stageCheck's place)
   function modeCheck() {
     const m = game.mode, make = game.result && game.result.make;
+    if (game.phase === "crossing") return crossingCheck();
     if (game.phase === "encore") { if (game.run.encoreEnd != null && (!cansLeft() || game.time >= game.run.encoreEnd)) { encoreDone(); return true; } return true; }   // (the cans are the round: no director between throws)
     if (m === "rush") { if (boss && boss.dead) { rushNext(); return true; } return false; }
     if (m === "curtain") { if (modeSt.clock <= 0) { gameOver(true); return true; } return false; }
@@ -162,7 +165,7 @@
   // ── the HUD's progress bar, mode by mode: a clock for Curtain Call and the encore, a reach for Longshot, the throws
   // left in the Gallery, how far into the list in Boss Rush (its fights use the boss's own bar)
   function modeProgress() {
-    const m = game.mode; if (game.state === "title" || (m === "story" && game.phase !== "encore") || m === "arcade" || m === "director" || m === "feature") return false;   // (the Director's and the Feature's are renderProgress's own: 07b_stage.js)
+    const m = game.mode; if (game.state === "title" || (m === "story" && game.phase !== "encore" && game.phase !== "crossing") || m === "arcade" || m === "director" || m === "feature") return false;   // (the Director's and the Feature's are renderProgress's own: 07b_stage.js)
     const fighting = !!boss && (game.phase === "mini" || game.phase === "boss");
     if (m === "rush" && fighting) { progSt.textContent = modeSt.rushI + 1; return false; }   // (the boss's health bar, as in Story)
     progEl.classList.remove("fight", "half", "beat"); delete progEl.dataset.boss;
@@ -171,6 +174,7 @@
     if (clock >= 0) { progArc.textContent = `0:${String(Math.ceil(clock)).padStart(2, "0")}`; progFill.style.width = (100 * clock / (game.phase === "encore" ? CANS.secs + 1.8 : MODES.curtain.clock)).toFixed(1) + "%"; }
     else progSt.textContent = game.stage || 1;
     if (game.phase === "encore") progLbl.textContent = t("prog.encore", { n: cans.filter(c => c.down).length, total: cans.length });
+    else if (game.phase === "crossing") { const n = game.run.crossN || 0; progLbl.textContent = t("prog.cross", { map: mapData(game.stage + 1).name, n, total: CROSS.throws }); progFill.style.width = (100 * n / CROSS.throws).toFixed(1) + "%"; }
     else if (m === "curtain") progLbl.textContent = t("prog.curtain", { n: game.hits });
     else if (m === "longshot") { const best = modeRec("longshot").best / 10; progLbl.textContent = t("prog.longshot", { m: ring.z.toFixed(1), best: Math.max(best, modeSt.far).toFixed(1) }); progFill.style.width = (100 * clamp((ring.z - LONGSHOT.z0) / (LONGSHOT.zMax - LONGSHOT.z0), 0, 1)).toFixed(1) + "%"; }
     else if (m === "gallery") { const left = Math.max(0, MODES.gallery.throws - game.throws); progLbl.textContent = t("prog.gallery", { n: game.run.targets || 0, left }); progFill.style.width = (100 * left / MODES.gallery.throws).toFixed(1) + "%"; }

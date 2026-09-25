@@ -1,4 +1,4 @@
-# Perceptual travel (v47, the Crow Hollow pilot)
+# Perceptual travel (v47 pilot; all eight maps from v48)
 
 Morty never walks. He is thrown. So the game doesn't swap backgrounds between sections: **the scenery comes to him**.
 Crow Hollow is a continuous place assembled from reusable SVG scenery at different depths. Every make before a boss
@@ -70,7 +70,7 @@ The build imports the SVGs with `svgart.py`, the same importer as the skull and 
 - an unknown layer;
 - any **collision**. Travel scenery is looks only, and none of it can ever touch a throw.
 
-The Crow Hollow library has 15 assets:
+The Crow Hollow library has 15 assets (the other maps add a lair each: 22 in all):
 
 - two trees (an autumn one, and a dead one full of crows);
 - the farmhouse and the barn;
@@ -93,6 +93,34 @@ different trees.*
 - **Screen width.** A phone sees the lane-side scenery only in the middle distance; a wide screen sees more of it closer to. The play is the same on both.
 - **Living scenery.** Lit windows and jack-o'-lanterns glow, and give the GPU layer its light pools. In the harvest and the crows' country, crows come up out of the trees as Morty travels. The map's wanderers are left behind.
 - **The corridor.** Scenery never stands in the throw corridor (`|x| < 2.4 m` and nearer than z 16). The build checks every landmark, and the game drops anything generated there. The spec checks the whole track.
+
+## Every map (v48)
+
+Each map from the Gilded Graveyard on has a `travel` block of the same shape:
+
+- **Five zones**, starting at the map's start, then 6 m past hit 10, 8 m past hit 20, 6 m short of the mini-boss, and 30 m on from him. Each zone sets:
+  - its **mix**;
+  - its **near** edge (the silhouettes at the frame's sides);
+  - its **flock**: the chance a make flushes birds, crows or `bats`;
+  - its **backdrop** (what stands in the far rows);
+  - its **tone** and **fog**.
+- **Its lair**, `<boss>-lair`, a landmark 44 m past hit 50 that `wakes: "end"`.
+- **Clearings** at hits 30 and 50.
+- **A palette** (`pal`) for the painted props it borrows.
+
+The painted props the game already draws (`06d_props.js`, `06f_props_sets.js`) can stand anywhere in a mix, a backdrop, a near edge or as a landmark. The build knows them as `CANVAS_KINDS`.
+
+| Map | Zones | Lair |
+|---|---|---|
+| The Gilded Graveyard | gates, mausoleums, angels, bats, crypt | `count-lair` |
+| The Whistling Woods | wisps, logs, signposts, owls, root | `marrow-lair` |
+| The Drowned Theater | aisle, boxes, screen, jester, big top | `bigtop-lair` |
+| The Black Marsh | boardwalk, knees, marshlight, gator, parlour | `parlour-lair` |
+| The Bone Desert | dunes, mesas, ribcage, scarecrow, yard | `undertaker-lair` |
+| The Clockwork Caves | mine mouth, gears, pendulum, cuckoo, works | `clock-lair` |
+| The Black Abyss | bridge, frames, reel, projectionist, ring | `reaper-lair` |
+
+**The crossing.** The track starts 72 m before the map does (`CROSS.lead`), so the Challenge Stage's road can run into it. During the crossing, `travelGoal` reads `crossingAt()`, ten 6.6 m steps that end at 0: the map's own start. See [BODY_AND_CROSSING.md](BODY_AND_CROSSING.md).
 
 ## Adding travel to another map
 

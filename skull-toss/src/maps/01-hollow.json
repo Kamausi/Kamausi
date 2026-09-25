@@ -168,6 +168,7 @@
     "transition": "The oak's leaves blow across the lens, then an iris on the harvest moon.",
     "reward": {
       "bodyPart": "hair:vines",
+      "section": "leftArm",
       "fragment": "hollow",
       "show": "The Pumpkin King's vines curl onto Morty's crown; the shard spins out of his mouth."
     }
@@ -310,7 +311,8 @@
           "haybale": 1,
           "tuft": 3,
           "scarecrow": 1
-        }
+        },
+        "near": "bush"
       },
       {
         "id": "farm",
@@ -329,7 +331,8 @@
           "pumpkins": 2,
           "cart": 1,
           "tuft": 2
-        }
+        },
+        "near": "corn"
       },
       {
         "id": "harvest",
@@ -348,7 +351,9 @@
           "crowpost": 1,
           "jack": 1,
           "tuft": 2
-        }
+        },
+        "near": "bush",
+        "flock": 0.4
       },
       {
         "id": "crows",
@@ -363,7 +368,12 @@
           "tree-bare": 4,
           "crowpost": 3,
           "bush": 1
-        }
+        },
+        "near": "tree-bare",
+        "flock": 0.8,
+        "backdrop": [
+          "tree-bare"
+        ]
       },
       {
         "id": "field",
@@ -381,7 +391,13 @@
           "haybale": 1,
           "tuft": 2,
           "bush": 1
-        }
+        },
+        "near": "bush",
+        "backdrop": [
+          "tree-autumn",
+          "pumpkin-giant",
+          "pumpkin-giant"
+        ]
       }
     ],
     "landmarks": [
@@ -475,6 +491,11 @@
         "ahead": 34,
         "x": 5
       }
+    ],
+    "backdrop": [
+      "tree-autumn",
+      "tree-autumn",
+      "tree-bare"
     ]
   },
   "fragment": "hollow",

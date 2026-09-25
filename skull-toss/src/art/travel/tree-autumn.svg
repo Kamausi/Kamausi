@@ -4,9 +4,9 @@
   <g id="body">
     <ellipse class="s" cx="162" cy="431" rx="96" ry="9" fill="#000" opacity=".28"/>
     <path class="k" d="M150 212 C118 196 96 176 78 148" fill="none" stroke-width="18"/>
-    <path class="s" d="M150 212 C118 196 96 176 78 148" fill="none" stroke="#5A4A5E" stroke-width="9" stroke-linecap="round"/>
+    <path d="M150 212 C118 196 96 176 78 148" fill="none" stroke="#5A4A5E" stroke-width="9" stroke-linecap="round"/>
     <path class="k" d="M176 206 C204 188 224 172 244 146" fill="none" stroke-width="16"/>
-    <path class="s" d="M176 206 C204 188 224 172 244 146" fill="none" stroke="#5A4A5E" stroke-width="8" stroke-linecap="round"/>
+    <path d="M176 206 C204 188 224 172 244 146" fill="none" stroke="#5A4A5E" stroke-width="8" stroke-linecap="round"/>
     <path class="k" d="M126 432 C140 420 143 400 140 372 C136 330 118 296 130 256 C138 228 150 210 144 180 L174 178 C178 206 166 230 176 258 C190 298 176 334 182 372 C185 402 190 420 204 432 Z" fill="#5A4A5E"/>
     <path class="s" d="M144 402 C148 372 140 332 136 300 C132 268 146 238 152 212 L158 214 C152 240 142 268 146 298 C150 330 156 372 152 402 Z" fill="#7C6A80"/>
     <ellipse class="k" cx="96" cy="176" rx="58" ry="48" fill="#A8462A"/>

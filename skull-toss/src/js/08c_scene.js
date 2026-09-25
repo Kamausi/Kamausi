@@ -82,6 +82,10 @@
     if (ringHeat > 0.02) { drawRingFire(p.x, p.y, r, lw, ringHeat, T.t); Gpu.fire = { x: p.x, y: p.y, r: ringOuter(r, lw, cos.ring), heat: ringHeat }; }   // (and the GPU's embers: 08j_gpu.js)
     const rim = drawRingLight(p.x, p.y, r, lw);   // the backing that keeps it readable on any background, and its rim light
     drawRingShape(ctx, p.x, p.y, r, lw, cos.ring, T.t, ring.flash); rim();
+    if (crossOn() && crossGolden()) {   // the crossing's golden rings (07q_crossing.js): a gilt band and a light
+      ctx.strokeStyle = GOLD; ctx.lineWidth = Math.max(2, lw * 0.45); ctx.globalAlpha = 0.75 + 0.25 * Math.sin(game.time * 6); ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, TAU); ctx.stroke(); ctx.globalAlpha = 1;
+      gpuLight(p.x, p.y, r * 2.2, [1, 0.82, 0.35], 0.5);
+    }
     if (squashed) ctx.restore();
     if (powerOn("deadeye")) {          // Deadeye shows its doubled perfect window
       const pr = (ring.rc - RING_TUBE - SKULL_R) * 0.76 * p.s;
@@ -401,5 +405,6 @@
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     const fa = flashAlpha();
     if (fa > 0) { ctx.fillStyle = `rgba(242,231,201,${fa * 0.2})`; ctx.fillRect(0, 0, W, H); }
+    drawBodyShow();   // his body section coming home, over everything (07p_body.js)
     if (visualsOn()) drawVisualDebug();
   }

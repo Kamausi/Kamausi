@@ -1,8 +1,36 @@
-# SKULL TOSS v47
+# SKULL TOSS v48
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)), with a synthesised waltz standing in wherever they can't load.
+
+## New in v48: every map travels, Morty gets his bones back, and a Challenge Stage between maps
+
+- **All eight maps travel now** ([docs/TRAVEL.md](docs/TRAVEL.md)). What the Crow Hollow pilot did, every map does:
+  - its scenery comes toward Morty a step a make, slows as a boss comes up, and stands still through each fight;
+  - it has five zones of its own, each with its own colour, fog, tree line and near edge, and its own birds (bats in the Gilded Graveyard, crows elsewhere) flushed as you go;
+  - its end boss waits on the horizon, asleep in a lair of his own, until he wakes. There are seven new lair SVGs, one for each map after the Hollow: Count Crookula's crypt, Old Marrowroot's stump, the Ringmaster's big top, Madame Muck's parlour, the Undertaker's grave mound, the Clockwork King's tower and the Reel Reaper's projector.
+
+  The painted props each map already had (angels, urns, tents, cacti, gears, film cans…) line the road too. The build checks every map's track against the throw corridor, and so does the spec. Some detail lines in the Hollow's SVGs, hidden by a stray class, now show.
+- **Morty gets his body back, section by section** ([docs/BODY_AND_CROSSING.md](docs/BODY_AND_CROSSING.md)). Each of the first seven end bosses gives one back, in order: his **Left Arm**, **Right Arm**, **Ribs**, **Spine**, **Pelvis**, **Left Leg** and **Right Leg**.
+  - When the end boss goes down, the section flies home and snaps on, with a card to say which.
+  - It stays his, and the Profile shows him with what he has in bone and what's still missing pencilled in.
+  - The eighth boss gives back no bone: his shard closes the Black Ring.
+- **The Challenge Stage: the crossing into the next map.** After the shard (and Can Alley, if you play it) comes the road to the next map, ten throws long.
+  - Every throw carries Morty a step along it, through the next map's own scenery.
+  - A ring waits somewhere new each time, smaller as the road goes on. Each ring through pays bones, and the gold ones (the fifth and the tenth) pay more.
+  - Misses are free, and nothing can end the run here.
+  - All ten is a **clean crossing**: a bonus, and a line on your profile.
+  - At the tenth throw the road arrives exactly where the map begins, and its title card rolls.
+
+  The positions come from the run's dice, so a replay sees the same ones.
+
+  The new order after an end boss:
+
+  > end boss → body section → Black Ring shard → Can Alley (optional) → crossing → next map
+
+  A reload mid-crossing picks up at the next map's start.
+- **New stats:** crossings, clean crossings, and bones back in place.
 
 ## New in v47: 80 hits a map, a world that travels, and a GPU on top
 

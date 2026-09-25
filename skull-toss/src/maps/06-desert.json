@@ -155,6 +155,7 @@
     "transition": "A sandstorm rolls across the lens.",
     "reward": {
       "bodyPart": "wings:vulture",
+      "section": "leftLeg",
       "fragment": "desert",
       "show": "A pair of ragged vulture wings unfold on Morty's back."
     }
@@ -339,6 +340,138 @@
     "The Great Ribcage",
     "The Undertaker's Yard"
   ],
+  "travel": {
+    "step": 6,
+    "arrive": [
+      0.85,
+      0.7,
+      0.55,
+      0.4,
+      0.25
+    ],
+    "gap": 2.6,
+    "far": 170,
+    "_doc": "v47 perceptual travel (docs/TRAVEL.md): see 01-hollow.json.",
+    "pal": "bone",
+    "backdrop": [
+      "cactus",
+      "ribcage",
+      "rock"
+    ],
+    "zones": [
+      {
+        "id": "dunes",
+        "from": [
+          0,
+          0
+        ],
+        "density": 0.42,
+        "fog": 0.06,
+        "tone": "rgba(0,0,0,0)",
+        "near": "cactus",
+        "mix": {
+          "cactus": 4,
+          "rock": 3,
+          "skullpile": 1
+        }
+      },
+      {
+        "id": "mesas",
+        "from": [
+          10,
+          6
+        ],
+        "density": 0.46,
+        "fog": 0.08,
+        "tone": "rgba(80,40,10,.1)",
+        "near": "rock",
+        "mix": {
+          "cactus": 2,
+          "rock": 3,
+          "ribcage": 1
+        }
+      },
+      {
+        "id": "ribcage",
+        "from": [
+          20,
+          8
+        ],
+        "density": 0.5,
+        "fog": 0.1,
+        "tone": "rgba(80,30,10,.14)",
+        "near": "cactus",
+        "mix": {
+          "ribcage": 3,
+          "skullpile": 2,
+          "cactus": 2
+        },
+        "flock": 0.3
+      },
+      {
+        "id": "scarecrow",
+        "from": [
+          30,
+          -6
+        ],
+        "density": 0.34,
+        "fog": 0.14,
+        "tone": "rgba(60,20,10,.22)",
+        "near": "rock",
+        "mix": {
+          "rock": 3,
+          "cactus": 2
+        },
+        "flock": 0.5
+      },
+      {
+        "id": "yard",
+        "from": [
+          30,
+          30
+        ],
+        "density": 0.5,
+        "fog": 0.12,
+        "tone": "rgba(50,20,20,.2)",
+        "near": "cactus",
+        "mix": {
+          "stone": 3,
+          "cross": 2,
+          "skullpile": 2
+        }
+      }
+    ],
+    "landmarks": [
+      {
+        "asset": "digger",
+        "hit": 0,
+        "ahead": 12.5,
+        "x": -2.9
+      },
+      {
+        "asset": "undertaker-lair",
+        "hit": 50,
+        "ahead": 44,
+        "x": 0,
+        "mul": 1.25,
+        "wakes": "end"
+      }
+    ],
+    "clear": [
+      {
+        "hit": 30,
+        "back": 6,
+        "ahead": 28,
+        "x": 4.2
+      },
+      {
+        "hit": 50,
+        "back": 6,
+        "ahead": 34,
+        "x": 5
+      }
+    ]
+  },
   "fragment": "desert",
   "target": "bonefruit",
   "music": {

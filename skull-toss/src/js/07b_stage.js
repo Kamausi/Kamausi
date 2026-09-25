@@ -191,7 +191,7 @@
     profile.bossKills++; if (boss.flawless) { profile.bossFlawless++; profile.flawless[boss.kind] = 1; } game.run.bosses++;
     profile.bossLog[boss.kind] = (profile.bossLog[boss.kind] || 0) + 1;
     profile.bestStage = Math.max(profile.bestStage, game.stage + 1); game.stageHits = Math.max(game.stageHits || 0, STAGE_END);
-    // the corrected roadmap's progression: END BOSS → BODY-PART REWARD → BLACK RING SHARD → BONUS ROUND (optional) → NEXT MAP
+    // the corrected roadmap's progression: END BOSS → BODY-PART REWARD → BLACK RING SHARD → BONUS ROUND (optional) → CROSSING → NEXT MAP
     const M = mapData(game.stage), frag = M.fragment, fresh = !profile.fragments.includes(frag), part = BODY_PART[boss.kind], partKey = part ? part.kind + ":" + part.id : "";
     if (fresh) profile.fragments.push(frag);
     game.run.fragments = (game.run.fragments || []).concat(frag);
@@ -217,7 +217,10 @@
       updateHud();
     };
     // the boss goes down, then (Story) the encore: ten seconds of Curtain Call for bones (07i_modes.js), then the next map
-    cine("boss-out", 2.8, () => { boss = null; seeds.length = 0; obstaclesSync(true); shardCard(() => { if (encoreOn()) offerBonus(nextMap); else nextMap(); }); }, 0.4);   // the bonus round: Can Alley, if you want it (07o_bonus.js)
+    // then his body section flies home (07p_body.js), the shard, Can Alley if you want it (07o_bonus.js), and the crossing
+    // into the next map, the Challenge Stage (07q_crossing.js)
+    const onward = () => (crossingsOn() ? startCrossing(nextMap) : nextMap());
+    cine("boss-out", 2.8, () => { boss = null; seeds.length = 0; obstaclesSync(true); bodyReward(() => shardCard(() => { if (encoreOn()) offerBonus(onward); else onward(); })); }, 0.4);
     checkUnlocks(); persist(); updateHud();
     challenge("bosses", 1);
   }

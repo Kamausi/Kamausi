@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 820">
+  <!-- The Black Marsh's destination: Madame's parlour on its stilts, moss dripping, the crystal ball aglow. 100 units = 1 m; foot at (450, 810). -->
+  <style>.k{stroke:ink;stroke-width:8;stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}.l{fill:none;stroke-linecap:round}</style>
+  <g id="body">
+    <ellipse class="s" cx="452" cy="806" rx="400" ry="20" fill="#000" opacity=".35"/>
+    <path class="k" d="M220 806 L236 520 L260 520 L248 806 Z M660 806 L644 520 L668 520 L684 806 Z M440 806 L444 520 L468 520 L466 806 Z" fill="#3A2A1E"/>
+    <path class="k" d="M170 530 L730 510 L740 540 L160 560 Z" fill="#5A4232"/>
+    <path class="k" d="M200 540 L210 300 L700 290 L710 520 Z" fill="#4A5A40"/>
+    <path d="M230 340 H680 M226 380 H684 M224 420 H688 M222 460 H690 M220 500 H692" stroke="#3A4A32" stroke-width="5"/>
+    <path class="k" d="M150 320 L440 110 L760 300 L720 320 L440 150 L190 336 Z" fill="#2E2A22"/>
+    <path class="k" d="M600 180 L600 110 L640 108 L642 206 Z" fill="#4A3A2E"/>
+    <circle class="k" cx="330" cy="400" r="56" fill="#FFD27A"/>
+    <path d="M330 344 V456 M274 400 H386" stroke="ink" stroke-width="7"/>
+    <path class="k" d="M500 540 L500 380 C500 350 600 350 600 380 L600 540 Z" fill="#1E1A14"/>
+    <circle class="k" cx="550" cy="470" r="26" fill="#9FE8FF" stroke-width="5"/>
+    <path class="l" d="M200 336 C204 380 196 420 206 460 M280 330 C284 360 278 390 286 420 M660 322 C664 370 656 410 666 450 M720 312 C724 350 718 380 726 410" stroke="#6A8A5A" stroke-width="10"/>
+    <path class="k" d="M760 330 L760 400 M740 400 L780 400 L776 440 L744 440 Z" fill="#FFB050" stroke-width="5"/>
+  </g>
+</svg>

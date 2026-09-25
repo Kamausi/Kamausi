@@ -158,6 +158,7 @@
     "transition": "The curtains close on the drowned stalls.",
     "reward": {
       "bodyPart": "hair:quiff",
+      "section": "spine",
       "fragment": "drowned",
       "show": "The Ringmaster's quiff springs up on Morty's crown with a POP."
     }
@@ -321,6 +322,129 @@
     "Under the Screen",
     "The Big Top Stage"
   ],
+  "travel": {
+    "step": 6,
+    "arrive": [
+      0.85,
+      0.7,
+      0.55,
+      0.4,
+      0.25
+    ],
+    "gap": 2.6,
+    "far": 170,
+    "_doc": "v47 perceptual travel (docs/TRAVEL.md): see 01-hollow.json.",
+    "backdrop": [
+      "pillar"
+    ],
+    "zones": [
+      {
+        "id": "aisle",
+        "from": [
+          0,
+          0
+        ],
+        "density": 0.7,
+        "fog": 0.08,
+        "tone": "rgba(0,0,0,0)",
+        "near": "seats",
+        "mix": {
+          "seats": 5,
+          "rope": 1,
+          "pillar": 1
+        }
+      },
+      {
+        "id": "boxes",
+        "from": [
+          10,
+          6
+        ],
+        "density": 0.66,
+        "fog": 0.1,
+        "tone": "rgba(40,10,20,.1)",
+        "near": "seats",
+        "mix": {
+          "pillar": 2,
+          "seats": 4,
+          "popcorn": 1
+        }
+      },
+      {
+        "id": "screen",
+        "from": [
+          20,
+          8
+        ],
+        "density": 0.6,
+        "fog": 0.14,
+        "tone": "rgba(20,30,50,.14)",
+        "near": "seats",
+        "mix": {
+          "seats": 3,
+          "filmcans": 2,
+          "pillar": 1
+        }
+      },
+      {
+        "id": "jester",
+        "from": [
+          30,
+          -6
+        ],
+        "density": 0.38,
+        "fog": 0.2,
+        "tone": "rgba(20,20,40,.22)",
+        "near": "seats",
+        "mix": {
+          "pillar": 3,
+          "balloons": 1
+        }
+      },
+      {
+        "id": "bigtop",
+        "from": [
+          30,
+          30
+        ],
+        "density": 0.55,
+        "fog": 0.14,
+        "tone": "rgba(60,20,20,.18)",
+        "near": "pennant",
+        "mix": {
+          "tent": 2,
+          "booth": 2,
+          "pennant": 3,
+          "horse": 1,
+          "balloons": 1
+        }
+      }
+    ],
+    "landmarks": [
+      {
+        "asset": "bigtop-lair",
+        "hit": 50,
+        "ahead": 44,
+        "x": 0,
+        "mul": 1.15,
+        "wakes": "end"
+      }
+    ],
+    "clear": [
+      {
+        "hit": 30,
+        "back": 6,
+        "ahead": 28,
+        "x": 4.2
+      },
+      {
+        "hit": 50,
+        "back": 6,
+        "ahead": 34,
+        "x": 5
+      }
+    ]
+  },
   "fragment": "drowned",
   "target": "duck",
   "music": {

@@ -79,7 +79,7 @@
     targets.push({ kind, type, x: decoy ? rrIn(-1.0, 1.0) : x, y: decoy ? rrIn(2.0, 3.0) : type === "swinging" ? Math.min(y, Z.y[1] - 0.3) : y, z, t: 0, left: type === "golden" ? 3 : 6, pop: 0, ph: rrIn(0, TAU), shield: type === "shielded", sz: type === "secret" ? 0.9 : 1 });
   }
   function refillTargets() {
-    const want = boss || game.state === "title" ? 0 : tierNow().targets * directorTargets();
+    const want = boss || game.state === "title" || game.phase === "crossing" ? 0 : tierNow().targets * directorTargets();
     for (let i = targets.length - 1; i >= 0; i--) if (targets[i].pop || --targets[i].left <= 0) targets.splice(i, 1);
     while (targets.filter(T => T.type !== "half").length < want) spawnTarget();
   }
@@ -108,7 +108,7 @@
   // gives a tell first (a screech, a shadow, a tick) and none of them run during a boss fight except the wind.
   const HZ = { kind: "none", wind: 0, fog: 0, fogT: 0, list: [], since: 0, pendT: 0, lastTick: 0 };
   // the map's hazards (wind included) sit out the mini-games, the encore, and Practice with them switched off
-  const hazardsAllowed = () => !MODES[game.mode].mini && game.phase !== "encore" && !(game.mode === "practice" && !practice.hazards);
+  const hazardsAllowed = () => !MODES[game.mode].mini && game.phase !== "encore" && game.phase !== "crossing" && !(game.mode === "practice" && !practice.hazards);
   const hazardsLive = () => !boss && game.state !== "title" && game.state !== "cine" && hazardsAllowed();
   function hazardsReset() {
     HZ.kind = mapData(game.stage || 1).mechanic.kind; HZ.wind = 0; HZ.windMul = 1; HZ.fog = 0; HZ.fogT = 0; HZ.list = []; HZ.since = 0; HZ.pendT = 0; HZ.lastTick = 0;

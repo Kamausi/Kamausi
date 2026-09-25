@@ -15,14 +15,18 @@
   const TRAVEL_ASSETS = Object.fromEntries(Object.keys(ASSETS).filter(k => k.startsWith("travel/")).map(k => [k.slice(7), ASSETS[k]]));
   // the props the game already paints (06d_props.js) can go on the track too: their size in metres and their foot
   const TRAVEL_CANVAS = { pumpkin: [1.0, 0.8, 0.5, 0.75], jack: [1.1, 0.9, 0.55, 0.85], tuft: [0.8, 0.45, 0.4, 0.4], hay: [1.4, 0.8, 0.7, 0.75], corn: [1.2, 2.2, 0.6, 2.1],
-    scarecrow: [1.8, 2.6, 0.9, 2.5], rail: [3.6, 1.2, 1.8, 1.1], tree: [2.4, 3.1, 1.2, 2.95] };
+    scarecrow: [1.8, 2.6, 0.9, 2.5], rail: [3.6, 1.2, 1.8, 1.1], tree: [2.4, 3.1, 1.2, 2.95],
+    stone: [1.0, 1.9, 0.5, 1.8], cross: [1.0, 1.9, 0.5, 1.8], slab: [1.0, 1.9, 0.5, 1.8], obelisk: [1.0, 1.9, 0.5, 1.8], crypt: [3.2, 2.7, 1.6, 2.6], lantern: [0.8, 1.7, 0.2, 1.65], fence: [3.6, 1.35, 1.8, 1.25] };
+  const STONE_KINDS = ["stone", "cross", "slab", "obelisk"];
   const TRAVEL = { on: false, def: null, table: null, D: 0, goal: 0, v: 0, zones: [], near: [], sprites: {}, lastGoal: 0 };
   const TRAVEL_EASE = 4.2, TRAVEL_NEAR = -CAM_BACK + 0.6, TRAVEL_HAZE_Z = 45, TRAVEL_VECTOR = 0.85;   // (vectors once a canvas unit is this many pixels)
   // what an asset is: its canvas (units: 100 a metre), foot, layer and family, whichever kind of painter it has
   function travelKind(kind) {
     const A = TRAVEL_ASSETS[kind]; if (A) return A.meta;
-    const C = TRAVEL_CANVAS[kind]; if (!C) return null;
-    return { canvas: [C[0] * 100, C[1] * 100], foot: [C[2] * 100, C[3] * 100], layer: "gameplay", family: kind === "rail" ? "rail" : kind, sway: kind === "tree" ? 0.05 : kind === "tuft" || kind === "corn" ? 0.12 : kind === "scarecrow" ? 0.07 : 0, canvasKind: true };
+    const C = TRAVEL_CANVAS[kind] || (PROP_PAINT[kind] && PROP_SPRITES[kind]); if (!C) return null;
+    const tall = C[1] > 2.6 || C[0] > 2.8;
+    return { canvas: [C[0] * 100, C[1] * 100], foot: [C[2] * 100, C[3] * 100], layer: tall ? "midground" : "gameplay", family: kind, canvasKind: true,
+      sway: ["tree", "bonetree", "cypress"].includes(kind) ? 0.05 : ["tuft", "corn", "reeds"].includes(kind) ? 0.12 : ["scarecrow", "balloons"].includes(kind) ? 0.07 : 0 };
   }
   // how far on the camera stands at each hit: a step a make through each leg that travels (acts I–III, then the
   // approach), the last few steps shorter as a boss comes up; nothing through the boss fights
@@ -52,16 +56,16 @@
       P.push({ kind, d, x, z: d, mul, flip, ph: rnd(), seed: (rnd() * 4) | 0, face: false, size: 1, fam: K.family, tall: (K.canvas[1] / 100) * mul, travel: true, wakes: extra.wakes || null });
     };
     const end = table[STAGE_END] + Tv.far + 10;
-    for (let d = 1.2; d < end; d += Tv.gap) for (const side of [-1, 1]) {   // the lane-side rows: small things near, bigger further out
+    const start = -CROSS.lead;   // (the track begins before the map does: the Challenge Stage's road runs into it, 07q_crossing.js)
+    for (let d = start; d < end; d += Tv.gap) for (const side of [-1, 1]) {   // the lane-side rows: small things near, bigger further out
       const Z = zoneAt(d); if (rnd() > Z.density) continue;
       const kind = pick(Z.mix), K = travelKind(kind); if (!K) continue;
       const big = K.canvas[1] > 250 || K.canvas[0] > 300, mul = 0.8 + rnd() * 0.45, reach = K.layer === "midground" || big ? 1.2 + rnd() * 7 : 0.25 + rnd() * 3.2;
       add(kind, d + rnd() * Tv.gap * 0.8, side * (half + reach + (K.canvas[0] / 200) * mul), { mul });
     }
-    for (let d = 6; d < end; d += 7 + rnd() * 5) for (const side of [-1, 1]) {   // tree lines further out, so the land has depth
-      const Z = zoneAt(d); if (rnd() > 0.35 + Z.density * 0.4) continue;
-      const kind = Z.mix["tree-bare"] && (Z.id === "crows" || rnd() < 0.3) ? "tree-bare" : Z.mix["pumpkin-giant"] && rnd() < 0.5 ? "pumpkin-giant" : "tree-autumn";
-      add(kind, d, side * (13 + rnd() * 16), { mul: 1 + rnd() * 0.6 });
+    for (let d = start + 4; d < end; d += 7 + rnd() * 5) for (const side of [-1, 1]) {   // tree lines (or whatever the zone's backdrop is) further out, so the land has depth
+      const Z = zoneAt(d), back = Z.backdrop || Tv.backdrop || []; if (!back.length || rnd() > 0.35 + Z.density * 0.4) continue;
+      add(back[(rnd() * back.length) | 0], d, side * (13 + rnd() * 16), { mul: 1 + rnd() * 0.6 });
     }
     for (const L of Tv.landmarks || []) {
       const d = table[L.hit] + (L.ahead || 0);
@@ -70,8 +74,8 @@
     }
     // the near edge of the frame: a bush or a clump of corn at each side now and then, sweeping past as Morty goes
     TRAVEL.near = [];
-    for (let d = 5, i = 0; d < end; d += 4.2 + rnd() * 2.6, i++) {
-      const Z = zoneAt(d), kind = Z.id === "farm" ? "corn" : Z.id === "crows" ? "tree-bare" : Z.mix.bush || Z.id === "field" ? "bush" : "corn", K = travelKind(kind);
+    for (let d = start + 5, i = 0; d < end; d += 4.2 + rnd() * 2.6, i++) {
+      const Z = zoneAt(d), kind = Z.near || Tv.near, K = kind && travelKind(kind);
       if (K && !cleared(d, half + 0.1, half + 0.2)) TRAVEL.near.push({ kind, d, side: i % 2 ? 1 : -1, mul: 0.55 + rnd() * 0.25, ph: rnd(), flip: rnd() < 0.5 ? -1 : 1, inset: 0.02 + rnd() * 0.05 });
     }
     P.sort((a, b) => b.d - a.d);
@@ -85,15 +89,16 @@
   }
   // where the run has got to: the Adventure travels, on the map it's playing; anything else stands at the start
   function travelGoal() {
+    if (TRAVEL.on && game.phase === "crossing" && game.mode === "story" && sceneMap === (game.stage || 1)) return crossingAt();   // the road into the next map (07q_crossing.js)
     if (!TRAVEL.on || game.state === "title" || game.mode !== "story" || sceneMap !== (game.stage || 1) - 1) return 0;
     return travelAt(game.stageHits || 0);
   }
   function updateTravel(dt) {
     if (!TRAVEL.on) return;
     const goal = travelGoal(), was = TRAVEL.D, step = TRAVEL.def.step;
-    if (goal > TRAVEL.lastGoal + 0.01 && goal - TRAVEL.lastGoal <= step * 1.01) travelStepped(goal);
+    if (goal > TRAVEL.lastGoal + 0.01 && goal - TRAVEL.lastGoal <= Math.max(step, CROSS.step) * 1.01) travelStepped(goal);
     TRAVEL.lastGoal = goal; TRAVEL.goal = goal;
-    if (Math.abs(goal - TRAVEL.D) > step * 2.5 || reduceMotion) TRAVEL.D = goal;   // a jump (a new run, a reload, a reduced-motion player): straight there
+    if (Math.abs(goal - TRAVEL.D) > Math.max(step, CROSS.step) * 2.5 || reduceMotion) TRAVEL.D = goal;   // a jump (a new run, a reload, a reduced-motion player): straight there
     else { TRAVEL.D += (goal - TRAVEL.D) * (1 - Math.exp(-dt * TRAVEL_EASE)); if (Math.abs(goal - TRAVEL.D) < 0.003) TRAVEL.D = goal; }
     const dD = TRAVEL.D - was; TRAVEL.v = dt > 0 ? dD / dt : 0;
     if (dD) {
@@ -103,8 +108,8 @@
   }
   // a step has just begun: in the harvest and the crows' country, the crows come up out of the trees
   function travelStepped(goal) {
-    const Z = travelZone(goal + 10); if (!Z) return;
-    if ((Z.id === "harvest" && Math.random() < 0.4) || (Z.id === "crows" && Math.random() < 0.8)) spawnFlock("crow");
+    const Z = travelZone(goal + 10); if (!Z || !Z.flock) return;
+    if (Math.random() < Z.flock) spawnFlock(look().ambient.crows ? "crow" : "bat");   // (the crows, or the bats, come up as Morty passes)
   }
   function travelApply() {
     const D = TRAVEL.D;
@@ -126,8 +131,9 @@
   function paintTravel(g, kind, K) {   // in canvas units, the foot at the foot
     if (!K.canvasKind) { drawLayer(g, "travel/" + kind, "body"); return; }
     g.save(); g.translate(K.foot[0], K.foot[1]); g.scale(100, 100); g.lineJoin = "round"; g.lineCap = "round"; g.strokeStyle = INK; g.lineWidth = 0.03;
-    const k = { kind, size: 1, seed: 7, ph: 0, col: 0, pal: "grave", h: 0.9 };
-    if (kind === "tree") paintTree(g, k); else if (kind === "tuft") paintTuft(g, k); else if (PROP_PAINT[kind]) PROP_PAINT[kind](g, k);
+    const k = { kind, size: 1, seed: 7, ph: 0, col: 0, pal: (TRAVEL.def && TRAVEL.def.pal) || "grave", h: 0.9, side: 1, n: 5 };
+    if (kind === "tree") paintTree(g, k); else if (kind === "tuft") paintTuft(g, k); else if (STONE_KINDS.includes(kind)) paintStone(g, k);
+    else if (kind === "crypt") paintCrypt(g); else if (kind === "lantern") paintLantern(g); else if (kind === "fence") paintFence(g); else if (PROP_PAINT[kind]) PROP_PAINT[kind](g, k);
     g.restore();
   }
   function travelSprite(kind, r, sil = false) {
@@ -158,7 +164,8 @@
     if (sway) ctx.transform(1, 0, sway, 1, 0, 0);
     reactXform(k);   // hit by a throw: it bends, squeaks or shakes like the rest of the map's props (07n_environment.js)
     ctx.scale(sc * k.flip * (1 - bb * 0.04), sc * (1 + bb * 0.06));
-    if (k.kind === "jack") { PROP_LIFE.jack({ ...k, size: 1 }, 100, t); gpuLight(p.x, p.y - 32 * sc, 140 * sc, "255,190,80", 0.3); }   // (its glow, under it; and on the GPU)
+    const life = PROP_LIFE[k.kind];   // (a glowing kind's light, under it; and on the GPU)
+    if (life) { life({ ...k, size: 1 }, 100, t); const L = PROP_LIGHT[k.kind]; if (L) gpuLight(p.x + L[0] * 100 * sc * k.flip, p.y - L[1] * 100 * sc, L[2] * 100 * sc, L[3], 0.3); }
     if (sc > TRAVEL_VECTOR) { ctx.translate(-K.foot[0], -K.foot[1]); paintTravel(ctx, k.kind, K); ctx.translate(K.foot[0], K.foot[1]); }
     else { const r = TRAVEL_LODS.reduce((best, v) => (v >= sc ? v : best), TRAVEL_LODS[0]), S = travelSprite(k.kind, r); ctx.drawImage(S.c, -K.foot[0], -K.foot[1], K.canvas[0], K.canvas[1]); }
     travelLights(K, t, k.ph);

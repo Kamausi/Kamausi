@@ -109,6 +109,7 @@ TIERS = json.loads((MAPDIR / "tiers.json").read_text())
 HEX = re.compile(r"^#[0-9A-Fa-f]{6}$"); COLOR = re.compile(r"^(#[0-9A-Fa-f]{6}|rgba?\([\d.,\s]+\))$")
 def inside(v, lo, hi, eps=1e-6): return lo - eps <= v <= hi + eps
 def span_ok(r, lo, hi): return isinstance(r, list) and len(r) == 2 and r[0] <= r[1] and inside(r[0], lo, hi) and inside(r[1], lo, hi)
+BODY_SECTIONS = ["leftArm", "rightArm", "ribs", "spine", "pelvis", "leftLeg", "rightLeg"]   # (v48: what the end bosses give back, 07p_body.js)
 def map_problems(m, fname):
     bad = []
     need = lambda k, d=m: k in d or bad.append(f"missing \"{k}\"")
@@ -173,6 +174,7 @@ def map_problems(m, fname):
     bp = str(Rw.get("bodyPart", "")).split(":")
     if len(bp) != 2 or bp[0] not in REG["bodySlot"]: bad.append(f"sheet.reward.bodyPart must be <{'|'.join(REG['bodySlot'])}>:<id>")
     if not str(Rw.get("show", "")).strip(): bad.append("sheet.reward.show: how the reward is presented")
+    if "section" in Rw and Rw["section"] not in BODY_SECTIONS: bad.append(f"sheet.reward.section must be one of Morty's sections ({', '.join(BODY_SECTIONS)})")
     # ── the ring, anchored to the environment
     if m["anchor"] not in REG["anchor"]: bad.append(f"anchor \"{m['anchor']}\" isn't one the code draws ({', '.join(REG['anchor'])})")
     R = m["ring"]
@@ -229,7 +231,9 @@ def map_problems(m, fname):
     if "travel" in m: bad += travel_problems(m["travel"], SB, C)
     return bad
 # ── v47 perceptual travel (docs/TRAVEL.md): the map's track, checked here the way the game will build it ──
-CANVAS_KINDS = {"pumpkin", "jack", "tuft", "hay", "corn", "scarecrow", "rail", "tree"}
+CANVAS_KINDS = set("""pumpkin jack tuft hay corn scarecrow rail tree stone cross slab obelisk crypt lantern fence sarcophagus column mausoleum torch bonetree ribcage
+  skullpile cypress lily rowboat stump reeds tent booth pennant horse balloons lamppost gear gargoyle bell crate barrel seats rope pillar filmcans popcorn
+  angel urn signpost log mushroom cactus rock stalagmite minecart frame seatwreck""".split())   # (the props the game paints: 06d_props.js, 06f_props_sets.js)
 def travel_table(Tv, SB):   # how far on the camera stands at each hit (the game's travelTable, 06g_travel.js)
     D, d, arr = [0.0], 0.0, Tv["arrive"]
     for h in range(1, SB["end"] + 1):
@@ -261,12 +265,15 @@ def travel_problems(Tv, SB, C):
             if k not in lib and k not in CANVAS_KINDS: bad.append(f"travel zone {z['id']}: \"{k}\" isn't in the travel library or a prop the code paints")
             if not (isinstance(w, (int, float)) and w > 0): bad.append(f"travel zone {z['id']}: {k}'s weight must be above 0")
         if not z.get("mix"): bad.append(f"travel zone {z['id']} has nothing in its mix")
+        for k in (z.get("backdrop") or []) + ([z["near"]] if z.get("near") else []):
+            if k not in lib and k not in CANVAS_KINDS: bad.append(f"travel zone {z['id']}: \"{k}\" (backdrop or near edge) isn't scenery the game has")
+        if not 0 <= z.get("flock", 0) <= 1: bad.append(f"travel zone {z['id']}: flock is a chance, 0–1")
     if not starts: bad.append("travel needs at least one zone")
     elif starts != sorted(starts) or starts[0] > 0: bad.append("travel zones must start in order along the way, the first at the start")
     far_end = D[SB["end"]]
     for L in Tv.get("landmarks", []):
         a = L.get("asset")
-        if a != "digger" and a not in lib: bad.append(f"travel landmark {a} isn't in the travel library"); continue
+        if a != "digger" and a not in lib and a not in CANVAS_KINDS: bad.append(f"travel landmark {a} isn't in the travel library or a prop the code paints"); continue
         if not hit_ok(L.get("hit")): bad.append(f"travel landmark {a}: hit must be 0–{SB['end']}"); continue
         d = D[L["hit"]] + L.get("ahead", 0); x = L.get("x", 0)
         if a in lib: cw, fx = lib[a]["canvas"][0], lib[a]["foot"][0]; x0, x1 = x - fx / 100, x + (cw - fx) / 100
@@ -284,6 +291,8 @@ if [m.get("n") for m in MAP_DATA] != list(range(1, len(MAP_DATA) + 1)): problems
 for key in ["id", "fragment"]:
     vals = [m.get(key) for m in MAP_DATA]
     if len(set(vals)) != len(vals): problems.append(f"two maps share a {key}")
+secs = [m["sheet"]["reward"]["section"] for m in MAP_DATA if "section" in m.get("sheet", {}).get("reward", {})]
+if len(set(secs)) != len(secs): problems.append("two maps give back the same section of Morty")
 bosses = [m["bosses"][k] for m in MAP_DATA for k in ("mini", "end") if "bosses" in m]
 if len(set(bosses)) != len(bosses): problems.append("two maps share a boss")
 if problems: sys.exit("build refused: the maps don't check out\n  " + "\n  ".join(problems))

@@ -158,6 +158,7 @@
     const r = rankFor(profile.makes);
     $("rankName").textContent = r.name;
     $("profTitle").textContent = titleName();
+    renderBodyCard();   // his bones so far (07p_body.js)
     $("rankBar").style.width = r.next ? `${Math.round(((profile.makes - r.from) / (r.next[0] - r.from)) * 100)}%` : "100%";
     $("rankNext").textContent = r.next ? `${r.next[0] - profile.makes} more makes to ${r.next[1]}` : "Highest rank. The graveyard is yours.";
     const P = profile, N = fmtN, pct = (a, b) => (b ? Math.round((a / b) * 100) + "%" : "—");
@@ -167,11 +168,11 @@
         ["Average score", N(Math.round(P.scoreTotal / Math.max(1, P.games)))], ["Time played", mins(P.playTime)], ["Longest run", mmss(P.longestRun || 0)], ["Career level", levelFor(P.xp)], ["Achievements", `${P.achievements.length}/${ACHIEVEMENTS.length}`]]],
       ["Tossing", "", [["Throws", N(P.throws)], ["Hits", N(P.makes)], ["Accuracy", pct(P.makes, P.throws)], ["Perfects", N(P.perfects)], ["Perfect rate", pct(P.perfects, P.makes)], ["Rim-ins", N(P.rims)],
         ["Swishes", N(Math.max(0, P.makes - P.perfects - P.rims - (P.eyePokes || 0)))], ["Best combo", `×${P.bestStreak}`], ["Top multiplier", `×${comboMult(P.bestStreak)}`], ["Rings set on fire", N(P.fireRings)], ["Makes through fire", N(P.fireMakes)], ["Perfects in a row", P.bestPerfStreak], ["Most skulls held", P.peakLives], ["Last-skull hits", N(P.clutch)], ["Times you grabbed Morty", N(P.grabs)]]],
-      ["Bosses", "", [["Different bosses beaten", `${BOSS_IDS.filter(id => P.bossLog[id]).length}/${BOSS_IDS.length}`], ["Continues taken", N(P.continues)], ["Mini-bosses beaten", P.miniKills], ["…without a miss", P.miniFlawless], ["End bosses beaten", P.bossKills], ["…without a miss", P.bossFlawless], ["Loose rings caught", N(P.ringCatches)], ["Pokes in the eye", N(P.eyePokes)], ["Black Ring shards", `${P.fragments.length}/${MAP_COUNT}`], ["Adventure finished", N(P.storyClears)]]],
+      ["Bosses", "", [["Different bosses beaten", `${BOSS_IDS.filter(id => P.bossLog[id]).length}/${BOSS_IDS.length}`], ["Continues taken", N(P.continues)], ["Mini-bosses beaten", P.miniKills], ["…without a miss", P.miniFlawless], ["End bosses beaten", P.bossKills], ["…without a miss", P.bossFlawless], ["Loose rings caught", N(P.ringCatches)], ["Pokes in the eye", N(P.eyePokes)], ["Black Ring shards", `${P.fragments.length}/${MAP_COUNT}`], ["Bones back in place", `${(P.body || []).length}/${BODY_SECTIONS.length}`], ["Adventure finished", N(P.storyClears)]]],
       ["Power-ups", "", [["Grabbed", N(P.powerups)], ["Cursed skulls taken", P.cursed], ["Second chances used", P.saves],
         ...["rush", "deadeye", "blast", "ghost", "magnet", "second", "cursed"].map(id => [POWERS[id].name, N((P.powerLog || {})[id] || 0)])]],
-      ["Targets & Can Alley", "", [["Bonus targets hit", N(P.targetHits)], ["Secret targets", N(P.secretTargets || 0)], ["Knocked out of the air", N(P.hazardHits)], ["Can Alley rounds", N(P.bonusRounds)],
-        ["Cans knocked down", N(P.cansDown)], ["Can Alley clears", N(P.canClears)], ["Carnival prizes", `${CAN_PRIZES.filter(([k, id]) => P.unlocked.includes(k + ":" + id)).length}/${CAN_PRIZES.length}`]]],
+      ["Targets, Can Alley & crossings", "", [["Bonus targets hit", N(P.targetHits)], ["Secret targets", N(P.secretTargets || 0)], ["Knocked out of the air", N(P.hazardHits)], ["Can Alley rounds", N(P.bonusRounds)],
+        ["Cans knocked down", N(P.cansDown)], ["Can Alley clears", N(P.canClears)], ["Crossings", N(P.crossings)], ["Clean crossings", N(P.cleanCrossings)], ["Carnival prizes", `${CAN_PRIZES.filter(([k, id]) => P.unlocked.includes(k + ":" + id)).length}/${CAN_PRIZES.length}`]]],
       ["Modes & challenges", "", [["Arcade runs", N(P.arcadeRuns)], ["Arcade best", N(Math.max(0, ...Object.values(P.arcade || {}).map(a => a.score || 0)))], ["Arcade longest", mmss(Math.max(0, ...Object.values(P.arcade || {}).map(a => a.secs || 0)))],
         ...["curtain", "longshot", "gallery", "rush", "practice"].map(m => [t(`mode.${m}.name`), m === "practice" ? `${N(((P.modes || {})[m] || {}).runs || 0)} runs` : N(((P.modes || {})[m] || {}).best || 0)]),
         ["Challenges claimed", N(P.chalClaims)], ["Full sets claimed", N(P.chalSets)], ["Best days in a row", N(Math.max(P.bestDayStreak || 0, P.streakDays || 0))]]],

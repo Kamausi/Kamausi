@@ -5,10 +5,10 @@
     <ellipse class="s" cx="366" cy="570" rx="300" ry="16" fill="#000" opacity=".3"/>
     <g transform="rotate(-1.6 360 570)">
       <path class="k" d="M438 226 L438 118 L486 116 L488 232 Z" fill="#7E4A3A"/>
-      <path class="s" d="M444 134 H482 M444 156 H482 M444 178 H482 M444 200 H482" stroke="#5A3228" stroke-width="3"/>
+      <path d="M444 134 H482 M444 156 H482 M444 178 H482 M444 200 H482" stroke="#5A3228" stroke-width="3"/>
       <rect class="k" x="430" y="104" width="64" height="18" fill="#5A3228"/>
       <path class="k" d="M150 568 L154 300 L566 296 L570 568 Z" fill="#8E7F70"/>
-      <path class="s" d="M160 330 H560 M160 362 H560 M160 394 H560 M160 426 H560 M160 458 H560 M160 490 H560 M160 522 H560" stroke="#6E6052" stroke-width="3" opacity=".8"/>
+      <path d="M160 330 H560 M160 362 H560 M160 394 H560 M160 426 H560 M160 458 H560 M160 490 H560 M160 522 H560" stroke="#6E6052" stroke-width="3" opacity=".8"/>
       <path class="s" d="M156 304 L182 304 L178 564 L154 564 Z" fill="#A89A8A" opacity=".7"/>
       <path class="k" d="M118 314 L360 128 L604 310 L580 318 L360 156 L140 322 Z" fill="#6A2E28"/>
       <path class="k" d="M140 322 L360 156 L580 318 L566 300 L154 304 Z" fill="#8E7F70"/>

@@ -159,6 +159,7 @@
     "transition": "The fog closes over the frame.",
     "reward": {
       "bodyPart": "hair:moss",
+      "section": "pelvis",
       "fragment": "marsh",
       "show": "Madame's moss drapes over Morty's crown, dripping."
     }
@@ -340,6 +341,131 @@
     "The Marsh-Light",
     "Madame's Parlour"
   ],
+  "travel": {
+    "step": 6,
+    "arrive": [
+      0.85,
+      0.7,
+      0.55,
+      0.4,
+      0.25
+    ],
+    "gap": 2.6,
+    "far": 170,
+    "_doc": "v47 perceptual travel (docs/TRAVEL.md): see 01-hollow.json.",
+    "backdrop": [
+      "cypress"
+    ],
+    "zones": [
+      {
+        "id": "boardwalk",
+        "from": [
+          0,
+          0
+        ],
+        "density": 0.55,
+        "fog": 0.12,
+        "tone": "rgba(0,0,0,0)",
+        "near": "reeds",
+        "mix": {
+          "cypress": 3,
+          "reeds": 3,
+          "lily": 2,
+          "stump": 1
+        }
+      },
+      {
+        "id": "knees",
+        "from": [
+          10,
+          6
+        ],
+        "density": 0.62,
+        "fog": 0.16,
+        "tone": "rgba(20,40,20,.12)",
+        "near": "reeds",
+        "mix": {
+          "cypress": 4,
+          "stump": 2,
+          "reeds": 2
+        }
+      },
+      {
+        "id": "marshlight",
+        "from": [
+          20,
+          8
+        ],
+        "density": 0.58,
+        "fog": 0.22,
+        "tone": "rgba(20,40,30,.18)",
+        "near": "reeds",
+        "mix": {
+          "lantern": 2,
+          "cypress": 3,
+          "reeds": 2
+        },
+        "flock": 0.4
+      },
+      {
+        "id": "gator",
+        "from": [
+          30,
+          -6
+        ],
+        "density": 0.36,
+        "fog": 0.3,
+        "tone": "rgba(10,24,16,.26)",
+        "near": "reeds",
+        "mix": {
+          "cypress": 3,
+          "stump": 2
+        },
+        "flock": 0.6
+      },
+      {
+        "id": "parlour",
+        "from": [
+          30,
+          30
+        ],
+        "density": 0.5,
+        "fog": 0.22,
+        "tone": "rgba(30,20,40,.2)",
+        "near": "reeds",
+        "mix": {
+          "rowboat": 1,
+          "cypress": 2,
+          "reeds": 3,
+          "lantern": 1
+        }
+      }
+    ],
+    "landmarks": [
+      {
+        "asset": "parlour-lair",
+        "hit": 50,
+        "ahead": 44,
+        "x": 0,
+        "mul": 1.25,
+        "wakes": "end"
+      }
+    ],
+    "clear": [
+      {
+        "hit": 30,
+        "back": 6,
+        "ahead": 28,
+        "x": 4.2
+      },
+      {
+        "hit": 50,
+        "back": 6,
+        "ahead": 34,
+        "x": 5
+      }
+    ]
+  },
   "fragment": "marsh",
   "target": "frog",
   "music": {

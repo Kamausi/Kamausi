@@ -266,10 +266,12 @@
   const STAT_KEYS = ["games", "throws", "makes", "perfects", "rims", "bestStreak", "bestPerfStreak", "peakLives", "points", "best", "bonesTotal", "bonks", "misses", "clutch",
     "bestScore", "scoreTotal", "bestStage", "miniKills", "miniFlawless", "bossKills", "bossFlawless",
     "wides", "overs", "lows", "posts", "shorts", "clanks", "seeds", "zeroRuns", "quickDeaths",
-    "powerups", "cursed", "saves", "bonesSpent", "shopBuys", "coffins", "playTime", "grabs", "arcadeRuns", "chalClaims", "achSeen", "storyClears", "targetHits", "hazardHits", "continues", "xp", "bonusRounds", "cansDown", "canClears", "fireRings", "fireMakes", "longestRun", "bestDayStreak", "chalSets", "ringCatches", "eyePokes"];   // xp: career experience (04h_career.js)
+    "powerups", "cursed", "saves", "bonesSpent", "shopBuys", "coffins", "playTime", "grabs", "arcadeRuns", "chalClaims", "achSeen", "storyClears", "targetHits", "hazardHits", "continues", "xp", "bonusRounds", "cansDown", "canClears", "fireRings", "fireMakes", "longestRun", "bestDayStreak", "chalSets", "ringCatches", "eyePokes", "crossings", "cleanCrossings", "crossThrows"];   // xp: career experience (04h_career.js)
+  // Morty's body, section by section: what each of the first seven end bosses gives back (07p_body.js)
+  const BODY_SECTIONS = ["leftArm", "rightArm", "ribs", "spine", "pelvis", "leftLeg", "rightLeg"];
   // arcade: the best on each map, keyed by map number ({ score, secs, hits, runs }); achievements: the ones unlocked
   const DEFAULT_PROFILE = { name: "", bones: 0, daily: null, weekly: null, monthly: null, unlocked: [], seen: [], achievements: [], arcade: {}, updatedAt: 0, board: false, bestStage: 1, boardBest: null,
-    fragments: [], bossLog: {}, bio: "", pic: null, shots: {}, modes: {}, met: [], secrets: [], history: [], mastery: [], flawless: {}, mapMakes: {}, canAlley: {}, powerLog: {}, boardBests: {}, arcadeTables: {}, lastIni: "", streakDays: 0, streakLast: "", director: null, firsts: [], season: null };   // season: this season's Ticket (07l_season.js)   // firsts: the funnel, the first time of each thing (04g_telemetry.js)   // director: this week's Director's Challenge stars and best (07k_director.js)   // streak: days played in a row (v37)   // arcadeTables: each cabinet's top five (09o_arcade.js)   // mastery: claimed tiers; flawless: end bosses beaten without a miss; mapMakes: makes per map (09n_mastery.js)   // history: the last ten runs (04h_career.js)   // met: what the Codex has noted ("boss:crow", "power:rush"…); secrets: the ones found (09l_mischief.js)   // modes: Boss Rush's and each mini-game's record (07i_modes.js)   // shots: each signature shot, how many times (07h_shots.js)   // fragments: Morty's pieces recovered (ids); bossLog: each boss beaten, how many times
+    fragments: [], body: [], bossLog: {}, bio: "", pic: null, shots: {}, modes: {}, met: [], secrets: [], history: [], mastery: [], flawless: {}, mapMakes: {}, canAlley: {}, powerLog: {}, boardBests: {}, arcadeTables: {}, lastIni: "", streakDays: 0, streakLast: "", director: null, firsts: [], season: null };   // season: this season's Ticket (07l_season.js)   // firsts: the funnel, the first time of each thing (04g_telemetry.js)   // director: this week's Director's Challenge stars and best (07k_director.js)   // streak: days played in a row (v37)   // arcadeTables: each cabinet's top five (09o_arcade.js)   // mastery: claimed tiers; flawless: end bosses beaten without a miss; mapMakes: makes per map (09n_mastery.js)   // history: the last ten runs (04h_career.js)   // met: what the Codex has noted ("boss:crow", "power:rush"…); secrets: the ones found (09l_mischief.js)   // modes: Boss Rush's and each mini-game's record (07i_modes.js)   // shots: each signature shot, how many times (07h_shots.js)   // fragments: Morty's pieces recovered (ids); bossLog: each boss beaten, how many times
   for (const k of STAT_KEYS) if (!(k in DEFAULT_PROFILE)) DEFAULT_PROFILE[k] = 0;
   const DEFAULT_COS = { skull: "bone", eyes: "pie", teeth: "grin", paint: "none", trail: "dust", impact: "classic", ring: "hoop", aim: "bone", reel: "standard", title: "rookie", updatedAt: 0 };
   let sandbox = null;   // while the spec runs, nothing is written to the player's storage or cloud
@@ -314,6 +316,7 @@
     { const bb = {}; if (out.boardBests && typeof out.boardBests === "object") for (const m of ["arcade", "rush", "curtain", "longshot", "gallery"]) { const r = cleanRun(out.boardBests[m]); if (r) bb[m] = r; } out.boardBests = bb; }   // (v45: each scored mode's best, for its board)
     out.bestStage = clamp(Math.floor(out.bestStage), 1, MAP_DATA.length + 1);   // (MAP_COUNT + 1: the story has been finished)
     out.fragments = Array.isArray(out.fragments) ? [...new Set(out.fragments.filter(f => typeof f === "string"))].slice(0, 16) : [];
+    out.body = Array.isArray(out.body) ? BODY_SECTIONS.filter(b => out.body.includes(b)) : [];
     const log = {}; if (out.bossLog && typeof out.bossLog === "object") for (const [k, v] of Object.entries(out.bossLog)) if (/^[a-z]{2,16}$/.test(k)) log[k] = Math.max(0, Math.floor(Number(v) || 0));
     out.bossLog = log;
     const sh = {}; if (out.shots && typeof out.shots === "object") for (const [k, v] of Object.entries(out.shots)) if (/^[a-z]{2,16}$/.test(k)) sh[k] = Math.max(0, Math.floor(Number(v) || 0));
@@ -383,6 +386,7 @@
     out.boardBest = b.boardBest && (!a.boardBest || b.boardBest.score > a.boardBest.score) ? b.boardBest : a.boardBest;
     out.boardBests = { ...(a.boardBests || {}) }; for (const [m, r] of Object.entries(b.boardBests || {})) if (!out.boardBests[m] || r.score > out.boardBests[m].score) out.boardBests[m] = r;
     out.fragments = [...new Set([...a.fragments, ...b.fragments])];
+    out.body = BODY_SECTIONS.filter(x => a.body.includes(x) || b.body.includes(x));
     out.bossLog = { ...a.bossLog }; for (const [k, v] of Object.entries(b.bossLog)) out.bossLog[k] = Math.max(out.bossLog[k] || 0, v);
     out.shots = { ...a.shots }; for (const [k, v] of Object.entries(b.shots)) out.shots[k] = Math.max(out.shots[k] || 0, v);
     out.seen = [...new Set([...a.seen, ...b.seen])];

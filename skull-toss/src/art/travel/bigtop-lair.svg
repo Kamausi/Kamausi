@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 800">
+  <!-- The Drowned Theater's destination: the Ringmaster's big top, flags flying. 100 units = 1 m; foot at (550, 790). -->
+  <style>.k{stroke:ink;stroke-width:8;stroke-linejoin:round;stroke-linecap:round}.s{stroke:none}</style>
+  <g id="body">
+    <ellipse class="s" cx="552" cy="786" rx="520" ry="22" fill="#000" opacity=".35"/>
+    <path class="k" d="M550 40 L550 150" fill="none"/>
+    <path class="k" d="M550 40 L640 64 L550 88 Z" fill="red"/>
+    <path class="k" d="M90 786 L140 420 L550 150 L960 420 L1010 786 Z" fill="cream"/>
+    <path class="s" d="M140 420 L230 786 L340 786 L300 330 Z M470 200 L480 786 L620 786 L630 200 Z M800 330 L760 786 L870 786 L960 420 Z" fill="red"/>
+    <path class="k" d="M90 786 L140 420 L550 150 L960 420 L1010 786 Z" fill="none"/>
+    <path class="k" d="M140 420 C260 470 420 470 550 420 C680 470 840 470 960 420" fill="none" stroke-width="7"/>
+    <path class="k" d="M140 420 Q180 470 220 440 Q260 480 300 446 Q340 486 380 452 Q420 486 460 452 Q500 486 550 452 Q600 486 640 452 Q680 486 720 452 Q760 486 800 446 Q840 480 880 440 Q920 470 960 420" fill="gold" stroke-width="6"/>
+    <path class="k" d="M470 786 L500 560 C520 520 580 520 600 560 L630 786 Z" fill="#1A0A0A"/>
+    <path class="k" d="M500 560 C470 640 440 720 420 786 L470 786 Z M600 560 C630 640 660 720 680 786 L630 786 Z" fill="red" stroke-width="6"/>
+    <circle class="k" cx="550" cy="330" r="46" fill="gold"/>
+    <path class="s" d="M550 300 L558 322 L582 322 L563 336 L570 358 L550 344 L530 358 L537 336 L518 322 L542 322 Z" fill="red"/>
+    <path class="k" d="M140 420 L140 380 L175 392 L140 404 M960 420 L960 380 L925 392 L960 404" fill="teal" stroke-width="5"/>
+  </g>
+</svg>
