@@ -490,3 +490,130 @@ details.row.sent{display:block}details.row.sent summary{cursor:pointer;font:700 
 .ach-pop.play .medal{width:28px;height:28px;border-width:2px}.ach-pop.play .medal svg{width:15px;height:15px}
 .ach-pop.play .k{font-size:8.5px}.ach-pop.play b{font-size:15px}.ach-pop.play .s{display:none}
 .ach-pop.play .r{padding:2px 5px 1px;font-size:14px;border-width:1.5px}.ach-pop.play .r svg{width:11px;height:11px}
+/* v50: Settings shows its categories; one opens its settings */
+.set-cats{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+.set-cat{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;padding:12px 44px 12px 14px;border:3px solid var(--ink);border-radius:12px;background:var(--paper);color:var(--ink);box-shadow:0 4px 0 var(--ink);cursor:pointer;position:relative;min-height:60px}
+.set-cat::after{content:"›";position:absolute;right:14px;top:50%;transform:translateY(-52%);font:900 28px/1 var(--ui);opacity:.6}
+.set-cat b{font:22px/1 var(--display);letter-spacing:.04em;text-transform:uppercase}
+.set-cat span{font:600 13px/1.25 var(--ui);opacity:.75}
+.set-cat:active{transform:translateY(2px);box-shadow:0 2px 0 var(--ink)}
+.set-sub{margin:16px 2px 4px;font:19px/1 var(--display);letter-spacing:.05em;color:var(--mustard-l);text-shadow:var(--outline);text-align:left}
+.set-sec .set-sub:first-child{margin-top:4px}
+.set-note{margin:2px 4px 6px;font:600 13px/1.3 var(--ui);opacity:.8}
+.acct-btns .link-btn{display:inline-flex;align-items:center;gap:10px;padding:10px 16px;font:800 15px/1 var(--ui)}
+.acct-btns .link-btn .gicon{width:20px;height:20px;flex:none}
+.acct-btns>button{flex:1 1 220px}
+.email-box{display:flex;flex-direction:column;gap:8px;margin-top:8px;width:100%}
+.email-box input,.redeem-box input{font:700 16px var(--ui);padding:10px 12px;border:3px solid var(--ink);border-radius:10px;background:#fff;color:#1F1F1F;min-width:0}
+.redeem-box{display:flex;gap:8px;width:100%;margin-top:6px}
+.redeem-box input{flex:1;text-transform:uppercase;letter-spacing:.12em}
+#redeemNote.good{color:var(--mint,#7FD18B)}
+.info-btns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:6px 0}
+.info-btns button{min-height:44px}
+.info-body p{margin:0 0 12px;font:600 15px/1.45 var(--ui);text-align:left}
+/* v50: achievements as cards, two across */
+.ach-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.ach-grid .ach{flex-direction:column;align-items:center;text-align:center;gap:6px;padding:12px 8px 10px;position:relative;min-height:170px}
+.ach-grid .ach .medal{width:52px;height:52px}.ach-grid .ach .medal svg{width:26px;height:26px}
+.ach-grid .ach-t{align-items:center;flex:1 1 auto;width:100%}
+.ach-grid .ach-t b{font-size:16px;overflow-wrap:anywhere}
+.ach-grid .ach-t span{font-size:11.5px}
+.ach-grid .ach-prog{width:100%;flex-direction:column;gap:4px;margin-top:auto;padding-top:5px}
+.ach-grid .ach-prog .bar{width:100%}
+.ach-grid .ach-r{font-size:15px;padding:3px 10px;border-radius:999px;border:2px solid var(--ink);background:rgba(0,0,0,.18)}
+@media (min-width:700px){.ach-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* v50: four challenge tabs, the fourth a drop-down of Seasonal and Events; the set bonus clears the dotted line */
+.chal-tabs{overflow:visible;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.chal-tabs button{padding:9px 4px 7px;font-size:15px;min-width:0}
+.chal-more{position:relative;min-width:0;display:flex}
+.chal-more>button{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:3px;white-space:nowrap}
+.chal-more>button i{font:900 12px/1 var(--ui);font-style:normal}
+.chal-menu{position:absolute;right:0;top:calc(100% + 6px);z-index:6;display:flex;flex-direction:column;gap:6px;padding:6px;min-width:150px;border:3px solid var(--ink);border-radius:10px;background:var(--panel);box-shadow:0 5px 0 var(--ink)}
+.chal-menu[hidden]{display:none}
+.chal-menu button{width:100%;text-align:left;padding:10px 12px 8px}
+#chalSet{margin-top:14px}
+/* v50: Practice — options in a tidy grid (a fixed label column, the choices filling the rest), slim map rows */
+.practice-opts{gap:6px;padding:10px}
+.practice-opts .row{display:grid;grid-template-columns:78px minmax(0,1fr);align-items:center;gap:8px;min-height:0}
+.practice-opts .lbl{text-align:left}
+.practice-opts .seg{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);width:100%;margin:0}
+.practice-opts .seg button{min-height:38px;padding:6px 4px;font-size:14px;white-space:nowrap}
+.map-card.prac{display:flex;align-items:center;gap:12px;margin-top:8px;padding:9px 14px 8px 22px;box-shadow:0 3px 0 var(--ink)}
+.map-card.prac b{order:2;flex:1;min-width:0;font-size:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.map-card.prac .n{order:1;float:none;margin:0;display:inline-flex;align-items:center;gap:6px;flex:none;min-width:64px}
+.map-card.prac .lk{width:15px;height:15px;color:var(--cream)}
+/* v50: the Director's Challenge, easier to read — flat, bigger type, the UI face for the notes, clear rows */
+.director-card{transform:none;padding:16px 16px 14px;background:#F6EBBE;color:#1E1712}
+.director-card .dk{font-size:12.5px;color:#8E2A20}
+.director-card .from{font:italic 700 13px/1.3 var(--ui);color:#5A3A1E;margin:4px 0 10px}
+.director-card .dt{font:20px/1.1 var(--display);letter-spacing:.03em;color:#1E1712}
+.director-card .quote{margin:8px 0 10px;font:italic 600 14.5px/1.45 var(--ui);color:#3A2A1C}
+.director-card .notes{gap:6px;margin:8px 0}
+.director-card .notes li{font:700 15px/1.35 var(--ui);padding:7px 10px;border-radius:8px;background:rgba(43,33,24,.07);border:1.5px solid rgba(43,33,24,.18)}
+.director-card .notes li.got{background:rgba(192,57,43,.1)}
+.director-card .notes li i{font-size:17px}
+.director-card .notes li em{font-size:16px}
+.director-card .meta{font:700 13px/1.35 var(--ui);color:#4A3522}
+.director-card .btn{margin-top:6px}
+/* v50: the Vault — the shelves in three rows of seven; the chosen card carries its own Equip / Buy button (no try-on
+   stage, no bar at the foot); how a locked thing is had is plain text; a slimmer Closet */
+.cat-tabs.vault-cats,#sheet-customize .cat-tabs{grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+#sheet-customize .cat-tabs button{padding:7px 1px 5px;font-size:12.5px;letter-spacing:.01em;min-height:36px;white-space:nowrap;overflow:hidden;text-overflow:clip}
+#sheet-customize .cat-tabs button[data-group]:not(:first-child){margin-left:0}
+#sheet-customize #buybar{display:none!important}
+.grid .cell{display:flex;flex-direction:column;gap:6px;min-width:0}
+.grid .cell .item{flex:1}
+.grid .cell .card-act{width:100%;min-width:0;padding:8px 4px;font-size:15px;display:inline-flex;align-items:center;justify-content:center;gap:4px}
+.grid .cell .card-act svg{width:14px;height:14px}
+.grid.rows .cell .card-act{width:auto;align-self:flex-end;min-width:140px}
+.item.selected{outline:3px solid var(--mustard-l);outline-offset:1px}
+.item .how i{padding:0;border:0;background:none!important;color:var(--cream-dim)!important;font-size:9.5px}
+.item .how i svg{display:none}
+.item .how i+i::before{content:"·";margin:0 3px 0 0}
+#sheet-customize .closet>summary{min-height:36px;padding:5px 12px}
+#sheet-customize .closet .closet-t{font-size:18px}
+#sheet-customize .closet .closet-now{font-size:11px}
+#sheet-customize .closet+.section-k{margin-top:12px}
+#sheet-customize .closet-body{padding:2px 10px 10px}
+#sheet-customize .closet .outfits{margin-bottom:8px}
+/* v50: the leaderboard — one row of tabs (All-time, a Daily/Weekly/Monthly drop-down, This device); the top ten fit
+   without scrolling; See more opens the top hundred in a window of its own */
+.board-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible;position:relative;z-index:4}
+.board-tabs>button,.board-per>button{min-width:0;padding:8px 4px;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.board-per{position:relative;display:flex;min-width:0}
+.board-per>button{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:4px}
+.board-per>button i{font:900 11px/1 var(--ui);font-style:normal}
+.board-menu{left:0;right:auto}
+.board-modes{margin-top:8px}
+#sheet-board .board{gap:4px;margin-top:8px}
+#sheet-board .board li{grid-template-columns:28px 32px 1fr auto;padding:3px 10px 3px 6px;border-width:2px;box-shadow:0 2px 0 var(--ink);border-radius:9px;min-height:40px}
+#sheet-board .board canvas{width:32px;height:32px}
+#sheet-board .board .rank{font-size:18px}
+#sheet-board .board .who{gap:1px}
+#sheet-board .board .who b{font-size:15px}
+#sheet-board .board .who span{font-size:10px}
+#sheet-board .board .sc{font-size:18px}
+#sheet-board #boardOpt{padding:6px 0}
+.board-more{width:100%;margin-top:8px}
+.board-top .cont-card{width:min(440px,calc(100vw - 24px));max-height:calc(100vh - 48px);max-height:calc(100dvh - 48px);display:flex;flex-direction:column}
+.board-top .board{flex:1 1 auto;min-height:0;overflow-y:auto;margin:10px 0;padding:2px 4px 4px;gap:4px;text-align:left}
+.board-top .board li{grid-template-columns:34px 32px 1fr auto;padding:3px 10px 3px 6px;border-width:2px;box-shadow:0 2px 0 var(--ink);border-radius:9px}
+.board-top .board canvas{width:32px;height:32px}
+/* v50: the Codex's twelve parts, in three rows of four */
+#codexTabs{position:static;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;overflow:visible;margin:8px 0 0;padding:0 0 10px}
+#codexTabs button{min-width:0;padding:8px 2px 6px;font-size:13px;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-width:2px;box-shadow:0 2px 0 var(--ink)}
+#codexTabs button[aria-selected="true"]{transform:translateY(-1px) rotate(-1.5deg)}
+/* v50: mastery's fourth tier, Diamond, and five parts */
+.m-tiers{grid-template-columns:repeat(4,minmax(0,1fr))}
+.m-tier.diamond.got{background:linear-gradient(135deg,#BFF3FF,#6FD3F0 45%,#E8FBFF);color:var(--ink)}
+.m-tier.diamond:not(.got){background:#243040}
+#masteryTabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;overflow:visible}
+#masteryTabs button{min-width:0;padding:8px 2px 6px;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* v50: the four new mini-games' tiles */
+.mode-tile.m-pitch{background:linear-gradient(160deg,#2E5A4A,#1E3A30)}
+.mode-tile.m-sudden{background:repeating-linear-gradient(135deg,#3A1418 0 10px,#2A0E12 10px 20px)}
+.mode-tile.m-gale{background:linear-gradient(160deg,#3A5068,#243446)}
+.mode-tile.m-swing{background:linear-gradient(160deg,#5A3A6A,#3A2448)}
+#miniModes{grid-template-columns:repeat(2,minmax(0,1fr))}
+#sheet-customize .cat-tabs button{font-size:10.5px;letter-spacing:0;padding:7px 0 5px}
+@media (min-width:430px){#sheet-customize .cat-tabs button{font-size:12px}}

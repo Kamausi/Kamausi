@@ -232,6 +232,12 @@
     for (const ex of [-0.035, 0.035]) { const x = hx + ex * s + (walk ? 0.02 * s : 0), y = hy - 0.005 * s;
       if (blink) { ctx.strokeStyle = "#E8D84A"; ctx.beginPath(); ctx.moveTo(x - 0.02 * s, y); ctx.lineTo(x + 0.02 * s, y); ctx.stroke(); ctx.strokeStyle = INK; continue; }
       ctx.fillStyle = "#E8D84A"; ctx.beginPath(); ctx.ellipse(x, y, 0.028 * s, 0.035 * s, 0, 0, TAU); ctx.fill(); ctx.fillStyle = INK; ctx.beginPath(); ctx.ellipse(x + (walk ? 0.008 * s : 0), y, 0.008 * s, 0.03 * s * (run ? 0.4 : 1), 0, 0, TAU); ctx.fill(); ctx.fillStyle = body; }
+    // v50: moonlight along its back and the top of its head, pink in the ears, a glint in each eye
+    ctx.strokeStyle = "rgba(170,180,220,.45)"; ctx.lineWidth = O(0.012); ctx.beginPath();
+    if (walk) ctx.ellipse(0, -0.17 * s - bob, 0.18 * s * puff, 0.065 * s * puff, 0, Math.PI * 1.15, Math.PI * 1.75); else ctx.ellipse(-0.02 * s, -0.16 * s, 0.095 * s, 0.145 * s, -0.2, Math.PI * 1.1, Math.PI * 1.6);
+    ctx.stroke(); ctx.beginPath(); ctx.arc(hx, hy, 0.078 * s, Math.PI * 1.1, Math.PI * 1.6); ctx.stroke();
+    ctx.fillStyle = "#8A4A5A"; for (const ex of [-0.055, 0.05]) { ctx.beginPath(); ctx.moveTo(hx + ex * s - 0.015 * s, hy - 0.07 * s); ctx.lineTo(hx + ex * s, hy - 0.125 * s); ctx.lineTo(hx + ex * s + 0.018 * s, hy - 0.065 * s); ctx.closePath(); ctx.fill(); }
+    if (!blink) { ctx.fillStyle = "rgba(255,255,255,.85)"; for (const ex of [-0.035, 0.035]) { ctx.beginPath(); ctx.arc(hx + ex * s + (walk ? 0.02 * s : 0) - 0.008 * s, hy - 0.018 * s, Math.max(0.6, 0.007 * s), 0, TAU); ctx.fill(); } }
     ctx.strokeStyle = "rgba(242,231,201,.6)"; ctx.lineWidth = O(0.006); for (const sd of [-1, 1]) { ctx.beginPath(); ctx.moveTo(hx + 0.04 * s, hy + 0.03 * s); ctx.lineTo(hx + 0.13 * s, hy + 0.02 * s + sd * 0.02 * s); ctx.stroke(); }
     ctx.restore();
   }

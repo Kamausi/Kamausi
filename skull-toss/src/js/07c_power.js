@@ -120,6 +120,14 @@
   }
   // v45: what the prop does, in the middle of the screen for a moment (not a toast at the edge)
   const powerCardEl = $("powerCard");
+  // v50: a card that pops up in play goes below the ring's lowest reach on this map (or above its highest), never on it
+  function placeClearOfRing(el) {
+    el.style.top = ""; if (screen !== "play" || !ring) return;
+    const Z = mapData(game.stage || 1).sheet.zones.ring, low = project(0, Z.y[0] - ring.rc, Z.z[0]), cur = project(ring.x, ring.y, ring.z);
+    const bottom = Math.max(low.y + ring.rc * low.s * 0.2, cur.y + ring.rc * cur.s * (ringFlies() ? 1.6 : 1.1)), r = el.getBoundingClientRect(), h = r.height || 110;
+    if (bottom + h + 12 < H * 0.86) el.style.top = `${Math.round(bottom + 12 + h / 2)}px`;
+    else { const top = cur.y - ring.rc * cur.s * 1.4; el.style.top = `${Math.round(Math.max(H * 0.2, top - 12 - h / 2))}px`; }
+  }
   let powerCardT = 0;
   function powerCard(id) {
     const P = POWERS[id]; if (!powerCardEl) return;
@@ -127,6 +135,7 @@
     powerCardEl.querySelector("b").textContent = P.name; powerCardEl.querySelector("span").textContent = P.tip;
     const cv = powerCardEl.querySelector("canvas"), c = cv.getContext("2d"); c.clearRect(0, 0, cv.width, cv.height); drawPowerIcon(c, id, cv.width / 2, cv.height / 2 + 4, cv.width * 0.28, 0.4);
     powerCardEl.hidden = false; powerCardEl.classList.remove("show"); void powerCardEl.offsetWidth; powerCardEl.classList.add("show");
+    placeClearOfRing(powerCardEl);   // v50: never over the ring
     clearTimeout(powerCardT); powerCardT = setTimeout(() => { powerCardEl.hidden = true; powerCardEl.classList.remove("show"); }, 2300);
   }
   // BONK Blast: a cartoon shockwave that knocks the whole graveyard about

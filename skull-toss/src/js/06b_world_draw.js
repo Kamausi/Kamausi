@@ -17,6 +17,8 @@
     limbI(c, 0, hy, sw * 0.35 + 0.05, 0.25, sw * 0.3, 0.26, 0.08, pants);
     segI(c, 0, hy, 0.1, -0.84 + bob, 0.17, rag);
     c.fillStyle = ragD; c.beginPath(); c.moveTo(-0.08, hy - 0.02); c.lineTo(-0.05, hy + 0.08); c.lineTo(0.0, hy + 0.01); c.lineTo(0.05, hy + 0.09); c.lineTo(0.1, hy - 0.02); c.fill();
+    c.strokeStyle = "#E8D8B8"; c.lineWidth = 0.008; c.beginPath(); for (let i = 0; i < 4; i++) { const y = hy - 0.08 - i * 0.06; c.moveTo(0.02 + i * 0.012, y); c.lineTo(0.08 + i * 0.012, y - 0.02); } c.stroke();   // (v50: stitches)
+    c.fillStyle = "#8A6A3A"; c.strokeStyle = INK; c.lineWidth = 0.01; c.beginPath(); c.rect(0.05, hy - 0.2, 0.06, 0.05); c.fill(); c.stroke();   // a patch
     const na = [0.5, -0.82 + bob + Math.sin(ph * 0.5 + 1) * 0.03]; segI(c, 0.1, -0.82 + bob, na[0], na[1], 0.055, skin); glove(c, na[0] + 0.02, na[1], 0.04);
     c.fillStyle = skin; c.strokeStyle = INK; c.lineWidth = 0.014; c.beginPath(); c.ellipse(0.17, -0.95 + bob, 0.1, 0.09, 0.2, 0, TAU); c.fill(); c.stroke();
     pieEye(c, 0.19, -0.97 + bob, 0.032, 0.04, 0.6); pieEye(c, 0.25, -0.965 + bob, 0.026, 0.034, 0.6);
@@ -84,13 +86,24 @@
     c.quadraticCurveTo(1.3, up * 0.4 + 0.25, 1.6, up); c.quadraticCurveTo(0.6, up - 0.4, 0, 0); c.fill();
     c.beginPath(); c.ellipse(0, 0.05, 0.22, 0.34, 0, 0, TAU); c.fill();
     c.beginPath(); c.moveTo(-0.14, -0.2); c.lineTo(-0.2, -0.52); c.lineTo(-0.02, -0.27); c.moveTo(0.14, -0.2); c.lineTo(0.2, -0.52); c.lineTo(0.02, -0.27); c.fill();
+    if (s > 5) {   // v50: the wing's finger bones and two ember eyes, when it's near enough to see
+      c.strokeStyle = "rgba(255,255,255,.16)"; c.lineWidth = 0.05; c.beginPath();
+      for (const sd of [-1, 1]) { c.moveTo(0, 0); c.lineTo(sd * 1.6, up); c.moveTo(sd * 0.3, 0.02); c.lineTo(sd * 1.05, up * 0.3 + 0.1); c.moveTo(sd * 0.25, 0.08); c.lineTo(sd * 0.55, 0.15); }
+      c.stroke(); c.fillStyle = "#FF7A4A"; c.beginPath(); c.arc(-0.07, -0.08, 0.045, 0, TAU); c.arc(0.07, -0.08, 0.045, 0, TAU); c.fill();
+    }
     c.restore();
   }
   function drawCrowSil(c, x, y, s, f) {   // a crow: a heavier body and wide, slow wings
     const up = -f * 0.6; c.save(); c.translate(x, y); c.scale(s * 1.2, s * 1.2); c.beginPath();
     c.moveTo(-0.2, 0); c.quadraticCurveTo(-0.9, up - 0.3, -1.7, up + 0.1); c.lineTo(-1.3, up * 0.3 + 0.2); c.quadraticCurveTo(-0.7, 0.1, -0.2, 0.2);
     c.lineTo(0.2, 0.2); c.quadraticCurveTo(0.7, 0.1, 1.3, up * 0.3 + 0.2); c.lineTo(1.7, up + 0.1); c.quadraticCurveTo(0.9, up - 0.3, 0.2, 0); c.closePath(); c.fill();
-    c.beginPath(); c.ellipse(0, 0.1, 0.3, 0.2, 0, 0, TAU); c.fill(); c.beginPath(); c.moveTo(0.28, 0.05); c.lineTo(0.55, 0.12); c.lineTo(0.28, 0.18); c.fill(); c.restore();
+    c.beginPath(); c.ellipse(0, 0.1, 0.3, 0.2, 0, 0, TAU); c.fill(); c.beginPath(); c.moveTo(0.28, 0.05); c.lineTo(0.55, 0.12); c.lineTo(0.28, 0.18); c.fill();
+    if (s > 5) {   // v50: the flight feathers splayed at the tips, and a bright eye
+      c.beginPath(); for (const sd of [-1, 1]) for (let i = 0; i < 4; i++) { const bx = sd * (1.25 + i * 0.13), by = up * (0.5 + i * 0.15) + 0.05; c.moveTo(bx, by); c.lineTo(bx + sd * 0.22, by + 0.12 - i * 0.02); c.lineTo(bx - sd * 0.04, by + 0.14); } c.fill();
+      c.strokeStyle = "rgba(255,255,255,.14)"; c.lineWidth = 0.04; c.beginPath(); for (const sd of [-1, 1]) { c.moveTo(sd * 0.25, 0.05); c.quadraticCurveTo(sd * 0.8, up * 0.4 - 0.1, sd * 1.5, up + 0.12); } c.stroke();
+      c.fillStyle = "#F2E7C9"; c.beginPath(); c.arc(0.2, 0.05, 0.05, 0, TAU); c.fill();
+    }
+    c.restore();
   }
   function drawWitch(c, x, y, s, dir, t) {
     const fl = Math.sin(t * 9) * 0.06;
@@ -132,7 +145,20 @@
     else if (type === "skeleton") drawSkeleton(g, u * TAU);
     else if (type === "werewolf") drawWerewolf(g, u * TAU, howl, u * (TAU / 5));
     else drawGhost(g, u * (TAU / 1.6), 0);
+    celLight(g, c, type);
     return (cels[key] = { c, w, h, ax: -B.x0 * S, ay: -B.y0 * S });
+  }
+  // v50: every cel gets lit — a warm key from the upper left, a cool shadow to the lower right, the feet in shade,
+  // and a thin rim of light on the lit edge — painted only over what's drawn (source-atop), once per cel
+  function celLight(g, c, type) {
+    const w = c.width, h = c.height;
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = "source-atop";
+    const d = g.createLinearGradient(0, 0, w, h); d.addColorStop(0, "rgba(255,236,200,.22)"); d.addColorStop(0.45, "rgba(255,236,200,0)"); d.addColorStop(0.6, "rgba(20,10,40,0)"); d.addColorStop(1, "rgba(20,10,40,.32)");
+    g.fillStyle = d; g.fillRect(0, 0, w, h);
+    if (type !== "ghost") { const v = g.createLinearGradient(0, 0, 0, h); v.addColorStop(0.72, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(0,0,0,.3)"); g.fillStyle = v; g.fillRect(0, 0, w, h); }
+    g.globalCompositeOperation = "source-atop"; g.globalAlpha = 0.35; g.drawImage(c, -Math.max(1, w * 0.012), -Math.max(1, h * 0.008));   // (a faint offset copy: a rim on the lit edge)
+    g.restore();
+    if (type === "ghost") { g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = "destination-over"; const r = g.createRadialGradient(w / 2, h * 0.45, 0, w / 2, h * 0.45, Math.max(w, h) * 0.6); r.addColorStop(0, "rgba(200,235,255,.28)"); r.addColorStop(1, "rgba(200,235,255,0)"); g.fillStyle = r; g.fillRect(0, 0, w, h); g.restore(); }
   }
   const celIndex = k => {
     const ph = k.type === "ghost" ? world.t * 1.6 + k.ph : k.ph;

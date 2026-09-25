@@ -81,9 +81,25 @@
   };
   // a scoring or bonking moment: the word in a burst, plus the equipped style's flourish
   const POP_K = 0.72;   // v49: the comic-book words are smaller and quicker, so the ring stays in sight
+  // v50: nothing pops up over the ring. The ring's circle on screen (wings and all, in play) is kept clear: a word
+  // that would land on it goes just above it, or below it when above would run under the HUD, or beside it.
+  function ringKeepOut() {
+    if (screen !== "play" || game.state === "title" || !ring) return null;
+    const p = project(ring.x, ring.y, ring.z); return { x: p.x, y: p.y, r: ring.rc * p.s * (ringFlies() ? 1.9 : 1.2) + U * 0.02 };
+  }
+  function clearOfRing(x, y, hw, hh) {
+    const K = ringKeepOut(); if (!K) return [x, y];
+    const nx = clamp(K.x, x - hw, x + hw), ny = clamp(K.y, y - hh, y + hh);
+    if (Math.hypot(nx - K.x, ny - K.y) > K.r) return [x, y];   // (already clear)
+    const top = H * 0.17 + hh, above = K.y - K.r - hh - U * 0.02, below = K.y + K.r + hh + U * 0.02;
+    if (above >= top) return [x, above];
+    if (below + hh < H * 0.78) return [x, below];
+    const side = K.x < W / 2 ? 1 : -1; return [clamp(K.x + side * (K.r + hw + U * 0.02), hw, W - hw), y];
+  }
+  function burstBox(b) { const w = Math.max(b.size * 0.62 * [...b.word].length, b.size * 2) * (b.shape === "tag" ? 0.6 : 0.72) + b.size * 0.6, h = b.size * (b.sub ? 1.9 : 1.2); return [w / 2, h / 2]; }
   function impact(word, x, y, o = {}) {
     const I = IMPACTS[o.style || cos.impact] || IMPACTS.classic, bx = clamp(x, U * 0.26, W - U * 0.26), by = Math.max(y, H * 0.17);
-    const b = makeBurst(word, bx, by, I, o, U);
+    const b = makeBurst(word, bx, by, I, o, U); if (!o.onRing) { const [hw, hh] = burstBox(b); [b.x, b.y] = clearOfRing(b.x, b.y, hw, hh); }
     if (I.shape === "cloud" && gpuSmoke(bx, by, b.size * 1.9, 30)) { b.shape = "none"; bursts.push(b); return; }   // v49: the KABOOM's cloud is real smoke, on the GPU (08j_gpu.js)
     bursts.push(b);
     if (o.bits !== false) flourish(I.bits, x, y, o.scale || 1);
@@ -92,7 +108,7 @@
     return { word, x, y, fill: o.fill || I.fill, text: o.text || I.text, shape: o.shape || I.shape || "burst",
       size: S * 0.085 * POP_K * (o.scale || 1) * (I.big || 1), sub: o.sub || "", t: -(o.delay || 0), dur: o.dur || 0.9, rot: rand(-0.16, 0.16), seed: (Math.random() * 1e6) | 0 };
   }
-  function caption(text, x, y) { bursts.push({ word: text, x: clamp(x, U * 0.22, W - U * 0.22), y: Math.max(y, H * 0.17), shape: "tag", fill: PAPER, text: INK, size: U * 0.036, sub: "", t: 0, dur: 1.0, rot: rand(-0.06, 0.06), seed: 1 }); }
+  function caption(text, x, y) { const b = { word: text, x: clamp(x, U * 0.22, W - U * 0.22), y: Math.max(y, H * 0.17), shape: "tag", fill: PAPER, text: INK, size: U * 0.036, sub: "", t: 0, dur: 1.0, rot: rand(-0.06, 0.06), seed: 1 }; const [hw, hh] = burstBox(b); [b.x, b.y] = clearOfRing(b.x, b.y, hw, hh); bursts.push(b); }
   function flourish(kind, x, y, sc, list = particles, S = U) {
     const n = Math.round(14 * sc * QUALITY.particles), sp = S * 0.9;
     for (let i = 0; i < n; i++) {

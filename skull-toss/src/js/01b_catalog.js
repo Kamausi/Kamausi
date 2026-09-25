@@ -200,7 +200,7 @@
   // shelf, lose their bones price, and carry the server's Souls price
   for (const [key, it] of Object.entries(Economy.ITEMS)) { const [kind, id] = key.split(":"); if (!CATALOG[kind]) continue;
     const had = CATALOG[kind].find(x => x.id === id);
-    if (had) { delete had.price; had.souls = it.souls; } else CATALOG[kind].push({ id, name: it.name, s: it.s, souls: it.souls }); }   // (a season's Premium Ticket isn't a look)
+    if (had) { delete had.price; had.souls = it.souls; } else CATALOG[kind].push({ id, name: it.name, s: it.s, souls: it.souls, ...(it.cart ? { shop: true } : {}) }); }   // (a season's Premium Ticket isn't a look)
   // v42: the season looks, earned on a season's Ticket and only that season (07l_season.js)
   CATALOG.skull.push({ id: "harvestmoon", name: "Harvest Moon", s: 4, season: "s1" });
   CATALOG.ring.push({ id: "candycorn", name: "Candy Corn", s: 3, season: "s1" });
@@ -286,6 +286,18 @@
   KINDS.push("glasses", "ringwings");
   Object.assign(KIND_LABEL, { glasses: "glasses", ringwings: "ring wings" });
   Object.assign(DEFAULT_COS, { glasses: "none", ringwings: "classic" });
+  // v50: masks, over Morty's face (08i_body.js: MASKS). The hoods cover his hair too
+  CATALOG.mask = [
+    { id: "none", name: "No Mask" },
+    { id: "paperbag", name: "Paper Bag", s: 1, price: 350 },          { id: "hockey", name: "Goalie Mask", s: 2, price: 1100 },
+    { id: "masquerade", name: "Masquerade", s: 2, price: 1300 },      { id: "luchador", name: "Luchador", s: 3, price: 2700 },
+    { id: "plague", name: "Plague Doctor", s: 3, price: 3000 },
+    { id: "ghost", name: "Bedsheet Ghost", s: 2, req: ["misses", 300], shame: true }
+  ];
+  for (const [key, it] of Object.entries(Economy.ITEMS)) if (key.startsWith("mask:")) CATALOG.mask.push({ id: key.slice(5), name: it.name, s: it.s, souls: it.souls, ...(it.cart ? { shop: true } : {}) });   // (the Cart's mask)
+  KINDS.push("mask");
+  Object.assign(KIND_LABEL, { mask: "mask" });
+  Object.assign(DEFAULT_COS, { mask: "none" });
   // v45: Can Alley's prizes (07o_bonus.js). The first time you clear the cans after a map's end boss, that map's prize
   // is yours; they're never sold. (The last map has no Can Alley: the Adventure ends there.)
   const CAN_PRIZES = [["aim", "tickets", "Prize Tickets", 2], ["trail", "midway", "Midway Confetti", 3], ["impact", "ringer", "RINGER!", 3], ["aura", "bulbs", "Marquee Bulbs", 3],

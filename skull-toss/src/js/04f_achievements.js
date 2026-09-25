@@ -234,12 +234,12 @@
     const got = ACHIEVEMENTS.filter(A => achHas(A.id)).length, fmtV = (A, v) => A.time ? (A.n >= 3600 ? `${Math.floor(v / 60)}m` : `${Math.floor(v / 60)}:${String(Math.floor(v) % 60).padStart(2, "0")}`) : Math.floor(v).toLocaleString("en-US");
     $("achCount").innerHTML = `<b>${got}</b> of ${ACHIEVEMENTS.length} unlocked`;
     $("achBar").firstElementChild.style.width = `${Math.round((got / ACHIEVEMENTS.length) * 100)}%`;
-    $("achList").innerHTML = ACH_SECTIONS.map(sec => { const L = ACHIEVEMENTS.filter(A => A.cat === sec); return `<h3 class="stat-h ach-h">${sec} <span class="n">${L.filter(A => achHas(A.id)).length}/${L.length}</span></h3>` + L.map(A => {
+    $("achList").innerHTML = ACH_SECTIONS.map(sec => { const L = ACHIEVEMENTS.filter(A => A.cat === sec); return `<h3 class="stat-h ach-h">${sec} <span class="n">${L.filter(A => achHas(A.id)).length}/${L.length}</span></h3><div class="ach-grid">` + L.map(A => {
       const has = achHas(A.id), v = Math.min(achValue(A), A.n), pct = Math.round((v / A.n) * 100);
       return `<div class="ach${has ? " got" : ""}"><span class="medal"><svg><use href="#i-${has ? A.icon : "lock"}"/></svg></span>`
         + `<div class="ach-t"><b>${A.name}</b><span>${A.text}</span>`
         + (has ? "" : `<div class="ach-prog"><div class="bar"><i style="width:${pct}%"></i></div><em>${fmtV(A, v)}/${fmtV(A, A.n)}</em></div>`)
         + `</div><span class="ach-r">${has ? "Done" : `+${A.bones.toLocaleString("en-US")}`}</span></div>`;
-    }).join(""); }).join("");
+    }).join("") + "</div>"; }).join("");   // (v50: cards, two across)
     if (profile.achSeen !== profile.achievements.length) { profile.achSeen = profile.achievements.length; persist(2000); updatePips(); }
   }

@@ -261,7 +261,7 @@
   }
   // (gpu: the GPU effects layer, 08j_gpu.js: Lite on a touch screen, and Off under automation, where the spec turns it on to test it)
   const DEFAULT_SETTINGS = { sound: true, music: 45, sfx: 80, amb: 50, vibe: true, shake: true, guide: "full", film: reduceMotion ? "light" : "full", camera: reduceMotion ? "still" : "full", gpu: navigator.webdriver ? "off" : window.matchMedia && matchMedia("(pointer: coarse)").matches ? "lite" : "full", voice: "babble",
-    flashes: reduceMotion ? "reduced" : "full", text: "normal", cards: "full", lang: "en", mischief: true, analytics: "ask" };   // analytics: ask | yes | no (04g_telemetry.js)   // cards: the reel's title cards (09i_reel.js)   // accessibility: flash strength, text size
+    flashes: reduceMotion ? "reduced" : "full", text: "normal", cards: "full", lang: "en", mischief: true, analytics: "ask", notifDaily: false, notifChal: false, notifEvents: false };   // notif*: v50's notifications (09p_general.js)   // analytics: ask | yes | no (04g_telemetry.js)   // cards: the reel's title cards (09i_reel.js)   // accessibility: flash strength, text size
   // "best" is the most hits in one run (what older saves called their best score); "bestScore" is the arcade score
   const STAT_KEYS = ["games", "throws", "makes", "perfects", "rims", "bestStreak", "bestPerfStreak", "peakLives", "points", "best", "bonesTotal", "bonks", "misses", "clutch",
     "bestScore", "scoreTotal", "bestStage", "miniKills", "miniFlawless", "bossKills", "bossFlawless",
@@ -270,8 +270,8 @@
   // Morty's body, section by section: what each of the first seven end bosses gives back (07p_body.js)
   const BODY_SECTIONS = ["leftArm", "rightArm", "ribs", "spine", "pelvis", "leftLeg", "rightLeg"];
   // arcade: the best on each map, keyed by map number ({ score, secs, hits, runs }); achievements: the ones unlocked
-  const DEFAULT_PROFILE = { name: "", bones: 0, daily: null, weekly: null, monthly: null, unlocked: [], seen: [], achievements: [], arcade: {}, updatedAt: 0, board: false, bestStage: 1, boardBest: null,
-    fragments: [], body: [], bossLog: {}, bio: "", pic: null, shots: {}, modes: {}, met: [], secrets: [], history: [], mastery: [], flawless: {}, mapMakes: {}, canAlley: {}, powerLog: {}, boardBests: {}, arcadeTables: {}, lastIni: "", streakDays: 0, streakLast: "", director: null, firsts: [], season: null };   // season: this season's Ticket (07l_season.js)   // firsts: the funnel, the first time of each thing (04g_telemetry.js)   // director: this week's Director's Challenge stars and best (07k_director.js)   // streak: days played in a row (v37)   // arcadeTables: each cabinet's top five (09o_arcade.js)   // mastery: claimed tiers; flawless: end bosses beaten without a miss; mapMakes: makes per map (09n_mastery.js)   // history: the last ten runs (04h_career.js)   // met: what the Codex has noted ("boss:crow", "power:rush"…); secrets: the ones found (09l_mischief.js)   // modes: Boss Rush's and each mini-game's record (07i_modes.js)   // shots: each signature shot, how many times (07h_shots.js)   // fragments: Morty's pieces recovered (ids); bossLog: each boss beaten, how many times
+  const DEFAULT_PROFILE = { name: "", bones: 0, daily: null, weekly: null, monthly: null, seasonal: null, event: null, unlocked: [], seen: [], achievements: [], arcade: {}, updatedAt: 0, board: false, bestStage: 1, boardBest: null,
+    fragments: [], body: [], redeemed: [], bossLog: {}, bio: "", pic: null, shots: {}, modes: {}, met: [], secrets: [], history: [], mastery: [], flawless: {}, mapMakes: {}, canAlley: {}, powerLog: {}, boardBests: {}, arcadeTables: {}, lastIni: "", streakDays: 0, streakLast: "", director: null, firsts: [], season: null };   // season: this season's Ticket (07l_season.js)   // firsts: the funnel, the first time of each thing (04g_telemetry.js)   // director: this week's Director's Challenge stars and best (07k_director.js)   // streak: days played in a row (v37)   // arcadeTables: each cabinet's top five (09o_arcade.js)   // mastery: claimed tiers; flawless: end bosses beaten without a miss; mapMakes: makes per map (09n_mastery.js)   // history: the last ten runs (04h_career.js)   // met: what the Codex has noted ("boss:crow", "power:rush"…); secrets: the ones found (09l_mischief.js)   // modes: Boss Rush's and each mini-game's record (07i_modes.js)   // shots: each signature shot, how many times (07h_shots.js)   // fragments: Morty's pieces recovered (ids); bossLog: each boss beaten, how many times
   for (const k of STAT_KEYS) if (!(k in DEFAULT_PROFILE)) DEFAULT_PROFILE[k] = 0;
   const DEFAULT_COS = { skull: "bone", eyes: "pie", teeth: "grin", paint: "none", trail: "dust", impact: "classic", ring: "hoop", aim: "bone", reel: "standard", title: "rookie", updatedAt: 0 };
   let sandbox = null;   // while the spec runs, nothing is written to the player's storage or cloud
@@ -308,7 +308,7 @@
     out.unlocked = keys(out.unlocked); out.seen = keys(out.seen);
     out.updatedAt = Number(out.updatedAt) || 0;
     out.bones = Math.max(0, Math.floor(Number(out.bones) || 0));
-    for (const k of ["daily", "weekly", "monthly"]) out[k] = out[k] && typeof out[k] === "object" && Array.isArray(out[k].items) ? out[k] : null;
+    for (const k of ["daily", "weekly", "monthly", "seasonal", "event"]) out[k] = out[k] && typeof out[k] === "object" && Array.isArray(out[k].items) ? out[k] : null;
     out.board = !!out.board; out.bestStage = Math.max(1, out.bestStage);
     out.achievements = Array.isArray(out.achievements) ? [...new Set(out.achievements.filter(s => typeof s === "string"))].slice(0, 200) : [];
     out.arcade = cleanArcade(out.arcade);
@@ -317,6 +317,7 @@
     out.bestStage = clamp(Math.floor(out.bestStage), 1, MAP_DATA.length + 1);   // (MAP_COUNT + 1: the story has been finished)
     out.fragments = Array.isArray(out.fragments) ? [...new Set(out.fragments.filter(f => typeof f === "string"))].slice(0, 16) : [];
     out.body = Array.isArray(out.body) ? BODY_SECTIONS.filter(b => out.body.includes(b)) : [];
+    out.redeemed = Array.isArray(out.redeemed) ? [...new Set(out.redeemed.filter(h => typeof h === "string" && /^[0-9a-f]{6,16}$/.test(h)))].slice(0, 200) : [];   // (v50: promo codes used, by their hash)
     const log = {}; if (out.bossLog && typeof out.bossLog === "object") for (const [k, v] of Object.entries(out.bossLog)) if (/^[a-z]{2,16}$/.test(k)) log[k] = Math.max(0, Math.floor(Number(v) || 0));
     out.bossLog = log;
     const sh = {}; if (out.shots && typeof out.shots === "object") for (const [k, v] of Object.entries(out.shots)) if (/^[a-z]{2,16}$/.test(k)) sh[k] = Math.max(0, Math.floor(Number(v) || 0));
@@ -375,7 +376,7 @@
     const newer = b.updatedAt > a.updatedAt ? b : a, older = newer === a ? b : a;
     out.name = newer.name || older.name;
     out.bones = newer.bones;   // a spendable balance: the most recent save wins (max() would refund purchases)
-    out.daily = newer.daily || older.daily; out.weekly = newer.weekly || older.weekly; out.monthly = newer.monthly || older.monthly;
+    out.daily = newer.daily || older.daily; out.weekly = newer.weekly || older.weekly; out.monthly = newer.monthly || older.monthly; out.seasonal = newer.seasonal || older.seasonal; out.event = newer.event || older.event;
     out.achievements = [...new Set([...a.achievements, ...b.achievements])];
     out.arcade = {};
     for (const k of new Set([...Object.keys(a.arcade), ...Object.keys(b.arcade)])) {
@@ -387,6 +388,7 @@
     out.boardBests = { ...(a.boardBests || {}) }; for (const [m, r] of Object.entries(b.boardBests || {})) if (!out.boardBests[m] || r.score > out.boardBests[m].score) out.boardBests[m] = r;
     out.fragments = [...new Set([...a.fragments, ...b.fragments])];
     out.body = BODY_SECTIONS.filter(x => a.body.includes(x) || b.body.includes(x));
+    out.redeemed = [...new Set([...(a.redeemed || []), ...(b.redeemed || [])])];
     out.bossLog = { ...a.bossLog }; for (const [k, v] of Object.entries(b.bossLog)) out.bossLog[k] = Math.max(out.bossLog[k] || 0, v);
     out.shots = { ...a.shots }; for (const [k, v] of Object.entries(b.shots)) out.shots[k] = Math.max(out.shots[k] || 0, v);
     out.seen = [...new Set([...a.seen, ...b.seen])];
@@ -422,6 +424,7 @@
     if (typeof settings.lang !== "string") settings.lang = "en";
     settings.mischief = settings.mischief !== false;
     delete settings.soundSet;   // (v49: the sound sets are gone)
+    for (const k of ["notifDaily", "notifChal", "notifEvents"]) settings[k] = settings[k] === true;
     delete settings.contrast;   // (v46: the High contrast setting is gone)
     if (!["ask", "yes", "no"].includes(settings.analytics)) settings.analytics = "ask";
     profile = cleanProfile(readSaved(KEYS.profile));

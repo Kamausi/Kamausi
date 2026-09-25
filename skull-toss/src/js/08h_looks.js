@@ -239,6 +239,16 @@
   const stripes = (c, x, top, bot, pw, a, b, t = 0, slope = 1) => { c.save(); c.beginPath(); c.rect(x - pw / 2, top, pw, bot - top); c.clip(); c.fillStyle = a; c.fillRect(x - pw / 2, top, pw, bot - top); c.fillStyle = b; const st = pw * 1.4; for (let y = top - pw * 2 + ((t * 30) % st); y < bot + pw; y += st) { c.beginPath(); c.moveTo(x - pw / 2, y); c.lineTo(x + pw / 2, y - pw * slope); c.lineTo(x + pw / 2, y - pw * slope + st * 0.5); c.lineTo(x - pw / 2, y + st * 0.5); c.closePath(); c.fill(); } c.restore(); c.strokeStyle = INK; c.lineWidth = 1.5; c.strokeRect(x - pw / 2, top, pw, bot - top); };
   const POLES = {
     wood: null,
+    totem: { draw(c, x, top, bot, pw, s, t) {   // v50 (the Cart): a totem pole, three faces stacked, wings at the top
+      const w = pw * 2.4, n = 3, hh = (bot - top) / n;
+      for (let i = 0; i < n; i++) { const y0 = top + i * hh, col = ["#B8322A", "#2F6FD0", "#3E7A2E"][i];
+        c.fillStyle = INK; c.fillRect(x - w / 2 - 1.5, y0, w + 3, hh); c.fillStyle = "#8A5A30"; c.fillRect(x - w / 2, y0, w, hh);
+        c.fillStyle = col; c.fillRect(x - w / 2, y0 + hh * 0.08, w, hh * 0.14);
+        for (const sd of [-1, 1]) { c.fillStyle = "#F4ECD8"; c.beginPath(); c.ellipse(x + sd * w * 0.22, y0 + hh * 0.38, w * 0.14, hh * 0.08, 0, 0, TAU); c.fill(); c.fillStyle = INK; c.beginPath(); c.arc(x + sd * w * 0.22, y0 + hh * 0.38, Math.max(1, w * 0.06), 0, TAU); c.fill(); }
+        c.fillStyle = INK; c.beginPath(); rr(c, x - w * 0.28, y0 + hh * 0.62, w * 0.56, hh * 0.12, 2); c.fill(); c.fillStyle = "#F4ECD8"; for (let k = -1; k <= 1; k++) c.fillRect(x + k * w * 0.14 - w * 0.04, y0 + hh * 0.62, w * 0.08, hh * 0.05); }
+      c.fillStyle = "#E3B64B"; c.strokeStyle = INK; c.lineWidth = 1.5; for (const sd of [-1, 1]) { c.beginPath(); c.moveTo(x + sd * w * 0.5, top + hh * 0.1); c.lineTo(x + sd * w * 1.5, top - hh * 0.05 + Math.sin(t * 2) * 1.5); c.lineTo(x + sd * w * 0.5, top + hh * 0.35); c.closePath(); c.fill(); c.stroke(); }
+      footing(c, x, bot, s, "#5A3A22");
+    } },
     birch: { draw(c, x, top, bot, pw, s) { woodPost(c, x, top, bot, pw * 1.1, "#EDE6D6"); c.fillStyle = INK; seeded(121, 8, rnd => c.fillRect(x - pw * 0.55 + rnd() * pw * 0.4, top + rnd() * (bot - top), pw * (0.3 + rnd() * 0.4), 1.5)); footing(c, x, bot, s, "#6B6A5A"); } },
     bamboo: { draw(c, x, top, bot, pw, s) { woodPost(c, x, top, bot, pw * 1.1, "#9AB85A"); c.fillStyle = "#5E7A36"; for (let y = top + pw * 3; y < bot; y += pw * 4) c.fillRect(x - pw * 0.6, y, pw * 1.2, Math.max(2, pw * 0.3)); footing(c, x, bot, s); } },
     candy: { draw(c, x, top, bot, pw, s, t) { stripes(c, x, top, bot, pw * 1.2, "#FBF9F4", RED, 0); footing(c, x, bot, s, RED); } },
@@ -265,6 +275,16 @@
   function glintAt2(c, x, y, r, k) { if (k < 0.03) return; c.fillStyle = `rgba(255,252,236,${k})`; star(c, x, y, r * k, 4, 0.18, 0); c.fill(); }
 
   // ── v45: the Can Alley prizes (07o_bonus.js), one for the first clear after each end boss but the last
+  // v50 (the Cart): a Ferris wheel for a ring — spokes, and the cars swinging on the rim as it turns
+  Object.assign(RINGS, { ferris: { style: "ferris", color: "#E8505B", rgb: "232,80,91", shade: "rgba(60,10,20,.5)", hi: "rgba(255,240,220,.9)" } });
+  RING_STYLES.ferris = (c, x, y, r, lw, R, t) => {
+    c.save(); c.translate(x, y); inkArc(c, r, lw * 0.8, R.color); c.rotate(t * 0.3);
+    c.strokeStyle = "rgba(242,231,201,.55)"; c.lineWidth = Math.max(1, lw * 0.12); for (let i = 0; i < 8; i++) { const a = (i / 8) * TAU; c.beginPath(); c.moveTo(Math.cos(a) * r * 0.2, Math.sin(a) * r * 0.2); c.lineTo(Math.cos(a) * (r - lw * 0.4), Math.sin(a) * (r - lw * 0.4)); c.stroke(); }
+    const cols = ["#F5D84A", "#4A8FD8", "#5BB86A", "#F58A3A"];
+    for (let i = 0; i < 8; i++) { const a = (i / 8) * TAU, cx = Math.cos(a) * r, cy = Math.sin(a) * r; c.save(); c.translate(cx, cy); c.rotate(-t * 0.3); c.fillStyle = cols[i % 4]; c.strokeStyle = INK; c.lineWidth = Math.max(1, lw * 0.1); c.beginPath(); rr(c, -lw * 0.45, lw * 0.2, lw * 0.9, lw * 0.6, lw * 0.15); c.fill(); c.stroke(); c.restore(); }
+    c.fillStyle = "#FFF3C0"; for (let i = 0; i < 16; i++) { const a = (i / 16) * TAU + 0.2; if ((Math.floor(t * 4) + i) % 3) continue; c.beginPath(); c.arc(Math.cos(a) * r, Math.sin(a) * r, lw * 0.14, 0, TAU); c.fill(); }
+    c.restore();
+  };
   Object.assign(RINGS, { bigtop: { style: "bigtop", color: "#C8503A", rgb: "200,80,58", shade: "rgba(70,14,8,.6)", hi: "rgba(255,240,220,.85)" } });
   Object.assign(RING_STYLES, {
     bigtop(c, x, y, r, lw, R, t) {   // a big-top stripe, red and cream, with a run of marquee bulbs round the outside

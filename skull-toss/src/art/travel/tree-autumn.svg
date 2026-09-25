@@ -9,17 +9,14 @@
     <path d="M176 206 C204 188 224 172 244 146" fill="none" stroke="#5A4A5E" stroke-width="8" stroke-linecap="round"/>
     <path class="k" d="M126 432 C140 420 143 400 140 372 C136 330 118 296 130 256 C138 228 150 210 144 180 L174 178 C178 206 166 230 176 258 C190 298 176 334 182 372 C185 402 190 420 204 432 Z" fill="#5A4A5E"/>
     <path class="s" d="M144 402 C148 372 140 332 136 300 C132 268 146 238 152 212 L158 214 C152 240 142 268 146 298 C150 330 156 372 152 402 Z" fill="#7C6A80"/>
-    <ellipse class="k" cx="96" cy="176" rx="58" ry="48" fill="#A8462A"/>
-    <ellipse class="k" cx="232" cy="170" rx="60" ry="50" fill="#A8462A"/>
-    <ellipse class="k" cx="164" cy="104" rx="76" ry="64" fill="#C8642A"/>
-    <ellipse class="k" cx="112" cy="126" rx="54" ry="46" fill="#D98A3A"/>
-    <ellipse class="k" cx="220" cy="120" rx="52" ry="44" fill="#D98A3A"/>
-    <ellipse class="k" cx="166" cy="172" rx="62" ry="40" fill="#C8642A"/>
-    <ellipse class="s" cx="146" cy="82" rx="30" ry="20" fill="#E0B85C" opacity=".7"/>
-    <ellipse class="s" cx="96" cy="112" rx="20" ry="14" fill="#E0B85C" opacity=".6"/>
-    <ellipse class="s" cx="206" cy="104" rx="20" ry="13" fill="#E0B85C" opacity=".6"/>
-    <path class="s" d="M60 190 C80 214 120 214 140 196 C112 206 84 204 60 190 Z" fill="#7E2A22" opacity=".45"/>
-    <path class="s" d="M196 196 C220 214 260 212 282 188 C256 202 222 204 196 196 Z" fill="#7E2A22" opacity=".45"/>
+    <!-- v50: the crown is drawn like the bushes: one scalloped mass, lighter scalloped layers inside, highlights and leaf flicks -->
+    <path class="k" d="M40 196 C22 176 30 150 50 146 C40 120 60 98 84 104 C84 76 110 58 134 68 C144 40 186 36 198 62 C220 46 252 56 254 82 C278 80 298 102 290 126 C308 136 310 164 292 178 C300 196 286 214 266 210 C256 226 230 228 218 216 C204 230 178 230 166 218 C150 232 122 230 112 216 C96 228 70 224 64 208 C52 212 42 206 40 196 Z" fill="#A8462A"/>
+    <path class="s" d="M56 190 C46 174 56 156 70 158 C66 136 84 122 100 130 C104 106 126 96 142 106 C152 84 184 82 192 102 C210 90 236 98 236 120 C256 118 270 136 262 154 C276 164 274 184 258 190 C250 202 228 204 218 194 C204 206 180 206 170 196 C156 208 132 206 124 194 C108 204 86 202 80 190 Z" fill="#C8642A"/>
+    <path class="s" d="M92 164 C90 148 104 140 114 146 C118 128 138 122 150 132 C160 116 184 118 188 134 C204 128 220 140 214 156 C226 162 224 178 210 180 L100 182 C90 180 86 172 92 164 Z" fill="#D98A3A"/>
+    <path class="s" d="M112 128 C124 112 146 110 158 118 C146 116 128 118 112 128 Z M176 104 C188 94 206 96 214 106 C202 102 190 102 176 104 Z M70 156 C78 146 92 144 100 150 C90 148 80 150 70 156 Z" fill="#E0B85C" opacity=".75"/>
+    <path class="k" d="M84 104 l-6 -12 M134 68 l-2 -13 M198 62 l6 -12 M254 82 l12 -6 M290 126 l12 2 M50 146 l-12 -4 M218 216 l4 10 M112 216 l-4 10" fill="none" stroke-width="3"/>
+    <path class="k" d="M100 136 q8 -10 16 -2 q-8 10 -16 2 Z M196 148 q8 -10 16 -2 q-8 10 -16 2 Z M150 176 q8 -10 16 -2 q-8 10 -16 2 Z M238 166 q8 -10 16 -2 q-8 10 -16 2 Z" fill="#E0B85C" stroke-width="2"/>
+    <path class="s" d="M70 206 C100 226 150 228 180 214 C220 228 256 222 276 204 C240 216 200 214 176 206 C146 216 104 216 70 206 Z" fill="#7E2A22" opacity=".45"/>
     <ellipse class="s" cx="150" cy="318" rx="7" ry="10" fill="#2A1E2C"/>
     <ellipse class="s" cx="172" cy="318" rx="7" ry="10" fill="#2A1E2C"/>
     <circle class="s" cx="152" cy="315" r="2.6" fill="cream"/>

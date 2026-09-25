@@ -1,7 +1,7 @@
   // ───────────────────────── the Skull Vault ─────────────────────────
   // An old cartoon prop room: pick a shelf, tap an item, and the skull hops onto the pedestal wearing it.
   const shop = { cat: "skull", sel: null, slot: 0 };
-  const CAT_LABEL = { skull: "Skulls", eyes: "Eyes", teeth: "Teeth", paint: "Paint jobs", hat: "Hats", aura: "Auras", trail: "Trails", impact: "Impacts", ring: "Rings", pole: "Ring poles", band: "Bands", aim: "Aim lines", reel: "Film reels", title: "Titles", hair: "Hair", beard: "Facial hair", wings: "Wings", launcher: "Launchers", glasses: "Glasses", ringwings: "Ring wings" };
+  const CAT_LABEL = { skull: "Skulls", eyes: "Eyes", teeth: "Teeth", paint: "Paint jobs", hat: "Hats", aura: "Auras", trail: "Trails", impact: "Impacts", ring: "Rings", pole: "Ring poles", band: "Bands", aim: "Aim lines", reel: "Film reels", title: "Titles", hair: "Hair", beard: "Facial hair", wings: "Wings", launcher: "Launchers", glasses: "Glasses", ringwings: "Ring wings", mask: "Masks" };
   const fmt = n => n.toLocaleString("en-US");
   const starsText = it => "★".repeat(starsOf(it)) + "☆".repeat(4 - starsOf(it));
   const vault = { R: makeRig(), y: -140, vy: 0, ang: 0, spin: 0, parts: [], bursts: [], trail: [], loop: 0, nextHop: 0, nextReact: 0, react: null, reactUntil: 0, dragX: null };
@@ -52,6 +52,7 @@
     if (kind === "aim") { drawAimArc(c, 8, 44, 42, 30, 1, id, 0); return; }
     if (kind === "reel") { reelFrame(c, 26, 26, 44, 34, id, t); return; }
     if (kind === "impact") { const I = IMPACTS[id], b = makeBurst(I.word, 26, 27, I, { scale: 0.78 }, 300); b.t = b.dur * 0.3; b.rot = -0.08; b.seed = 7; drawBurstList(c, [b], 120); return; }
+    if (kind === "mask") { drawSkull(c, 26, 29, 17, { t, look: { ...cos, mask: id, hat: "none", glasses: "none" }, face: faceFor("idle", t, { ly: -0.2 }) }); return; }
     if (kind === "hair") { drawSkull(c, 26, 33, 13, { t, look: { ...cos, hat: "none", hair: id }, face: faceFor("idle", t, { ly: -0.2 }) }); return; }
     if (kind === "beard") { drawSkull(c, 26, 22, 15, { t, look: { ...cos, beard: id }, face: faceFor("idle", t) }); return; }
     if (kind === "wings") { drawSkull(c, 26, 28, 10, { t, look: { ...cos, wings: id }, face: faceFor("happy", t) }); return; }
@@ -173,14 +174,14 @@
       if (!usable) b.insertAdjacentHTML("beforeend", '<svg class="lock" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-lock"/></svg>');
       if (it.shame || it.boss || it.prize || it.shop || it.souls || it.season) b.insertAdjacentHTML("beforeend", `<span class="ribbon ${it.shame ? "shame" : it.boss ? "boss" : it.prize ? "prize" : it.shop ? "shop" : it.souls ? "soul" : it.season ? "season" : "shop"}">${it.shame ? "Shame" : it.boss ? "Boss" : it.prize ? "Prize" : it.shop ? "Cart" : it.souls ? "Souls" : it.season ? t("season.ribbon") : "Cart"}</span>`);
       if (fresh.includes(kind + ":" + it.id)) b.insertAdjacentHTML("beforeend", '<span class="new" aria-hidden="true"></span>');
-      grid.appendChild(b);
+      if (selected) { const cell = h("div", { class: "cell sel" }); cell.append(b, h("button", { type: "button", class: "btn primary sm card-act", id: "cardAct" })); grid.appendChild(cell); }   // (v50: the chosen card carries its Equip / Buy button)
+      else grid.appendChild(b);
     }
     renderBuybar(); renderOutfits();
   }
   // try-on: the item large on the pedestal, and the foot says what to do with it
   function tryOn(kind, id) {
-    shop.sel = { kind, id }; seeItem(kind + ":" + id);
-    $("sheet-customize").classList.add("trying"); $("tryClose").hidden = false;
+    shop.sel = { kind, id }; seeItem(kind + ":" + id);   // (v50: no try-on stage: the pedestal shows it, and the card gets its button)
     vault.y = -140; vault.vy = 0;   // BOING: it hops onto the pedestal wearing the item
     renderShop();
   }
@@ -209,10 +210,12 @@
     cos.updatedAt = Date.now(); applyCosmetics(); persist(); renderShop(); Sound.ui("equip");
     return n;
   }
-  $("outfitSlots").addEventListener("click", e => { const b = e.target.closest("[data-outfit]"); if (!b) return; const i = +b.dataset.outfit; shop.slot = i; if (cos.outfits[i]) wearOutfit(i); else saveOutfit(i); renderOutfits(); });
+  // (v50: a slot is picked, and worn if it holds a look; only Save look saves into it)
+  $("outfitSlots").addEventListener("click", e => { const b = e.target.closest("[data-outfit]"); if (!b) return; const i = +b.dataset.outfit; shop.slot = i; if (cos.outfits[i]) wearOutfit(i); else Sound.ui("tick"); renderOutfits(); });
   $("outfitSave").addEventListener("click", () => saveOutfit());
   $("surpriseBtn").addEventListener("click", () => surpriseLook());
-  function renderBuybar() {
+  function renderBuybar() { renderBuybar0(); const a = $("cardAct"), b = $("buyBtn"); if (a) { a.innerHTML = b.innerHTML; a.disabled = b.disabled; } }
+  function renderBuybar0() {
     const bar = $("buybar"), s = shop.sel, it = s && findItem(s.kind, s.id);
     if (!it) { bar.hidden = true; shop.sel = null; $("sheet-customize").classList.remove("trying"); $("tryClose").hidden = true; return; }
     bar.hidden = false;
@@ -240,9 +243,11 @@
   });
   $("shopGrid").addEventListener("click", e => {
     const b = e.target.closest(".item"); if (!b) return;
+    if (shop.sel && shop.sel.kind === b.dataset.kind && shop.sel.id === b.dataset.id) return;
     Sound.ui("tick"); tryOn(b.dataset.kind, b.dataset.id);
   });
   for (const id of ["tryBack", "tryClose"]) $(id).addEventListener("click", () => { Sound.ui("flick"); tryOff(); });
+  $("shopGrid").addEventListener("click", e => { if (e.target.closest("#cardAct")) { e.stopPropagation(); $("buyBtn").click(); } }, true);
   $("buyBtn").addEventListener("click", () => {
     const s = shop.sel; if (!s) return;
     const it = findItem(s.kind, s.id);
@@ -258,11 +263,14 @@
   // Clear badges: marks everything new as seen, straight away (v49: no question first)
   $("clearBadges").addEventListener("click", () => { markSeen(); renderShop(); Sound.ui("flick"); });
 
-  // ───────────────────────── challenges: daily, weekly, monthly ─────────────────────────
+  // ───────────────────────── challenges: daily, weekly, monthly, seasonal, events ─────────────────────────
   let chalTab = "daily";
   function renderChallenges() {
     const per = chalTab, d = ensurePeriod(per), P = PERIODS[per];
-    for (const b of $("chalTabs").querySelectorAll("button")) { b.setAttribute("aria-selected", b.dataset.per === per); b.querySelector(".dot").hidden = !claimable(b.dataset.per); }
+    for (const b of $("chalTabs").querySelectorAll("[data-per]")) { b.setAttribute("aria-selected", b.dataset.per === per); b.querySelector(".dot").hidden = !claimable(b.dataset.per); }
+    const more = per === "seasonal" || per === "event";   // (v50: the fourth tab, a drop-down of Seasonal and Events)
+    $("chalMoreBtn").setAttribute("aria-selected", String(more)); $("chalMoreLbl").textContent = more ? t(`ui.${per === "event" ? "events" : "seasonal"}`) : t("ui.more");
+    $("chalMoreBtn").querySelector(".dot").hidden = !(claimable("seasonal") || claimable("event"));
     $("chalWhat").textContent = P.label.toLowerCase();
     $("streakLine").hidden = profile.streakDays < 1; $("streakLine").textContent = t("streak.line", { n: profile.streakDays, next: 20 * Math.min(7, profile.streakDays + 1) });   // (v37)
     $("chalList").innerHTML = d.items.map((it, i) => {
@@ -285,7 +293,11 @@
     $("chalTimer").textContent = fmtCountdown(msToReset(chalTab));
     if (PERIOD_IDS.some(per => profile[per] && profile[per].day !== PERIODS[per].key())) { PERIOD_IDS.forEach(ensurePeriod); renderChallenges(); updatePips(); }
   }
-  $("chalTabs").addEventListener("click", e => { const b = e.target.closest("[data-per]"); if (!b || b.dataset.per === chalTab) return; chalTab = b.dataset.per; Sound.ui("flick"); renderChallenges(); });
+  const chalMenu = open => { $("chalMenu").hidden = !open; $("chalMoreBtn").setAttribute("aria-expanded", String(open)); };
+  $("chalTabs").addEventListener("click", e => {
+    if (e.target.closest("#chalMoreBtn")) { chalMenu($("chalMenu").hidden); Sound.ui("tick"); return; }
+    const b = e.target.closest("[data-per]"); chalMenu(false); if (!b || b.dataset.per === chalTab) return; chalTab = b.dataset.per; Sound.ui("flick"); renderChallenges();
+  });
   $("chalList").addEventListener("click", e => {
     const b = e.target.closest("[data-claim]"); if (!b) return;
     const it = ensurePeriod(chalTab).items[+b.dataset.claim];

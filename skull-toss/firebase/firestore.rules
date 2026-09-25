@@ -17,6 +17,8 @@ service cloud.firestore {
     // the leaderboard: anyone signed in can read it; only the server's run check writes it (v34)
     match /leaderboard/{uid} { allow read: if request.auth != null; allow write: if false; }
     match /weekly/{id} { allow read: if request.auth != null; allow write: if false; }
+    match /daily/{id} { allow read: if request.auth != null; allow write: if false; }
+    match /monthly/{id} { allow read: if request.auth != null; allow write: if false; }
     // v45: a board for each scored mode, written only by the server's run check, like the Adventure's
     match /boards/{id} { allow read: if request.auth != null; allow write: if false; }
     // v45: who's about: each player keeps one doc of their own, holding only the server's clock at their last visit

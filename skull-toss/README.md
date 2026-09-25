@@ -1,8 +1,20 @@
-# SKULL TOSS v49
+# SKULL TOSS v50
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)); nothing else ever plays in their place.
+
+## New in v50: Settings by category, four more mini-games, masks, and a lot of fixes
+
+- **Play.** The map title card is full size again, and the film countdown is back: 3, 2, 1, then it flickers, glitches and burns away into the map. Hitting a bullseye is no longer a miss (and new bullseyes only come after a make). The ring's fire is drawn in front of the ring, WebGL fire included when paused. Popups keep clear of the ring. Only the clock map hangs its ring. The ring's wings are bigger, and the thick poles are slimmer.
+- **Four new mini-games:** Perfect Pitch (ten throws, only clean makes count), Sudden Death (one skull, a ring that speeds up), Gale Force (a gale that turns every throw) and Swing Time (thirty seconds, a ring that swings wider).
+- **Settings** shows its five categories; one opens its settings. The new **Account & General** holds notifications (daily rewards, challenges ending, events and seasons), account linking (Google, Apple, Facebook and a Kamausi email account), promo codes, support and credits, and your data.
+- **Profile:** name and bio beside the picture, a pencil to edit them (the eight pictures, name, bio), the last five runs, Ring fragments beside Morty's bones, level chips in two rows of three, every stat folded under **See all stats**, and Google sign-in at the bottom.
+- **Vault:** 21 shelves in three rows of seven, a new **Masks** shelf (Paper Bag, Goalie, Masquerade, Luchador, Plague Doctor, Bedsheet Ghost), an Equip button on the chosen card instead of the try-on stage, plain-text unlock notes, and outfit slots that only save when you press Save look. Glasses follow Morty's eyes, moustaches sit above his top teeth, teeth are shaded, and hair has sheen and strands.
+- **Curio Cart:** four shelves of seven (four new exclusives: the Gilded Venetian mask, a Merry-Go-Round hat, a Ferris Wheel ring and a Totem Pole), your bones beside your Souls, and Mort's arm behind the counter.
+- **Leaderboard:** All-time, a Daily/Weekly/Monthly drop-down and This device in one row; the top ten fit, and **See more** opens the top hundred.
+- **Challenges:** a fourth tab drops down **Seasonal** and **Events**. **Mastery:** a Diamond tier on everything, and Mini-games and Power-ups parts. **Codex:** Areas (each map's four acts) and Mini-bosses, in three rows of four. **Achievements** are cards.
+- **Look:** a slimmer title menu, the crack on the left of buttons, no skull cursor on a long press, the Director's Challenge easier to read, tree crowns drawn like the bushes, and lit, shaded wanderers, bats, crows and the cat.
 
 ## New in v49: a tidier title, the Closet, WebGL fire, corner bullseyes and Sign in with Google
 

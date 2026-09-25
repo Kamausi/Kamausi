@@ -1,6 +1,8 @@
 {
   "indexes": [
     { "collectionGroup": "weekly", "queryScope": "COLLECTION", "fields": [ { "fieldPath": "week", "order": "ASCENDING" }, { "fieldPath": "score", "order": "DESCENDING" } ] },
+    { "collectionGroup": "daily", "queryScope": "COLLECTION", "fields": [ { "fieldPath": "day", "order": "ASCENDING" }, { "fieldPath": "score", "order": "DESCENDING" } ] },
+    { "collectionGroup": "monthly", "queryScope": "COLLECTION", "fields": [ { "fieldPath": "month", "order": "ASCENDING" }, { "fieldPath": "score", "order": "DESCENDING" } ] },
     { "collectionGroup": "boards", "queryScope": "COLLECTION", "fields": [ { "fieldPath": "mode", "order": "ASCENDING" }, { "fieldPath": "score", "order": "DESCENDING" } ] },
     { "collectionGroup": "ledger", "queryScope": "COLLECTION", "fields": [ { "fieldPath": "uid", "order": "ASCENDING" }, { "fieldPath": "at", "order": "DESCENDING" } ] }
   ],

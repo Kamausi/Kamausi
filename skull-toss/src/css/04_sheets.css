@@ -86,3 +86,29 @@
 .runs li b{grid-row:span 2;font:22px/1 var(--num);color:var(--mustard-l)}
 .runs li span{font:700 12px/1.3 var(--ui);color:var(--cream-dim)}.runs li i{grid-row:1;grid-column:3;font:700 10px var(--ui);font-style:normal;color:var(--cream-faint)}
 .runs li.won b{color:#FFE04E}
+/* v50: the Profile — picture, then the name with a pencil and the bio; the editor opens under it */
+.prof-head{display:flex;gap:14px;align-items:flex-start}
+.prof-head canvas{width:88px;height:88px;flex:none;border-radius:10px}
+.ph-text{flex:1;min-width:0;text-align:left}
+.ph-name{display:flex;align-items:center;gap:6px}
+.ph-name b{font:26px/1.05 var(--display);letter-spacing:.03em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.ph-name .pencil{flex:none;width:36px;height:36px;min-width:36px;min-height:36px;padding:6px}
+.ph-name .pencil .icon{width:18px;height:18px}
+.prof-head .prof-title{margin-top:6px;font-size:15px}
+.ph-bio{margin:8px 0 0;font:600 14px/1.35 var(--ui);color:var(--cream-dim);overflow-wrap:anywhere}
+.ph-bio.empty{font-style:italic;opacity:.7}
+.prof-edit{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.prof-edit .field{margin:0}
+.prof-edit .row-btns{display:flex;justify-content:flex-end}
+.career .chips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.career .chip{justify-content:center;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;border-radius:10px;text-align:center}
+.pb-frag{display:inline-flex;align-items:baseline;gap:6px;margin-top:8px;padding:5px 9px;border-radius:8px;border:2px solid var(--ink);background:var(--panel-2);box-shadow:0 2px 0 var(--ink)}
+.pb-frag b{font:18px/1 var(--num);color:var(--mustard-l)}
+.pb-frag span{font:800 10px/1 var(--ui);letter-spacing:.1em;text-transform:uppercase;color:var(--cream-dim)}
+.all-stats{margin-top:14px;border:3px solid var(--ink);border-radius:12px;background:var(--panel-2);box-shadow:0 4px 0 var(--ink)}
+.all-stats>summary{list-style:none;cursor:pointer;padding:12px 14px;font:20px/1 var(--display);letter-spacing:.04em;text-transform:uppercase;min-height:44px;display:flex;align-items:center;justify-content:space-between}
+.all-stats>summary::-webkit-details-marker{display:none}
+.all-stats>summary::after{content:"▾";font:900 18px/1 var(--ui)}
+.all-stats[open]>summary::after{content:"▴"}
+.all-stats #stats{padding:0 10px 12px}
+#saveCard{margin-top:14px}

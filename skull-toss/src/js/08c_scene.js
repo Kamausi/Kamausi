@@ -15,14 +15,15 @@
   }
   // cartoon wings: the ring has shaken loose and flies the triangle on its own (after the mini-boss). v45: which wings is a
   // Vault shelf of its own (Ring wings): the classic bat membrane, or any of Morty's own wing styles (08i_body.js)
+  // (v50: the wings are bigger)
   function drawRingWings(x, y, r, lw, id = cos.ringwings, c = ctx, t = game.time, grow = 1 - (ring.morph || 0), ringId = cos.ring) {
     const flap = Math.sin(Math.floor(t * 12) / 12 * 14) * 0.5, W1 = id !== "classic" && WINGS[id], E = ringOuter(r, lw, ringId);   // (they root at the ring's drawn edge: a painted ring is far wider than its tube)
     if (grow <= 0.02) return;
     c.save(); c.translate(x, y); c.lineJoin = "round"; c.strokeStyle = INK; c.lineWidth = Math.max(1.5, lw * 0.35);
     for (const sd of [-1, 1]) {
       c.save(); c.scale(sd * grow, grow); c.rotate(-0.15 - flap * 0.5); c.translate(E * 0.88, 0);
-      if (W1) { const k = E * 0.42; c.scale(k, k); c.translate(-0.5, 0.25); c.lineWidth = Math.max(1.5, lw * 0.35) / k; W1(c, t, sd); c.restore(); continue; }
-      r = E * 0.85;   // (the classic membrane, sized to the ring as drawn)
+      if (W1) { const k = E * 0.6; c.scale(k, k); c.translate(-0.5, 0.25); c.lineWidth = Math.max(1.5, lw * 0.35) / k; W1(c, t, sd); c.restore(); continue; }
+      r = E * 1.2;   // (the classic membrane, sized to the ring as drawn; v50: bigger)
       c.fillStyle = "#3A3240"; c.beginPath(); c.moveTo(0, -r * 0.1);
       c.bezierCurveTo(r * 0.3, -r * 0.8, r * 0.95, -r * 0.75, r * 1.05, -r * 0.35);
       c.quadraticCurveTo(r * 0.85, -r * 0.28, r * 0.88, -r * 0.05); c.quadraticCurveTo(r * 0.6, -r * 0.12, r * 0.6, r * 0.12); c.quadraticCurveTo(r * 0.35, -r * 0.02, 0, r * 0.1); c.closePath(); c.fill(); c.stroke();
@@ -70,6 +71,7 @@
     const p = project(ring.x, ring.y, ring.z), T = VENT.ring || { t: game.time, sq: 0, dir: 0 };
     const wob = ring.wobble > 0 ? Math.sin(T.t * 38) * 0.035 * ring.wobble : 0, morph = ring.morph || 0;
     const r = ring.rc * p.s * (1 + wob + morph * 0.25 * Math.sin(morph * 18)), lw = RING_TUBE * 2 * p.s;
+    gpuSceneComposite();   // v50: the scene's GPU fire (the ring's, the torches') goes in here, behind the ring (08j_gpu.js)
     drawAnchorHanger(p, r, lw);   // the ring belongs to the map: its rope, chain, rod, post or hand (07n_environment.js)
     if (ringFlies()) drawRingWings(p.x, p.y, r, lw);
     const cut = ring.mode === "jumpcut" ? RING_PATHS.jumpcut.tell(ring.phase) : 0;   // the Final Reel: the film flickers a beat before it cuts
@@ -96,8 +98,10 @@
   }
 
   // the ring's post (a cosmetic: poles)
+  // v50: the heavier posts are slimmed so no pole outweighs the ring it holds up
+  const POLE_THIN = { column: 0.55, rocket: 0.5, barber: 0.75, candy: 0.8, skulls: 0.65, gold: 0.8, birch: 0.85, bamboo: 0.85, perch: 0.85, plunger: 0.8, neon: 0.7, bones: 0.75, tentacle: 0.8, vine: 0.8 };
   function drawPole(x, top, bottom, pw, s, id = cos.pole, c = ctx, t = game.time, ringTop = top) {
-    const P = POLES[id];
+    const P = POLES[id]; pw *= POLE_THIN[id] || 0.9;
     if (P && P.draw) { c.save(); P.draw(c, x, top, bottom, pw, s, t, ringTop); c.restore(); return; }
     if (ASSETS.target && drawPost(c, x, top, bottom, pw)) return;
     c.fillStyle = INK; c.fillRect(x - pw / 2 - 1.5, top, pw + 3, bottom - top);

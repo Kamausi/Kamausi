@@ -40,7 +40,12 @@
       "aura:cards":        { name: "House of Cards", souls: 150, s: 3, cart: true },
       "aura:void":         { name: "Black Hole", souls: 330, s: 4, cart: true },
       "pole:gold":         { name: "Solid Gold Post", souls: 280, s: 4, cart: true },
-      "pole:rocket":       { name: "Rocket", souls: 370, s: 4, cart: true }
+      "pole:rocket":       { name: "Rocket", souls: 370, s: 4, cart: true },
+      // v50: four more, so the Cart's four shelves hold seven each (face, hats, effects, the ring and its stand)
+      "mask:gilded":       { name: "Gilded Venetian", souls: 290, s: 4, cart: true },
+      "hat:carousel":      { name: "Merry-Go-Round", souls: 170, s: 3, cart: true },
+      "ring:ferris":       { name: "Ferris Wheel", souls: 320, s: 4, cart: true },
+      "pole:totem":        { name: "Totem Pole", souls: 260, s: 4, cart: true }
     };
     // what a real-money purchase credits, by store product id (the stores' own prices are set in their consoles)
     // v49: the tiers follow the industry's anchors: $4.99 for 500 is the baseline, each tier above adds a bigger bonus

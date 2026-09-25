@@ -5,7 +5,7 @@
   //   db.tx(fn): run fn(t) as one transaction, where t.get(path) → object|null, t.set(path, obj), and (optionally)
   //   t.inc(path, { field: n }), which adds to counters without reading them
   // Paths: wallets/<uid> (balance and owned items), receipts/<id> (each store receipt, once), ledger/<uid>_<n>,
-  // leaderboard/<uid> (the best checked run), weekly/<week>_<uid> (this week's), runs/<uid>_<time> (every run sent, for audit),
+  // leaderboard/<uid> (the best checked run), weekly/<week>_<uid> (this week's; v50: daily/<day>_<uid>, monthly/<month>_<uid>), runs/<uid>_<time> (every run sent, for audit),
   // meta/<uid> (when this player last sent a run), config/live (the live flags: 03d_flags.js in the game),
   // events/<day>_<uid>_<time> (a batch of play analytics, kept 30 days), metrics/<day>_<shard> (the day's counts, no
   // ids), ameta/<uid> (the analytics rate limit).
@@ -110,8 +110,11 @@
             else t.set(path, { ...had, name: r.name, bio: r.bio, pic: r.pic, rank: r.rank, level: r.level, ach: r.ach, title: r.title, look: r.look });   // (the card stays current)
             return { accepted: true, best: isBest, mode: r.mode };
           }
-          const best = await t.get(`leaderboard/${uid}`), wk = await t.get(`weekly/${week}_${uid}`);
+          const day = Runs.dayOf(now), month = Runs.monthOf(now);   // (v50: the day's and the month's boards too)
+          const best = await t.get(`leaderboard/${uid}`), wk = await t.get(`weekly/${week}_${uid}`), dy = await t.get(`daily/${day}_${uid}`), mo = await t.get(`monthly/${month}_${uid}`);
           const isBest = !best || r.score > best.score, isWeek = !wk || r.score > wk.score;
+          if (!dy || r.score > dy.score) t.set(`daily/${day}_${uid}`, { ...entry, day });
+          if (!mo || r.score > mo.score) t.set(`monthly/${month}_${uid}`, { ...entry, month });
           if (isBest) t.set(`leaderboard/${uid}`, entry);
           else t.set(`leaderboard/${uid}`, { ...best, name: r.name, bio: r.bio, pic: r.pic, rank: r.rank, level: r.level, ach: r.ach, title: r.title, look: r.look });   // (a new headstone name, bio or look follows the entry)
           if (isWeek) t.set(`weekly/${week}_${uid}`, { ...entry, week });

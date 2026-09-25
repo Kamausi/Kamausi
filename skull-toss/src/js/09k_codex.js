@@ -6,10 +6,18 @@
   // Practice: the Codex is what you know, not what you've scored.
   // The Production Archive is the studio's paperwork from 1933, from the first memo to the restoration report,
   // unsealed one document at a time as the story goes on.
+  const MINI_IDS_ = () => MAP_DATA.map(m => m.bosses && m.bosses.mini).filter(Boolean), END_IDS_ = () => MAP_DATA.map(m => m.bosses && m.bosses.end).filter(Boolean);
   const CODEX = {
+    // v50: the areas, each map's four acts, noted as you reach them (and all of a map's once you've got past it)
+    area:   { ids: () => MAP_DATA.flatMap(m => (m.acts || []).map((a, i) => `${m.n}-${i}`)), seen: id => { const [n, a] = id.split("-").map(Number); return n < profile.bestStage || (a === 0 && n <= profile.bestStage) || profile.met.includes("area:" + id); },
+              name: id => { const [n, a] = id.split("-").map(Number); return mapData(n).acts[a]; },
+              body: id => { const [n, a] = id.split("-").map(Number), B = mapData(n).bosses || {}; return t("codex.area.body", { act: ["I", "II", "III", "IV"][a] || a + 1, map: mapData(n).name, boss: BOSS_INFO[a < 3 ? B.mini : B.end] ? BOSS_INFO[a < 3 ? B.mini : B.end].name : "" }); },
+              stat: id => t("codex.stat.map", { n: id.split("-")[0] }) },
     map:    { ids: () => MAP_DATA.map(m => String(m.n)), seen: id => Number(id) <= profile.bestStage,
               name: id => mapData(+id).name, body: id => `${mapData(+id).premise} ${t(`codex.map.${id}`)}`, stat: id => t("codex.stat.reel", { reel: mapData(+id).reel, mechanic: mapData(+id).identity.mechanic.split(":")[0] }) },
-    boss:   { ids: () => BOSS_IDS.slice(), seen: id => !!profile.bossLog[id] || profile.met.includes("boss:" + id),
+    boss:   { ids: () => BOSS_IDS.filter(id => END_IDS_().includes(id)), seen: id => !!profile.bossLog[id] || profile.met.includes("boss:" + id),
+              name: id => BOSS_INFO[id].name, body: id => `${t(`codex.boss.${id}`)} ${BOSS_INFO[id].tell}.`, stat: id => (profile.bossLog[id] ? t("codex.stat.beaten", { n: profile.bossLog[id] }) : "") },
+    miniboss: { ids: () => BOSS_IDS.filter(id => MINI_IDS_().includes(id)), seen: id => !!profile.bossLog[id] || profile.met.includes("boss:" + id),
               name: id => BOSS_INFO[id].name, body: id => `${t(`codex.boss.${id}`)} ${BOSS_INFO[id].tell}.`, stat: id => (profile.bossLog[id] ? t("codex.stat.beaten", { n: profile.bossLog[id] }) : "") },
     piece:  { ids: () => Object.keys(FRAGMENTS), seen: id => profile.fragments.includes(id), name: id => FRAGMENTS[id].name, body: id => FRAGMENTS[id].line, stat: id => BOSS_INFO[FRAGMENTS[id].from].name },
     power:  { ids: () => POWER_IDS.slice(), seen: id => profile.met.includes("power:" + id), name: id => POWERS[id].name, body: id => `${t(`codex.power.${id}`)} ${POWERS[id].tip}.`, stat: () => "" },
@@ -29,6 +37,8 @@
   ];
   const codexCount = () => CODEX_CATS.reduce((s, c) => s + CODEX[c].ids().filter(CODEX[c].seen).length, 0);
   const codexTotal = () => CODEX_CATS.reduce((s, c) => s + CODEX[c].ids().length, 0);
+  // an area reached (07b_stage.js): noted quietly, no toast (a title card has just said where you are)
+  function sawArea(n, a) { const P = realProfile(), key = `area:${n}-${a}`; if (P.met.includes(key)) return; P.met.push(key); if (profile !== P && !profile.met.includes(key)) profile.met.push(key); updatePips(); }
   // the first time something turns up in play: note it (on the real profile, even in Practice) and say so
   function sawIt(cat, id) {
     const P = realProfile(), key = `${cat}:${id}`;

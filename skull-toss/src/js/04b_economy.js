@@ -106,7 +106,7 @@
     profile.gift = 1; profile.bones += 300; profile.bonesTotal += 300; persist(1500);
   }
 
-  // ───────────────────────── challenges: daily, weekly and monthly ─────────────────────────
+  // ───────────────────────── challenges: daily, weekly, monthly, and (v50) seasonal and event ─────────────────────────
   // Three of each, picked from a pool and seeded by the day, the week (Monday to Sunday) or the month, so
   // everyone gets the same set. Progress counts into all three at once; each pays its bones when claimed.
   const dayKey = (d = new Date()) => `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
@@ -118,8 +118,15 @@
     weekly:  { label: "Weekly",  pool: CHALLENGES_WEEKLY,  seed: "skull-toss:week:",  key: (d = new Date()) => "w" + dayKey(weekStart(d)),
                next: n => { const m = weekStart(n); m.setDate(m.getDate() + 7); return m; }, again: "back on Monday" },
     monthly: { label: "Monthly", pool: CHALLENGES_MONTHLY, seed: "skull-toss:month:", key: (d = new Date()) => `m${d.getFullYear()}-${d.getMonth() + 1}`,
-               next: n => new Date(n.getFullYear(), n.getMonth() + 1, 1), again: "back next month" }
+               next: n => new Date(n.getFullYear(), n.getMonth() + 1, 1), again: "back next month" },
+    // v50: a season is a quarter of the year; an event runs a fortnight (Monday to the Sunday after next). Both reuse
+    // the monthly and weekly goals, made bigger (mult), and pay to match
+    seasonal: { label: "Seasonal", pool: CHALLENGES_MONTHLY, seed: "skull-toss:season:", mult: 2, key: (d = new Date()) => `s${d.getFullYear()}-${Math.floor(d.getMonth() / 3) + 1}`,
+               next: n => new Date(n.getFullYear(), Math.floor(n.getMonth() / 3) * 3 + 3, 1), again: "back next season" },
+    event:   { label: "Event",   pool: CHALLENGES_WEEKLY,  seed: "skull-toss:event:", mult: 1.5, key: (d = new Date()) => "e" + dayKey(fortStart(d)),
+               next: n => { const m = fortStart(n); m.setDate(m.getDate() + 14); return m; }, again: "a new event soon" }
   };
+  function fortStart(d) { const w = weekStart(d), ref = new Date(2024, 0, 1), n = Math.round((w - ref) / 604800000); if (n % 2) w.setDate(w.getDate() - 7); return w; }   // (every other Monday since 1 Jan 2024)
   const PERIOD_IDS = Object.keys(PERIODS);
   function ensurePeriod(per) {
     const P = PERIODS[per], key = P.key(), cur = profile[per];
@@ -131,7 +138,8 @@
       const c = pool.splice(Math.floor(rnd() * pool.length), 1)[0];
       let k = c.range[0] + Math.floor(rnd() * (c.range[1] - c.range[0] + 1));
       if (c.step) k = Math.max(c.step, Math.round(k / c.step) * c.step);
-      items.push({ id: c.id, n: k * (c.scale || 1), reward: Math.round((c.reward(k) * bonus) / 5) * 5, have: 0, claimed: false });
+      const mult = P.mult || 1, n = Math.max(1, Math.round(k * (c.scale || 1) * mult));
+      items.push({ id: c.id, n, reward: Math.round((c.reward(k) * mult * bonus) / 5) * 5, have: 0, claimed: false });
     }
     profile[per] = { day: key, items };
     return profile[per];
@@ -152,7 +160,7 @@
     updatePips();
   }
   // v45: claim all three of a set and it pays a bonus on top, once a day, a week or a month
-  const SET_BONUS = { daily: 150, weekly: 600, monthly: 2500 };
+  const SET_BONUS = { daily: 150, weekly: 600, monthly: 2500, seasonal: 6000, event: 1200 };
   function claimChallenge(i, per = "daily") {
     const d = ensurePeriod(per), it = d.items[i];
     if (!it || it.claimed || !chalDone(it)) return false;

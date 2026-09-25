@@ -105,22 +105,55 @@
     Gpu.head = (i + 1) % GPU_MAX; Gpu.stats.emitted++;
   }
   // ── v49: fire and smoke, flown on the GPU (their own buffer, so a big fire never crowds the sparks out)
-  function gpuFlameEmit(x, y, vx, vy, life, size, rise, sway, tint, a) {
-    const i = Gpu.fhead, o = i * GPU_STRIDE, D = Gpu.fdata;
+  // v50: two of them. The overlay's (smoke, and fire on Morty) is drawn over everything; the scene's (the burning ring,
+  // torches) is drawn by its own small WebGL canvas and laid into the picture just before the ring, so the ring's fire
+  // burns BEHIND the ring.
+  const GpuS = { cv: null, gl: null, inst: null, p: null, b: {}, data: new Float32Array(GPU_FLAMES * GPU_STRIDE), head: 0, dirty: [GPU_FLAMES, -1], ok: false };
+  function gpuSceneInit() {
+    if (GpuS.ok || GpuS.failed) return GpuS.ok;
+    try {
+      const cv = document.createElement("canvas"); let gl = cv.getContext("webgl2", { alpha: false, antialias: false, depth: false, stencil: false, premultipliedAlpha: false, powerPreference: "low-power" });
+      let inst = gl ? { div: (i, d) => gl.vertexAttribDivisor(i, d), draw: (m, f, c, n) => gl.drawArraysInstanced(m, f, c, n) } : null;
+      if (!gl) { gl = cv.getContext("webgl", { alpha: false, antialias: false, depth: false, stencil: false }); const ext = gl && gl.getExtension("ANGLE_instanced_arrays"); if (!ext) throw new Error("no instancing"); inst = { div: (i, d) => ext.vertexAttribDivisorANGLE(i, d), draw: (m, f, c, n) => ext.drawArraysInstancedANGLE(m, f, c, n) }; }
+      const buf = data => { const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, data, gl.DYNAMIC_DRAW); return b; };
+      for (let i = 0; i < GPU_FLAMES; i++) GpuS.data[i * GPU_STRIDE + 5] = -1;
+      Object.assign(GpuS, { cv, gl, inst, p: gpuProgram(gl, GV_FLAME, GF_FLAME), b: { corner: buf(new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1])), flames: buf(GpuS.data) }, dirty: [GPU_FLAMES, -1], ok: true });
+    } catch (e) { GpuS.failed = true; }
+    return GpuS.ok;
+  }
+  // lay the scene's fire into the 2D picture here (08c_scene.js calls it just before the ring)
+  function gpuSceneComposite() {
+    if (!Gpu.on || !gpuSceneInit()) return;
+    const gl = GpuS.gl, cv = GpuS.cv, w = Math.max(1, Math.round(W * Gpu.dpr)), h = Math.max(1, Math.round(H * Gpu.dpr));
+    if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+    gl.viewport(0, 0, w, h); gl.clearColor(0, 0, 0, 1); gl.clear(gl.COLOR_BUFFER_BIT); gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
+    const P = GpuS.p; gl.useProgram(P.p); gl.uniform2f(P.loc.uRes, W, H); gl.uniform1f(P.loc.uT, Gpu.t);
+    gl.bindBuffer(gl.ARRAY_BUFFER, GpuS.b.flames);
+    if (GpuS.dirty[1] >= GpuS.dirty[0]) { const a = GpuS.dirty[0], b = GpuS.dirty[1] + 1; gl.bufferSubData(gl.ARRAY_BUFFER, a * GPU_STRIDE * 4, GpuS.data.subarray(a * GPU_STRIDE, b * GPU_STRIDE)); GpuS.dirty = [GPU_FLAMES, -1]; }
+    gl.bindBuffer(gl.ARRAY_BUFFER, GpuS.b.corner); gl.enableVertexAttribArray(P.loc.aC); gl.vertexAttribPointer(P.loc.aC, 2, gl.FLOAT, false, 0, 0); GpuS.inst.div(P.loc.aC, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, GpuS.b.flames);
+    for (const [n, off] of [["a0", 0], ["a1", 16], ["a2", 32]]) { const l = P.loc[n]; if (l < 0) continue; gl.enableVertexAttribArray(l); gl.vertexAttribPointer(l, 4, gl.FLOAT, false, GPU_STRIDE * 4, off); GpuS.inst.div(l, 1); }
+    GpuS.inst.draw(gl.TRIANGLE_STRIP, 0, 4, GPU_FLAMES);
+    ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalCompositeOperation = "lighter"; ctx.drawImage(cv, 0, 0, W, H); ctx.restore();
+    Gpu.stats.scene = (Gpu.stats.scene || 0) + 1;
+  }
+  function gpuFlameEmit(x, y, vx, vy, life, size, rise, sway, tint, a, scene = false) {
+    const R = scene && gpuSceneInit() ? GpuS : null, D = R ? R.data : Gpu.fdata, i = R ? R.head : Gpu.fhead, o = i * GPU_STRIDE;
     D[o] = x; D[o + 1] = y; D[o + 2] = vx; D[o + 3] = vy; D[o + 4] = Gpu.t; D[o + 5] = life; D[o + 6] = size; D[o + 7] = rise; D[o + 8] = Math.random() * 100; D[o + 9] = sway; D[o + 10] = tint; D[o + 11] = a;
-    Gpu.fdirty[0] = Math.min(Gpu.fdirty[0], i); Gpu.fdirty[1] = Math.max(Gpu.fdirty[1], i);
-    Gpu.fhead = (i + 1) % GPU_FLAMES; Gpu.stats.flames = (Gpu.stats.flames || 0) + 1;
+    if (R) { R.dirty[0] = Math.min(R.dirty[0], i); R.dirty[1] = Math.max(R.dirty[1], i); R.head = (i + 1) % GPU_FLAMES; }
+    else { Gpu.fdirty[0] = Math.min(Gpu.fdirty[0], i); Gpu.fdirty[1] = Math.max(Gpu.fdirty[1], i); Gpu.fhead = (i + 1) % GPU_FLAMES; }
+    Gpu.stats.flames = (Gpu.stats.flames || 0) + 1;
   }
   // how many to make this frame, for a fire that makes rate a second (key: which fire, so each keeps its own count)
   function gpuDue(key, rate) { const n = (Gpu.acc[key] || 0) + rate * Math.min(Gpu.dt, 0.05) * QUALITY.particles * (reduceMotion ? 0.5 : 1); const m = Math.floor(n); Gpu.acc[key] = n - m; return m; }
   // a fire at a point in the canvas's own space (c's current transform: a prop's or a skull's local units): w wide at
   // its root, flames h tall. Returns false when the GPU isn't drawing, so the caller paints its 2D fire instead.
-  function gpuFireAt(c, key, lx, ly, w, h, heat = 1, tint = 0) {
-    if (!Gpu.on || c !== ctx || !inRun() && game.state !== "over") return false;
+  function gpuFireAt(c, key, lx, ly, w, h, heat = 1, tint = 0, scene = false) {
+    if (!Gpu.on || c !== ctx) return false;
     const m = c.getTransform(), sc = Math.hypot(m.a, m.b) / DPR, x = (m.a * lx + m.c * ly + m.e) / DPR, y = (m.b * lx + m.d * ly + m.f) / DPR, W2 = w * sc, H2 = h * sc;
     if (x < -H2 * 2 || x > W + H2 * 2 || y < -H2 * 2 || y > H + H2 * 2) return true;
     const n = gpuDue(key, (40 + W2 * 2.2) * heat);
-    for (let i = 0; i < n; i++) { const u = rand(-0.5, 0.5), life = rand(0.24, 0.45) * (0.7 + 0.3 * heat); gpuFlameEmit(x + u * W2, y + rand(-0.08, 0.08) * H2, -u * W2 * 0.6, -H2 * rand(0.35, 0.8) / life, life, W2 * rand(0.45, 0.7) * (1 - Math.abs(u) * 0.7) + 2, H2 * 1.2, W2 * 0.1, tint, 0.7); }
+    for (let i = 0; i < n; i++) { const u = rand(-0.5, 0.5), life = rand(0.24, 0.45) * (0.7 + 0.3 * heat); gpuFlameEmit(x + u * W2, y + rand(-0.08, 0.08) * H2, -u * W2 * 0.6, -H2 * rand(0.35, 0.8) / life, life, W2 * rand(0.45, 0.7) * (1 - Math.abs(u) * 0.7) + 2, H2 * 1.2, W2 * 0.1, tint, 0.7, scene); }
     gpuLight(x, y - H2 * 0.4, Math.max(W2, H2) * 2.2, tint ? "140,255,110" : "255,150,60", 0.22 * heat * (0.85 + 0.15 * Math.sin(Gpu.t * 17 + x)));
     return true;
   }
@@ -131,7 +164,7 @@
     for (let i = 0; i < n; i++) {
       const a = rand(Math.PI * 0.8, Math.PI * 2.2), ca = Math.cos(a), sa = Math.sin(a); if (sa > 0.5) continue;
       const out = E * rand(0.9, 1.04), life = rand(0.22, 0.42) * (0.8 + 0.3 * k), up = E * (0.28 + 0.4 * k) * (0.6 + 0.6 * Math.max(0, -sa));   // (tongues that lick up off the band, hugging it)
-      gpuFlameEmit(x + ca * out, y + sa * out, ca * up * 0.35 / life, (sa * 0.35 - 0.75) * up / life, life, Math.max(lw * 2.1, E * 0.26) * rand(0.75, 1.15), E * 0.9, E * 0.04, 0, 0.62);
+      gpuFlameEmit(x + ca * out, y + sa * out, ca * up * 0.35 / life, (sa * 0.35 - 0.75) * up / life, life, Math.max(lw * 2.1, E * 0.26) * rand(0.75, 1.15), E * 0.9, E * 0.04, 0, 0.62, true);
     }
     gpuLight(x, y, E * (2.2 + 0.4 * k), "255,140,50", 0.36 * k * (0.85 + 0.15 * Math.sin(Gpu.t * 17)));
     return true;
@@ -198,7 +231,7 @@
   const rgbN = s => rgbCache[s] || (rgbCache[s] = s.split(",").map(v => +v / 255));
   // ── the frame: the bloom (Full), then the light pools, then the particles, all added onto black
   function gpuFrame(dt) {
-    const mode = gpuMode(), want = mode !== "off" && screen === "play" || (mode !== "off" && game.state === "title");
+    const mode = gpuMode(), want = mode !== "off" && (screen === "play" || screen === "pause" || game.state === "title");   // (v50: paused too, so the fire doesn't fall back to 2D under the menu)
     if (!want) { if (Gpu.on) { Gpu.on = false; Gpu.cv.hidden = true; } Gpu.lights.length = 0; return; }
     if (!Gpu.on) { Gpu.on = true; Gpu.cv.hidden = false; gpuResize(); }
     const gl = Gpu.gl, cv = Gpu.cv; if (!gl) return;

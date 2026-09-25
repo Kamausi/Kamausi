@@ -66,13 +66,14 @@
     drawItemIcon(cv, kind, it.id);
     grid.appendChild(b);
   }
+  const CART_SHELVES = [["face", ["skull", "paint", "eyes", "teeth", "mask", "glasses", "hair", "beard"]], ["hats", ["hat"]], ["effects", ["trail", "impact", "aura", "aim", "wings"]], ["ring", ["ring", "pole", "reel", "ringwings", "band", "launcher", "title"]]];
   function renderStore() {
     const deals = dailyDeals(), ex = exclusives();
     const dg = $("dealGrid"), eg = $("exclGrid"); dg.innerHTML = ""; eg.innerHTML = "";
     deals.forEach(d => cartTile(d, dg));
-    for (const kind of KINDS) {   // (shelf by shelf, as the Vault orders them)
-      const L = ex.filter(d => d.kind === kind); if (!L.length) continue;
-      eg.insertAdjacentHTML("beforeend", `<h4 class="cart-shelf">${CAT_LABEL[kind] || KIND_LABEL[kind]}</h4>`);
+    for (const [shelf, kinds] of CART_SHELVES) {   // (v50: four shelves of seven, not one per Vault shelf)
+      const L = ex.filter(d => kinds.includes(d.kind)); if (!L.length) continue;
+      eg.insertAdjacentHTML("beforeend", `<h4 class="cart-shelf">${t(`cart.shelf.${shelf}`)} <span class="n">${L.length}</span></h4>`);
       const g = document.createElement("div"); g.className = "grid"; eg.appendChild(g); L.forEach(d => cartTile(d, g));
     }
     $("exclCount").textContent = `${ex.filter(d => canUse(d.kind, d.it)).length}/${ex.length} owned`;
@@ -239,7 +240,7 @@
     for (let k = 0; k < 3; k++) { c.beginPath(); c.arc(-s * (0.5 + k * 0.04), -s * (0.16 + (k % 2) * 0.03), s * 0.045, 0, TAU); c.fill(); c.stroke(); }
     c.restore();
   }
-  // his arms, laid on the counter — drawn after it so they rest on top of the wood
+  // his other arm, from the shoulder, resting behind the counter's edge with the wand
   function drawMortArms(c, x, y, s, T) {
     const tt = Math.floor(T * 12) / 12, bob = Math.sin(tt * 2.6) * s * 0.02 - (cart.bounce > 0 ? Math.sin(cart.bounce * Math.PI) * s * 0.07 : 0);
     c.save(); c.translate(x, y + bob); c.lineJoin = "round"; c.lineCap = "round";
@@ -252,7 +253,7 @@
       c.beginPath(); c.arc(gx, gy, s * 0.14, 0, TAU); c.fill(); c.stroke();
       for (let k = 0; k < 3; k++) { c.beginPath(); c.arc(gx + flip * s * (0.03 + k * 0.05), gy - s * (0.12 + (k % 2) * 0.02), s * 0.042, 0, TAU); c.fill(); c.stroke(); }
     };
-    hose(s * 0.38, s * 0.5, s * 0.72, s * 0.34, s * 0.84, s * 0.08);       // his other arm, laid along the counter
+    hose(s * 0.34, -s * 0.24, s * 0.66, -s * 0.22, s * 0.86, s * 0.02);    // his other arm, from the shoulder to the counter (v50: behind it, attached)
     { const wx = s * 0.92, wy = s * 0.02, ex = s * 1.22, ey = -s * 0.34, tw = 0.5 + 0.5 * Math.sin(T * 6);   // his wand, held loosely, sparking now and then
       c.strokeStyle = INK; c.lineWidth = s * 0.06; c.beginPath(); c.moveTo(wx, wy); c.lineTo(ex, ey); c.stroke();
       c.strokeStyle = "#5A3A22"; c.lineWidth = s * 0.035; c.stroke(); c.strokeStyle = "#F2E7C9"; c.lineWidth = s * 0.035; c.beginPath(); c.moveTo(ex - (ex - wx) * 0.12, ey - (ey - wy) * 0.12); c.lineTo(ex, ey); c.stroke();
@@ -296,8 +297,8 @@
     c.fillStyle = pool; c.fillRect(0, 0, w, h);
     const ms = h * 0.52, mx = Math.min(w * 0.72, w - ms * 1.02), my = CY - h * 0.04;
     drawMort(c, mx, my, ms, T, cart.sel ? -1 : Math.sin(T * 0.7) * 0.5);
+    drawMortArms(c, mx, my, ms, T);   // (v50: the arm and wand go behind the counter, which hides the elbow down)
     drawCounter(c, w, h, CY);
-    drawMortArms(c, mx, my, ms, T);
     // the thing you're looking at, sitting on the counter under a glow
     const d0 = cart.sel ? { kind: cart.sel.kind, id: cart.sel.id } : (() => { const d = dailyDeals()[0]; return { kind: d.kind, id: d.it.id }; })();
     const cx = w * 0.23, cy = CY - h * 0.01, sz = h * 0.4;

@@ -225,7 +225,7 @@
   const DEF = { skull: "bone", eyes: "pie", teeth: "grin", paint: "none", trail: "dust", impact: "classic", ring: "hoop", aim: "bone", reel: "standard", title: "rookie", hat: "none", aura: "none", pole: "wood" };
   const dressDefault = () => { for (const [k, v] of Object.entries(DEF)) T.equip(k, v); };
   test("Skull Vault: thirteen shelves (hats, auras and poles are new), over 350 things, titles earned not bought", () => {
-    const c = T.catalog(), want = { skull: 40, eyes: 24, teeth: 18, paint: 32, trail: 35, impact: 21, ring: 25, aim: 17, reel: 10, title: 50, hat: 53, aura: 32, pole: 21 };   // (titles: six career-level ones, v31, and the Shot Doctor, v32; v45: one Can Alley prize on seven shelves)
+    const c = T.catalog(), want = { skull: 40, eyes: 24, teeth: 18, paint: 32, trail: 35, impact: 21, ring: 26, aim: 17, reel: 10, title: 50, hat: 54, aura: 32, pole: 22 };   // (titles: six career-level ones, v31, and the Shot Doctor, v32; v45: one Can Alley prize on seven shelves)
     for (const [k, n] of Object.entries(want)) { const L = (c[k] || []).filter(i => (!i.souls || i.shop) && !i.season); assert(L.length === n, `${k}: ${L.length} items, wanted ${n} (besides the Soul Shop's, v30, and the seasons', v42)`); }
     const all = Object.values(c).flat(); assert(all.length >= 351, `only ${all.length} cosmetics (117 × 3 = 351)`);
     for (const k of Object.keys(c)) for (const it of c[k]) {
@@ -345,9 +345,9 @@
     assert(getComputedStyle(document.querySelector("#sheet-customize .sheet-body")).overflowY === "hidden" && getComputedStyle($("vaultScroll")).overflowY === "auto", "only the shelves scroll: the pedestal stays in view");
     const heads = [...$("shopGrid").querySelectorAll(".rar-head")].map(h => h.className.split("t-")[1]); assert(heads.join() === "stock,featured,special,lost", `Stock to Lost (${heads})`);
     $("shopGrid").querySelector('[data-id="bowler"]').click();
-    assert($("sheet-customize").classList.contains("trying") && !$("buybar").hidden && T.cosmetics().hat !== "bowler", "an owned hat goes on the pedestal, large, before it goes on");
+    assert(!$("sheet-customize").classList.contains("trying") && $("cardAct") && /Equip/.test($("cardAct").textContent) && T.cosmetics().hat !== "bowler", "an owned hat goes on the pedestal, and its card gets an Equip button (v50: no try-on stage)");
     assert(bub("hat") === 1, "looking at a new item takes it off its shelf's bubble");
-    $("buyBtn").click(); assert(T.cosmetics().hat === "bowler" && !$("sheet-customize").classList.contains("trying"), "Wear it puts it on");
+    $("cardAct").click(); assert(T.cosmetics().hat === "bowler", "Equip puts it on");
     const how = $("shopGrid").querySelector(".item.locked .how"); assert(how && /Bones/i.test(how.textContent), "a locked item says how it's had");
     T.shopCat("glasses"); const g = $("shopGrid").querySelector('[data-id="bandit"] .how'); assert(g && /Earn/i.test(g.textContent), "and an earned one says so");
     $("clearBadges").click(); assert(bub("glasses") === 0 && bub("hat") === 0 && $("clearBadges").hidden, "Clear badges clears every bubble at once, no question asked");
@@ -608,7 +608,7 @@
     assert(ex.souls > 0 && !ex.price, "a Cart exclusive has a Souls price and no bones price");
     assert(!T.buy("hat", ex.id), "an exclusive was sold in the Vault");
     assert(!(await T.cartBuy("hat", ex.id)) && T.bones() === 20000, "no server, no Souls: nothing sells, and no bones are taken");
-    T.openSheet("store"); assert(!$("cartStatus").hidden && document.querySelectorAll("#exclGrid .cart-shelf").length >= 8, "the Cart shows its shelves and says the Souls counter is shut"); T.closeSheet();
+    T.openSheet("store"); assert(!$("cartStatus").hidden && document.querySelectorAll("#exclGrid .cart-shelf").length === 4, "the Cart shows its four shelves and says the Souls counter is shut"); T.closeSheet();
     await T.fakeServer(); const S = T.soulsApi(); await S.redeem({ platform: "test", receipt: "OK:cart1", product: "souls.1200" });
     const deal = T.deals()[0]; assert(T.deals().length === 1 && deal.shop && deal.price < deal.full, JSON.stringify(T.deals()));
     assert(await T.cartBuy(deal.kind, deal.id), "bought the deal of the day");
@@ -919,7 +919,7 @@
     assert(T.weekly().items[0].have >= 2 && T.monthly().items[0].have >= 2, "a throw should count toward the weekly and the monthly challenge");
     const b0 = T.bones(); assert(T.claim(0, "weekly") && T.bones() === b0 + 400 && !T.claim(0, "weekly"), "a weekly claim pays once");
     assert(T.claim(0, "monthly") && T.bones() === b0 + 1300, "a monthly claim pays");
-    T.openSheet("challenges"); const tabs = [...$("chalTabs").querySelectorAll("button")].map(b => b.textContent.trim());
+    T.openSheet("challenges"); const tabs = [...$("chalTabs").querySelectorAll(":scope > button")].map(b => b.textContent.trim());
     assert(tabs.join() === "Daily,Weekly,Monthly", `the sheet should have Daily, Weekly and Monthly tabs (${tabs})`);
     $("chalTabs").querySelector('[data-per="monthly"]').click();
     assert(/monthly/.test($("chalWhat").textContent) && $("chalList").querySelectorAll(".chal.monthly").length === 3, "the Monthly tab shows the monthly three");
@@ -967,7 +967,7 @@
     assert(front.width >= slot.width + em && back.width === front.width && front.bottom > slot.bottom, "the canvases should be wider and deeper than the letter slot");
     assert(+getComputedStyle($("mascotBack")).zIndex < 0 && +getComputedStyle($("mascotFront")).zIndex > 0, "the back layer goes behind the lettering, the front one over it");
     const tag = document.querySelector(".tagline");
-    assert(/The Adventure of Mortimer Bones/i.test(tag.textContent) && !/One skull/.test(tag.textContent) && getComputedStyle(tag).textTransform === "uppercase", "the tagline is the one line, in capitals (v46: The Adventure of Mortimer Bones)");
+    assert(tag.textContent.trim() === "The Adventures of Mortimer Bones" && getComputedStyle(tag).textTransform === "none", "the tagline is the one line, capitalised as written (v50: The Adventures of Mortimer Bones)");
   });
   test("The score follows the acts: menu, A, B and the boss, the recorded score and nothing else", () => {
     T.toTitle(); assert(T.music().want === "menu", `title plays ${T.music().want}`);
@@ -1094,7 +1094,7 @@
     list[list.length - 1].focus();
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true }));
     assert(root.contains(document.activeElement) && document.activeElement === list[0], `Tab off the end should wrap to the top (${document.activeElement && document.activeElement.id})`);
-    const full = $("set-flashes").querySelector('[data-v="full"]'); T.setSetting("flashes", "full"); T.openSheet("settings"); full.focus();
+    const full = $("set-flashes").querySelector('[data-v="full"]'); T.setSetting("flashes", "full"); T.openSheet("settings"); document.querySelector('.set-cat[data-sec="access"]').click(); full.focus();
     full.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true, cancelable: true }));
     assert(T.settings().flashes === "reduced", `the arrow should pick the next choice (${T.settings().flashes})`);
     T.setSetting("flashes", "full"); T.closeSheet();
@@ -1404,8 +1404,10 @@
     T.step(2.9); R = T.reel(); assert(R.card === "leader" && !R.hidden, `then the countdown (${JSON.stringify(R)})`);
     $("reelCard").dispatchEvent(new PointerEvent("pointerdown", { bubbles: true })); T.step(0.05);
     R = T.reel(); assert(R.hidden && T.state().state === "ready", `a tap skips to play (${JSON.stringify(R)})`);
-    T.start(); R = T.reel(); assert(R.card === "title", `the leader plays once a session; the next run opens on the title (${R.card})`);
-    T.step(2.9); assert(T.state().state === "ready" && T.reel().hidden, "then play");
+    T.start(); R = T.reel(); assert(R.card === "title", `the next run opens on its title too (${R.card})`);
+    T.step(2.9); assert(T.reel().card === "leader", "and v50: the countdown plays every run");
+    T.step(2.8); assert(!T.reel().hidden && T.reel().rot > 0.2, `it corrupts and fades into the map (${T.reel().rot})`);
+    T.step(0.9); assert(T.state().state === "ready" && T.reel().hidden, "then play");
     T.toTitle();
   });
   test("Between reels: the changeover cues, then the next reel's card; after Reel Four, an intermission", () => {
@@ -1414,7 +1416,8 @@
     skipCards(); assert(T.state().state === "ready" && T.state().stage === 2, "and map 2 plays");
     beatBoth(4); T.step(6); R = T.reel(); assert(R.card === "intermission" && /shards of the Black Ring/.test($("rcSub").textContent), `the intermission after Reel Four (${JSON.stringify(R)})`);
     T.step(3.7); R = T.reel(); assert(R.card === "title" && R.n === 5, `then Reel Five (${JSON.stringify(R)})`);
-    T.step(2.9); assert(T.state().state === "ready" && T.state().stage === 5, "and play");
+    T.step(2.9); R = T.reel(); assert(R.card === "leader", `then the countdown into it (v50) (${JSON.stringify(R)})`);
+    T.step(3.6); assert(T.state().state === "ready" && T.state().stage === 5, "and play");
     T.setStats(ZERO); T.toTitle();
   });
   test("After Reel Eight: THE END card, then the headstone", () => {
@@ -1643,7 +1646,7 @@
     assert(tiles.map(b => b.dataset.mode).join() === "practice,rush" && tiles.filter(b => b.classList.contains("locked")).map(b => b.dataset.mode).join() === "rush", `Practice open, Boss Rush locked (${tiles.map(b => b.dataset.mode + (b.classList.contains("locked") ? "*" : "")).join()})`);
     document.querySelector('#modePick [data-open="minis"]').click();
     const minis = [...document.querySelectorAll("#miniModes [data-mode]")];
-    assert(!$("miniPick").hidden && $("modePick").hidden && minis.map(b => b.dataset.mode).join() === "curtain,longshot,gallery,cans" && !minis.some(b => b.classList.contains("locked")), `the Mini Games card: four, all open (${minis.map(b => b.dataset.mode).join()})`);
+    assert(!$("miniPick").hidden && $("modePick").hidden && minis.map(b => b.dataset.mode).join() === "curtain,longshot,gallery,cans,pitch,sudden,gale,swing" && !minis.some(b => b.classList.contains("locked")), `the Mini Games card: eight (v50), all open (${minis.map(b => b.dataset.mode).join()})`);
     document.querySelector("#sheet-play [data-back]").click(); assert(!$("modePick").hidden && $("miniPick").hidden, "Back steps back to the modes");
     T.closeSheet(); T.setStats(OPENED); T.toTitle(); $("play").click();
     tiles = [...document.querySelectorAll("#moreModes [data-mode]")]; assert(!tiles.some(b => b.classList.contains("locked")), "Boss Rush open after an end boss");
@@ -1662,7 +1665,7 @@
   });
   // ── v27: the Codex and the Production Archive ──
   test("The Codex notes things as they turn up: a boss when you meet it, a power-up when you grab it, each map's hazard and target", () => {
-    T.setStats(ZERO); let K = T.codex(); assert(K.total === 75 && K.count === 1, `75 entries, only Crow Hollow known at first (${K.count}/${K.total})`);
+    T.setStats(ZERO); let K = T.codex(); assert(K.total === 107 && K.count === 2, `107 entries (v50: 32 areas), only Crow Hollow and its first act known at first (${K.count}/${K.total})`);
     fresh(); toHit(C.STAGE_MINI); assert(T.codex().seen.includes("boss:crow"), "meeting the Crow King notes him");
     T.givePower("rush"); assert(T.codex().seen.includes("power:rush"), "grabbing a power-up notes it");
     fresh(); T.setStage(2); T.setHits(10); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y);
@@ -1673,12 +1676,17 @@
   });
   test("The Codex sheet: a tab for each part and the Archive, ??? until found, and the count", () => {
     T.setStats({ ...ZERO, bossLog: { crow: 2 }, fragments: ["hollow"], shots: { longbomb: 1 }, bestStage: 2 }); T.toTitle(); T.openSheet("codex");
-    const tabs = [...document.querySelectorAll("#codexTabs [data-cat]")]; assert(tabs.length === 10, `ten tabs: eight parts (obstacles, v44), the Secrets (v28) and the Archive (${tabs.length})`);
-    tabs.find(b => b.dataset.cat === "boss").click();
-    const rows = [...document.querySelectorAll("#codexList .entry")], crow = rows.find(r => r.dataset.entry === "boss:crow");
-    assert(rows.length === 16 && crow && /Crow King/.test(crow.textContent) && /Beaten 2/.test(crow.textContent), `16 bosses, the Crow King written up (${rows.length})`);
-    assert(rows.filter(r => r.classList.contains("unseen")).length === 15 && rows.find(r => r.dataset.entry === "boss:reaper").textContent.startsWith("???"), "the rest stay ???");
-    assert(/of 75 found/.test($("codexCount").textContent), $("codexCount").textContent);
+    const tabs = [...document.querySelectorAll("#codexTabs [data-cat]")]; assert(tabs.length === 12 && tabs[0].dataset.cat === "area" && tabs[1].dataset.cat === "map", `twelve tabs, Areas first (v50) (${tabs.length})`);
+    assert(getComputedStyle($("codexTabs")).gridTemplateColumns.split(" ").length === 4, "in rows of four");
+    tabs.find(b => b.dataset.cat === "miniboss").click();
+    const rows = [...document.querySelectorAll("#codexList .entry")], crow = rows.find(r => r.dataset.entry === "miniboss:crow");
+    assert(rows.length === 8 && crow && /Crow King/.test(crow.textContent) && /Beaten 2/.test(crow.textContent), `8 mini-bosses, the Crow King written up (${rows.length})`);
+    assert(rows.filter(r => r.classList.contains("unseen")).length === 7, "the rest stay ???");
+    tabs.find(b => b.dataset.cat === "boss").click(); const ends = [...document.querySelectorAll("#codexList .entry")];
+    assert(ends.length === 8 && ends.every(r => r.classList.contains("unseen")) && ends.find(r => r.dataset.entry === "boss:reaper").textContent.startsWith("???"), "8 end bosses, none met");
+    tabs.find(b => b.dataset.cat === "area").click(); const areas = [...document.querySelectorAll("#codexList .entry")];
+    assert(areas.length === 32 && areas.filter(r => !r.classList.contains("unseen")).length === 5, `32 areas, map 1's four and map 2's first seen (${areas.filter(r => !r.classList.contains("unseen")).length})`);
+    assert(/of 107 found/.test($("codexCount").textContent), $("codexCount").textContent);
     T.closeSheet(); T.setStats(ZERO); T.toTitle();
   });
   test("The Production Archive unseals the studio's paperwork as the story goes on", () => {
@@ -1827,7 +1835,7 @@
     T.toTitle(); T.openSheet("profile");
     const card = $("careerCard").textContent;
     assert(new RegExp(`^${T.levelFor(T.profile().xp)}`).test(card) && /XP to level/.test(card) && /2\/8/.test(card) && /12,345/.test(card), card);
-    assert(document.querySelectorAll("#history .runs li").length === 10, "the runs log");
+    assert(document.querySelectorAll("#history .runs li").length === 5, "the runs log (v50: the last five)");
     T.closeSheet(); T.setStats(ZERO); T.toTitle();
   });
 
@@ -1899,7 +1907,7 @@
   test("The board has a This week tab beside all time and this device", () => {
     T.toTitle(); T.openSheet("board");
     assert([...document.querySelectorAll("#boardTabs [data-tab]")].map(b => b.dataset.tab).join() === "live,week,local", "three tabs");
-    document.querySelector('#boardTabs [data-tab="week"]').click(); assert($("boardRival").hidden, "no rival line off the shared board");
+    document.querySelector('#boardTabs [data-tab="week"]').click(); document.querySelector('#boardPerMenu [data-per="week"]').click(); assert($("boardRival").hidden, "no rival line off the shared board");
     T.closeSheet();
   });
 
@@ -2305,13 +2313,14 @@
       assert(m.sheet.ambient.length <= B.ambientBudget.max && m.sheet.lighting.ring >= B.lighting.ringReadability, `${m.name}: inside the ambient budget, the ring readable`);
       const Z = m.sheet.zones; assert(Z.targets.z[0] >= Z.ring.z[0] && Z.hazards.z[1] <= Z.ring.z[1], `${m.name}: targets behind the ring, hazards before it`);
     }
-    assert(M.every(m => m.anchor === "post"), "v49: every map's ring stands on its pole");
+    assert(M.every(m => m.anchor === (m.n === 7 ? "gear" : "post")), "v50: every map's ring stands on its pole but the Clockwork Caves', which hangs from its gears");
   });
   test("Tiers I to VI have their names: The Toss, The Distraction, The Hazard, The Puzzle, The Chaos, The Secrets", () => {
     assert(T.tiers().map(x => x.name).join() === "The Toss,The Distraction,The Hazard,The Puzzle,The Chaos,The Secrets", T.tiers().map(x => x.name).join());
     const M = T.maps(); assert(M[0].tiers[0] === "I" && M[7].tiers[1] === "VI", "the reel climbs from the Toss to the Secrets");
   });
-  test("v49: the ring stands on its pole on every map: it holds in the first half and leaves it when it flies", () => {
+  test("v50: the ring stands on its pole on every map but the Clockwork Caves (it hangs from the gears there): it holds in the first half and leaves it when it flies", () => {
+    fresh(); T.setStage(7); T.unfreezeRing(); T.step(0.2); assert(T.anchor().kind === "gear" && T.anchor().holds, `map 7 hangs it (${JSON.stringify(T.anchor())})`);
     for (const n of [1, 2, 6, 8]) { fresh(); if (n > 1) T.setStage(n); T.unfreezeRing(); T.step(0.2); const A = T.anchor(); assert(A.kind === "post" && A.holds, `map ${n}: on its pole (${JSON.stringify(A)})`); }
     beatCrow(1); assert(!T.anchor().holds, "the winged ring has left its pole");
     T.toTitle();
@@ -2368,7 +2377,7 @@
     fresh(); T.setStage(3); T.calm(); T.freezeRing(0, C.RING_Y); const { a, q } = pathAt(3.6); const d = T.spawnTargetType("decoy"); assert(d.corner != null, "v49: a decoy keeps to a corner like the rest");
     void a; void q; T.toTitle();
   });
-  test("v49: targets are bullseyes in the corners, never in front of the ring or behind it on screen; a throw straight at one hits it (and still misses the ring)", () => {
+  test("v49: targets are bullseyes in the corners, never in front of the ring or behind it on screen; a throw straight at one hits it and isn't a miss (v50)", () => {
     for (const n of [2, 4, 6, 8]) {
       fresh(); T.setStage(n); T.calm(); for (let i = 0; i < 4; i++) T.spawnTargetType("standard");
       const R = T.maps()[n - 1].sheet.zones.ring;
@@ -2381,8 +2390,9 @@
     }
     fresh(); T.setStage(3); T.calm(); T.spawnTargetType("standard"); const q = T.targetsFull()[0], a = T.aimFor(q.x, q.y, q.z), lives = T.state().lives, pts = T.profile().targetHits || 0;
     void q;
-    T.freezeRing(0, C.RING_Y); T.throwAt(a.AX, a.AY); T.step(3);
-    assert((T.profile().targetHits || 0) === pts + 1 && !T.state().lastResult.make && T.state().lives === lives - 1, `straight at a corner: the bullseye pays, the ring's miss costs a skull (${T.profile().targetHits}, ${T.state().lastResult.kind})`);
+    T.setStreak(4); T.freezeRing(0, C.RING_Y); T.throwAt(a.AX, a.AY); T.step(3);
+    assert((T.profile().targetHits || 0) === pts + 1 && !T.state().lastResult.make && T.state().lastResult.target && T.state().lives === lives && T.state().streak === 4, `straight at a corner: the bullseye pays, and it isn't a miss (${T.profile().targetHits}, ${T.state().lastResult.kind}, lives ${T.state().lives}/${lives})`);
+    assert(T.targets().filter(x => !x.pop).length === 0, "and no new bullseye turns up until a make");
     T.toTitle();
   });
   test("A decoy in the throw's way is a miss; the Codex knows all nine targets and eight obstacles", () => {
@@ -2502,12 +2512,80 @@
     assert(body.indexOf("chalSet") < body.indexOf("streakLine") && body.indexOf("chalSet") < body.indexOf("chalList") && $("chalSet").querySelector(".chal-set"), `the strip above the streak and the timer (${body})`);
     assert($("chalSet").firstElementChild.getBoundingClientRect().height < 64, `and it's slim (${$("chalSet").firstElementChild.getBoundingClientRect().height})`); T.closeSheet(); T.setStats(ZERO);
   });
-  test("v49 settings: in sections (Audio, Graphics, Gameplay, Accessibility, Account & data), with Sign in with Google", () => {
+  test("v50 settings: only the categories, a category opens its settings; Account & General has notifications, linking, redeem and support", () => {
     T.toTitle(); T.openSheet("settings");
-    assert([...document.querySelectorAll("#sheet-settings .set-h")].map(h => h.textContent).join("|") === "Audio|Graphics|Gameplay|Accessibility|Account & data", "the sections");
+    const cats = [...document.querySelectorAll("#setCats .set-cat b")].map(b => b.textContent).join("|");
+    assert(cats === "Audio|Graphics|Gameplay|Accessibility|Account & General", cats);
+    assert([...document.querySelectorAll("#sheet-settings .set-sec")].every(s => s.hidden), "no settings until a category is picked");
+    document.querySelector('.set-cat[data-sec="audio"]').click();
+    assert(!document.querySelector('.set-sec[data-sec="audio"]').hidden && $("setCats").hidden && $("h-settings").textContent === "Audio", "Audio opens");
+    $("sheet-settings").querySelector("[data-back]").click();
+    assert(T.state().sheet === "settings" && !$("setCats").hidden, "back goes to the categories first");
+    document.querySelector('.set-cat[data-sec="account"]').click();
+    for (const id of ["set-notif-daily", "set-notif-chal", "set-notif-events", "googleSignIn", "redeemIn", "redeemBtn"]) assert($(id), id);
+    for (const p of ["apple.com", "facebook.com", "password"]) assert(document.querySelector(`.link-btn[data-provider="${p}"]`), p);
+    assert([...document.querySelectorAll("[data-info]")].map(b => b.dataset.info).join() === "help,privacy,terms,credits", "support and credits");
     const btn = $("googleSignIn"); assert(btn && /Sign in with Google/.test(btn.textContent) && btn.disabled, "the Google button (off without the online game)");
-    assert(/online game/.test($("accountNote").textContent), $("accountNote").textContent); T.closeSheet();
-    T.openSheet("profile"); assert(document.querySelector("#saveCard .google-btn"), "and on the Profile's save card"); T.closeSheet();
+    assert(/online game/.test($("accountNote").textContent), $("accountNote").textContent);
+    const b0 = T.profile().bones;
+    $("redeemIn").value = "nope nope"; $("redeemBtn").click(); assert(/isn't valid/.test($("redeemNote").textContent) && T.profile().bones === b0, "a bad code pays nothing");
+    $("redeemIn").value = "morty-bones"; $("redeemBtn").click(); assert(T.profile().bones === b0 + 500, `a good code pays (${T.profile().bones - b0})`);
+    $("redeemIn").value = "MORTYBONES"; $("redeemBtn").click(); assert(/already used/.test($("redeemNote").textContent) && T.profile().bones === b0 + 500, "once");
+    document.querySelector('[data-info="credits"]').click(); assert(T.state().sheet === "info" && /Credits/.test($("h-info").textContent) && $("infoBody").children.length, "credits open");
+    $("sheet-info").querySelector("[data-back]").click(); assert(T.state().sheet === "settings" && !document.querySelector('.set-sec[data-sec="account"]').hidden, "back to Account & General");
+    T.closeSheet();
+    T.openSheet("profile"); assert(document.querySelector("#sheet-profile .google-btn"), "and on the Profile"); T.closeSheet();
+  });
+  test("v50 Vault: 21 shelves in three rows of seven (masks among them); a slot is picked and worn, only Save look saves", () => {
+    T.setStats({ ...ZERO, unlocked: ["mask:paperbag"] }); T.toTitle(); T.openSheet("customize");
+    const tabs = [...document.querySelectorAll("#catTabs [data-cat]")]; assert(tabs.length === 21 && getComputedStyle($("catTabs")).gridTemplateColumns.split(" ").length === 7, `21 shelves, seven across (${tabs.length})`);
+    T.shopCat("mask"); assert(document.querySelectorAll("#shopGrid .item").length >= 7, "the mask shelf");
+    $("shopGrid").querySelector('[data-id="paperbag"]').click(); $("cardAct").click(); assert(T.cosmetics().mask === "paperbag", "a paper bag over his head");
+    const before = JSON.stringify(T.cosmetics().outfits); document.querySelectorAll("#outfitSlots .slot")[2].click();
+    assert(JSON.stringify(T.cosmetics().outfits) === before, "picking an empty slot saves nothing");
+    $("outfitSave").click(); assert(T.cosmetics().outfits[2] && T.cosmetics().outfits[2].mask === "paperbag", "Save look saves into the picked slot");
+    const how = document.querySelector("#shopGrid .item .how i"); assert(!how || getComputedStyle(how).borderTopWidth === "0px", "how it's had is plain text");
+    T.closeSheet(); T.setStats(ZERO);
+  });
+  test("v50 Cart and mini-games and mastery: four Cart shelves of seven; eight mini-games; five mastery parts with a Diamond tier", () => {
+    T.setStats(ZERO); T.toTitle(); T.openSheet("store");
+    const shelves = [...document.querySelectorAll("#exclGrid .grid")].map(g => g.querySelectorAll(".item, button").length);
+    assert(shelves.length === 4 && shelves.every(n => n === shelves[0]), `balanced shelves (${shelves})`);
+    assert(document.querySelector("#sheet-store .sheet-head .bones"), "the bones beside the Souls"); T.closeSheet();
+    T.openSheet("play"); document.querySelector("[data-open=minis]").click(); assert(document.querySelectorAll("#miniModes [data-mode]").length === 8, "eight mini-games"); T.closeSheet();
+    T.openSheet("mastery"); assert(document.querySelectorAll("#masteryTabs [data-cat]").length === 5, "five parts");
+    assert(document.querySelectorAll("#masteryList .m-row")[0].querySelectorAll(".m-tier").length === 4 && document.querySelector(".m-tier.diamond"), "four tiers, Diamond last"); T.closeSheet();
+  });
+  test("v50 Challenges: a fourth tab drops down Seasonal and Events; the set bonus sits clear of the dotted line", () => {
+    T.setStats(ZERO); T.toTitle(); T.openSheet("challenges");
+    $("chalMoreBtn").click(); assert(!$("chalMenu").hidden, "the drop-down opens");
+    document.querySelector('#chalMenu [data-per="seasonal"]').click(); assert($("chalMenu").hidden && /Seasonal/.test($("chalMoreLbl").textContent) && document.querySelectorAll("#chalList .chal").length === 3, "three seasonal challenges");
+    $("chalMoreBtn").click(); document.querySelector('#chalMenu [data-per="event"]').click(); assert(/Events/.test($("chalMoreLbl").textContent) && document.querySelectorAll("#chalList .chal").length === 3, "and three for the event");
+    const line = $("chalTabs").getBoundingClientRect().bottom, set = $("chalSet").getBoundingClientRect().top; assert(set >= line, `the set bonus clears the line (${set} ≥ ${line})`);
+    T.closeSheet();
+  });
+  test("v50 Profile: name beside the picture with a pencil; stats in See all stats; five runs; fragments beside Morty's bones; level chips in 2 rows of 3", () => {
+    T.setStats({ ...ZERO, name: "Mort", bio: "Hi", history: Array.from({ length: 8 }, (_, i) => ({ score: 100 * i, mode: "story", stage: 1, hits: 3, xp: 5, at: Date.now() })) }); T.toTitle(); T.openSheet("profile");
+    assert($("profNameShow").textContent === "Mort" && $("profBioShow").textContent === "Hi" && $("profEditBox").hidden, "name and bio shown, editor shut");
+    $("profEdit").click(); assert(!$("profEditBox").hidden && $("picGrid").children.length === 8, "the pencil opens the editor with the eight pictures");
+    assert(!$("allStats").open && $("allStats").contains($("stats")), "the stats fold into See all stats");
+    assert(document.querySelectorAll("#history .runs li").length === 5, "the last five runs");
+    assert(/0\/8/.test($("profFragN").textContent), "the fragments count");
+    const chips = $("careerCard").querySelector(".chips"); assert(getComputedStyle(chips).gridTemplateColumns.split(" ").length === 3 && chips.children.length === 6, "2 rows of 3");
+    const g = document.querySelector("#sheet-profile .google-btn"), body = document.querySelector("#sheet-profile .sheet-body");
+    assert(g && body.lastElementChild.contains(g), "Google at the bottom"); T.closeSheet(); T.setStats(ZERO);
+  });
+  test("v50 Leaderboard: one row of tabs with a Daily/Weekly/Monthly drop-down; ten rows, and See more opens a hundred", () => {
+    T.boardLocal(Array.from({ length: 10 }, (_, i) => ({ name: "M" + i, score: 100 + i, hits: 1, stage: 1, at: Date.now() })));
+    T.toTitle(); T.openSheet("board"); $("boardTabs").querySelector('[data-tab="local"]').click();
+    const tabs = $("boardTabs").getBoundingClientRect(); assert(tabs.height < 60, `one row (${tabs.height})`);
+    $("boardPerBtn").click(); assert(!$("boardPerMenu").hidden && $("boardPerMenu").querySelectorAll("[data-per]").length === 3, "the drop-down: daily, weekly, monthly");
+    document.querySelector('#boardPerMenu [data-per="month"]').click(); assert(/Monthly/.test($("boardPerLbl").textContent), "Monthly picked");
+    T.closeSheet(); T.unfakeBoard();
+  });
+  test("v50 Achievements are cards, two across", () => {
+    T.setStats(ZERO); T.toTitle(); T.openSheet("achievements");
+    const g = document.querySelector("#achList .ach-grid"); assert(g && getComputedStyle(g).display === "grid" && getComputedStyle(g).gridTemplateColumns.split(" ").length >= 2, "a grid of cards"); T.closeSheet();
   });
   test("v49 Vault: a Closet holds Surprise me (first), four outfits, Save look and the shelves; the pedestal says Preview; no Wizard Mort", () => {
     T.setStats(ZERO); T.toTitle(); T.openSheet("customize");

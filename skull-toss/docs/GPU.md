@@ -27,6 +27,10 @@ play. On top of it, `08j_gpu.js` runs a WebGL canvas (`#gpuFx`) that adds what a
   - flaming skulls, fire auras and flaming hair;
   - the Cursed skull's green flames.
 
+  v50: the ring's fire and the torches go to a second WebGL context (`GpuS`), composited into the 2D frame with
+  `lighter` just before the ring is drawn, so the flames sit in the scene (in front of what's behind the ring, behind
+  the ring itself) instead of on top of everything. The layer also keeps drawing while the game is paused.
+
   Each flame is born white-hot at its root, cools through orange to red as it rises, swells then shrinks, and sways. A fire at a point in a prop's or a skull's own drawing space goes through `gpuFireAt`, which returns false when the layer is off, so the caller paints its 2D fire instead. The Dynamite's KABOOM puts real smoke (`gpuSmoke`: pale puffs that billow, rise and thin) where the cartoon cloud was.
 - **Glow** (Full only). A bloom pass:
   1. The 2D frame is shrunk to a quarter size.

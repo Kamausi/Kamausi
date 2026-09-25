@@ -77,11 +77,9 @@
     $("arcadeBest").textContent = played.length ? `Longest run ${clockStr(longest)}` : "";
     $("mapList").classList.toggle("arcade", pickFor !== "practice");
     if (pickFor !== "practice") { $("mapList").innerHTML = STAGES.map((S, i) => cabinetHTML(S, i)).join(""); return; }   // the Arcade: a row of cabinets (09o_arcade.js)
-    $("mapList").innerHTML = STAGES.map((S, i) => {
-      const A = arcadeRec(i), open = mapUnlocked(i), prac = pickFor === "practice";
-      if (!open) return `<button class="map-card locked" type="button" data-map="${i}" aria-disabled="true" style="--tint:${S.map.look.sky[1]}"><span class="n">Map ${i + 1}</span><b>${S.name}</b><span class="d">Reach it in Adventure to play it here</span><span class="rec"><span><i>Locked</i></span></span></button>`;
-      return `<button class="map-card" type="button" data-map="${i}" style="--tint:${S.map.look.sky[1]}"><span class="n">Map ${i + 1}</span><b>${S.name}</b><span class="d">${S.blurb}</span>`
-        + `<span class="rec">${prac ? "" : A.runs ? `<span><i>Best</i> ${fmtN(A.score)}</span><span><i>Longest</i> ${clockStr(A.secs)}</span>` : "<span><i>Not played yet</i></span>"}</span></button>`;
+    $("mapList").innerHTML = STAGES.map((S, i) => {   // (v50: Practice's list is slim: the number, a lock beside it when it's shut, the name)
+      const open = mapUnlocked(i), lock = open ? "" : `<svg class="lk" aria-label="${t("mode.locked")}"><use href="#i-lock"/></svg>`;
+      return `<button class="map-card prac${open ? "" : " locked"}" type="button" data-map="${i}"${open ? "" : ' aria-disabled="true"'} style="--tint:${S.map.look.sky[1]}"><span class="n">Map ${i + 1}${lock}</span><b>${S.name}</b></button>`;
     }).join("");
   }
   $("modePick").addEventListener("click", e => {
@@ -206,7 +204,7 @@
     $("resGrade").parentElement.classList.toggle("top", g.v >= 0.69);
     const best = game.newBest && game.score > 0, longer = arcade && r.newTime && r.secs > 0;
     $("newBest").hidden = !(best || longer || r.story);
-    $("newBest").textContent = r.story && !best ? "Morty is whole again!" : !arcade ? "A brand new record!" : best ? `New best on ${STAGES[game.map].name}!` : "Your longest run on this map!";
+    $("newBest").textContent = r.story && !best ? "Morty is whole again!" : !arcade ? "New high score" : best ? `New best on ${STAGES[game.map].name}!` : "Your longest run on this map!";
     $("resTitle").textContent = best || longer ? "" : arcade ? `Arcade · ${STAGES[game.map].name}` : titleName();
     $("resBones").textContent = r.bones;
     renderInitials();   // a cabinet's top five: your initials (09o_arcade.js)
@@ -297,7 +295,8 @@
     const f = faceFor(R.mood, T, { lx, ly, seed: 1.7 }); R.jawT = f.jawT; stepRig(R, dt);
     const sink = R.a < 1 ? sr * (1 - R.a) * 0.9 : 0;
     drawAura(cb, cx, cy + sink, sr, T, false);   // the aura's far side, behind the lettering; its near side goes over it
-    drawSkull(c, cx, cy + sink, sr, { ang: M.ang + R.tilt, a: R.a, dir: R.dir, t: T, look: cos, face: f, jaw: R.jaw });
+    if (WINGS[cos.wings]) { cb.save(); cb.translate(cx, cy + sink); cb.rotate(M.ang + R.tilt); cb.scale(sr, sr); drawBodyBehind(cb, cos, T); cb.restore(); }   // v50: his wings go behind TOSS too
+    drawSkull(c, cx, cy + sink, sr, { ang: M.ang + R.tilt, a: R.a, dir: R.dir, t: T, look: WINGS[cos.wings] ? { ...cos, wings: "none" } : cos, face: f, jaw: R.jaw });
     drawAura(c, cx, cy + sink, sr, T, true); drawHat(c, cx, cy + sink, sr, M.ang + R.tilt, T, null, 1, hatOf(cos), R.a, R.dir);
   }
   // the round is over, so the skull has left the building: X eyes, jaw hanging open, and a wisp where the rest of him was

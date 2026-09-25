@@ -12,7 +12,7 @@
     voice.quiet = game.time; voice.idleSaid = false;
     const v = aimVelocity(AX, AY);
     Object.assign(skull, { launchRing: { x: ring.x, y: ring.y, z: ring.z }, ax0: windNow(), close: false, shots: [] });   // (what the signature shots read: 07h_shots.js)
-    Object.assign(skull, { p0: { x: 0, y: START_Y, z: 0 }, v0: v, t: 0, crossed: false, resting: false, bounces: 0, ax: windNow(),
+    Object.assign(skull, { p0: { x: 0, y: START_Y, z: 0 }, v0: v, t: 0, crossed: false, resting: false, bounces: 0, ax: windNow(), tHit: false,
       spin: (1.3 + Math.abs(v.x) * 0.5) * (v.x < 0 ? -1 : 1), hang: 0, take: 0, alpha: 1, flightTime: 0, trail: [], spawn: 1, emit: 0, missed: false });
     skull.pos = { ...skull.p0 };
     game.state = "flying"; game.result = null; game.endTimer = 0; game.throws++;
@@ -212,13 +212,17 @@
       }
       if (game.throws <= 6 && game.hits <= 2) setHint(t("hint.speedsUp"));
     } else {
-      const saved = powerOn("second");   // Second Chance: this miss is on the house
-      if (saved) { usePower("second"); profile.saves++; impact(t("result.saved"), W / 2, H * 0.3, { fill: TEAL, text: CREAM, scale: 0.7, delay: 0.25, bits: false }); Sound.life(); }
+      const onTarget = !!skull.tHit;   // v50: a throw that hit a bullseye isn't a miss: no skull lost, the streak stands
+      const saved = !onTarget && powerOn("second");   // Second Chance: this miss is on the house
+      if (onTarget) game.result.target = true;
+      else if (saved) { usePower("second"); profile.saves++; impact(t("result.saved"), W / 2, H * 0.3, { fill: TEAL, text: CREAM, scale: 0.7, delay: 0.25, bits: false }); Sound.life(); }
       else if (!freeMiss() && !R.safe) game.lives--;   // (an eye poke costs nothing)   // (Practice, Curtain Call and the encore: misses are free)
-      game.streak = 0; game.perfStreak = 0; run.misses++; profile.misses++;
-      if (MISS_STAT[kind]) profile[MISS_STAT[kind]]++;
-      if (boss && !R.safe) boss.flawless = false;
-      showCombo(0);
+      if (!onTarget) {
+        game.streak = 0; game.perfStreak = 0; run.misses++; profile.misses++;
+        if (MISS_STAT[kind]) profile[MISS_STAT[kind]]++;
+        if (boss && !R.safe) boss.flawless = false;
+        showCombo(0);
+      }
       skull.missed = true;
       if (R.hit) {  // it actually hit something (the visual system already squashed it): see stars, BONK
         game.result.bonked = true; profile.bonks++;

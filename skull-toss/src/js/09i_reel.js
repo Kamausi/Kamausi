@@ -6,7 +6,7 @@
   // switch machines) flash twice in the film. A card holds the throw like any cut-scene, and a tap, Space or Enter
   // skips it. Settings → Title cards: Full (leader and cards), Short (brief cards, no leader) or Off (the small stage
   // card only).
-  const REEL_DUR = { leader: 2.4, title: 2.8, short: 1.4, intermission: 3.6, end: 4.6 };
+  const REEL_DUR = { leader: 3.5, title: 2.8, short: 1.4, intermission: 3.6, end: 4.6 };
   const reelEl = $("reelCard"), reelCv = $("reelCv");
   const reelSt = { card: null, t0: 0, shown: [], cues: [], leaderShown: false };
   const cardsMode = () => (sandbox && !sandbox.cardsOn ? "off" : settings.cards);   // (older tests expect play to start at once)
@@ -35,7 +35,7 @@
     hideStageCard(); next(0); return true;
   }
   function showReelCard(c) {
-    reelSt.card = c; reelSt.t0 = game.time; reelSt.shown.push(c.kind + (c.n ? ":" + c.n : "")); reelSt.lastN = -1;
+    reelSt.card = c; reelSt.t0 = game.time; reelSt.rotAt = null; reelEl.style.opacity = ""; reelSt.shown.push(c.kind + (c.n ? ":" + c.n : "")); reelSt.lastN = -1;
     reelEl.dataset.kind = c.kind; reelEl.hidden = false;
     $("rcK").textContent = c.k || ""; $("rcReel").textContent = c.reel || ""; $("rcTitle").textContent = c.title || ""; $("rcSub").textContent = c.sub || ""; $("rcNote").textContent = c.note || "";
     reelEl.classList.remove("in"); void reelEl.offsetWidth; reelEl.classList.add("in");
@@ -43,7 +43,7 @@
     if (c.kind === "title" && c.n) Sound.motif("map" + c.n); else Sound.toon(c.kind === "end" ? "fanfare" : c.kind === "leader" ? "tick" : "brass");   // each reel's own phrase (02e_audio_sets.js) if (c.kind === "end") mortySays("end", { priority: true });
     Telemetry.emit("reel_card", { kind: c.kind, n: c.n || 0 });
   }
-  function hideReelCard() { reelSt.card = null; reelEl.hidden = true; reelEl.classList.remove("in"); }
+  function hideReelCard() { reelSt.card = null; reelEl.hidden = true; reelEl.classList.remove("in"); reelEl.style.opacity = ""; reelSt.rotAt = null; }
   // a tap, Space or Enter: on to the next card (the throw is held until the last one is done)
   function skipReelCard() {
     if (!reelSt.card || !game.cine || game.cine.kind !== "reel") return false;
@@ -96,8 +96,12 @@
     c.restore();
   }
   // the Academy leader: grey film, a cross and two circles, the sweep going round once a second, the number in the middle
+  // the countdown: 3, 2, 1 with the sweep going round, then (v50) the print corrupts into the map: it flickers,
+  // tears into glitching strips, burns through in spreading holes that show the picture beneath, and fades away
+  const LEADER_COUNT = 2.4, LEADER_ROT = 1.1;
+  const leaderRot = t => clamp((t - LEADER_COUNT) / LEADER_ROT, 0, 1);   // 0 while it counts, then 0→1 as it corrupts
   function drawLeader(c, w, hgt, t, still) {
-    const n = Math.max(1, 3 - Math.floor(t / 0.8)), u = still ? 0 : (t % 0.8) / 0.8, cx = w / 2, cy = hgt / 2, R = Math.min(w, hgt) * 0.36;
+    const tc = Math.min(t, LEADER_COUNT - 0.001), n = Math.max(1, 3 - Math.floor(tc / 0.8)), u = still ? 0 : (tc % 0.8) / 0.8, cx = w / 2, cy = hgt / 2, R = Math.min(w, hgt) * 0.36;
     if (n !== reelSt.lastN) { reelSt.lastN = n; if (t > 0.05) Sound.toon("tick"); }
     c.fillStyle = "#8C8375"; c.fillRect(0, 0, w, hgt);
     c.fillStyle = "#6E665A"; c.beginPath(); c.moveTo(cx, cy); c.arc(cx, cy, Math.hypot(w, hgt), -Math.PI / 2, -Math.PI / 2 + u * TAU); c.closePath(); c.fill();
@@ -105,18 +109,39 @@
     c.lineWidth = 4; for (const k of [1, 0.82]) { c.beginPath(); c.arc(cx, cy, R * k, 0, TAU); c.stroke(); }
     c.font = `${R * 1.2}px ${NUMFONT}`; c.textAlign = "center"; c.textBaseline = "middle"; c.lineWidth = 8; c.strokeStyle = INK; c.strokeText(String(n), cx, cy + R * 0.06);
     c.fillStyle = "#F2E7C9"; c.fillText(String(n), cx, cy + R * 0.06);
+    const k = leaderRot(t);
+    if (k <= 0) { reelEl.style.opacity = ""; return; }
+    if (reelSt.rotAt == null) { reelSt.rotAt = 1; Sound.toon("hiss"); }
+    reelEl.style.opacity = String(1 - k * k);   // the fade
+    if (still) return;
+    const rnd = mulberry32(((t * 24) | 0) * 7919 + 13), cv = c.canvas, dpr = cv.width / w;
+    if (rnd() < 0.35 + k * 0.4) { c.fillStyle = rnd() < 0.5 ? `rgba(255,250,235,${0.25 + rnd() * 0.4})` : `rgba(10,8,6,${0.3 + rnd() * 0.4})`; c.fillRect(0, 0, w, hgt); }   // flicker
+    c.save(); c.setTransform(1, 0, 0, 1, 0, 0);   // glitch: strips of the frame torn sideways, one channel slipping
+    for (let i = 0, m = 3 + ((k * 9) | 0); i < m; i++) { const y = rnd() * cv.height, hh = (4 + rnd() * 40 * (0.5 + k)) * dpr, dx = (rnd() - 0.5) * 80 * dpr * (0.4 + k); c.drawImage(cv, 0, y, cv.width, hh, dx, y, cv.width, hh); }
+    c.globalCompositeOperation = "lighter"; c.globalAlpha = 0.35; c.drawImage(cv, (6 + 10 * k) * dpr, 0); c.restore();
+    c.save();   // burn: holes open and spread, charred and glowing at the edge, the picture showing through
+    const holes = [[0.3, 0.4, 0], [0.72, 0.62, 0.12], [0.5, 0.2, 0.25], [0.18, 0.78, 0.35], [0.85, 0.25, 0.45]];
+    for (const [hx, hy, at] of holes) {
+      const g = clamp((k - at) / (1 - at), 0, 1); if (g <= 0) continue;
+      const x = hx * w, y = hy * hgt, r = g * g * Math.hypot(w, hgt) * 0.55 + 4;
+      const gr = c.createRadialGradient(x, y, r * 0.7, x, y, r * 1.18); gr.addColorStop(0, "rgba(20,8,2,.95)"); gr.addColorStop(0.35, "rgba(255,120,30,.9)"); gr.addColorStop(0.6, "rgba(90,40,10,.6)"); gr.addColorStop(1, "rgba(60,30,10,0)");
+      c.globalCompositeOperation = "source-over"; c.fillStyle = gr; c.beginPath(); c.arc(x, y, r * 1.18, 0, TAU); c.fill();
+      c.globalCompositeOperation = "destination-out"; c.beginPath();
+      for (let a = 0; a <= 24; a++) { const an = (a / 24) * TAU, rr2 = r * (0.8 + 0.12 * Math.sin(an * 5 + at * 20) + 0.06 * Math.sin(an * 11 + t * 3)); a ? c.lineTo(x + Math.cos(an) * rr2, y + Math.sin(an) * rr2) : c.moveTo(x + Math.cos(an) * rr2, y + Math.sin(an) * rr2); }
+      c.closePath(); c.fill();
+    }
+    c.restore();
   }
 
   // ── where the reel's cards come in
-  function introReel(mode, map) {   // a run starts: the leader (once a session) and Reel One's card (Story), or the map's card (Arcade, Practice)
-    const leader = Replay.play ? !!Replay.play.R.leader : mode === "story" && !reelSt.leaderShown && cardsMode() === "full";   // (a replay shows it if the run did)
+  function introReel(mode, map) {   // a run starts: Reel One's card and the countdown (Story), or the map's card (Arcade, Practice)
+    const leader = Replay.play ? !!Replay.play.R.leader : mode === "story" && cardsMode() === "full";   // (v50: every Adventure run; a replay shows it if the run did)
     reelSt.introLeader = leader;
-    if (leader) reelSt.leaderShown = true;
     const list = mode !== "story" ? [titleCard(map + 1, mode)] : [titleCard(1)].concat(leader ? [{ kind: "leader" }] : []);   // (v49: the map's card, then the countdown into play)
     reelCards(list, () => { setHint(t("hint.start")); mortySays(`map.${game.stage}`, { priority: true }); });
   }
   function nextReel() {   // a map is clear and the next one is set: its card (after the intermission, halfway)
-    const list = (game.stage === MAP_COUNT / 2 + 1 ? [intermissionCard()] : []).concat(titleCard(game.stage));
+    const list = (game.stage === MAP_COUNT / 2 + 1 ? [intermissionCard()] : []).concat(titleCard(game.stage), cardsMode() === "full" ? [{ kind: "leader" }] : []);   // (v50: and the countdown into each map)
     reelCards(list, () => { updateHud(); mortySays(`map.${game.stage}`, { priority: true }); });
   }
   function endReel(done) {   // the last boss is down: THE END, then the iris closes on Morty and opens on the headstone

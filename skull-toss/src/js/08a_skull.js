@@ -67,6 +67,7 @@
   const ART_K = 2.2 / (ART_BOT - ART_TOP), ART_CX = 500, ART_CY = (ART_TOP + ART_BOT) / 2;
   const SKULL_BOTTOM = (ART_BOT - ART_CY) * ART_K;
   const toArt = c => { c.scale(ART_K, ART_K); c.translate(-ART_CX, -ART_CY); };
+  const UPPER_TOP = (BOX.upper.y0 - ART_CY) * ART_K, NOSE_BOT = (artBox(shapeOf("nose", false)).y1 - ART_CY) * ART_K;   // (v50: a moustache sits between the two)
   const SOCK = ["socket-left", "socket-right"].map(n => {
     const p = shapeOf(n, true), b = artBox(p), cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2;
     return { path: p, x: (cx - ART_CX) * ART_K, y: (cy - ART_CY) * ART_K, rx: ((b.x1 - b.x0) / 2) * ART_K, ry: ((b.y1 - b.y0) / 2) * ART_K };
@@ -140,10 +141,14 @@
     if (S.jawTop) S.jawTop(c, t, dropA * ART_K, pal, (hinge + (BOX.jaw.y1 - hinge) * js[1] + dropA - ART_CY) * ART_K);
     if (pal.crack && !flat) { c.strokeStyle = pal.crack; c.lineWidth = 0.045; c.beginPath(); c.moveTo(0.22, -1.02); c.lineTo(0.3, -0.84); c.lineTo(0.2, -0.72); c.lineTo(0.32, -0.6); c.moveTo(0.3, -0.84); c.lineTo(0.46, -0.84); c.stroke(); }
     if (S.top) S.top(c, t, pal, f);
-    drawBodyFront(c, look, t, dropA * ART_K);   // hair, facial hair, the wizard's beard (08i_body.js)
+    drawBodyFront(c, look, t, dropA * ART_K, faceSocks(f));   // hair, glasses, masks, facial hair (08i_body.js)
     c.restore();
   }
 
+  // where the sockets are with this face (they swell from their inner edges): glasses and masks follow them (v50)
+  function faceSocks(f) {
+    return SOCK.map((s, i) => { const k = i ? f.sockR : f.sockL, kx = 1 + ((k || 1) - 1) * 0.55, px = s.x + (i ? -1 : 1) * s.rx * 0.9; return { ...s, x: px + (s.x - px) * kx, rx: s.rx * kx, ry: s.ry * (k || 1) }; });
+  }
   // ───────────────────────── sockets, lids, brows, pupils ─────────────────────────
   function drawSockets(c, look, f, pal, t, S) {
     const eyes = look.eyes || "pie", sleepyLid = eyes === "sleepy" ? 0.42 : 0, U = c.getTransform();
@@ -219,7 +224,18 @@
   function drawTeeth(c, name, id, pal, minW) {
     if (id === "toothless") return;
     const upper = name === "teeth-upper", edges = TEETH[upper ? "upper" : "lower"], box = upper ? BOX.upper : BOX.lower, tooth = pal.tooth || pal.base;
-    const draw = (fillCol) => { for (const p of ART[name]) { if (p.filled) { c.fillStyle = p.dark ? pal.socket : fillCol || tooth; c.fill(p.path); } if (p.stroked) { c.strokeStyle = pal.line; c.lineWidth = Math.max(p.sw, minW * 0.8); c.stroke(p.path); } } };
+    // v50: enamel — each tooth shaded from the gum to the biting edge, with a glint, under its outline
+    const enamel = path => {
+      if (pal.flat) return;
+      c.save(); c.clip(path);
+      const g = c.createLinearGradient(0, box.y0, 0, box.y1), gum = "rgba(110,86,52,.3)", edge = "rgba(255,255,255,.38)";
+      g.addColorStop(0, upper ? gum : edge); g.addColorStop(0.55, "rgba(255,255,255,0)"); g.addColorStop(1, upper ? edge : gum);
+      c.fillStyle = g; c.fillRect(box.x0 - 30, box.y0 - 30, box.x1 - box.x0 + 60, box.y1 - box.y0 + 60);
+      c.fillStyle = "rgba(255,255,255,.5)"; const hgt = box.y1 - box.y0;
+      for (let i = 0; i < edges.length - 1; i++) { const w = edges[i + 1] - edges[i]; if (w < 12) continue; c.beginPath(); c.ellipse(edges[i] + w * 0.32, box.y0 + hgt * (upper ? 0.62 : 0.38), w * 0.1, hgt * 0.17, -0.2, 0, TAU); c.fill(); }
+      c.restore();
+    };
+    const draw = (fillCol) => { for (const p of ART[name]) { if (p.filled) { c.fillStyle = p.dark ? pal.socket : fillCol || tooth; c.fill(p.path); if (!p.dark) enamel(p.path); } if (p.stroked) { c.strokeStyle = pal.line; c.lineWidth = Math.max(p.sw, minW * 0.8); c.stroke(p.path); } } };
     const seg = (i, fn) => { c.save(); c.beginPath(); c.rect(edges[i] - 5, 0, edges[i + 1] - edges[i] + 10, 1000); c.clip(); fn(); c.restore(); };
     const n = edges.length - 1;
     if (TEETH_X[id] && TEETH_X[id](c, { draw, seg, n, edges, box, upper, pal, minW, tooth, mid: (box.y0 + box.y1) / 2 })) return;

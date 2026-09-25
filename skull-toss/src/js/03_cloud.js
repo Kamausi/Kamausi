@@ -62,35 +62,57 @@
   // (the save, the board, the Souls wallet) is that account's. Signing out goes back to a fresh anonymous account;
   // this device keeps its copy. Needs the Google provider switched on in the Firebase console
   // (Authentication → Sign-in method → Google) and the site's domain in its authorised domains.
+  // v50: Apple, Facebook and a Kamausi account (an email and a password, the developer's own sign-in) link the same
+  // way. Each needs its provider switched on in the Firebase console (Apple and Facebook need their developer apps).
+  const PROVIDERS = { "google.com": "Google", "apple.com": "Apple", "facebook.com": "Facebook", password: "Kamausi" };
   const Account = {
     busy: false, error: "",
     auth() { return Backend.kind === "firebase" && Backend.app && Backend.app.auth ? Backend.app.auth() : null; },
     available() { return !!this.auth(); },
-    google() { const a = this.auth(), u = a && a.currentUser; return u && !u.isAnonymous && (u.providerData || []).some(p => p.providerId === "google.com") ? u : null; },
-    async signIn() {
+    user() { const a = this.auth(), u = a && a.currentUser; return u && !u.isAnonymous ? u : null; },
+    linked(id) { const u = this.user(); return u && (u.providerData || []).some(p => p.providerId === id) ? u : null; },
+    google() { return this.linked("google.com"); },
+    provider(id) {
+      const fb = window.firebase;
+      if (id === "google.com") { const p = new fb.auth.GoogleAuthProvider(); p.setCustomParameters({ prompt: "select_account" }); return p; }
+      if (id === "facebook.com") return new fb.auth.FacebookAuthProvider();
+      if (id === "apple.com") { const p = new fb.auth.OAuthProvider("apple.com"); p.addScope("email"); p.addScope("name"); return p; }
+      return null;
+    },
+    async signIn(id = "google.com", email = "", pass = "", create = false) {
       const auth = this.auth(); if (!auth || this.busy) return;
-      const fb = window.firebase, provider = new fb.auth.GoogleAuthProvider(); provider.setCustomParameters({ prompt: "select_account" });
       this.busy = true; this.error = ""; renderAccount();
       try {
-        const u = auth.currentUser;
-        if (u && u.isAnonymous) {
-          try { await u.linkWithPopup(provider); }   // same id: nothing moves, the save simply gains a way back in
-          catch (e) {
-            if (e && e.code === "auth/credential-already-in-use" && e.credential) { await Cloud.push(); await auth.signInWithCredential(e.credential); await this.adopt(); return; }
-            throw e;
-          }
-        } else await auth.signInWithPopup(provider);
+        const u = auth.currentUser, fb = window.firebase;
+        if (id === "password") {
+          const cred = fb.auth.EmailAuthProvider.credential(email, pass);
+          if (u && u.isAnonymous && create) await u.linkWithCredential(cred);   // a new account: this save becomes it
+          else if (u && u.isAnonymous) { try { await u.linkWithCredential(cred); } catch (e) { if (e && (e.code === "auth/email-already-in-use" || e.code === "auth/credential-already-in-use")) { await Cloud.push(); await auth.signInWithEmailAndPassword(email, pass); await this.adopt(); return; } throw e; } }
+          else await auth.signInWithEmailAndPassword(email, pass);
+        } else {
+          const provider = this.provider(id);
+          if (u && u.isAnonymous) {
+            try { await u.linkWithPopup(provider); }   // same id: nothing moves, the save simply gains a way back in
+            catch (e) {
+              if (e && e.code === "auth/credential-already-in-use" && e.credential) { await Cloud.push(); await auth.signInWithCredential(e.credential); await this.adopt(); return; }
+              throw e;
+            }
+          } else if (u) await u.linkWithPopup(provider);   // already signed in another way: add this one too
+          else await auth.signInWithPopup(provider);
+        }
         if (auth.currentUser) await auth.currentUser.reload().catch(() => {});
-        const g = this.google(); if (g && Cloud.me) { Cloud.me.name = g.displayName || g.email || ""; Cloud.me.avatarUrl = g.photoURL || ""; }
+        const g = this.user(); if (g && Cloud.me) { Cloud.me.name = g.displayName || g.email || ""; Cloud.me.avatarUrl = g.photoURL || ""; }
         if (g && !profile.name && g.displayName) { profile.name = g.displayName.split(" ")[0].slice(0, 16); persist(); }
-        toast(`<b>Signed in with Google</b> · your progress now follows you`); Sound.ui("claim"); Telemetry.emit("account", { how: "google" });
+        toast(`<b>Signed in with ${PROVIDERS[id]}</b> · your progress now follows you`); Sound.ui("claim"); Telemetry.emit("account", { how: id.split(".")[0] });
+        const box = $("emailBox"); if (box) box.hidden = true;
       } catch (e) {
         const code = (e && e.code) || "";
-        this.error = code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request" ? "" : code === "auth/operation-not-allowed" ? t("acct.notEnabled") : code === "auth/unauthorized-domain" ? t("acct.domain") : code === "auth/popup-blocked" ? t("acct.popup") : t("acct.failed");
+        this.error = code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request" ? "" : code === "auth/operation-not-allowed" ? t("acct.notEnabled", { who: PROVIDERS[id] }) : code === "auth/unauthorized-domain" ? t("acct.domain") : code === "auth/popup-blocked" ? t("acct.popup")
+          : code === "auth/wrong-password" || code === "auth/invalid-credential" || code === "auth/user-not-found" || code === "auth/invalid-login-credentials" ? t("acct.badLogin") : code === "auth/weak-password" ? t("acct.weak") : code === "auth/invalid-email" ? t("acct.badEmail") : t("acct.failed");
       }
       this.busy = false; renderAccount(); renderSave();
     },
-    // the Google account already had a save: this device's progress goes into it, then a clean start as that account
+    // the account already had a save: this device's progress goes into it, then a clean start as that account
     async adopt() {
       const auth = this.auth(), u = auth.currentUser;
       try {
@@ -109,13 +131,21 @@
     }
   };
   function renderAccount() {
-    const g = Account.google(), ok = Account.available();
-    for (const btn of document.querySelectorAll(".google-btn")) {
+    const u = Account.user(), ok = Account.available();
+    for (const btn of document.querySelectorAll(".google-btn, .link-btn")) {
+      const id = btn.dataset.provider || "google.com", on = !!Account.linked(id);
       btn.disabled = Account.busy || (!ok && Cloud.state !== "connecting");
-      const lbl = btn.querySelector(".g-lbl"); if (lbl) lbl.textContent = Account.busy ? t("acct.wait") : g ? t("acct.signOut") : t("acct.signIn");
-      btn.classList.toggle("out", !!g);
+      const lbl = btn.querySelector(".g-lbl"); if (lbl) lbl.textContent = Account.busy ? t("acct.wait") : id === "google.com" && on ? t("acct.signOut") : on ? t("acct.linked", { who: PROVIDERS[id] }) : id === "google.com" ? t("acct.signIn") : id === "password" ? t("acct.email") : t("acct.with", { who: PROVIDERS[id] });
+      btn.classList.toggle("out", on);
     }
     const note = $("accountNote");
-    if (note) note.textContent = Account.error || (g ? t("acct.as", { who: g.email || g.displayName || "Google" }) : ok ? t("acct.why") : Cloud.state === "connecting" ? t("acct.connecting") : t("acct.offline"));
+    if (note) note.textContent = Account.error || (u ? t("acct.as", { who: u.email || u.displayName || "you" }) : ok ? t("acct.why") : Cloud.state === "connecting" ? t("acct.connecting") : t("acct.offline"));
   }
-  document.addEventListener("click", e => { const b = e.target.closest(".google-btn"); if (!b || b.disabled) return; if (Account.google()) Account.signOut(); else Account.signIn(); });
+  document.addEventListener("click", e => {
+    const b = e.target.closest(".google-btn, .link-btn"); if (!b || b.disabled) return;
+    const id = b.dataset.provider || "google.com";
+    if (id === "password") { const box = $("emailBox"); if (Account.linked("password")) Account.signOut(); else if (box) { box.hidden = !box.hidden; if (!box.hidden) $("emailIn").focus(); } return; }
+    if (Account.linked(id)) { if (id === "google.com") Account.signOut(); return; }
+    Account.signIn(id);
+  });
+  for (const [id, create] of [["emailGo", false], ["emailNew", true]]) { const b = document.getElementById(id); if (b) b.addEventListener("click", () => { const em = $("emailIn").value.trim(), pw = $("passIn").value; if (!em || pw.length < 6) { Account.error = t("acct.fill"); renderAccount(); return; } Account.signIn("password", em, pw, create); }); }

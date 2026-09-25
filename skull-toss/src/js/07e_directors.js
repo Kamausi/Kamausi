@@ -126,7 +126,7 @@
     renderWind(); obstaclesReset();
   }
   const newBalloon = y => ({ kind: "balloon", x: rrIn(-2.2, 2.2), y, z: rrIn(2.4, 4.8), vy: rrIn(0.28, 0.42), col: ["#A94332", "#C49A42", "#356B68", "#F2E7C9"][(runRand() * 4) | 0], r: 0.24 });
-  const windNow = () => (HZ.kind === "wind" && hazardsAllowed() ? HZ.wind : 0);   // m/s² across the throw (positive pushes right)
+  const windNow = () => (HZ.kind === "wind" && (hazardsAllowed() || game.mode === "gale") ? HZ.wind : 0);   // (v50: Gale Force's own gale)   // m/s² across the throw (positive pushes right)
   // the pendulum: a pivot high over the lane, swinging across it; its bob is what hits
   const PEND = { x: 0, y: 5.4, z: 3.1, L: 3.1, A: 0.86, r: 0.32 };
   function pendPeriod() { return 2.7 / tierNow().speed; }
@@ -218,15 +218,15 @@
       }
       if (T.corner == null && (!game.result || !game.result.make)) continue;   // (the Gallery's targets behind the ring still want a make first)
       if (T.type === "runaway" && d < 1.2 && !T.fled) { T.fled = true; T.flee = (T.flee || 0) + (P.x > s.pos.x ? 0.7 : -0.7); }   // it sees the skull coming and scuttles
-      if (d <= SKULL_R + tgR(T)) hitTarget(T);
+      if (d <= SKULL_R + tgR(T)) { if (T.corner != null && !game.result) skull.tHit = true; hitTarget(T); }
     }
   }
   function clearDirectors() { targets.length = 0; HZ.list = HZ.list.filter(h => h.kind === "balloon"); HZ.fogT = 0; HZ.since = 0; }
-  function directorsAfterThrow() { refillTargets(); hazardsAfterThrow(); }
+  function directorsAfterThrow() { if (!game.result || game.result.make) refillTargets(); else for (let i = targets.length - 1; i >= 0; i--) if (targets[i].pop) targets.splice(i, 1); hazardsAfterThrow(); }   // (v50: new bullseyes only after a make, so hitting them for free can't be farmed)
   // the wind's HUD sign: which way and how hard (shown only where the wind blows)
   function renderWind() {
     const el = $("wind"); if (!el) return;
-    const on = HZ.kind === "wind" && game.state !== "title" && hazardsAllowed(); el.hidden = !on; if (!on) return;
+    const on = HZ.kind === "wind" && game.state !== "title" && (hazardsAllowed() || game.mode === "gale"); el.hidden = !on; if (!on) return;
     const w = HZ.wind, n = Math.min(3, Math.ceil(Math.abs(w) / 0.6));
     el.querySelector(".arr").textContent = w === 0 ? "·" : (w > 0 ? "→" : "←").repeat(Math.max(1, n));
     el.querySelector("b").textContent = Math.abs(w).toFixed(1);

@@ -38,6 +38,10 @@ PC = root / "platform.config.json"
 PLAT = json.loads(PC.read_text()) if PC.exists() else {}
 PLAT["serviceWorker"] = "--pwa" in sys.argv
 js = "  const PLATFORM_CONFIG = " + json.dumps(PLAT) + ";\n" + js
+# promo codes (v50, src/promo.json): only each code's salted hash ships (tools/promo.py makes them)
+PR = root / "promo.json"
+PROMO = [p for p in (json.loads(PR.read_text()) if PR.exists() else []) if isinstance(p, dict) and re.fullmatch(r"[0-9a-f]{6,16}", str(p.get("hash", "")))]
+js = "  const PROMO_CODES = " + json.dumps(PROMO, separators=(",", ":")) + ";\n" + js
 # the build's number (src/version.json): the live config can ask anything older to update (build.min)
 VERSION = json.loads((root / "version.json").read_text())
 js = f"  const GAME_BUILD = {int(VERSION['build'])}, GAME_VERSION = {json.dumps(VERSION['name'])};\n" + js

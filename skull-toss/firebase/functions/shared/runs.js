@@ -56,6 +56,8 @@
       const y = d.getUTCFullYear(), jan4 = new Date(Date.UTC(y, 0, 4)), wk = 1 + Math.round(((d - jan4) / 864e5 - 3 + ((jan4.getUTCDay() + 6) % 7)) / 7);
       return `${y}-W${String(wk).padStart(2, "0")}`;
     }
-    return { LIMITS: L, MODES, clean, cleanName, check, ceiling, weekOf };
+    // v50: the day's and the month's boards (UTC)
+    const dayOf = ms => new Date(ms).toISOString().slice(0, 10), monthOf = ms => new Date(ms).toISOString().slice(0, 7);
+    return { LIMITS: L, MODES, clean, cleanName, check, ceiling, weekOf, dayOf, monthOf };
   })();
   if (typeof module !== "undefined" && module.exports) module.exports = Runs;

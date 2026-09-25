@@ -7,7 +7,7 @@
     sheet = name; cancelAim();
     if (!sheetOpener || !sheetOpener.isConnected) sheetOpener = document.activeElement;
     $("sheet-" + name).hidden = false; $("sheetScrim").hidden = false;
-    renderSheet(name); Sound.ui("open");
+    renderSheet(name, back); Sound.ui("open");
     if (name === "store") Sound.musicScene("shop", true);   // the Curio Cart has its own tune
     $("sheet-" + name).querySelector("[data-back]").focus({ preventScroll: true });
   }
@@ -17,17 +17,17 @@
     const was = sheet, SHEET_LISTS = { achievements: ["achList"], customize: ["shopGrid"], store: ["dealGrid", "exclGrid"], souls: ["soulsGrid"], profile: ["stats"] };
     $("sheet-" + was).hidden = true; sheet = null;
     if (!swap) $("sheetScrim").hidden = true;
-    disarm(); $("codeBox").hidden = true;
+    disarm(); $("codeBox").hidden = true; $("profEditBox").hidden = true; $("allStats").open = false;
     const n = $("prof-name"); if (document.activeElement === n) n.blur();
     if (was === "customize") { shop.sel = null; $("sheet-customize").classList.remove("trying"); $("tryClose").hidden = true; }   // (v45: what's new stays badged until you look at it, or clear the badges)
-    if (was === "board") Board.unwatch();
+    if (was === "board") { Board.unwatch(); $("boardTop").hidden = true; $("boardPerMenu").hidden = true; }
     for (const id of SHEET_LISTS[was] || []) $(id).textContent = "";   // (v45: long lists are drawn when their sheet opens, and let go when it shuts: the page stays small)
     if (was === "store") { cart.sel = null; Sound.musicScene("shop", false); }
     if (sound) Sound.ui("close");
     if (!swap) { const o = sheetOpener; sheetOpener = null; if (o && o.isConnected && o.focus) o.focus({ preventScroll: true }); }
   }
-  function renderSheet(name) {
-    if (name === "settings") renderSettings();
+  function renderSheet(name, back = false) {
+    if (name === "settings") { if (!back) showSetSec(null); renderSettings(); }   // (v50: a fresh visit starts at the categories; 09p_general.js)
     else if (name === "profile") { renderProfile(); renderSave(); }
     else if (name === "customize") renderShop();
     else if (name === "challenges") renderChallenges();
@@ -156,9 +156,17 @@
   }
   $("picGrid").addEventListener("click", e => { const b = e.target.closest("[data-face]"); if (!b) return; profile.pic = { face: b.dataset.face, frame: b.dataset.frame }; persist(800); renderPicPick(); Sound.ui("tick"); });
   $("prof-bio").addEventListener("input", e => { profile.bio = e.target.value.replace(/[<>]/g, "").slice(0, 120); persist(2500); });
+  function editProfile(on) {
+    $("profEditBox").hidden = !on; $("profEdit").setAttribute("aria-expanded", String(on));
+    if (on) { renderPicPick(); $("prof-name").focus({ preventScroll: true }); } else renderProfile();
+  }
+  $("profEdit").addEventListener("click", () => { editProfile($("profEditBox").hidden); Sound.ui("tick"); });
+  $("profDone").addEventListener("click", () => { editProfile(false); persist(300); Sound.ui("equip"); });
   function renderProfile() {
     const n = $("prof-name"); if (document.activeElement !== n) n.value = profile.name;
     const bio = $("prof-bio"); if (document.activeElement !== bio) bio.value = profile.bio || ""; renderPicPick();
+    $("profNameShow").textContent = profile.name || t("profile.nameless"); $("profBioShow").textContent = profile.bio || t("profile.noBio");   // (v50: name and bio beside the picture; the pencil edits them)
+    $("profBioShow").classList.toggle("empty", !profile.bio); $("profFragN").textContent = `${profile.fragments.length}/${MAP_COUNT}`;
     const r = rankFor(profile.makes);
     $("rankName").textContent = r.name;
     $("profTitle").textContent = titleName();
@@ -193,9 +201,9 @@
       + `<div class="bar"><i style="width:${top ? 100 : Math.round((100 * (P.xp - a)) / Math.max(1, b - a))}%"></i></div><div class="sub">${top ? t("career.max") : t("career.next", { xp: fmtN(b - P.xp), n: L + 1 })} · ${fmtN(P.xp)} XP</div>`
       + `<div class="chips">${chip(t("career.chip.best"), fmtN(P.bestScore))}${chip(t("career.chip.story"), P.storyClears)}${chip(t("career.chip.pieces"), `${P.fragments.length}/${MAP_COUNT}`)}`
       + `${chip(t("codex.cat.shot"), `${SHOT_IDS.filter(id => P.shots[id]).length}/${SHOT_IDS.length}`)}${chip(t("career.chip.codex"), `${codexCount()}/${codexTotal()}`)}${chip(t("codex.cat.secret"), `${P.secrets.length}/${SECRETS.length}`)}</div></div>`;
-    // the last ten runs
+    // the last five runs (v50)
     const ago = ms => { const m = Math.round((Date.now() - ms) / 60000); return m < 1 ? t("career.now") : m < 60 ? t("career.mins", { n: m }) : m < 1440 ? t("career.hours", { n: Math.round(m / 60) }) : t("career.days", { n: Math.round(m / 1440) }); };
-    $("history").innerHTML = (P.history || []).length ? `<h3 class="stat-h">${t("career.recent")}</h3><ol class="runs">${P.history.map(h => `<li class="${h.won ? "won" : ""}"><b>${fmtN(h.score)}</b><span>${t(`mode.${h.mode}.name`)} · ${STAGES[h.mode === "story" ? Math.min(h.stage, MAP_COUNT) - 1 : h.map] ? STAGES[h.mode === "story" ? Math.min(h.stage, MAP_COUNT) - 1 : h.map].name : ""}</span><span>${t("career.hits", { n: h.hits })} · +${h.xp} XP</span><i>${ago(h.at)}</i></li>`).join("")}</ol>` : "";
+    $("history").innerHTML = (P.history || []).length ? `<h3 class="stat-h">${t("career.recent")}</h3><ol class="runs">${P.history.slice(0, 5).map(h => `<li class="${h.won ? "won" : ""}"><b>${fmtN(h.score)}</b><span>${t(`mode.${h.mode}.name`)} · ${STAGES[h.mode === "story" ? Math.min(h.stage, MAP_COUNT) - 1 : h.map] ? STAGES[h.mode === "story" ? Math.min(h.stage, MAP_COUNT) - 1 : h.map].name : ""}</span><span>${t("career.hits", { n: h.hits })} · +${h.xp} XP</span><i>${ago(h.at)}</i></li>`).join("")}</ol>` : "";
     $("stats").innerHTML = groups.map(([h, cls, rows]) => `<h3 class="stat-h ${cls}">${h}</h3><dl class="stats">${rows.map(([k, v]) => `<div class="stat"><dt>${k}</dt><dd>${v}</dd></div>`).join("")}</dl>`).join("")
       + `<h3 class="stat-h">${t("shot.heading")} <span class="n">${SHOT_IDS.filter(id => P.shots[id]).length}/${SHOT_IDS.length}</span></h3><dl class="stats shots">${shotRows}</dl>`;
   }

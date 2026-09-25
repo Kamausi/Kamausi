@@ -155,7 +155,7 @@
 .reelcard{position:fixed;inset:0;z-index:3;display:grid;place-items:center;padding:calc(env(safe-area-inset-top,0px) + 28px) 28px calc(env(safe-area-inset-bottom,0px) + 28px);
   background:radial-gradient(ellipse at 50% 42%,#2A3448 0%,#141925 70%,#0C0F16 100%);text-align:center;pointer-events:auto;cursor:pointer}
 .reelcard canvas{position:absolute;inset:0;width:100%;height:100%}
-.reelcard[data-kind="leader"]{background:#8C8375}
+.reelcard[data-kind="leader"]{background:transparent}   /* (v50: the canvas paints the leader, so its burn holes show the map beneath) */
 .reelcard[data-kind="leader"] .rc-text{display:none}
 .reelcard.in .rc-text{animation:rcin .7s var(--ease) both}
 @keyframes rcin{0%{opacity:0;transform:scale(1.06)}100%{opacity:1;transform:none}}
@@ -222,11 +222,11 @@ html.hc .rc-text{text-shadow:0 0 2px var(--ink),0 0 4px var(--ink)}
 .stagecard b{font-size:clamp(19px,5.2vw,28px);text-shadow:0 2px 0 var(--ink),var(--outline)}
 .stagecard .s{margin-top:3px;font-size:10.5px;line-height:1.25}
 .stagecard.boss{background:rgba(52,20,20,.68)}
-.reelcard[data-kind="title"],.reelcard[data-kind="intermission"]{inset:auto;left:50%;top:42%;transform:translate(-50%,-50%);width:min(350px,88vw);padding:52px 30px 44px;
-  border-radius:14px;border:2px solid rgba(242,231,201,.3);background:rgba(16,20,30,.7);box-shadow:0 12px 30px rgba(0,0,0,.4)}
-.reelcard[data-kind="title"] .rc-t,.reelcard[data-kind="intermission"] .rc-t{font-size:clamp(24px,6.6vw,36px);text-shadow:var(--outline),0 3px 0 var(--ink)}
-.reelcard[data-kind="title"] .rc-reel,.reelcard[data-kind="intermission"] .rc-reel{font-size:16px}
-.reelcard[data-kind="title"] .rc-s,.reelcard[data-kind="intermission"] .rc-s{font-size:12px}
-.reelcard[data-kind="title"] .rc-n,.reelcard[data-kind="intermission"] .rc-n{font-size:10.5px}
-.reelcard[data-kind="title"] .rc-text,.reelcard[data-kind="intermission"] .rc-text{gap:5px}
-.reelcard[data-kind="title"] .rc-skip,.reelcard[data-kind="intermission"] .rc-skip{bottom:9px;font-size:9px}
+/* v50: the reels' title cards are full size again, a touch see-through over the picture */
+.reelcard[data-kind="title"],.reelcard[data-kind="intermission"]{background:radial-gradient(ellipse at 50% 42%,rgba(42,52,72,.9) 0%,rgba(20,25,37,.92) 70%,rgba(12,15,22,.94) 100%)}
+
+/* v50: the press crack runs down the button's left edge, clear of its words; the hover skull is for a mouse only,
+   so a long press on a phone doesn't pop it up (nor the browser's own callout) */
+.btn::after{background-position:left center;background-size:22% 100%}
+@media (hover:none),(pointer:coarse){.btn:hover .toss,.btn:focus-visible .toss,.btn:active .toss{opacity:0!important;transform:translateY(14px) scale(.4)!important}}
+.btn,.chip-btn,.ghost-btn,button{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}

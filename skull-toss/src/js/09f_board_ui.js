@@ -46,13 +46,15 @@
     if (ev === "keydown" && e.key !== "Enter" && e.key !== " ") return;
     const li = e.target.closest("li"); if (!li || !li._row) return; if (ev === "keydown") e.preventDefault(); openPlayerCard(li._row);
   });
+  const PER_LABEL = { day: "ui.daily", week: "ui.weekly", month: "ui.monthly" };
   function renderBoard() {
     const week = Board.tab === "week", live = Board.tab === "live" || week, list = $("boardList"), empty = $("boardEmpty"), tip = $("boardTip"), mode = Board.mode;
     const modes = $("boardModes"); if (!modes.children.length) for (const m of BOARD_MODES) { const b = document.createElement("button"); b.type = "button"; b.setAttribute("role", "tab"); b.dataset.mode = m; b.textContent = BOARD_LABEL(m); modes.appendChild(b); }
     for (const b of modes.children) b.setAttribute("aria-selected", String(b.dataset.mode === mode));
     const weekTab = $("boardTabs").querySelector('[data-tab="week"]'); weekTab.disabled = mode !== "story"; if (week && mode !== "story") { Board.tab = "live"; return renderBoard(); }
+    $("boardPerLbl").textContent = t(PER_LABEL[Board.period] || "ui.weekly");
     if (live && Board.db) { if (week) Board.watchWeek(); else if (mode === "story") Board.watch(); else Board.watchMode(mode); }
-    for (const b of $("boardTabs").querySelectorAll("button")) b.setAttribute("aria-selected", String(b.dataset.tab === Board.tab));
+    for (const b of $("boardTabs").querySelectorAll("[data-tab]")) b.setAttribute("aria-selected", String(b.dataset.tab === Board.tab));
     const online = !!Board.db;
     Presence.refresh(); $("boardOnline").hidden = Presence.count == null; if (Presence.count != null) $("boardOnlineN").textContent = Presence.count <= 1 ? t("board.online1") : t("board.online", { n: fmtN(Presence.count) });
     $("boardOpt").hidden = !live || !online;
@@ -60,9 +62,10 @@
     $("set-board").disabled = Board.state === "readonly";
     $("boardNote").textContent = Board.state === "readonly" ? "You can see the board, but this page doesn't let you post to it" : "Shows the name on your headstone, your best score, your skull and your card";
     list.textContent = "";
-    const wk = Runs.weekOf(Date.now()), meId = Board.me && Board.me.id;
-    const rows = live && online ? (week ? Board.weekRows : mode === "story" ? Board.rows : Board.modeRows[mode] || []) : week ? Board.local(mode).filter(r => Runs.weekOf(r.at || 0) === wk) : Board.local(mode);
-    rows.slice(0, 50).forEach((r, i) => list.appendChild(boardRow(r, i + 1, live && online && r.id === meId)));
+    const perOf = { day: Runs.dayOf, week: Runs.weekOf, month: Runs.monthOf }[Board.period] || Runs.weekOf, wk = perOf(Date.now()), meId = Board.me && Board.me.id;
+    const rows = live && online ? (week ? Board.weekRows : mode === "story" ? Board.rows : Board.modeRows[mode] || []) : week ? Board.local(mode).filter(r => perOf(r.at || 0) === wk) : Board.local(mode);
+    rows.slice(0, 10).forEach((r, i) => list.appendChild(boardRow(r, i + 1, live && online && r.id === meId)));   // (v50: the top ten fit; See more opens the top hundred)
+    Board.shown = rows; $("boardMore").hidden = rows.length <= 10;
     // your rival: the headstone just above yours
     const mine = rows.findIndex(r => live && online && r.id === meId);
     $("boardRival").innerHTML = mine > 0 ? t("board.rival", { name: cleanName(rows[mine - 1].name), score: fmtN(rows[mine - 1].score) }) : mine === 0 ? t("board.top") : "";
@@ -75,7 +78,25 @@
       : `Your ten best runs of each kind on this device. Tap one to see its card.`;
   }
   $("boardModes").addEventListener("click", e => { const b = e.target.closest("[data-mode]"); if (!b || b.dataset.mode === Board.mode) return; Board.mode = b.dataset.mode; Sound.ui("tick"); renderBoard(); });
-  $("boardTabs").addEventListener("click", e => { const b = e.target.closest("button"); if (!b || b.dataset.tab === Board.tab) return; Board.tab = b.dataset.tab; Sound.ui("tick"); renderBoard(); });
+  const perMenu = open => { $("boardPerMenu").hidden = !open; $("boardPerBtn").setAttribute("aria-expanded", String(open)); };
+  $("boardTabs").addEventListener("click", e => {
+    const p = e.target.closest("[data-per]");
+    if (p) { perMenu(false); const ch = p.dataset.per !== Board.period || Board.tab !== "week"; Board.period = p.dataset.per; Board.tab = "week"; if (ch) { Sound.ui("tick"); renderBoard(); } return; }
+    if (e.target.closest("#boardPerBtn")) { if (!$("boardPerBtn").disabled) { perMenu($("boardPerMenu").hidden); Sound.ui("tick"); } return; }
+    const b = e.target.closest("[data-tab]"); perMenu(false); if (!b || b.dataset.tab === Board.tab) return; Board.tab = b.dataset.tab; Sound.ui("tick"); renderBoard();
+  });
+  // v50: See more: the top hundred in a scrolling window of its own
+  $("boardMore").addEventListener("click", () => {
+    const L = $("boardTopList"), meId = Board.me && Board.me.id, live = Board.tab !== "local" && !!Board.db; L.textContent = "";
+    (Board.shown || []).slice(0, 100).forEach((r, i) => L.appendChild(boardRow(r, i + 1, live && r.id === meId)));
+    $("btTitle").textContent = t("board.top100", { n: Math.min(100, (Board.shown || []).length) }); $("boardTop").hidden = false; Sound.ui("open");
+  });
+  $("btClose").addEventListener("click", () => { $("boardTop").hidden = true; Sound.ui("close"); });
+  $("boardTop").addEventListener("click", e => { if (e.target === $("boardTop")) $("boardTop").hidden = true; });
+  for (const ev of ["click", "keydown"]) $("boardTopList").addEventListener(ev, e => {
+    if (ev === "keydown" && e.key !== "Enter" && e.key !== " ") return;
+    const li = e.target.closest("li"); if (!li || !li._row) return; if (ev === "keydown") e.preventDefault(); openPlayerCard(li._row);
+  });
   $("set-board").addEventListener("click", () => {
     if (Board.state === "readonly") return;
     profile.board = !profile.board; persist(600); Sound.ui("toggle");

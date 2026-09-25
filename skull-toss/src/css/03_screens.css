@@ -156,3 +156,17 @@
 .results .res-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;width:100%;padding-top:0}
 .results .res-row .chip-btn{flex-direction:column;justify-content:center;gap:3px;padding:7px 2px 6px;min-height:52px;font-size:clamp(10.5px,2.9vw,14px);letter-spacing:0;line-height:1.05}
 .results .res-row .chip-btn .icon{width:17px;height:17px}
+/* v50: the title's small buttons thinner, the big four a little closer, the tagline as written */
+.title .menu-row .chip-btn{gap:1px;min-height:44px;padding:4px 2px 3px}
+.title .menu-row .chip-btn .icon{width:14px;height:14px}
+.title .menu-stack{gap:11px}
+.tagline{text-transform:none;letter-spacing:.03em;font-size:15px}
+/* v50: the headstone stands in the middle, Morty's head at its top-left corner under the title (where he was across,
+   higher up), the best score under the stone, no heap of dirt, and a wider New high score banner; smaller bones box */
+.results .grave{display:flex;justify-content:center;align-items:flex-start;padding:26px 0 18px}
+.results .plot{width:min(300px,74vw)}
+.results #sleeper{position:absolute;left:-6px;top:-4px;z-index:3;margin:0;width:clamp(96px,27vw,140px);height:clamp(96px,27vw,140px)}
+.results .ribbon{left:-26px;right:-26px}
+.results #bestLine{margin-top:-6px;font-size:18px}
+.res-bones{gap:5px;padding:3px 8px 2px;margin:-1px -2px 4px 10px;border-width:2px;font-size:0.8em}
+.res-bones b{font-size:18px}.res-bones svg{width:15px;height:15px}.res-bones > span{font-size:10px}

@@ -82,7 +82,7 @@
   const cardEl = $("stagecard");
   function stageCard(kicker, title, sub, dur = 1.9, tone = "") {
     cardEl.innerHTML = `<span class="k">${kicker}</span><b>${title}</b>${sub ? `<span class="s">${sub}</span>` : ""}`;
-    cardEl.className = "stagecard " + tone; cardEl.hidden = false; void cardEl.offsetWidth; cardEl.classList.add("in");
+    cardEl.className = "stagecard " + tone; cardEl.hidden = false; void cardEl.offsetWidth; cardEl.classList.add("in"); placeClearOfRing(cardEl);
     clearTimeout(stageCard.timer); clearTimeout(stageCard.hide);
     stageCard.timer = setTimeout(() => { cardEl.classList.remove("in"); cardEl.classList.add("out"); }, Math.max(400, dur * 1000 - 380));
     stageCard.hide = setTimeout(() => { if (cardEl.classList.contains("out")) cardEl.hidden = true; }, dur * 1000 + 60);
@@ -131,6 +131,7 @@
     const a = actOf(game.stageHits || 0);
     if (game.phase !== "A" || a <= (game.act || 0)) return;
     game.act = a; Sound.toon("xylo"); Telemetry.emit("act", { stage: game.stage, act: a + 1 });
+    if (game.mode === "story") sawArea(game.stage, a);   // (v50: the Codex's Areas)
     stageCard(t("card.act.k", { n: ROMAN[a] }), actName(a), t("card.act.s", { n: STAGE_MINI - game.stageHits, boss: BOSS_INFO[bossIds().mini].name }), 2.0);
   }
   function arcadeGo3D() {
@@ -155,6 +156,7 @@
     // hit 40: he drops the ring and it breaks loose, flying on its own. The approach begins (and the first throw through
     // the loose ring catches it: 07_game.js)
     game.stageHits = Math.max(game.stageHits || 0, STAGE_LOOSE); game.act = 3; game.run.catchDue = 1;
+    if (game.mode === "story") sawArea(game.stage, 3);
     stageCard(t("card.miniDown.k"), t("card.loose.t"), `${t("card.loose.s", { act: actName(3) })}${boss.flawless ? " · " + t("card.flawless") : ""}`, 2.6, "gold");
     // the rules change: the camera pulls back, the ring shakes loose and grows wings, the band changes key
     cine("mini-out", 2.6, () => { boss = null; game.phase = "B"; snapRing(); setHint(t("hint.catch")); obstaclesSync(); updateHud(); }, 0.55);
