@@ -16,6 +16,7 @@
   const START_Y = 0.9;            // hand height
   const CAM_BACK = 3.0;           // camera distance behind the launch point
   const RING_Z = 6.0;             // depth of the ring plane
+  const WALK_END = 3.3;           // where a boardwalk over water stops, short of the ring (v58: it stands in open water)
   const RING_Y = 2.3;             // ring centre height
   const RING_TUBE = 0.065;        // half-thickness of the ring's tube
   const RC_START = 0.68, RC_MIN = 0.44;  // ring centre-line radius (shrinks with score)

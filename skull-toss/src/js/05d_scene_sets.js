@@ -92,6 +92,36 @@
       b.fillStyle = "rgba(240,230,210,.6)"; b.strokeStyle = "rgba(60,30,10,.5)"; b.lineWidth = 1;
       for (let i = 0; i < 16; i++) { const sd = rnd() < 0.5 ? -1 : 1, z = 1 + rnd() * 12, p = projectBase(sd * (1.2 + rnd() * 3), 0, z), s = 0.08 * p.s; b.save(); b.translate(p.x, p.y); b.rotate(rnd() * 3); b.beginPath(); rr(b, -s, -s * 0.15, s * 2, s * 0.3, s * 0.12); b.fill(); b.stroke(); b.restore(); }
     },
+    seabed(b) {   // v58: the theatre's floor under the sea: sand drifted over the stalls, the old carpet and boards showing
+      // through where the current has scoured it, ripples, shells and stones, weed at the edges; a wide aisle, no dock
+      const rnd = mulberry32(458);
+      const aisle = lanePts(1.9, 1.5, 40), g = b.createLinearGradient(0, aisle[2].y, 0, aisle[0].y);
+      g.addColorStop(0, "rgba(200,190,150,.05)"); g.addColorStop(1, "rgba(214,200,160,.28)"); lanePoly(b, aisle, g);
+      for (let i = 0; i < 22; i++) {   // the old flooring, scoured bare in patches: the aisle's red runner, the stalls' boards
+        const z = 0.8 + Math.pow(rnd(), 1.4) * 26, carpet = rnd() < 0.55, x = carpet ? (rnd() - 0.5) * 1.2 : (rnd() < 0.5 ? -1 : 1) * (2 + rnd() * 5), p = projectBase(x, 0, z), rx = p.s * (0.4 + rnd() * 0.7), ry = rx * 0.22;
+        b.save(); b.translate(p.x, p.y); b.scale(1, ry / rx); b.beginPath(); for (let k = 0; k < 9; k++) { const a = (k / 9) * TAU, rr = rx * (0.75 + rnd() * 0.35); b.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); } b.closePath(); b.clip();
+        b.fillStyle = carpet ? "rgba(122,40,36,.55)" : "rgba(92,66,44,.5)"; b.fillRect(-rx, -rx, rx * 2, rx * 2);
+        b.strokeStyle = carpet ? "rgba(214,170,80,.35)" : "rgba(40,26,16,.4)"; b.lineWidth = Math.max(1, p.s * 0.012);
+        if (carpet) { for (let d = -rx; d < rx; d += p.s * 0.2) { b.beginPath(); b.moveTo(d, -rx); b.lineTo(d + rx, rx); b.moveTo(d, rx); b.lineTo(d + rx, -rx); b.stroke(); } }
+        else for (let d = -rx; d < rx; d += p.s * 0.14) { b.beginPath(); b.moveTo(d, -rx); b.lineTo(d, rx); b.stroke(); }
+        b.restore();
+      }
+      b.strokeStyle = "rgba(60,70,60,.22)"; b.lineWidth = 1.1;   // the ripples the current draws in the sand
+      laneRows(0.4, 40, 0.55, z => { b.beginPath(); for (let x = -14; x <= 14; x += 0.7) { const p = projectBase(x, 0, z + Math.sin(x * 1.1 + z * 0.7) * 0.14); x === -14 ? b.moveTo(p.x, p.y) : b.lineTo(p.x, p.y); } b.stroke(); });
+      b.strokeStyle = "rgba(240,236,210,.14)"; laneRows(0.6, 40, 0.55, z => { b.beginPath(); for (let x = -14; x <= 14; x += 0.7) { const p = projectBase(x, 0, z + 0.06 + Math.sin(x * 1.1 + z * 0.7) * 0.14); x === -14 ? b.moveTo(p.x, p.y) : b.lineTo(p.x, p.y); } b.stroke(); });
+      for (let i = 0; i < 70; i++) {   // shells, stones, a starfish or two, sediment specks
+        const z = 0.5 + Math.pow(rnd(), 1.6) * 22, x = (rnd() * 2 - 1) * (1.5 + z * 0.5), p = projectBase(x, 0, z), s = p.s * (0.03 + rnd() * 0.05), kind = rnd();
+        if (s < 0.8) continue;
+        b.save(); b.translate(p.x, p.y); b.scale(1, 0.5);
+        if (kind < 0.35) { b.fillStyle = "#E4D4B4"; b.beginPath(); b.arc(0, 0, s, Math.PI, 0); b.closePath(); b.fill(); }
+        else if (kind < 0.7) { b.fillStyle = ["#6E7068", "#8A8474", "#5A5E58"][(rnd() * 3) | 0]; b.beginPath(); b.ellipse(0, 0, s * 1.2, s, 0, 0, TAU); b.fill(); }
+        else if (kind < 0.8) { b.fillStyle = "#D98A3A"; b.beginPath(); for (let k = 0; k < 10; k++) { const a = (k / 10) * TAU - Math.PI / 2, r = k % 2 ? s * 0.45 : s * 1.2; b.lineTo(Math.cos(a) * r, Math.sin(a) * r); } b.closePath(); b.fill(); }
+        else { b.fillStyle = "rgba(40,50,44,.35)"; b.fillRect(-s, -s * 0.3, s * 0.6, s * 0.6); }
+        b.restore();
+      }
+      b.strokeStyle = "rgba(62,106,58,.7)"; b.lineCap = "round";   // tufts of weed along the aisle's edges
+      for (let i = 0; i < 40; i++) { const sd = rnd() < 0.5 ? -1 : 1, z = 0.6 + rnd() * 16, p = projectBase(sd * (1.9 + rnd() * 0.8), 0, z), h = p.s * (0.15 + rnd() * 0.2); if (h < 2) continue; b.lineWidth = Math.max(1, p.s * 0.02); b.beginPath(); for (let k = -1; k <= 1; k++) { b.moveTo(p.x + k * h * 0.15, p.y); b.quadraticCurveTo(p.x + k * h * 0.3 + h * 0.2, p.y - h * 0.6, p.x + k * h * 0.2 + h * 0.1, p.y - h); } b.stroke(); }
+    },
     rails(b) {   // the mine's rails, sleepers and all, running into the dark
       const pts = lanePts(0.95, 0.75, 30); lanePoly(b, pts, "rgba(40,30,22,.45)");
       b.strokeStyle = "rgba(20,14,10,.85)"; b.lineWidth = 2;

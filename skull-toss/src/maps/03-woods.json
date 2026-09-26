@@ -198,16 +198,15 @@
     "tint": null,
     "ambient": {
       "walkers": [
-        "werewolf",
-        "ghost"
+        "werewolf"
       ],
-      "ghost": true,
-      "bats": 0.8,
+      "ghost": false,
+      "bats": 0,
       "witch": false,
       "digger": false,
       "cat": false,
       "lightning": false,
-      "crows": true
+      "crows": false
     }
   },
   "anchor": "post",
@@ -505,6 +504,14 @@
       "wave": 85,
       "curve": 1.2,
       "bend": 130
+    },
+    "sky": {
+      "arc": 0.8,
+      "late": [
+        "#060A10",
+        "#2E4A3A"
+      ],
+      "k": 0.3
     }
   },
   "fragment": "whistle",
@@ -513,5 +520,37 @@
     "rate": 1.03,
     "key": 1
   },
-  "blurb": "The wind turns every throw, hollow logs gust up the lane, and decoys hide among the bullseyes"
+  "blurb": "The wind turns every throw, hollow logs gust up the lane, and decoys hide among the bullseyes",
+  "ecosystem": {
+    "_doc": "v58 MAP → ECOSYSTEM → CAST (blueprint.json: ecosystem): who and what lives here, and nowhere else it doesn't belong.",
+    "teaches": "Wind",
+    "cast": [
+      "werewolf",
+      "owl",
+      "deer",
+      "fox",
+      "spirit"
+    ],
+    "wildlife": {
+      "owl": 3,
+      "deer": 2,
+      "fox": 1,
+      "spirit": 5
+    },
+    "vegetation": [
+      "pine",
+      "fern",
+      "mushroom-ring",
+      "gnarled-root"
+    ],
+    "props": [
+      "hollow-log",
+      "owl-tree",
+      "skullpile",
+      "bonetree"
+    ],
+    "hazards": [
+      "the wind through the trees"
+    ]
+  }
 }

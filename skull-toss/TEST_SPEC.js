@@ -491,8 +491,8 @@
   });
 
   // ── Living graveyard ──────────────────────────────────────
-  test("The graveyard is alive: clouds drift, creatures wander across and leave", () => {
-    T.start(); const w0 = T.world();
+  test("The graveyard is alive: clouds drift, creatures wander across and leave (v58: the Gilded Graveyard, whose cast they are)", () => {
+    T.start(); T.setStage(2); const w0 = T.world();
     T.step(20); const w1 = T.world();
     assert(w1.clouds.some((x, i) => Math.abs(x - w0.clouds[i]) > 1), "clouds are static");
     let saw = w1.walkers.length;                       // they come and go on their own clock, so wait for one
@@ -681,8 +681,8 @@
     assert(typeof T.say() === "string" && $("set-voice").querySelectorAll("button").length === 3, "voice setting missing");
   });
   test("The graveyard at work: a gravedigger digs and a black cat crosses between you and the ring", () => {
-    T.start(); const d0 = T.digger() ? T.digger().t : 0; T.step(5); assert(T.digger() && T.digger().t > d0 + 4, "no gravedigger");
-    T.catNow(); const c0 = T.cat(); assert(c0 && c0.z > 2 && c0.z < 4, "the cat should walk between the slingshot and the ring");
+    T.start(); T.setStage(2); T.step(0.2); const d0 = T.digger() ? T.digger().t : 0; T.step(5); assert(T.digger() && T.digger().t > d0 + 4, "no gravedigger (v58: he's the Gilded Graveyard's)");
+    T.setStage(1); T.step(0.2); T.catNow(); const c0 = T.cat(); assert(c0 && c0.z > 2 && c0.z < 4, "the cat should walk between the slingshot and the ring");
     T.step(1.5); assert(T.cat() && T.cat().x !== c0.x, "the cat should move");
   });
   test("The slingshot stays after the shot: its bands snap through the rest point, overshoot and settle", () => {
@@ -1136,7 +1136,8 @@
       looks.add(S.kinds.join());
     }
     assert(looks.size === 8, `eight different sets of props (${looks.size})`);
-    T.setScene(0); const S = T.scene(); assert(S.kinds.includes("digger") && S.kinds.includes("pumpkin") && S.moon === "art", "map 1 is Crow Hollow: the gravedigger, the pumpkin rows and the drawn moon");
+    T.setScene(0); const S = T.scene(); assert(!S.kinds.includes("digger") && S.kinds.includes("pumpkin") && S.moon === "art", "map 1 is Crow Hollow: the pumpkin rows and the drawn moon (v58: no gravedigger: he's the Graveyard's)");
+    T.setScene(1); assert(T.scene().kinds.includes("digger"), "the Gilded Graveyard has its gravedigger");
     T.toTitle();
   });
   test("Arcade opens a map once Story has reached it", () => {
@@ -2519,7 +2520,7 @@
     const half = 2.4, far = T.travelEnd(), bad = T.travelSpans().filter(s => s.x1 > -half && s.x0 < half && s.d - far < 16);
     assert(!bad.length, `no scenery ever stands in the throw corridor (${JSON.stringify(bad.slice(0, 3))})`);
     fresh(); T.setStage(2); assert(T.travel().on && T.travel().D === 0, "and so does the next map (all eight do: the v48 test)");
-    T.startArcade(0); T.setHits(20); T.step(0.5); assert(T.travel().on && T.travel().D === 0, "Arcade on Crow Hollow stands at the start");
+    T.startArcade(0); T.setHits(20); T.step(3); assert(T.travel().on && T.travel().D > 0, "Arcade on Crow Hollow travels too (v58: every mode that plays a lane does)");
     T.toTitle(); T.setStats(ZERO);
   });
   // ── v49: the menus, the Vault's Closet, the Cart and the Soul Shop, the popups and the results ──
@@ -2641,8 +2642,8 @@
     assert(!c1 || Math.abs(c0.z - c1.z - (d1 - d0)) < 0.03, `the cat is passed by as far as the world moved, not carried along (${c0.z.toFixed(2)} → ${c1 ? c1.z.toFixed(2) : "gone"}; the world ${(d1 - d0).toFixed(2)})`);
     T.toTitle();
   });
-  test("v53 underwater: a skull that comes down in open water goes in, slows and sinks, and the throw still ends", () => {
-    T.setStats(ZERO); fresh(); T.setStage(4); T.calm(); T.freezeRing(0, C.RING_Y);
+  test("v53 underwater: a skull that comes down in open water goes in, slows and sinks, and the throw still ends (v58: the marsh; the Drowned Theater is under the sea now)", () => {
+    T.setStats(ZERO); fresh(); T.setStage(5); T.calm(); T.freezeRing(0, C.RING_Y);
     assert(T.throwAt(1.6, 0.9), "thrown"); let lowest = 9, under = 0;
     for (let i = 0; i < 60 && T.state().state === "flying"; i++) { T.step(0.05); const y = T.state().skull.y; lowest = Math.min(lowest, y); if (y < -0.05) under++; }
     assert(under > 3 && lowest > -1.35, `it went under and stopped short of the bottom (lowest ${lowest.toFixed(2)})`);
@@ -2666,6 +2667,73 @@
     T.setStats({ ...ZERO, bossLog: { crow: 60 } }); T.openSheet("mastery"); document.querySelector('#masteryTabs [data-cat="boss"]').click();
     const pg = document.querySelector('#masteryList [data-m="boss:crow"]'); assert(pg.classList.contains("m-page") && pg.querySelectorAll(".m-line .m-tier").length === 8 && pg.querySelectorAll(".m-tier.got").length === 4, "a page, eight stops on its line, four reached at 60");
     T.closeSheet(); T.setStats(ZERO); T.toTitle();
+  });
+  // ── v58: the sky keeps time with the road; one ring reflection; every mode travels ──
+  test("v58 The sky: the further the road has come, the lower the moon (setting on its own side, clear of the ring) and the later the night; the picture-house screen stays put", () => {
+    T.setStats({ ...ZERO, bestStage: 9 }); fresh(); T.step(0.5); const s0 = T.sky();
+    assert(s0.p === 0 && s0.dx === 0 && s0.dy === 0 && s0.halo, `the start of the road: the moon where it hangs (${JSON.stringify(s0)})`);
+    T.setHits(40); T.snapTravel(); T.step(0.2); const s1 = T.sky();
+    assert(s1.p > 0.5 && s1.y > s0.y && Math.abs(s1.x - T.ringScreen(0, C.RING_Y, C.RING_Z).x) > Math.abs(s0.x - T.ringScreen(0, C.RING_Y, C.RING_Z).x), `forty makes on: lower, and further from the ring (${JSON.stringify(s1)})`);
+    T.setHits(C.STAGE_END - 2); T.snapTravel(); T.step(0.2); const s2 = T.sky(); assert(s2.p >= s1.p && s2.y >= s1.y, `by the boss it is setting (${JSON.stringify(s2)})`);
+    T.setStage(4); T.setHits(40); T.snapTravel(); T.step(0.2); const s4 = T.sky(); assert(s4.kind === "screen" && s4.dx === 0 && s4.dy === 0, `the Drowned Theater's screen doesn't move (${JSON.stringify(s4)})`);
+    T.toTitle(); T.setStats(ZERO);
+  });
+  test("v58 The ring has one reflection on the water, drawn every frame there, and none anywhere else", () => {
+    T.setStats({ ...ZERO, bestStage: 9 }); fresh(); T.setStage(5); T.step(0.3); assert(T.ringRefl() === 1, "the Black Marsh: the ring's reflection");
+    T.setStage(1); T.step(0.3); assert(T.ringRefl() === 0, "Crow Hollow: no water, no reflection");
+    T.setStage(5); T.calm(); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); assert(T.state().lastResult.make, "and a throw is a throw, as ever");
+    T.toTitle(); T.setStats(ZERO);
+  });
+  test("v58 Every mode that plays a lane travels it (the MapTravelController): the Adventure by its legs, Arcade, Practice and the Director's Challenge by the road, Boss Rush in the arena; an attraction stays put", () => {
+    T.setStats({ ...OPENED, bestStage: 9, bossKills: 3 });
+    const run = (m, map) => { T.toTitle(); T.startMode(m, map); T.step(1); T.skipReel && T.skipReel(); const D0 = T.travel().D; T.setHits(12); T.step(3); const D1 = T.travel().D; T.setHits(30); T.step(3); return [D0, D1, T.travel().D]; };
+    for (const [m, map] of [["story", 0], ["arcade", 2], ["practice", 4], ["director", 0]]) { const D = run(m, map); assert(D[1] > D[0] && D[2] > D[1], `${m}: the world comes on as the makes do (${D})`); }
+    const R = run("rush", 0); assert(R[0] > 0 && R[1] === R[0] && R[2] === R[0], `Boss Rush: in the arena, and it stays there (${R})`);
+    const G = run("gallery", 0); assert(G.every(d => d === 0), `an attraction: its booth doesn't move (${G})`);
+    T.toTitle(); T.setStats(ZERO);
+  });
+  test("v58 Curl noise: the flow has no sources or sinks (divergence ~0), stays gentle, and moves only atmosphere: a throw on a map full of it is a throw as ever", () => {
+    let worst = 0, big = 0; for (let i = 0; i < 40; i++) { const r = T.curlDiv(i * 1.37, i * 0.71 - 5, i * 0.3); worst = Math.max(worst, Math.abs(r.div)); big = Math.max(big, r.mag); }
+    assert(worst < 0.05, `divergence-free (worst ${worst.toFixed(4)})`); assert(big > 0.05 && big < 12, `a real flow, not a storm (${big.toFixed(2)})`);
+    T.setStats({ ...ZERO, bestStage: 9 }); fresh(); T.setStage(4); T.step(1); T.calm(); T.freezeRing(0, C.RING_Y);
+    const k0 = T.aimFor(0, C.RING_Y); T.throwAt(k0.AX, k0.AY); T.step(0.4); const p1 = T.skullInfo(); T.step(2.5); const r1 = T.state().lastResult;
+    T.aquaStep(0.5); T.freezeRing(0, C.RING_Y); T.throwAt(k0.AX, k0.AY); T.step(0.4); const p2 = T.skullInfo(); T.step(2.5);
+    assert(r1.make && T.state().lastResult.make && JSON.stringify(p1.pos) === JSON.stringify(p2.pos), `the same throw flies the same, whatever the water's doing (${JSON.stringify(p1.pos)} / ${JSON.stringify(p2.pos)})`);
+    T.toTitle(); T.setStats(ZERO);
+  });
+  test("v58 The Drowned Theater is under the sea: no dock and no surface, a sandy aisle between rows of sunken seats (some over, some buried), the stage at the back, and its life", () => {
+    T.setStats({ ...ZERO, bestStage: 9 }); fresh(); T.setStage(4); T.step(1); const A = T.aqua();
+    assert(A.kind === "submerged" && A.snow > 20 && A.bubbles > 5 && A.far >= 2, `submerged: motes, bubbles, big shapes far off (${JSON.stringify({ k: A.kind, s: A.snow, b: A.bubbles, f: A.far })})`);
+    for (const k of ["school", "fish", "crab", "eel", "jelly", "turtle", "octopus", "shrimp"]) assert(A.n[k] > 0, `${k}s live here`);
+    assert(T.ringRefl() === 0 && T.scene().lane === "seabed", `no water surface to reflect in, and the floor is the sea bed (${T.scene().lane})`);
+    const seats = T.travelSpans().filter(s => s.kind === "theatre-seats"); assert(seats.length > 60 && seats.every(s => s.x1 < -2.4 || s.x0 > 2.4), `rows of seats either side of the aisle, never in it (${seats.length})`);
+    const R = T.travelRows(); assert(R.over > 0 && R.buried > 0 && R.over + R.buried < R.n * 0.5, `some over, some buried, most still standing (${JSON.stringify(R)})`);
+    assert(!T.powersHere().includes("dive"), "no Diving Skull: there's no surface to dive from");
+    const sw = A.list.filter(c => ["school", "fish", "jelly"].includes(c.k)); assert(sw.every(c => !(Math.abs(c.x) < 2.1 + c.z * 0.1 && c.y > 0.5 && c.y < 4.6)), "every swimmer keeps out of the ring's cone");
+    assert(T.aquaPoke("school").st === "scatter", "a school scatters when something comes at it");
+    assert(T.aquaPoke("crab").hide > 0.5, "a crab digs in"); const e = T.aquaPoke("eel"); assert(e.st === "in", "an eel goes back in its hole");
+    T.setStage(5); T.step(1); const M = T.aqua(); assert(M.kind === "surface" && ["frog", "minnows", "snapper", "gator", "strider", "dragonfly", "tadpoles"].every(k => M.n[k] > 0), `the Black Marsh: life under and on the surface (${JSON.stringify(M.n)})`);
+    assert(["jump", "under"].includes(T.aquaPoke("frog").st), "a frog goes off its pad and into the water"); assert(T.powersHere().includes("dive"), "and the dive is the marsh's");
+    T.setStage(1); T.step(0.5); assert(T.aqua().kind === null, "no water, no aquatic life");
+    T.toTitle(); T.setStats(ZERO);
+  });
+  test("v58 MAP → ECOSYSTEM → CAST: every character belongs to its maps (the gravedigger in the Graveyard and, as a prospector, the desert; zombies in the Graveyard and a rare one in the Hollow; the skeleton drowned, bleached or an echo), and each map has its own wildlife", () => {
+    const B = T.blueprint(), M = T.maps(); assert(B.ecosystem && B.ecosystem.identityTest.length === 10, "the Map Identity Test has ten questions");
+    const ORDER = ["Fundamentals", "Ricochet", "Wind", "Water", "Unpredictability", "Distance", "Timing", "Mastery"];
+    M.forEach((m, i) => { assert(m.ecosystem && m.ecosystem.teaches === ORDER[i], `${m.id} teaches ${ORDER[i]}`); for (const c of m.ecosystem.cast) assert(B.ecosystem.cast[c].includes(m.id), `${c} belongs on ${m.id}`); });
+    T.setStats({ ...ZERO, bestStage: 9 }); fresh();
+    const at = st => { T.setStage(st); T.step(0.5); return T.cast(); };
+    let c = at(1); assert(c.walkers.join() === "zombie" && c.zombie === "intro" && c.flock === "crow" && !T.scene().kinds.includes("digger"), `Crow Hollow: crows, the odd zombie, no gravedigger (${JSON.stringify(c.walkers)})`);
+    c = at(2); assert(c.digger === "sexton" && c.walkers.includes("zombie") && c.skeleton === "plain" && c.flock === "crow", "the Gilded Graveyard: the sexton, zombies, skeletons, crows");
+    c = at(3); assert(!c.walkers.includes("zombie") && c.flock === null && ["owl", "deer", "fox", "spirit"].every(k => T.wild().n[k] > 0), `the Whistling Woods: owls, deer, a fox, spirits; no crows, no zombies (${JSON.stringify(T.wild().n)})`);
+    c = at(4); assert(c.skeleton === "drowned", "the Drowned Theater's skeletons are drowned");
+    c = at(6); assert(c.digger === "prospector" && c.skeleton === "bleached" && T.wild().heat && ["vulture", "scorpion", "tumbleweed"].every(k => T.wild().n[k] > 0), "the Bone Desert: a prospector, sun-bleached skeletons, vultures, scorpions, tumbleweeds, the heat");
+    c = at(7); assert(!c.walkers.length && ["clockbug", "fungi"].every(k => T.wild().n[k] > 0), "the Clockwork Caves: no zombies or skeletons, clockwork bugs and glowing fungi");
+    c = at(8); assert(c.walkers.join() === "skeleton" && c.skeleton === "echo" && ["voidling", "fragment"].every(k => T.wild().n[k] > 0), "the Black Abyss: skeletons only as echoes, void things, fragments of the worlds before");
+    const cone = T.wild().list.filter(w => ["spirit", "fragment"].includes(w.k) && Math.abs(w.x) < 2.4 + w.z * 0.14); T.setStage(3); T.step(3); const cone2 = T.wild().list.filter(w => w.k === "spirit" && Math.abs(w.x) < 2.4 + w.z * 0.14);
+    assert(!cone.length && !cone2.length, `nothing floats across the ring's cone (${JSON.stringify(cone.concat(cone2))})`);
+    T.calm(); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); assert(T.state().lastResult.make, "and a throw is a throw");
+    T.toTitle(); T.setStats(ZERO);
   });
   // ── v57: the land, the band, and six power-ups with physics of their own ──
   test("v57 The land: flat and straight within nine metres (the play never changes); beyond, the road bends and the land rises either side; the water maps stay flat", () => {
@@ -2697,7 +2765,7 @@
     const at = st => { T.setStats({ ...ZERO, bestStage: 9 }); fresh(); if (st > 1) T.setStage(st); T.step(0.3); return T.powersHere(); };
     assert(!at(1).some(id => ["vine", "dive", "clones", "rewind", "homing", "flip"].includes(id)), "none on map 1");
     assert(at(3).includes("vine") && !at(3).includes("dive"), "the Whistling Woods: the vine (no water, no dive)");
-    assert(at(4).includes("dive") && at(6).includes("rewind") && !at(6).includes("dive") && at(7).includes("homing") && at(8).includes("flip") && at(5).includes("clones"), "the rest a map at a time, the dive on the water maps only");
+    assert(!at(4).includes("dive") && at(5).includes("dive") && at(6).includes("rewind") && !at(6).includes("dive") && at(7).includes("homing") && at(8).includes("flip") && at(5).includes("clones"), "the rest a map at a time, the dive where there's a surface to dive from (v58: the marsh; the Drowned Theater is under the sea)");
     const setup = st => { at(st); T.setHits(5); T.step(0.5); T.calm(); T.freezeRing(0, C.RING_Y); };
     setup(8); T.givePower("flip"); T.throwThrough(0, C.RING_Y, C.RING_Z); T.step(0.3); assert(T.skullInfo().g < 0, "Gravity Flip: it falls up"); T.step(2.5); assert(T.state().lastResult.make, `and the aim still meets the ring (${T.state().lastResult.kind})`);
     setup(7); T.throwThrough(0.62, C.RING_Y + 0.3, C.RING_Z); T.step(2.5); assert(!T.state().lastResult.make, "without it, a throw that far off misses");
@@ -2707,7 +2775,7 @@
     T.step(1.5); assert(T.state().lives === l0 && T.state().throws === n0 && T.state().state === "ready" && !T.powers().rewind, `and the throw never happened (${T.state().lives}, ${T.state().throws})`);
     setup(3); T.givePower("vine"); T.step(0.2); const E = T.vineEnd(), a = T.aimFor(E.x, E.y, E.z); T.throwAt(a.AX, a.AY); T.step(0.6);
     assert(T.skullInfo().vined, "Vine Swing: caught"); T.step(3); assert(T.state().lastResult.make && T.powers().vine && T.powers().vine.uses === 1, `slung through the ring, one catch left (${T.state().lastResult.kind})`);
-    setup(4); T.givePower("dive"); const d = T.aimFor(1.3, 0.14, 3.8); T.throwAt(d.AX, d.AY); let dv = false; for (let i = 0; i < 40 && !dv; i++) { T.step(0.05); const k = T.skullInfo(); dv = !!(k.sub && k.sub.dive); } assert(dv, "Diving Skull: short into the water, it dives");
+    setup(5); T.givePower("dive"); const d = T.aimFor(1.3, 0.14, 3.8); T.throwAt(d.AX, d.AY); let dv = false; for (let i = 0; i < 40 && !dv; i++) { T.step(0.05); const k = T.skullInfo(); dv = !!(k.sub && k.sub.dive); } assert(dv, "Diving Skull: short into the water, it dives");
     T.step(3); assert(T.state().lastResult.make && T.state().lives === 3, `it swims on and leaps through the ring (${T.state().lastResult.kind})`);
     T.toTitle(); T.setStats(ZERO);
   });
@@ -2798,7 +2866,7 @@
     T.toTitle();
   });
   test("v54 the gravedigger digs to the bar: a contact, a throw of earth that flies and lands, and not every dig the same", () => {
-    fresh(); T.calm(); const kinds = new Set(); let thrown = 0, maxDirt = 0;
+    fresh(); T.setStage(2); T.calm(); const kinds = new Set(); let thrown = 0, maxDirt = 0;   // (v58: in the Gilded Graveyard, where he belongs)
     for (let i = 0; i < 16 * 24; i++) { T.step(60 / 104 / 6); const d = T.diggerState(); if (!d) continue; kinds.add(d.kind); maxDirt = Math.max(maxDirt, d.dirt); if (d.dirt) thrown++; }
     assert(maxDirt >= 4 && thrown > 10, `earth in the air (${maxDirt})`);
     assert(kinds.size >= 3 && kinds.has("rest"), `a few kinds of dig, and a rest (${[...kinds]})`);

@@ -3,7 +3,8 @@
   // wanderers, fog] → the play field → near props → foreground frame. The flat planes are painted a little
   // bigger than the screen (the bleed) so a moving camera never shows an edge. Far planes are softer and hazier,
   // the foreground sharp-edged but dark and slightly soft, like a miniature set with depth of field.
-  let skyLayer = null, farLayer = null, midLayer = null, groundLayer = null, fgLayer = null, moon = { x: 0, y: 0, r: 0 }, waterSheens = [];
+  let skyLayer = null, farLayer = null, midLayer = null, groundLayer = null, fgLayer = null, moon = { x: 0, y: 0, r: 0 }, waterSheens = [], moonPath = null;
+  const SKY = { p: 0, dx: 0, dy: 0, vig: "0,0" };   // (v58: how far the moon has crossed the sky, 06g_travel.js)
   const bleed = () => Math.round(Math.max(56, U * 0.3));
   function plate(x0, y0, w, h) {   // a canvas you paint in screen coordinates, covering (x0, y0, w, h)
     const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(w * DPR)); c.height = Math.max(1, Math.round(h * DPR));
@@ -25,7 +26,7 @@
     g.drawImage(im, W / 2 - 1000 * S, HY - 350 * S, 2000 * S, 1000 * S); g.imageSmoothingQuality = q; return true;
   }
   // The moon hangs on its own little plate at the sky's depth, drawn after the drifting clouds so its face always
-  // reads (its halo stays in the sky plate, behind them). With artwork supplied (src/art/moon, made by prepare.py),
+  // reads (its halo is drawn under them, and both cross the sky as the road goes on: 06g_travel.js). With artwork supplied (src/art/moon, made by prepare.py),
   // moon.json says where the round disc sits in the picture: the disc lands where the moon belongs and anything past
   // it (the telescope) hangs out over the sky. Without it, the old plain disc is painted instead.
   let moonLayer = null;
@@ -83,12 +84,7 @@
       if (big) { star(b, x, y, 2.4, 4, 0.3, 0); b.fill(); } else b.fillRect(x, y, 1, 1);
     }
     b.globalAlpha = 1;
-    if (moon.r && kind !== "screen") {   // the halo keeps its old reach whatever size the moon is
-      const gr = U * 0.39, rgb = rgbOf(L.moonColor);
-      g = b.createRadialGradient(mx, my, mr * 0.8, mx, my, gr);
-      g.addColorStop(0, `rgba(${rgb},.22)`); g.addColorStop(0.4, `rgba(${rgb},.07)`); g.addColorStop(1, `rgba(${rgb},0)`);
-      b.fillStyle = g; b.beginPath(); b.arc(mx, my, gr, 0, TAU); b.fill();
-    }
+    moon.halo = !!(moon.r && kind !== "screen");   // (its halo is drawn with it, so it can cross the sky: drawMoonHalo, 06g_travel.js)
     g = b.createLinearGradient(0, HY - U * 0.45, 0, HY + U * 0.14);
     g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(0.76, L.horizon); g.addColorStop(1, L.horizon);
     b.fillStyle = g; b.fillRect(x0, HY - U * 0.45, x1 - x0, U * 0.59);
@@ -113,8 +109,8 @@
     let g = b.createLinearGradient(0, HY, 0, H + B);
     g.addColorStop(0, L.ground[0]); g.addColorStop(0.3, L.ground[1]); g.addColorStop(0.7, L.ground[2]); g.addColorStop(1, L.ground[3]);
     b.fillStyle = g; b.fillRect(x0, HY, x1 - x0, H + B - HY);
-    waterSheens = [];
-    if (L.ambient.water) { paintWater(b, x0, x1, B); for (const seed of [311, 719]) { const S = plate(P.x0, P.y0, P.w, P.h); paintWaterSheen(S.g, seed); waterSheens.push(S); } }   // (v55: the two drifting sheens, 08l_water.js)
+    waterSheens = []; moonPath = null;
+    if (L.ambient.water) { paintWater(b, x0, x1, B); if (moon.r) { moonPath = plate(P.x0, P.y0, P.w, P.h); paintMoonPath(moonPath.g, B); } for (const seed of [311, 719]) { const S = plate(P.x0, P.y0, P.w, P.h); paintWaterSheen(S.g, seed); waterSheens.push(S); } }   // (v55: the two drifting sheens, 08l_water.js)
     else {   // low rolling hills stacked toward the horizon, each with a lit rim (cartoon backgrounds are all layers)
       for (const [zc, col, amp, seed] of [[46, L.hills[0], 0.9, 1], [34, L.hills[1], 0.7, 2], [26, L.hills[2], 0.55, 3]]) {
         b.fillStyle = col; b.strokeStyle = L.hillRim; b.lineWidth = 1.5; b.beginPath();
@@ -194,7 +190,8 @@
     const R = Math.hypot(W, H) * 0.62, inner = Math.min(U * 0.34, R * 0.95);
     vigEl.style.background = `radial-gradient(circle ${Math.round(R)}px at 50% 48%, rgba(10,8,6,0) ${Math.round(inner)}px, rgba(10,8,6,.62) ${Math.round(R)}px)`;
     // the moon is the lamp of the whole scene, so the vignette leaves a soft clearing where it hangs, telescope and all
-    const r = moon.r, clear = r ? `radial-gradient(circle ${Math.round(r * 2.7)}px at ${Math.round(moon.x + r * 0.35)}px ${Math.round(moon.y)}px, transparent ${Math.round(r * 1.5)}px, #000 ${Math.round(r * 2.7)}px)` : "none";
+    const r = moon.r, mx = moon.x + SKY.dx, my = moon.y + SKY.dy; SKY.vig = Math.round(SKY.dx / 3) + "," + Math.round(SKY.dy / 3);
+    const clear = r ? `radial-gradient(circle ${Math.round(r * 2.7)}px at ${Math.round(mx + r * 0.35)}px ${Math.round(my)}px, transparent ${Math.round(r * 1.5)}px, #000 ${Math.round(r * 2.7)}px)` : "none";
     vigEl.style.webkitMaskImage = vigEl.style.maskImage = clear;
   }
   // near props: a broken headstone, a scrap of iron fence and grass tufts at the edges of the frame, on the ground

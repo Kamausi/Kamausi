@@ -240,7 +240,12 @@
     const strain = !resting && (P.phase === 3 || P.phase === 4) && (D.kind === "heavy" || D.kind === "stuck");
     ctx.fillStyle = INK; if (D.yawn > 0.5 || strain) { ctx.beginPath(); ctx.moveTo(hx + 0.02 * L, hy - 0.05 * L); ctx.lineTo(hx + 0.08 * L, hy - 0.05 * L); ctx.stroke(); } else { ctx.beginPath(); ctx.arc(hx + 0.065 * L, hy - 0.045 * L, 0.02 * L, 0, TAU); ctx.fill(); }
     if (D.yawn > 0.05) { ctx.fillStyle = "#3A1A14"; ctx.beginPath(); ctx.ellipse(hx + 0.04 * L, hy + 0.08 * L, 0.04 * L, 0.06 * L * D.yawn, 0, 0, TAU); ctx.fill(); ctx.stroke(); }
-    ctx.fillStyle = "#6A5A48"; ctx.beginPath(); ctx.ellipse(hx, hy - 0.12 * L + capLag, 0.16 * L, 0.06 * L, -0.1, Math.PI, TAU); ctx.lineTo(hx + 0.2 * L, hy - 0.1 * L + capLag); ctx.closePath(); ctx.fill(); ctx.stroke();
+    if (castVariant("gravedigger") === "prospector") {   // (v58: the desert's own: a wide sun hat and a red bandana)
+      ctx.fillStyle = "#B8422E"; ctx.beginPath(); ctx.moveTo(hx - 0.12 * L, hy + 0.1 * L); ctx.lineTo(hx + 0.12 * L, hy + 0.1 * L); ctx.lineTo(hx, hy + 0.2 * L); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#C8A060"; ctx.beginPath(); ctx.ellipse(hx, hy - 0.1 * L + capLag, 0.3 * L, 0.05 * L, -0.08, 0, TAU); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(hx - 0.13 * L, hy - 0.11 * L + capLag); ctx.quadraticCurveTo(hx - 0.12 * L, hy - 0.3 * L + capLag, hx, hy - 0.3 * L + capLag); ctx.quadraticCurveTo(hx + 0.12 * L, hy - 0.3 * L + capLag, hx + 0.13 * L, hy - 0.11 * L + capLag); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#6A3A22"; ctx.fillRect(hx - 0.13 * L, hy - 0.16 * L + capLag, 0.26 * L, 0.035 * L);
+    } else { ctx.fillStyle = "#6A5A48"; ctx.beginPath(); ctx.ellipse(hx, hy - 0.12 * L + capLag, 0.16 * L, 0.06 * L, -0.1, Math.PI, TAU); ctx.lineTo(hx + 0.2 * L, hy - 0.1 * L + capLag); ctx.closePath(); ctx.fill(); ctx.stroke(); }
     if (strain) { ctx.fillStyle = "#9FD0E8"; ctx.beginPath(); ctx.ellipse(hx - 0.14 * L, hy - 0.06 * L, 0.018 * L, 0.03 * L, 0, 0, TAU); ctx.fill(); }   // (a drop of sweat)
     // the shovel: its angle is the spring's (it lags and overshoots his hands), the grip where his hands are
     const a = resting ? 0.1 : D.sa, grip = { x: torsoTop.x + (resting ? 0.3 : P.gx) * L, y: torsoTop.y + (resting ? 0.3 : P.gy) * L };

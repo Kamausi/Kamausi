@@ -373,7 +373,8 @@
           "dock-post": 3,
           "cattails": 2,
           "lily-pads": 3,
-          "swamp-cypress": 1
+          "swamp-cypress": 1,
+          "reeds": 1
         }
       },
       {
@@ -478,6 +479,14 @@
       "wave": 90,
       "curve": 1.0,
       "bend": 140
+    },
+    "sky": {
+      "arc": 0.75,
+      "late": [
+        "#070C0A",
+        "#3A4A2A"
+      ],
+      "k": 0.3
     }
   },
   "fragment": "marsh",
@@ -486,5 +495,63 @@
     "rate": 0.94,
     "key": -2
   },
-  "blurb": "Thorn hedges rise from the marsh and a sunken log slams across the lane"
+  "blurb": "Thorn hedges rise from the marsh and a sunken log slams across the lane",
+  "aquatic": {
+    "_doc": "v58 the aquatic environment (08m_aquatic.js): see 04-drowned.json. The marsh is seen from above: shapes under the murk, and what sits and moves on the surface.",
+    "kind": "surface",
+    "water": {
+      "deep": "#0E1A12",
+      "murk": 1.1,
+      "bubbles": 6,
+      "algae": 10,
+      "current": [
+        0.05,
+        0
+      ]
+    },
+    "fauna": {
+      "minnows": 3,
+      "bigfish": 2,
+      "tadpoles": 3,
+      "frog": 4,
+      "snapper": 1,
+      "swamp-eel": 1,
+      "gator": 1,
+      "strider": 5,
+      "dragonfly": 2
+    }
+  },
+  "ecosystem": {
+    "_doc": "v58 MAP → ECOSYSTEM → CAST (blueprint.json: ecosystem): who and what lives here, and nowhere else it doesn't belong.",
+    "teaches": "Unpredictability",
+    "cast": [
+      "ghost",
+      "bat",
+      "fish",
+      "eel",
+      "turtle",
+      "frog",
+      "gator",
+      "dragonfly",
+      "firefly",
+      "strider"
+    ],
+    "wildlife": {},
+    "vegetation": [
+      "cattails",
+      "lily-pads",
+      "swamp-cypress",
+      "reeds",
+      "cypress-knees"
+    ],
+    "props": [
+      "dock-post",
+      "stilt-shack",
+      "rowboat"
+    ],
+    "hazards": [
+      "thorns out of the water",
+      "the log that slams down"
+    ]
+  }
 }

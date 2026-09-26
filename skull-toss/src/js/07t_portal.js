@@ -78,7 +78,7 @@
   function portalMotes(dt) {
     const P = PORTAL; P.motes = P.motes || [];
     if (P.motes.length < 26 && Math.random() < dt * 30) { const a = Math.random() * TAU; P.motes.push({ a, d: 1.7 + Math.random() * 0.9, v: 0.35 + Math.random() * 0.4, s: 0.6 + Math.random() * 0.8, hue: Math.random() < 0.3 }); }
-    for (const m of P.motes) { m.d -= m.v * dt * (1 + (2 - m.d)); m.a += dt * (1.4 / Math.max(0.3, m.d)); }
+    for (const m of P.motes) { const F = curl(Math.cos(m.a) * m.d * 2, Math.sin(m.a) * m.d * 2, game.time * 0.6, 1, 1); m.d -= m.v * dt * (1 + (2 - m.d)) + F.y * 0.05 * dt; m.a += dt * (1.4 / Math.max(0.3, m.d)) + F.x * 0.25 * dt; }   // (v58: drawn in along the flow's curls, 06i_flow.js)
     P.motes = P.motes.filter(m => m.d > 0.95);
   }
   const rimR = (a, t) => 1 + 0.045 * Math.sin(a * 5 + t * 3.1) + 0.03 * Math.sin(a * 11 - t * 5.3) + 0.02 * Math.sin(a * 17 + t * 7.7);

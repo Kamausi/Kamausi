@@ -194,11 +194,10 @@
     "tint": null,
     "ambient": {
       "walkers": [
-        "ghost",
         "skeleton"
       ],
-      "ghost": true,
-      "bats": 0.3,
+      "ghost": false,
+      "bats": 0,
       "witch": false,
       "digger": false,
       "cat": false,
@@ -417,7 +416,9 @@
           "rope-post": 4,
           "film-strip": 2,
           "spotlight": 1,
-          "seatwreck": 1
+          "seatwreck": 1,
+          "void-bloom": 2,
+          "void-thorn": 1
         }
       },
       {
@@ -433,7 +434,9 @@
         "mix": {
           "film-strip": 3,
           "chain-pillar": 2,
-          "frame": 2
+          "frame": 2,
+          "void-bloom": 2,
+          "void-thorn": 1
         }
       },
       {
@@ -450,7 +453,9 @@
           "film-reel": 2,
           "film-strip": 2,
           "filmcans": 2,
-          "director-chair": 1
+          "director-chair": 1,
+          "void-bloom": 2,
+          "void-thorn": 1
         },
         "flock": 0.3
       },
@@ -468,7 +473,9 @@
           "spotlight": 2,
           "director-chair": 2,
           "chain-pillar": 1,
-          "film-strip": 1
+          "film-strip": 1,
+          "void-bloom": 2,
+          "void-thorn": 1
         },
         "flock": 0.5
       },
@@ -486,7 +493,9 @@
           "chain-pillar": 2,
           "rope-post": 2,
           "spotlight": 1,
-          "film-reel": 1
+          "film-reel": 1,
+          "void-bloom": 2,
+          "void-thorn": 1
         }
       }
     ],
@@ -520,6 +529,14 @@
       "wave": 100,
       "curve": 1.0,
       "bend": 140
+    },
+    "sky": {
+      "arc": 0.5,
+      "late": [
+        "#050208",
+        "#4A1030"
+      ],
+      "k": 0.35
     }
   },
   "fragment": "abyss",
@@ -528,5 +545,32 @@
     "rate": 1.0,
     "key": 0
   },
-  "blurb": "Everything at once: ghost barriers, bumpers and a lodestone in the void, and the ring cuts between frames"
+  "blurb": "Everything at once: ghost barriers, bumpers and a lodestone in the void, and the ring cuts between frames",
+  "ecosystem": {
+    "_doc": "v58 MAP → ECOSYSTEM → CAST (blueprint.json: ecosystem): who and what lives here, and nowhere else it doesn't belong.",
+    "teaches": "Mastery",
+    "cast": [
+      "skeleton",
+      "voidling",
+      "fragment"
+    ],
+    "wildlife": {
+      "voidling": 4,
+      "fragment": 9
+    },
+    "vegetation": [
+      "void-bloom",
+      "void-thorn"
+    ],
+    "props": [
+      "chain-pillar",
+      "film-reel",
+      "director-chair",
+      "spotlight",
+      "rope-post"
+    ],
+    "hazards": [
+      "everything, one after another"
+    ]
+  }
 }

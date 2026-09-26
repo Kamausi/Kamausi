@@ -58,7 +58,7 @@
   function updateAnticipation(dt) {
     const s = skull, R = game.result;
     let want = 0;
-    if (game.state === "flying" && TRAVEL.on && game.mode === "story" && !Replay.play) {
+    if (game.state === "flying" && travelMoves() && !Replay.play) {
       if (!R) { const P = predictMake(s); antic.predicted = !!P; if (P) want = ANTIC_MAX * smooth(clamp(s.t / Math.max(0.05, P.tc), 0, 1)); }
       else if (R.make) want = ANTIC_MAX;   // it went in: hold on while the hit is counted (the travel takes it from there)
     } else antic.predicted = false;
@@ -68,7 +68,7 @@
   // how far the world may run ahead of the counted hits right now
   function anticipatedGoal() {
     if (!antic.k || !TRAVEL.on || game.phase === "crossing") return -Infinity;
-    const a = travelAt(antic.from), b = travelAt(antic.from + 1);
+    const a = travelDistAt(antic.from), b = travelDistAt(antic.from + 1);
     return b > a ? a + (b - a) * antic.k : -Infinity;
   }
 

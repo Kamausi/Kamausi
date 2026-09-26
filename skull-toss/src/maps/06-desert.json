@@ -488,6 +488,14 @@
       "wave": 120,
       "curve": 0.7,
       "bend": 180
+    },
+    "sky": {
+      "arc": 0.9,
+      "late": [
+        "#120A14",
+        "#8A4A2A"
+      ],
+      "k": 0.38
     }
   },
   "fragment": "desert",
@@ -496,5 +504,37 @@
     "rate": 1.0,
     "key": 2
   },
-  "blurb": "A smaller ring, further off: cannons fire across the lane and vultures drop bones"
+  "blurb": "A smaller ring, further off: cannons fire across the lane and vultures drop bones",
+  "ecosystem": {
+    "_doc": "v58 MAP → ECOSYSTEM → CAST (blueprint.json: ecosystem): who and what lives here, and nowhere else it doesn't belong.",
+    "teaches": "Distance",
+    "cast": [
+      "gravedigger",
+      "skeleton",
+      "vulture",
+      "scorpion",
+      "tumbleweed"
+    ],
+    "wildlife": {
+      "vulture": 3,
+      "scorpion": 3,
+      "tumbleweed": 3
+    },
+    "vegetation": [
+      "saguaro",
+      "tumbleweed"
+    ],
+    "props": [
+      "wagon-wreck",
+      "boot-hill",
+      "skull-post",
+      "ribcage",
+      "mesa"
+    ],
+    "hazards": [
+      "the heat haze",
+      "the long throw"
+    ],
+    "heat": true
+  }
 }

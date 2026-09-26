@@ -206,15 +206,18 @@
     "tint": null,
     "ambient": {
       "walkers": [
+        "zombie",
         "skeleton",
         "ghost"
       ],
       "ghost": true,
       "bats": 2.0,
       "witch": false,
-      "digger": false,
+      "digger": true,
       "cat": false,
-      "lightning": false
+      "lightning": false,
+      "crows": true,
+      "batsToo": true
     }
   },
   "anchor": "post",
@@ -496,6 +499,12 @@
     ],
     "landmarks": [
       {
+        "asset": "digger",
+        "hit": 0,
+        "ahead": 12.5,
+        "x": -2.9
+      },
+      {
         "asset": "gilded-gate",
         "hit": 0,
         "ahead": 16,
@@ -548,6 +557,14 @@
       "wave": 110,
       "curve": 0.8,
       "bend": 150
+    },
+    "sky": {
+      "arc": 0.7,
+      "late": [
+        "#0A0B18",
+        "#6A5230"
+      ],
+      "k": 0.3
     }
   },
   "fragment": "gilded",
@@ -556,5 +573,37 @@
     "rate": 0.97,
     "key": -1
   },
-  "blurb": "Gilded urns by the lane bounce the skull: bank shots count, bats come out of the domes"
+  "blurb": "Gilded urns by the lane bounce the skull: bank shots count, bats come out of the domes",
+  "ecosystem": {
+    "_doc": "v58 MAP → ECOSYSTEM → CAST (blueprint.json: ecosystem): who and what lives here, and nowhere else it doesn't belong.",
+    "teaches": "Ricochet",
+    "cast": [
+      "gravedigger",
+      "zombie",
+      "skeleton",
+      "ghost",
+      "crow",
+      "bat"
+    ],
+    "wildlife": {
+      "crow": 0
+    },
+    "vegetation": [
+      "willow",
+      "tree"
+    ],
+    "props": [
+      "angel",
+      "urn",
+      "gilded-gate",
+      "iron-fence",
+      "gas-lamp",
+      "lantern",
+      "crypt"
+    ],
+    "hazards": [
+      "gilded bars to bank off",
+      "bumpers"
+    ]
+  }
 }

@@ -137,7 +137,7 @@
   // few sizes (1×, 2×, 4×, 8× the far one) and drawn from the one that covers the size it's seen at, so it stays crisp
   // however near it comes.
   function walkerCel(type, i, howl, mult = 1) {
-    const key = type + (howl ? "h" : "") + i + "@" + mult, had = cels[key];
+    const vr = type === "skeleton" ? castVariant("skeleton") : "", key = type + vr + (howl ? "h" : "") + i + "@" + mult, had = cels[key];
     if (had) return had;
     if (!celS) walkerCelsResize();
     const S = celS * mult, B = CEL_BOX[type], w = Math.ceil((B.x1 - B.x0) * S), h = Math.ceil((B.y1 - B.y0) * S);
@@ -145,11 +145,29 @@
     const g = c.getContext("2d"), u = (i + 0.5) / CELS;
     g.setTransform(DPR * S, 0, 0, DPR * S, -B.x0 * S * DPR, -B.y0 * S * DPR);
     if (type === "zombie") drawZombie(g, u * TAU);
-    else if (type === "skeleton") drawSkeleton(g, u * TAU);
+    else if (type === "skeleton") { drawSkeleton(g, u * TAU); skeletonVariant(g, c, vr, u); }
     else if (type === "werewolf") drawWerewolf(g, u * TAU, howl, u * (TAU / 5));
     else drawGhost(g, u * (TAU / 1.6), 0);
     celLight(g, c, type);
     return (cels[key] = { c, w: w / mult, h: h / mult, ax: -B.x0 * S / mult, ay: -B.y0 * S / mult });   // (in the 1× cel's units, so it draws the same size)
+  }
+  // v58: the skeleton is the map's own: drowned (weed and barnacles, gone green), sun-bleached (chalk-white, cracked,
+  // a battered hat) or an echo in the Abyss (violet, and it flickers when drawn: drawWalker)
+  function skeletonVariant(g, c, vr, u) {
+    if (vr === "plain") return;
+    const wash = { drowned: "rgba(60,120,110,.32)", bleached: "rgba(255,250,235,.4)", echo: "rgba(150,110,255,.45)" }[vr];
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = "source-atop"; g.fillStyle = wash; g.fillRect(0, 0, c.width, c.height); g.restore();
+    g.save(); g.lineCap = "round"; g.lineJoin = "round";
+    if (vr === "drowned") {
+      g.strokeStyle = "#3E6A3A"; g.lineWidth = 0.035;
+      for (const [x, y, len] of [[-0.06, -0.72, 0.28], [0.08, -0.62, 0.22], [0.02, -0.95, 0.18]]) { g.beginPath(); g.moveTo(x, y); for (let k = 1; k <= 5; k++) g.lineTo(x + Math.sin(k * 1.4 + u * TAU) * 0.03, y + (len * k) / 5); g.stroke(); }
+      g.fillStyle = "#C8C0A8"; g.strokeStyle = INK; g.lineWidth = 0.012; for (const [x, y] of [[0.06, -0.98], [-0.08, -0.55], [0.1, -0.4]]) { g.beginPath(); g.arc(x, y, 0.022, 0, TAU); g.fill(); g.stroke(); }
+    } else if (vr === "bleached") {
+      g.strokeStyle = "rgba(90,70,50,.6)"; g.lineWidth = 0.012; g.beginPath(); g.moveTo(0.02, -1.02); g.lineTo(0.05, -0.96); g.lineTo(0.03, -0.92); g.moveTo(-0.04, -0.7); g.lineTo(-0.01, -0.64); g.stroke();
+      g.fillStyle = "#8A6A44"; g.strokeStyle = INK; g.lineWidth = 0.018; g.beginPath(); g.ellipse(0.02, -1.06, 0.2, 0.035, -0.08, 0, TAU); g.fill(); g.stroke();
+      g.beginPath(); g.moveTo(-0.08, -1.07); g.quadraticCurveTo(-0.06, -1.2, 0.02, -1.2); g.quadraticCurveTo(0.1, -1.2, 0.12, -1.07); g.closePath(); g.fill(); g.stroke();
+    }
+    g.restore();
   }
   // v50: every cel gets lit — a warm key from the upper left, a cool shadow to the lower right, the feet in shade,
   // and a thin rim of light on the lit edge — painted only over what's drawn (source-atop), once per cel
@@ -183,13 +201,15 @@
     if (k.type !== "ghost") { ctx.fillStyle = `rgba(0,0,0,${0.3 * a})`; ctx.beginPath(); ctx.ellipse(p.x, p.y, hp * 0.18, hp * 0.035, 0, 0, TAU); ctx.fill(); }
     const need = hp / celS, mult = need <= 1 ? 1 : need <= 2 ? 2 : need <= 4 ? 4 : 8;
     const cel = walkerCel(k.type, celIndex(k), k.type === "werewolf" && k.state === "howl", mult), sc = hp / celS;
-    ctx.save(); ctx.globalAlpha = a; ctx.translate(p.x, p.y); ctx.scale(k.dir * sc, sc);
+    const echo = k.type === "skeleton" && castVariant("skeleton") === "echo", fl = echo ? 0.4 + 0.25 * Math.sin(world.t * 7 + k.ph * 3) * Math.sin(world.t * 2.3) : 1;   // (v58: an echo in the Abyss flickers, and trails a fainter self)
+    ctx.save(); ctx.globalAlpha = a * fl; ctx.translate(p.x, p.y); ctx.scale(k.dir * sc, sc);
     ctx.drawImage(cel.c, -cel.ax, -cel.ay, cel.w, cel.h);
+    if (echo) { ctx.globalAlpha = a * fl * 0.35; ctx.drawImage(cel.c, -cel.ax - 0.06, -cel.ay - 0.01, cel.w, cel.h); }
     ctx.restore();
   }
   function drawSkyWorld() {
     const w = world, t = w.t;
-    planeXform(ctx, 400, "sky");
+    skyUpdate(); planeXform(ctx, 400, "sky"); drawSkyGrade();   // (v58: the night turns and the moon crosses the sky as the road goes on, 06g_travel.js)
     ctx.fillStyle = CREAM;
     for (const s of w.twinkles) { ctx.globalAlpha = 0.15 + 0.7 * Math.pow(Math.max(0, Math.sin(t * s.sp + s.ph)), 3); ctx.fillRect(s.x, s.y, s.r, s.r); }
     ctx.globalAlpha = 1;
@@ -202,9 +222,9 @@
     planeXform(ctx, 160, "sky");
     for (const c of w.clouds) { const sp = w.sprites[c.s]; if (!sp) continue; ctx.globalAlpha = c.a; ctx.drawImage(sp.c, c.x, c.y, sp.w, sp.h); }
     ctx.globalAlpha = 1;
-    if (moon.r && moon.kind !== "screen") gpuLight(moon.x + camBase.x, moon.y + camBase.y, moon.r * 3.4, "242,231,201", 0.12);   // (the moon's light, on the GPU: 08j_gpu.js)
+    if (moon.r && moon.kind !== "screen") gpuLight(moon.x + SKY.dx + camBase.x, moon.y + SKY.dy + camBase.y, moon.r * 3.4, "242,231,201", 0.12);   // (the moon's light, on the GPU: 08j_gpu.js)
     if (moonLayer) {   // the clouds pass behind the moon: it is a face in the sky, not weather
-      const M = moonLayer; planeXform(ctx, 400, "sky"); ctx.drawImage(M.c, M.x0, M.y0, M.w, M.h);
+      const M = moonLayer; planeXform(ctx, 400, "sky"); ctx.drawImage(M.c, M.x0 + SKY.dx, M.y0 + SKY.dy, M.w, M.h);
       const Sc = sceneFX.screen;   // the picture-house screen flickers with the projector (as much as Flashes allows)
       if (Sc) { ctx.fillStyle = `rgba(242,231,201,${(0.04 + 0.05 * Math.sin(t * 23) * Math.sin(t * 7)) * flashK()})`; ctx.fillRect(Sc.x - Sc.w / 2, Sc.y - Sc.h / 2, Sc.w, Sc.h); }
       planeXform(ctx, 160, "sky");
@@ -235,7 +255,10 @@
     // the props are already in back-to-front order; the few wanderers are merged into it
     // v53: only the wanderers beyond the ring's depth go in here, behind the ring and its pole; the nearer ones are drawn
     // after it (drawNearWorld), so one walking between the ring and the camera passes in front of the pole, not behind it
-    const ws = world.walkers.filter(k => !walkerNear(k)).sort((a, b) => b.z - a.z);
+    const ws = world.walkers.filter(k => !walkerNear(k)).map(k => ({ z: k.z, k, fn: drawWalker }));   // (v58: with the creatures in the water, 08m_aquatic.js)
+    for (const c of aquaWorldList()) ws.push({ z: c.z, k: c, fn: drawAquaThing });
+    for (const c of wildWorldList()) ws.push({ z: c.z, k: c, fn: drawWild });
+    ws.sort((a, b) => b.z - a.z);
     let wi = 0, hazed = !TRAVEL.on;
     // v57: the land (06h_land.js) is painted in slices, far to near, in among the scenery, each slice followed by the
     // flat ground detail that lies on it (v54, 06g_travel.js); without land, that detail goes down first as before
@@ -243,11 +266,11 @@
     for (const k of GY.props) {
       if (k.travel) { if (!travelShows(k)) continue; if (!hazed && k.z < TRAVEL_HAZE_Z) { drawTravelHaze(); hazed = true; } }   // (the far scenery softens behind the haze: 06g_travel.js)
       landUpTo(k.z);
-      while (wi < ws.length && ws[wi].z > k.z) { landUpTo(ws[wi].z); drawWalker(ws[wi++]); }
+      while (wi < ws.length && ws[wi].z > k.z) { landUpTo(ws[wi].z); const e = ws[wi++]; e.fn(e.k); }
       if (k.travel) drawTravelProp(k); else drawProp(k);
     }
     if (!hazed) drawTravelHaze();
-    while (wi < ws.length) { landUpTo(ws[wi].z); drawWalker(ws[wi++]); }
+    while (wi < ws.length) { landUpTo(ws[wi].z); const e = ws[wi++]; e.fn(e.k); }
     landUpTo(-1);
     const f = world.fogSprite;
     if (f) for (const b of world.fog) { const A = groundAt(b.y), x = W / 2 + (b.x - W / 2) * A.k + A.ox + camBase.x; ctx.globalAlpha = b.a; ctx.drawImage(f.c, x, A.y + camBase.y - (f.h * A.k) / 2, f.w * A.k, f.h * A.k); }

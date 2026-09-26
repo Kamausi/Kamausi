@@ -239,9 +239,91 @@ def map_problems(m, fname):
     if m.get("target") not in REG["target"]: bad.append(f"target \"{m.get('target')}\" isn't one the code draws ({', '.join(REG['target'])})")
     if not 0.85 <= m["music"].get("rate", 0) <= 1.15: bad.append("music.rate must be 0.85–1.15")
     if "travel" in m: bad += travel_problems(m["travel"], SB, C)
+    if "aquatic" in m: bad += aquatic_problems(m["aquatic"], m)
+    return bad
+# ── v58 MAP → ECOSYSTEM → CAST (blueprint.json: ecosystem): who may appear where, and the Map Identity Test
+ECO = BLUEPRINT["ecosystem"]
+AQ_CAST = {"school": "fish", "fish": "fish", "minnows": "fish", "bigfish": "fish", "shrimp": "shrimp", "crab": "crab", "eel": "eel", "swamp-eel": "eel", "jelly": "jelly", "turtle": "turtle", "snapper": "turtle",
+           "octopus": "octopus", "tadpoles": "frog", "frog": "frog", "gator": "gator", "strider": "strider", "dragonfly": "dragonfly"}
+def shown_cast(m):   # every character the map actually puts on screen, by what the code reads
+    A, out = m["look"]["ambient"], set()
+    for wk in A.get("walkers", []): out.add(wk)
+    if A.get("ghost"): out.add("ghost")
+    if A.get("digger"): out.add("gravedigger")
+    if A.get("witch"): out.add("witch")
+    if A.get("cat"): out.add("cat")
+    if A.get("bats", 0) > 0: out.add("crow" if A.get("crows") else "bat")
+    if A.get("batsToo"): out.add("bat")
+    if m["look"].get("weather") == "fireflies": out.add("firefly")
+    for k in m.get("aquatic", {}).get("fauna", {}): out.add(AQ_CAST[k])
+    for k, n in m.get("ecosystem", {}).get("wildlife", {}).items():
+        if n: out.add(k)
+    return out
+def track_kinds(m):
+    T, ks = m.get("travel", {}), set()
+    for z in T.get("zones", []):
+        ks |= set(z.get("mix", {})) | set(z.get("backdrop", []))
+        if z.get("near"): ks.add(z["near"])
+        if z.get("rows"): ks.add(z["rows"]["asset"])
+    return ks | set(T.get("backdrop", [])) | set(l["asset"] for l in T.get("landmarks", []))
+def ecosystem_problems(maps):
+    bad, ids = [], [m["id"] for m in maps]
+    kinds = {m["id"]: track_kinds(m) for m in maps}
+    for i, m in enumerate(maps):
+        E, mid = m.get("ecosystem"), m["id"]
+        if not E: bad.append(f"{mid}: no ecosystem (blueprint.json: ecosystem)"); continue
+        who = f"{mid}'s ecosystem"
+        for c in E.get("cast", []):
+            if c not in ECO["cast"]: bad.append(f"{who}: \"{c}\" isn't a character the cast rules know")
+            elif mid not in ECO["cast"][c]: bad.append(f"{who}: {c} doesn't belong here (only {', '.join(ECO['cast'][c])})")
+        for c in sorted(shown_cast(m) - set(E.get("cast", []))): bad.append(f"{mid} shows a {c}, who isn't in its cast")
+        for c, per in ECO["variants"].items():
+            if c in E.get("cast", []) and mid not in per: bad.append(f"{who}: {c} has no variant for this map")
+        # the Map Identity Test: ten questions, every map
+        nb = [maps[j] for j in (i - 1, i + 1) if 0 <= j < len(maps)]
+        others = set().union(*[kinds[x] for x in ids if x != mid])
+        fail = lambda tid, why: bad.append(f"{mid} fails the identity test ({tid}): {why}")
+        own = kinds[mid] - others
+        if len(own) < 4: fail("ground", f"only {len(own)} kinds of scenery no other map has")
+        if not (set(E.get("cast", [])) - set().union(*[set(n.get("ecosystem", {}).get("cast", [])) for n in nb])): fail("cast", "nobody here who isn't on a neighbouring map too")
+        life = [k for k in set(E.get("cast", [])) if k not in ("zombie", "skeleton", "ghost", "werewolf", "witch", "gravedigger")]
+        if len(life) < 2: fail("life", "fewer than two kinds of wildlife")
+        if len(E.get("vegetation", [])) < 2 or any(v not in kinds[mid] for v in E.get("vegetation", [])): fail("growth", "fewer than two vegetation kinds, or one that isn't on its track")
+        if len(E.get("props", [])) < 3 or any(p not in kinds[mid] for p in E.get("props", [])): fail("props", "fewer than three prop kinds, or one that isn't on its track")
+        if any(n["look"]["lane"] == m["look"]["lane"] for n in nb): fail("lane", f"the same lane ({m['look']['lane']}) as a neighbour")
+        if any(n["look"]["weather"] == m["look"]["weather"] for n in nb): fail("air", f"the same weather ({m['look']['weather']}) as a neighbour")
+        if E.get("teaches") != ECO["order"][i] or not E.get("hazards"): fail("teaches", f"it should teach {ECO['order'][i]} and name its hazards")
+        rgb = lambda h: [int(h[k:k + 2], 16) for k in (1, 3, 5)]
+        for o in maps:
+            if o is m: continue
+            d = sum((a - b) ** 2 for a, b in zip(rgb(m["look"]["sky"][1]) + rgb(m["look"]["ground"][1]), rgb(o["look"]["sky"][1]) + rgb(o["look"]["ground"][1]))) ** 0.5
+            if d < 20: fail("palette", f"its sky and ground are within {d:.0f} of {o['id']}'s")
+        lairs = [l["asset"] for l in m.get("travel", {}).get("landmarks", []) if l.get("wakes")]
+        if not lairs or any(a in others for a in lairs): fail("end", "no lair of its own on the horizon")
+    return bad
+# ── v58 the aquatic environment (08m_aquatic.js): the biome the map's water is dressed with
+AQ_FAUNA = {"submerged": {"school", "fish", "crab", "eel", "jelly", "turtle", "octopus", "shrimp"},
+            "surface": {"minnows", "bigfish", "tadpoles", "frog", "snapper", "swamp-eel", "gator", "strider", "dragonfly"}}
+def aquatic_problems(A, m):
+    bad, kind = [], A.get("kind")
+    if kind not in AQ_FAUNA: return [f"aquatic.kind must be one of {', '.join(AQ_FAUNA)}"]
+    if kind == "surface" and not m["look"]["ambient"].get("water"): bad.append("aquatic: a surface biome needs water (look.ambient.water)")
+    if kind == "submerged" and m["look"]["ambient"].get("water"): bad.append("aquatic: a submerged map has no water surface (look.ambient.water must be false)")
+    for k, n in A.get("fauna", {}).items():
+        if k not in AQ_FAUNA[kind]: bad.append(f"aquatic.fauna: \"{k}\" doesn't live in a {kind} biome")
+        elif not (isinstance(n, int) and 0 <= n <= 12): bad.append(f"aquatic.fauna.{k} must be 0–12")
+    Wt = A.get("water", {})
+    for k in ("tint", "deep"):
+        if k in Wt and not COLOR.match(str(Wt[k])): bad.append(f"aquatic.water.{k} must be a colour")
+    for k, lo, hi in (("clarity", 0, 1), ("caustics", 0, 1), ("murk", 0.3, 1.5), ("shafts", 0, 10), ("snow", 0, 120), ("bubbles", 0, 40), ("algae", 0, 20)):
+        if k in Wt and not (isinstance(Wt[k], (int, float)) and lo <= Wt[k] <= hi): bad.append(f"aquatic.water.{k} must be {lo}–{hi}")
+    cur = Wt.get("current", [0, 0])
+    if not (isinstance(cur, list) and len(cur) == 2 and all(isinstance(v, (int, float)) and abs(v) <= 0.5 for v in cur)): bad.append("aquatic.water.current is [x, y], each within ±0.5 m/s")
+    if any(f not in ("whale", "manta", "school") for f in A.get("far", [])): bad.append("aquatic.far: whale, manta or school")
     return bad
 # ── v47 perceptual travel (docs/TRAVEL.md): the map's track, checked here the way the game will build it ──
-CANVAS_KINDS = set("""pumpkin jack tuft hay corn scarecrow rail tree stone cross slab obelisk crypt lantern fence sarcophagus column mausoleum torch bonetree ribcage
+CANVAS_KINDS = set("""glow-fungus void-bloom void-thorn coral-fan coral-brain coral-branch rock-barnacle seaweed shells debris-flat column-ruin poster-wall anemone sand-drift
+  pumpkin jack tuft hay corn scarecrow rail tree stone cross slab obelisk crypt lantern fence sarcophagus column mausoleum torch bonetree ribcage
   skullpile cypress lily rowboat stump reeds tent booth pennant horse balloons lamppost gear gargoyle bell crate barrel seats rope pillar filmcans popcorn
   angel urn signpost log mushroom cactus rock stalagmite minecart frame seatwreck""".split())   # (the props the game paints: 06d_props.js, 06f_props_sets.js)
 def travel_table(Tv, SB):   # how far on the camera stands at each hit (the game's travelTable, 06g_travel.js)
@@ -270,6 +352,14 @@ def travel_problems(Tv, SB, C):
             if not (isinstance(v, (int, float)) and lo <= v <= hi): bad.append(f"travel.land.{k} must be {lo}–{hi} {what}")
         extra = set(Ld) - {"hills", "roll", "wave", "curve", "bend"}
         if extra: bad.append(f"travel.land has keys the game doesn't read: {', '.join(sorted(extra))}")
+    # v58: the sky over the road (06g_travel.js): how far across the moon goes by the map's end, and the night it turns to
+    Sk = Tv.get("sky")
+    if Sk is not None:
+        if not (isinstance(Sk.get("arc"), (int, float)) and 0 <= Sk["arc"] <= 1): bad.append("travel.sky.arc must be 0–1 (how far across the sky the moon goes)")
+        if not (isinstance(Sk.get("k"), (int, float)) and 0 <= Sk["k"] <= 0.6): bad.append("travel.sky.k must be 0–0.6 (how far the night turns)")
+        if not (isinstance(Sk.get("late"), list) and len(Sk["late"]) == 2 and all(COLOR.match(str(c)) for c in Sk["late"])): bad.append("travel.sky.late is two colours: the zenith and the horizon late in the map")
+        extra = set(Sk) - {"arc", "late", "k"}
+        if extra: bad.append(f"travel.sky has keys the game doesn't read: {', '.join(sorted(extra))}")
     if bad: return bad
     D, starts, ids = travel_table(Tv, SB), [], set()
     hit_ok = lambda h: isinstance(h, int) and 0 <= h <= SB["end"]
@@ -279,6 +369,9 @@ def travel_problems(Tv, SB, C):
         if not (isinstance(fr, list) and len(fr) == 2 and hit_ok(fr[0])): bad.append(f"travel zone {z.get('id')}: from is [hit, metres ahead]"); continue
         starts.append(D[fr[0]] + fr[1])
         if not (0 <= z.get("density", -1) <= 1 and 0 <= z.get("fog", -1) <= 1): bad.append(f"travel zone {z['id']}: density and fog are 0–1")
+        Rw = z.get("rows")   # v58: an audience seated either side of the aisle
+        if Rw is not None and not (Rw.get("asset") in lib and 1.5 <= Rw.get("every", 0) <= 6 and 1 <= Rw.get("deep", 0) <= 5 and 0 <= Rw.get("from", -1) <= 4 and all(0 <= Rw.get(k, -1) <= 1 for k in ("stagger", "gone", "over", "buried"))):
+            bad.append(f"travel zone {z['id']}: rows need a library asset, every 1.5–6 m, deep 1–5, from 0–4 m, and stagger, gone, over and buried 0–1")
         if not COLOR.match(str(z.get("tone", ""))): bad.append(f"travel zone {z['id']}: tone must be a colour")
         for k, w in z.get("mix", {}).items():
             if k not in lib and k not in CANVAS_KINDS: bad.append(f"travel zone {z['id']}: \"{k}\" isn't in the travel library or a prop the code paints")
@@ -314,6 +407,7 @@ secs = [m["sheet"]["reward"]["section"] for m in MAP_DATA if "section" in m.get(
 if len(set(secs)) != len(secs): problems.append("two maps give back the same section of Morty")
 bosses = [m["bosses"][k] for m in MAP_DATA for k in ("mini", "end") if "bosses" in m]
 if len(set(bosses)) != len(bosses): problems.append("two maps share a boss")
+problems += [f"ecosystem: {b}" for b in ecosystem_problems(MAP_DATA)]   # (v58: MAP → ECOSYSTEM → CAST, and the Map Identity Test)
 if problems: sys.exit("build refused: the maps don't check out\n  " + "\n  ".join(problems))
 js = ("  const MAP_DATA = " + json.dumps(MAP_DATA, separators=(",", ":"), ensure_ascii=False) + ";\n  const TIER_DATA = " + json.dumps(TIERS, separators=(",", ":")) +
       ";\n  const BLUEPRINT = " + json.dumps(BLUEPRINT, separators=(",", ":")) + ";\n  const MAP_REGISTRY = " + json.dumps(REG, separators=(",", ":")) + ";\n" + js)
@@ -435,7 +529,10 @@ for a, b in names:
     n = a or b
     (dupes if n in seen else seen).add(n)
 if dupes: sys.exit("build refused: duplicate top-level names across parts: " + ", ".join(sorted(dupes)))
-out = page.replace("/*__STYLE__*/", css).replace("<!--__MARKUP__-->", markup).replace("/*__SCRIPT__*/", '"use strict";\n(() => {\n' + js + "\n})();")
+# v58: the page carries the code without its // comments (tools/jsstrip.py lexes strings, templates and regexes so only
+# real comments go, and keeps every line break); the source keeps them all
+sys.path.insert(0, str(root.parent / "tools")); import jsstrip
+out = page.replace("/*__STYLE__*/", css).replace("<!--__MARKUP__-->", markup).replace("/*__SCRIPT__*/", '"use strict";\n(() => {\n' + jsstrip.strip(js) + "\n})();")
 args = [a for a in sys.argv[1:] if not a.startswith("--")]
 if dev and args and not embed_music: sys.exit("build refused: the published build never carries the test hooks; drop --dev")
 suffix = "-dev" if dev else ""

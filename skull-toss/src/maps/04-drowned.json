@@ -5,8 +5,8 @@
   "reel": "Reel Four",
   "premise": "The picture palace flooded in the storm of '33 and kept playing. The stagehands never left.",
   "identity": {
-    "visual": "A flooded theatre: red velvet under black water, gilt boxes, the screen still lit above the stage.",
-    "spatial": "A boardwalk of planks down the drowned aisle; the stage machinery works the space in front of the ring.",
+    "visual": "A theatre gone to the bottom of the sea: sand drifted over the red velvet stalls, coral round the proscenium, weed on the curtains, the screen still lit on the stage.",
+    "spatial": "A wide sandy aisle between rows of sunken seats, the stage at the back; the stage machinery works the water in front of the ring.",
     "mechanic": "Timing and stage movement: revolving scenery flats sweep the lane, a ghost scrim fades in and out, bubbles rise.",
     "throw": "Wait for your cue: the gap in the flats, the scrim going thin.",
     "boss": "The Ringmaster runs the show: the flats turn to his whistle and his hoop is the ring.",
@@ -21,7 +21,7 @@
   },
   "sheet": {
     "concept": "Timing, like a stage: the scenery moves on a beat and the throw has to come in on it.",
-    "plane": "The aisle boardwalk (z 0–7.8); the flats turn in the hazard zone, the scrim hangs across it.",
+    "plane": "The sandy aisle (z 0–7.8) between the sunken stalls; the flats turn in the hazard zone, the scrim hangs across it.",
     "launcher": [
       0,
       0.9,
@@ -165,48 +165,49 @@
   },
   "look": {
     "sky": [
-      "#0A0E16",
-      "#141C28",
-      "#1E2A38",
-      "#2A3A48"
+      "#2A7488",
+      "#1E5E70",
+      "#164A5A",
+      "#123E4C"
     ],
-    "horizon": "rgba(120,200,220,.12)",
+    "horizon": "rgba(150,220,230,.2)",
     "moon": "screen",
     "moonColor": "#E6EEF0",
     "stars": 0.0,
     "skyline": "theatre",
-    "silhouette": "#0A0A10",
-    "haze": "rgba(60,90,110,.26)",
+    "silhouette": "#0A1E26",
+    "haze": "rgba(40,110,130,.34)",
     "ground": [
-      "#1E2A34",
-      "#16202A",
-      "#101820",
-      "#0A0E14"
+      "#6E8274",
+      "#5E7266",
+      "#4E6258",
+      "#3E5048"
     ],
     "hills": [
-      "#24303A",
-      "#1E2A34",
-      "#18222C"
+      "#2C4E56",
+      "#264650",
+      "#203E48"
     ],
-    "hillRim": "rgba(150,210,230,.12)",
+    "hillRim": "rgba(170,230,240,.12)",
     "grass": [],
-    "lane": "boardwalk",
-    "light": "rgba(150,220,240,.08)",
+    "lane": "seabed",
+    "light": "rgba(170,235,250,.1)",
     "props": "theatre",
     "foreground": "curtains",
     "weather": "bubbles",
-    "tint": "#3A6B7A",
+    "tint": "#2A7A8A",
     "ambient": {
       "walkers": [
+        "skeleton",
         "ghost"
       ],
       "ghost": true,
-      "bats": 0.2,
+      "bats": 0,
       "witch": false,
       "digger": false,
       "cat": false,
       "lightning": false,
-      "water": true
+      "water": false
     }
   },
   "anchor": "post",
@@ -335,9 +336,9 @@
     "far": 170,
     "_doc": "v47 perceptual travel (docs/TRAVEL.md): see 01-hollow.json.",
     "backdrop": [
+      "column-ruin",
       "opera-box",
-      "pillar",
-      "marquee"
+      "pillar"
     ],
     "zones": [
       {
@@ -346,15 +347,26 @@
           0,
           0
         ],
-        "density": 0.7,
+        "density": 0.45,
         "fog": 0.08,
         "tone": "rgba(0,0,0,0)",
-        "near": "kelp",
+        "near": "seaweed",
         "mix": {
-          "theatre-seats": 5,
-          "kelp": 2,
-          "stage-light": 1,
-          "pillar": 1
+          "seaweed": 2,
+          "coral-brain": 1,
+          "shells": 3,
+          "rock-barnacle": 1,
+          "anemone": 1
+        },
+        "rows": {
+          "asset": "theatre-seats",
+          "every": 2.4,
+          "deep": 3,
+          "from": 0.5,
+          "stagger": 0.35,
+          "gone": 0.1,
+          "over": 0.08,
+          "buried": 0.16
         }
       },
       {
@@ -363,20 +375,31 @@
           10,
           6
         ],
-        "density": 0.66,
+        "density": 0.45,
         "fog": 0.1,
         "tone": "rgba(40,10,20,.1)",
-        "near": "kelp",
+        "near": "seaweed",
         "mix": {
-          "opera-box": 2,
-          "theatre-seats": 3,
-          "kelp": 1,
-          "popcorn": 1
+          "poster-wall": 2,
+          "coral-fan": 1,
+          "seaweed": 2,
+          "shells": 2,
+          "column-ruin": 1
         },
         "backdrop": [
           "opera-box",
-          "pillar"
-        ]
+          "column-ruin"
+        ],
+        "rows": {
+          "asset": "theatre-seats",
+          "every": 2.4,
+          "deep": 3,
+          "from": 0.5,
+          "stagger": 0.35,
+          "gone": 0.14,
+          "over": 0.12,
+          "buried": 0.22
+        }
       },
       {
         "id": "screen",
@@ -384,15 +407,27 @@
           20,
           8
         ],
-        "density": 0.6,
+        "density": 0.45,
         "fog": 0.14,
         "tone": "rgba(20,30,50,.14)",
-        "near": "kelp",
+        "near": "seaweed",
         "mix": {
-          "theatre-seats": 3,
-          "filmcans": 2,
-          "stage-light": 2,
-          "marquee": 1
+          "debris-flat": 2,
+          "filmcans": 1,
+          "stage-light": 1,
+          "coral-branch": 2,
+          "seaweed": 2,
+          "anemone": 1
+        },
+        "rows": {
+          "asset": "theatre-seats",
+          "every": 2.4,
+          "deep": 3,
+          "from": 0.5,
+          "stagger": 0.35,
+          "gone": 0.18,
+          "over": 0.14,
+          "buried": 0.26
         }
       },
       {
@@ -404,12 +439,23 @@
         "density": 0.38,
         "fog": 0.2,
         "tone": "rgba(20,20,40,.22)",
-        "near": "kelp",
+        "near": "seaweed",
         "mix": {
           "jester-pole": 3,
-          "kelp": 2,
-          "pillar": 1,
-          "balloons": 1
+          "coral-fan": 2,
+          "seaweed": 3,
+          "rock-barnacle": 1,
+          "coral-branch": 1
+        },
+        "rows": {
+          "asset": "theatre-seats",
+          "every": 2.4,
+          "deep": 2,
+          "from": 0.5,
+          "stagger": 0.35,
+          "gone": 0.3,
+          "over": 0.2,
+          "buried": 0.3
         }
       },
       {
@@ -421,13 +467,14 @@
         "density": 0.55,
         "fog": 0.14,
         "tone": "rgba(60,20,20,.18)",
-        "near": "kelp",
+        "near": "seaweed",
         "mix": {
           "tent": 2,
           "booth": 2,
           "jester-pole": 2,
-          "pennant": 2,
-          "stage-light": 1
+          "pennant": 1,
+          "coral-fan": 1,
+          "seaweed": 2
         }
       }
     ],
@@ -461,6 +508,14 @@
       "wave": 90,
       "curve": 0.8,
       "bend": 150
+    },
+    "sky": {
+      "arc": 0,
+      "late": [
+        "#04121C",
+        "#1E4A5A"
+      ],
+      "k": 0.25
     }
   },
   "fragment": "drowned",
@@ -469,5 +524,76 @@
     "rate": 1.05,
     "key": 3
   },
-  "blurb": "Revolving flats sweep the lane and a ghost scrim fades in and out: throw on your cue"
+  "blurb": "Revolving flats sweep the lane and a ghost scrim fades in and out: throw on your cue",
+  "aquatic": {
+    "_doc": "v58 the aquatic environment (08m_aquatic.js): a biome per map. kind: submerged (the camera is under water) or surface (above it). water: its colour (tint, deep), clarity, light shafts, caustics, marine snow, bubbles, the current's drift [x, y] in m/s. fauna: how many of each creature. far: the big shapes passing where the sky would be.",
+    "kind": "submerged",
+    "water": {
+      "tint": "#2A7A8A",
+      "deep": "#0C2E3C",
+      "clarity": 1.0,
+      "shafts": 6,
+      "caustics": 0.6,
+      "snow": 70,
+      "bubbles": 16,
+      "current": [
+        0.12,
+        0.02
+      ],
+      "murk": 1.0
+    },
+    "fauna": {
+      "school": 3,
+      "fish": 4,
+      "crab": 3,
+      "eel": 2,
+      "jelly": 3,
+      "turtle": 1,
+      "octopus": 1,
+      "shrimp": 6
+    },
+    "far": [
+      "whale",
+      "manta",
+      "school",
+      "school"
+    ]
+  },
+  "ecosystem": {
+    "_doc": "v58 MAP → ECOSYSTEM → CAST (blueprint.json: ecosystem): who and what lives here, and nowhere else it doesn't belong.",
+    "teaches": "Water",
+    "cast": [
+      "skeleton",
+      "ghost",
+      "fish",
+      "crab",
+      "eel",
+      "jelly",
+      "turtle",
+      "octopus",
+      "shrimp"
+    ],
+    "wildlife": {},
+    "vegetation": [
+      "seaweed",
+      "coral-fan",
+      "coral-brain",
+      "coral-branch",
+      "anemone"
+    ],
+    "props": [
+      "theatre-seats",
+      "opera-box",
+      "poster-wall",
+      "debris-flat",
+      "column-ruin",
+      "stage-light",
+      "shells"
+    ],
+    "hazards": [
+      "the flats turning",
+      "the scrim",
+      "rising bubbles"
+    ]
+  }
 }

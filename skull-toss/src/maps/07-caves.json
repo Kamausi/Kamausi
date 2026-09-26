@@ -203,10 +203,7 @@
     "weather": "rain",
     "tint": null,
     "ambient": {
-      "walkers": [
-        "skeleton",
-        "zombie"
-      ],
+      "walkers": [],
       "ghost": false,
       "bats": 1.4,
       "witch": false,
@@ -422,7 +419,8 @@
           "mine-cart": 2,
           "mine-lamp": 2,
           "crate": 1,
-          "crystal-cluster": 1
+          "crystal-cluster": 1,
+          "glow-fungus": 2
         }
       },
       {
@@ -439,7 +437,8 @@
           "gear-stack": 2,
           "stalagmites": 2,
           "mine-lamp": 2,
-          "crystal-cluster": 1
+          "crystal-cluster": 1,
+          "glow-fungus": 2
         }
       },
       {
@@ -456,7 +455,8 @@
           "pendulum-frame": 2,
           "mine-lamp": 2,
           "stalagmites": 2,
-          "mine-cart": 1
+          "mine-cart": 1,
+          "glow-fungus": 2
         },
         "flock": 0.3
       },
@@ -473,7 +473,8 @@
         "mix": {
           "crystal-cluster": 3,
           "stalagmites": 3,
-          "gear-stack": 1
+          "gear-stack": 1,
+          "glow-fungus": 2
         },
         "flock": 0.5
       },
@@ -491,7 +492,8 @@
           "gear-stack": 3,
           "pendulum-frame": 1,
           "mine-lamp": 2,
-          "bell": 1
+          "bell": 1,
+          "glow-fungus": 2
         }
       }
     ],
@@ -525,6 +527,14 @@
       "wave": 80,
       "curve": 1.2,
       "bend": 120
+    },
+    "sky": {
+      "arc": 0,
+      "late": [
+        "#05060A",
+        "#2A1E10"
+      ],
+      "k": 0.2
     }
   },
   "fragment": "clockwork",
@@ -533,5 +543,34 @@
     "rate": 1.02,
     "key": -3
   },
-  "blurb": "A lodestone bends the flight, a piston stamps and the pendulum swings: curve it and time it"
+  "blurb": "A lodestone bends the flight, a piston stamps and the pendulum swings: curve it and time it",
+  "ecosystem": {
+    "_doc": "v58 MAP → ECOSYSTEM → CAST (blueprint.json: ecosystem): who and what lives here, and nowhere else it doesn't belong.",
+    "teaches": "Timing",
+    "cast": [
+      "bat",
+      "clockbug",
+      "fungi"
+    ],
+    "wildlife": {
+      "clockbug": 4,
+      "fungi": 8
+    },
+    "vegetation": [
+      "glow-fungus",
+      "crystal-cluster",
+      "stalagmites"
+    ],
+    "props": [
+      "gear-stack",
+      "mine-cart",
+      "mine-lamp",
+      "pendulum-frame",
+      "bell"
+    ],
+    "hazards": [
+      "the pendulums",
+      "the crushers on the beat"
+    ]
+  }
 }

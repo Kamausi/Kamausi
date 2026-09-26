@@ -2,7 +2,7 @@
   "_doc": "What the code implements. build.py checks every map against this list, and the spec checks that the code has every id here.",
   "moon": ["art", "crescent", "harvest", "full", "none", "screen", "eclipse"],
   "skyline": ["graveyard", "crypts", "farm", "orchard", "bayou", "carnival", "city", "theatre", "gilded", "woods", "desert", "caves", "abyss"],
-  "lane": ["dirt", "flagstone", "furrows", "bones", "boardwalk", "sawdust", "cobbles", "carpet", "sand", "rails", "void"],
+  "lane": ["dirt", "flagstone", "furrows", "bones", "boardwalk", "sawdust", "cobbles", "carpet", "sand", "rails", "void", "seabed"],
   "props": ["graveyard", "crypts", "patch", "orchard", "bayou", "carnival", "belfry", "theatre", "gilded", "woods", "desert", "caves", "abyss"],
   "foreground": ["branches", "chains", "cornstalks", "vines", "moss", "bunting", "gears", "curtains", "ribs", "stalactites"],
   "weather": ["none", "mist", "leaves", "spores", "fireflies", "confetti", "rain", "dust", "bubbles", "embers"],

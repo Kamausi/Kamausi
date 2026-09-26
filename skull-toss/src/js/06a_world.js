@@ -47,6 +47,11 @@
     worldResize();
   }
   const panX = sx => clamp((sx / W) * 2 - 1, -1, 1);
+  // v58: MAP → ECOSYSTEM → CAST. Who flies over is the map's (crows in the Hollow and the Gilded Graveyard, bats where
+  // there are bats, nothing where there's neither), and a character's look is the map's variant of it (blueprint.json:
+  // ecosystem.variants: a drowned skeleton, a sun-bleached one, an echo in the Abyss; the prospector in the desert)
+  const flockKind = () => { const A = look().ambient; return A.crows ? (A.batsToo && Math.random() < 0.5 ? "bat" : "crow") : A.bats > 0 ? "bat" : null; };
+  const castVariant = who => { const V = BLUEPRINT.ecosystem && BLUEPRINT.ecosystem.variants[who], m = MAP_DATA[sceneMap]; return (V && m && V[m.id]) || "plain"; };
   function spawnWalker(type) {
     const T = WALKERS[type], z = rand(13, 27), dir = Math.random() < 0.5 ? 1 : -1, hw = halfWidthAt(z) + 2;
     world.walkers.push({ kind: "walker", type, z, dir, x: -dir * hw, start: -dir * hw, end: dir * hw, v: rand(T.v[0], T.v[1]), h: T.h * rand(0.93, 1.07),
@@ -81,6 +86,8 @@
     musicClockUpdate(w.t); bossBandUpdate(); bandUpdate(); updatePortal(dt);   // (v54: the musical clock the scenery moves to, 02f_music_clock.js; the portal, 07t_portal.js)
     updateTravel(dt);   // (06g_travel.js)
     updateWater(dt);    // (v51: ripples, 08l_water.js)
+    updateAquatic(dt);  // (v58: the life in the water, 08m_aquatic.js)
+    updateWildlife(dt); // (v58: the map's own creatures on land and in the air, 08n_wildlife.js)
     updateGraveyard(dt); updateWeather(dt);
     for (const k of w.walkers) if (k.scare) k.scare = Math.max(0, k.scare - dt * 1.4);
     for (const c of w.clouds) {
@@ -88,19 +95,19 @@
       const sp = w.sprites[c.s];
       if (sp && c.x > W + 10) { c.x = -sp.w - rand(0, W * 0.3); c.y = HY * rand(0.06, 0.68); }
     }
-    if (w.fogSprite) for (const f of w.fog) { f.x += f.v * dt; if (f.x > W) f.x = -w.fogSprite.w; if (f.x < -w.fogSprite.w) f.x = W; }
+    if (w.fogSprite) for (const f of w.fog) { const F = curl(f.x / U, f.y / U * 3, w.t * 0.08, 2, 1); f.x += (f.v + F.x * U * 0.006) * dt; f.y0 = f.y0 == null ? f.y : f.y0; f.y = f.y0 + F.y * U * 0.004; if (f.x > W) f.x = -w.fogSprite.w; if (f.x < -w.fogSprite.w) f.x = W; }   // (v58: the banks breathe and billow on the flow, 06i_flow.js)
     // director
     const n = w.next;
     const A = look().ambient, kinds = A.walkers.filter(k => k !== "ghost");
     if (w.t >= n.walker) {
       if (kinds.length && w.walkers.filter(k => k.type !== "ghost").length < 2) { // weighted pick from the map's wanderers, never the same one twice running if it has a choice
         let type, tries = 0; do { const r = Math.random(); type = kinds[Math.min(kinds.length - 1, Math.floor(Math.pow(r, 1.3) * kinds.length))]; } while (type === w.lastType && kinds.length > 1 && tries++ < 6);
-        w.lastType = type; spawnWalker(type);
+        w.lastType = type; if (!(type === "zombie" && castVariant("zombie") === "intro" && Math.random() < 0.6)) spawnWalker(type);   // (v58: in the Hollow a zombie is a rare first sighting)
       }
       n.walker = w.t + rand(7, 16);
     }
     if (w.t >= n.ghost) { if ((A.ghost || A.walkers.includes("ghost")) && !w.walkers.some(k => k.type === "ghost")) spawnWalker("ghost"); n.ghost = w.t + rand(25, 45); }
-    if (w.t >= n.bats) { if (A.bats > 0) spawnFlock(A.crows ? "crow" : "bat"); n.bats = w.t + rand(14, 28) / Math.max(0.2, A.bats || 0.2); }
+    if (w.t >= n.bats) { const fk = flockKind(); if (A.bats > 0 && fk) spawnFlock(fk); n.bats = w.t + rand(14, 28) / Math.max(0.2, A.bats || 0.2); }
     if (w.t >= n.witch) { if (A.witch && !w.witch) spawnWitch(); n.witch = w.t + rand(45, 80); }
     if (w.t >= n.shoot) { w.shooting = { x: rand(W * 0.15, W * 0.85), y: rand(HY * 0.05, HY * 0.35), vx: U * rand(1.1, 1.6) * (Math.random() < 0.5 ? -1 : 1), vy: U * rand(0.35, 0.6), t: 0, dur: 0.75 }; n.shoot = w.t + rand(18, 40); }
     if (w.t >= n.bolt) { if (!reduceMotion && A.lightning) spawnBolt(); n.bolt = w.t + rand(50, 100) * (look().weather === "rain" ? 0.4 : 1); }

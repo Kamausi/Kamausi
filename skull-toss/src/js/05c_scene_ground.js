@@ -37,12 +37,12 @@
         b.restore();
       }
     },
-    boardwalk(b) {   // planks on posts over the water, out to where the ring hangs
-      const pts = lanePts(0.75, 0.6, RING_Z + 1.2); lanePoly(b, pts, "#5A4632");
+    boardwalk(b) {   // planks on posts over the water, stopping short of the ring, which stands in open water (v58)
+      const pts = lanePts(0.75, 0.6, WALK_END); lanePoly(b, pts, "#5A4632");
       b.strokeStyle = "rgba(20,14,8,.7)"; b.lineWidth = 1.2;
-      laneRows(0.2, RING_Z + 1.2, 0.22, z => { const a = projectBase(-0.75 + z * 0.02, 0, z), c = projectBase(0.75 - z * 0.02, 0, z); b.beginPath(); b.moveTo(a.x, a.y); b.lineTo(c.x, c.y); b.stroke(); });
+      laneRows(0.2, WALK_END, 0.22, z => { const a = projectBase(-0.75 + z * 0.02, 0, z), c = projectBase(0.75 - z * 0.02, 0, z); b.beginPath(); b.moveTo(a.x, a.y); b.lineTo(c.x, c.y); b.stroke(); });
       b.strokeStyle = INK; b.lineWidth = 2; b.beginPath(); pts.forEach((q, i) => i ? b.lineTo(q.x, q.y) : b.moveTo(q.x, q.y)); b.closePath(); b.stroke();
-      b.fillStyle = "#3A2C1E"; for (let z = 0.6; z < RING_Z + 1.2; z += 1.4) for (const sd of [-1, 1]) { const p = projectBase(sd * (0.78 - z * 0.02), 0, z), w = 0.07 * p.s; b.fillRect(p.x - w / 2, p.y - w * 1.6, w, w * 2.2); }
+      b.fillStyle = "#3A2C1E"; for (let z = 0.6; z < WALK_END + 0.1; z += 1.2) for (const sd of [-1, 1]) { const p = projectBase(sd * (0.78 - z * 0.02), 0, z), w = 0.07 * p.s; b.fillRect(p.x - w / 2, p.y - w * 1.6, w, w * 2.2); }
     },
     sawdust(b) {
       lanePoly(b, lanePts(1.1, 0.8, RING_Z + 2), "rgba(210,170,110,.28)");
@@ -88,13 +88,15 @@
       b.bezierCurveTo(p.x + w * 0.4, p.y + h * (0.3 + rnd() * 0.5), p.x - w * 0.3, p.y + h * 0.2, p.x - w, p.y); b.fill();
     }
     paintWaterStrokes(b, rnd, 120, 0.9);   // the highlights on the crests
-    if (moon.r) {   // the moon laid down the water in broken strokes, wider toward you
-      const mc = rgbOf(look().moonColor);
-      for (let y = HY + 3, i = 0; y < H + B; y += 3 + i * 0.7, i++) {
-        const spread = moon.r * (0.5 + i * 0.045), n = 1 + (rnd() * 2.5) | 0;
-        for (let j = 0; j < n; j++) { const cx = moon.x + (rnd() - 0.5) * spread * 1.6, len = spread * (0.2 + rnd() * 0.55), th = 1 + i * 0.05 + rnd();
-          taperStroke(b, cx, y + (rnd() - 0.5) * 2, len, th, (rnd() - 0.5) * 0.08, `rgba(${mc},${0.1 + rnd() * 0.18})`); }
-      }
+  }
+  // the moon laid down the water in broken strokes, wider toward you: its own plate (v58), so it can follow the moon
+  // across the sky as the map's road goes on (drawWaterSheen, 08l_water.js)
+  function paintMoonPath(b, B) {
+    const rnd = mulberry32(517 + sceneMap * 7), mc = rgbOf(look().moonColor);
+    for (let y = HY + 3, i = 0; y < H + B; y += 3 + i * 0.7, i++) {
+      const spread = moon.r * (0.5 + i * 0.045), n = 1 + (rnd() * 2.5) | 0;
+      for (let j = 0; j < n; j++) { const cx = moon.x + (rnd() - 0.5) * spread * 1.6, len = spread * (0.2 + rnd() * 0.55), th = 1 + i * 0.05 + rnd();
+        taperStroke(b, cx, y + (rnd() - 0.5) * 2, len, th, (rnd() - 0.5) * 0.08, `rgba(${mc},${0.1 + rnd() * 0.18})`); }
     }
   }
   // a short tapered brush stroke: fat in the middle, to a point at each end

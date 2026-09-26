@@ -159,6 +159,7 @@
       sceneFX.clock = { x: tx, y: cy, r };
     },
     theatre(b, rnd, x0, x1, base, SIL) {   // the picture palace: balconies and boxes either side, the back of the stalls ahead
+      if (aquaBiome() && aquaBiome().kind === "submerged") { drownedStage(b, rnd, x0, x1, base, SIL); return; }   // (v58: under the sea)
       b.fillStyle = SIL; b.fillRect(x0, HY - U * 0.02, x1 - x0, base - HY + U * 0.02);
       for (const sd of [-1, 1]) {
         const ex = sd < 0 ? x0 : x1, inner = W / 2 + sd * Math.min(W * 0.3, U * 0.55);
@@ -171,6 +172,44 @@
       b.fillStyle = "rgba(90,26,26,.9)"; for (let x = x0; x < x1; x += U * 0.025) { b.beginPath(); b.arc(x, HY + U * 0.004, U * 0.011, Math.PI, 0); b.fill(); }   // the back rows of seats
     }
   };
+  // v58: the Drowned Theater's stage, at the back, under the sea: a proscenium arch, gilt gone green and barnacled, the
+  // screen lit inside it (the map's "screen" moon), the curtains either side heavy with weed, coral grown up round the
+  // arch's feet and along the apron (the stage is the most overgrown place in the house), balconies either side with
+  // weed hanging from them, the house's columns barnacled. Drawn softened, as far things are under water.
+  function drownedStage(b, rnd, x0, x1, base, SIL) {
+    const cx = W / 2, sw = Math.min(W * 0.36, U * 0.72), top = HY - U * 0.32, apron = HY + U * 0.01, ink = "rgba(8,20,26,.9)";
+    b.fillStyle = "rgba(10,30,38,.85)"; b.fillRect(x0, HY - U * 0.02, x1 - x0, base - HY + U * 0.02);   // the back of the house
+    for (const sd of [-1, 1]) {   // the balconies, tier on tier, weed hanging
+      const ex = sd < 0 ? x0 : x1, inner = cx + sd * sw * 1.05;
+      for (let row = 0; row < 3; row++) {
+        const y = HY - U * (0.06 + row * 0.11), h = U * 0.05;
+        b.fillStyle = "rgba(24,52,58,.95)"; b.beginPath(); b.moveTo(ex, y - h); b.lineTo(inner, y - h * 0.6); b.lineTo(inner, y + h * 0.2); b.lineTo(ex, y + h * 0.4); b.fill();
+        b.strokeStyle = "rgba(90,140,90,.55)"; b.lineWidth = 1.2; for (let i = 0; i < 6; i++) { const u = (i + rnd() * 0.8) / 6, lx = ex + (inner - ex) * u, ly = y + h * 0.3 - (h * 0.2) * u, ln = U * (0.02 + rnd() * 0.05); b.beginPath(); b.moveTo(lx, ly); b.quadraticCurveTo(lx + ln * 0.3, ly + ln * 0.6, lx - ln * 0.1, ly + ln); b.stroke(); }
+      }
+      for (const k of [1.18, 1.55]) {   // the house's columns, barnacled
+        const x = cx + sd * sw * k, w = U * 0.03; b.fillStyle = "rgba(40,70,72,.95)"; b.fillRect(x - w / 2, top - U * 0.02, w, apron - top + U * 0.02);
+        b.fillStyle = "rgba(200,196,170,.35)"; for (let i = 0; i < 7; i++) { b.beginPath(); b.arc(x + (rnd() - 0.5) * w, top + rnd() * (apron - top), 1.2 + rnd() * 1.6, 0, TAU); b.fill(); }
+      }
+    }
+    for (const sd of [-1, 1]) { b.fillStyle = "rgba(20,48,54,.97)"; b.fillRect(sd < 0 ? cx - sw : cx + sw * 0.82, top, sw * 0.18, apron - top); }   // the stage house's sides (the screen shows through the middle)
+    b.fillStyle = "rgba(20,48,54,.97)"; b.fillRect(cx - sw, top, sw * 2, U * 0.05);
+    for (const sd of [-1, 1]) {   // the curtains, drawn back, heavy with weed
+      b.fillStyle = "rgba(96,30,34,.95)"; b.beginPath(); b.moveTo(cx + sd * sw * 0.82, top + U * 0.06); b.lineTo(cx + sd * sw * 0.5, top + U * 0.06); b.quadraticCurveTo(cx + sd * sw * 0.62, HY - U * 0.12, cx + sd * sw * 0.7, apron); b.lineTo(cx + sd * sw * 0.82, apron); b.closePath(); b.fill();
+      b.strokeStyle = "rgba(40,10,14,.6)"; b.lineWidth = 1.2; for (let i = 1; i < 4; i++) { const u = i / 4; b.beginPath(); b.moveTo(cx + sd * sw * (0.82 - 0.3 * u), top + U * 0.06); b.quadraticCurveTo(cx + sd * sw * (0.82 - 0.2 * u), HY - U * 0.12, cx + sd * sw * (0.82 - 0.12 * u), apron); b.stroke(); }
+      b.strokeStyle = "rgba(70,120,60,.8)"; b.lineWidth = 2; for (let i = 0; i < 5; i++) { const x = cx + sd * sw * (0.55 + rnd() * 0.27), y0 = top + U * (0.08 + rnd() * 0.1), ln = U * (0.08 + rnd() * 0.14); b.beginPath(); b.moveTo(x, y0); b.bezierCurveTo(x + U * 0.02, y0 + ln * 0.3, x - U * 0.02, y0 + ln * 0.6, x + U * 0.01, y0 + ln); b.stroke(); }
+    }
+    b.strokeStyle = "rgba(120,140,90,.9)"; b.lineWidth = U * 0.018; b.beginPath(); b.moveTo(cx - sw * 0.86, apron); b.lineTo(cx - sw * 0.86, top + U * 0.1); b.quadraticCurveTo(cx - sw * 0.86, top + U * 0.02, cx - sw * 0.7, top + U * 0.02); b.lineTo(cx + sw * 0.7, top + U * 0.02); b.quadraticCurveTo(cx + sw * 0.86, top + U * 0.02, cx + sw * 0.86, top + U * 0.1); b.lineTo(cx + sw * 0.86, apron); b.stroke();   // the arch, its gilt gone green
+    b.strokeStyle = ink; b.lineWidth = 1.5; b.stroke();
+    b.fillStyle = "rgba(200,196,170,.4)"; for (let i = 0; i < 26; i++) { const u = rnd(), side = rnd() < 0.5 ? -1 : 1, y = top + U * 0.02 + u * (apron - top - U * 0.02); b.beginPath(); b.arc(cx + side * sw * 0.86 + (rnd() - 0.5) * U * 0.014, y, 1 + rnd() * 1.8, 0, TAU); b.fill(); }   // barnacles
+    b.fillStyle = "rgba(40,30,24,.95)"; b.fillRect(cx - sw * 1.02, apron - U * 0.012, sw * 2.04, U * 0.03);   // the apron
+    for (let i = 0; i < 28; i++) {   // coral along the apron and up the arch's feet, thickest at the sides
+      const u = rnd(), sd = rnd() < 0.5 ? -1 : 1, x = cx + sd * sw * (0.3 + Math.pow(u, 0.6) * 0.75), y = apron - U * 0.005, h = U * (0.015 + rnd() * 0.04) * (0.6 + u), col = ["rgba(184,71,74,.85)", "rgba(200,154,74,.8)", "rgba(208,122,90,.8)", "rgba(216,106,138,.75)"][(rnd() * 4) | 0];
+      b.fillStyle = col; b.beginPath(); b.moveTo(x - h * 0.5, y); b.quadraticCurveTo(x - h * 0.7, y - h, x, y - h * 1.1); b.quadraticCurveTo(x + h * 0.7, y - h, x + h * 0.5, y); b.closePath(); b.fill();
+    }
+    for (let i = 0; i < 8; i++) { const x = cx + (rnd() - 0.5) * sw * 1.4, y = apron - U * 0.01; b.fillStyle = "rgba(60,50,40,.9)"; b.save(); b.translate(x, y); b.rotate((rnd() - 0.5) * 1.2); b.fillRect(-U * 0.012, -U * 0.02, U * 0.024, U * 0.02); b.restore(); }   // broken footlights
+    const g = b.createLinearGradient(0, top - U * 0.1, 0, base);   // softened by the water between
+    g.addColorStop(0, "rgba(20,70,84,.1)"); g.addColorStop(1, "rgba(20,70,84,.3)"); b.fillStyle = g; b.fillRect(x0, top - U * 0.1, x1 - x0, base - top + U * 0.1);
+  }
   // the far plates' moving parts, drawn live over them: the windmill and the Ferris wheel turn, the clock tells time
   function drawFarFX(t) {
     const Wh = sceneFX.wheel, C = sceneFX.clock;

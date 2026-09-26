@@ -1,8 +1,75 @@
-# SKULL TOSS v57
+# SKULL TOSS v58
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)); nothing else ever plays in their place.
+
+## New in v58: the moon sets as you go, one reflection, a world that travels in every mode, and a theatre at the bottom of the sea
+
+- **The sky keeps time with the road.** The further a map carries Morty, the lower the moon: it sets on its own side of
+  the sky, never across the ring, and by the boss it is going down behind the skyline. The night turns with it: the
+  top of the sky deepens and the horizon takes the map's late colour. Its glow, its light, the vignette's clearing and
+  its road down the water all go with it. The Drowned Theater's screen and the moonless caves stay put.
+- **One ring reflection.** On the water the ring has a single reflection: rippling, softer than the ring, anchored under
+  it wherever it moves, and drawn even on a struggling phone. The flat copy that used to sit under it is gone. In the
+  Black Marsh the boardwalk now stops short of the ring, which stands in open water.
+- **Every mode travels.** One travel controller moves the world in every mode that plays a lane:
+  - Adventure and Adventure+ go by the map's legs and stand still through the bosses.
+  - Arcade, Practice, the Director's Challenge and the season's Feature go by the road: a step a make, slowing as the
+    map's far end comes up.
+  - Boss Rush stands in each boss's arena.
+  - An attraction's booth stays where it is.
+  The world, its life and the music all keep going while it moves.
+- **The Drowned Theater is under the sea.** The dock is gone.
+  - **The layout.** A wide sandy aisle runs between organised rows of sunken seats, staggered, with the odd one missing,
+    overturned or half buried. The sand drifts over the old red runner and the boards, with ripples, shells, stones and
+    weed. Barnacled columns and weedy balconies make the architecture, playbills peel on the walls, and broken flats
+    and props lie about.
+  - **The stage.** It stands at the back with the screen still lit. Weed hangs on its curtains and coral grows round the
+    arch; it is the most overgrown place in the house.
+  - **The water.** Blue-teal attenuation, light shafts, caustics wavering over the sand, the seats and the walls, drifting
+    motes and rising bubbles. Where the sky was, whales and mantas pass far off.
+  - **The life.** Schools and single fish wander between the seats and scatter when Morty goes by. Crabs crawl sideways
+    and dig in. Eels come out of their holes and go back. Jellyfish drift, a turtle glides across now and then, and an
+    octopus changes colour on a seat. Now and then a big fish passes close to the camera, low and to one side.
+- **The Black Marsh's life.**
+  - Under the murk: minnows, bigger fish that come up in a boil, an eel and tadpoles.
+  - On the surface: frogs on their pads that jump in when startled, a snapping turtle's head, a gator's eyes far off,
+    water striders and dragonflies touching down. Bubbles come up from the mud.
+- **Curl noise, for atmosphere only.** A curl-noise flow (swirling, never bunching) now carries:
+  - the marine snow, the bubbles and the sway of the weed;
+  - the wander of fish and fireflies;
+  - drifting spores and embers, and the mist banks;
+  - the portal's sparks.
+  It never touches the skull, the aim, the ring, a target or an obstacle.
+- The Diving Skull now turns up in the Black Marsh: the Drowned Theater has no surface to dive from.
+- **Every map has its own world: map, then ecosystem, then cast.** Characters aren't shared across the game any more:
+  each belongs to its maps and turns up nowhere else. The build refuses a map that breaks the rules.
+  - **The gravedigger:** only in the Gilded Graveyard (the sexton) and, as a prospector with a sun hat and a red bandana,
+    the Bone Desert.
+  - **Zombies:** the Graveyard, and a rare first one in Crow Hollow.
+  - **Skeletons:** the Graveyard's plain ones, drowned ones in the Drowned Theater (weed and barnacles), sun-bleached ones
+    with battered hats in the desert, and only flickering violet echoes in the Abyss.
+  - **Crows:** Crow Hollow and the Graveyard. Bats live in the Graveyard, the marsh and the caves; fish in the theatre
+    and the marsh.
+  - **The Whistling Woods:** owls on branches (they turn their heads after the skull and take off as Morty passes),
+    grazing deer that bound away, a fox that trots across and sits, and floating forest spirits.
+  - **The Bone Desert:** vultures circling, scorpions that dig in, tumbleweeds rolling on the wind, and heat haze over
+    the horizon.
+  - **The Clockwork Caves:** wind-up clockwork bugs that run down and rewind themselves, and bioluminescent fungi that
+    flare as Morty passes.
+  - **The Black Abyss:** things of the void that fade in and watch, void blooms and black thorns, and floating fragments
+    of the seven worlds before it.
+- **The Map Identity Test.** The build asks ten questions of every map, starting with "would removing the background
+  still leave enough to identify it?". It checks each map for:
+  - its own scenery;
+  - a cast that belongs;
+  - wildlife, vegetation and props of its own;
+  - a lane and weather unlike its neighbours';
+  - the mechanic its place in the order teaches (Fundamentals, Ricochet, Wind, Water, Unpredictability, Distance,
+    Timing, Mastery);
+  - a palette of its own;
+  - a lair on its own horizon.
 
 ## New in v57: hills, a winding road, a band that plays along, and six new power-ups
 
@@ -28,7 +95,7 @@ Open `index.html` in any browser, on a phone or a desktop. The fonts and all the
 | Power-up | From | What it does |
 |---|---|---|
 | **Vine Swing** | the Whistling Woods | A vine hangs over the lane, swaying. Catch its end and you swing round the branch and are slung through the ring. Two catches. |
-| **Diving Skull** | the water maps | A throw that drops short into the water dives instead of missing, swims on underwater, then leaps for the ring. Two dives. |
+| **Diving Skull** | the Black Marsh (v58: the only map with a surface to dive from) | A throw that drops short into the water dives instead of missing, swims on underwater, then leaps for the ring. Two dives. |
 | **Clone Skull** | the Black Marsh | Every throw splits in three. Whichever skull goes through the ring counts. |
 | **Rewind Bone** | the Bone Desert | Miss, and the film runs backwards. The throw never happened: no skull lost, and the streak is kept. |
 | **Homing Bone** | the Clockwork Caves | A throw that's close locks on and curves into the ring. |

@@ -18,6 +18,9 @@
     scarecrow: [1.8, 2.6, 0.9, 2.5], rail: [3.6, 1.2, 1.8, 1.1], tree: [2.4, 3.1, 1.2, 2.95],
     stone: [1.0, 1.9, 0.5, 1.8], cross: [1.0, 1.9, 0.5, 1.8], slab: [1.0, 1.9, 0.5, 1.8], obelisk: [1.0, 1.9, 0.5, 1.8], crypt: [3.2, 2.7, 1.6, 2.6], lantern: [0.8, 1.7, 0.2, 1.65], fence: [3.6, 1.35, 1.8, 1.25] };
   const STONE_KINDS = ["stone", "cross", "slab", "obelisk"];
+  // v58: what grows in water sways in the flow (06i_flow.js), each piece on its own, not to the music
+  const FLOW_SWAY = { seaweed: 0.14, kelp: 0.12, "coral-fan": 0.04, anemone: 0.1, "lily-pads": 0.03, cattails: 0.08 };
+  const flowSway = (k, t) => { const F = curl(k.x * 0.35 + k.d * 0.15, k.ph * 11, t * 0.3, 2.2, 2); return clamp(F.x * 0.9 + (aquaBiome() ? aquaDrift()[0] * 1.5 : 0), -1.4, 1.4); };
   const TRAVEL = { on: false, def: null, table: null, D: 0, goal: 0, v: 0, zones: [], near: [], sprites: {}, lastGoal: 0 };
   const TRAVEL_EASE = 4.2, TRAVEL_NEAR = -CAM_BACK + 0.6, TRAVEL_HAZE_Z = 45, TRAVEL_VECTOR = 0.85;   // (vectors once a canvas unit is this many pixels)
   // what an asset is: its canvas (units: 100 a metre), foot, layer and family, whichever kind of painter it has
@@ -26,7 +29,7 @@
     const C = TRAVEL_CANVAS[kind] || (PROP_PAINT[kind] && PROP_SPRITES[kind]); if (!C) return null;
     const tall = C[1] > 2.6 || C[0] > 2.8;
     return { canvas: [C[0] * 100, C[1] * 100], foot: [C[2] * 100, C[3] * 100], layer: tall ? "midground" : "gameplay", family: kind, canvasKind: true,
-      sway: ["tree", "bonetree", "cypress"].includes(kind) ? 0.05 : ["tuft", "corn", "reeds"].includes(kind) ? 0.12 : ["scarecrow", "balloons"].includes(kind) ? 0.07 : 0 };
+      sway: ["tree", "bonetree", "cypress"].includes(kind) ? 0.05 : ["tuft", "corn", "reeds"].includes(kind) ? 0.12 : ["scarecrow", "balloons"].includes(kind) ? 0.07 : FLOW_SWAY[kind] || 0 };
   }
   // how far on the camera stands at each hit: a step a make through each leg that travels (acts I–III, then the
   // approach), the last few steps shorter as a boss comes up; nothing through the boss fights
@@ -54,7 +57,7 @@
       const x0 = flip > 0 ? x - fx : x - (fw - fx), x1 = x0 + fw;   // (the span it covers, mirrored or not)
       if (!extra.landmark && ((x1 > -half && x0 < half) || cleared(d, x0, x1))) return;   // never in the throw corridor; the arenas stay open
       if (!extra.landmark && TRAVEL.lairBlock && TRAVEL.lairBlock(d, x0, x1)) return;   // (v54: nothing in front of the boss's lair)
-      P.push({ kind, d, x, z: d, mul, flip, ph: rnd(), seed: (rnd() * 4) | 0, face: false, size: 1, fam: K.family, tall: (K.canvas[1] / 100) * mul, travel: true, wakes: extra.wakes || null, lite: !!extra.lite });
+      P.push({ kind, d, x, z: d, mul, flip, ph: rnd(), seed: (rnd() * 4) | 0, face: false, size: 1, fam: K.family, tall: (K.canvas[1] / 100) * mul, travel: true, wakes: extra.wakes || null, lite: !!extra.lite, tilt: extra.tilt || 0, sink: extra.sink || 0 });
     };
     const end = table[STAGE_END] + Tv.far + 10;
     TRAVEL.lairBlock = (d, x0, x1) => (Tv.landmarks || []).some(L => { if (!L.wakes) return false; const K = travelKind(L.asset), ld = table[L.hit] + (L.ahead || 0), hw = K ? (K.canvas[0] / 200) * (L.mul || 1) * 1.15 + 1.5 : 0; return d > ld - 32 && d < ld + 8 && x1 > -hw && x0 < hw; });
@@ -64,6 +67,20 @@
       const kind = pick(Z.mix), K = travelKind(kind); if (!K) continue;
       const big = K.canvas[1] > 250 || K.canvas[0] > 300, mul = 0.8 + rnd() * 0.45, reach = K.layer === "midground" || big ? 1.2 + rnd() * 7 : 0.25 + rnd() * 3.2;
       add(kind, d + rnd() * Tv.gap * 0.8, side * (half + reach + (K.canvas[0] / 200) * mul), { mul });
+    }
+    // v58: a zone can seat an audience: rows of one asset either side of the aisle, a row every so many metres, each
+    // row a few seats deep going out from the lane and staggered back a little, the odd seat gone, turned over or half
+    // buried in the sand (travel zone rows: asset, every, deep, from, stagger, gone, over, buried). Its own dice.
+    for (const Z of TRAVEL.zones) {
+      const R = Z.rows; if (!R) continue;
+      const K = travelKind(R.asset); if (!K) continue;
+      const r2 = mulberry32(777 + sceneMap * 5 + ((Z.at * 10) | 0)), zi = TRAVEL.zones.indexOf(Z), zEnd = zi + 1 < TRAVEL.zones.length ? TRAVEL.zones[zi + 1].at : end, wSeat = K.canvas[0] / 100;
+      for (let d = Math.max(start, Z.at) + 1, row = 0; d < zEnd - 1; d += R.every, row++) for (const side of [-1, 1]) for (let i = 0; i < R.deep; i++) {
+        const u = r2(); if (u < R.gone) continue;
+        const x = side * (half + R.from + i * wSeat * 1.04 + wSeat / 2), dd = d + (i + (row % 2) * 0.5) * R.stagger;
+        const over = r2() < R.over, buried = !over && r2() < R.buried;
+        add(R.asset, dd, x, { mul: 1, flip: side < 0 ? 1 : -1, row: true, tilt: over ? (r2() < 0.5 ? -1 : 1) * (0.5 + r2() * 0.9) : (r2() - 0.5) * 0.08, sink: buried ? 0.3 + r2() * 0.35 : r2() * 0.08 });
+      }
     }
     for (let d = start + 4; d < end; d += 7 + rnd() * 5) for (const side of [-1, 1]) {   // tree lines (or whatever the zone's backdrop is) further out, so the land has depth
       const Z = zoneAt(d), back = Z.backdrop || Tv.backdrop || []; if (!back.length || rnd() > 0.35 + Z.density * 0.4) continue;
@@ -139,10 +156,29 @@
     layOutTravel(Tv, P); return true;
   }
   // where the run has got to: the Adventure travels, on the map it's playing; anything else stands at the start
+  // ── v58: the MapTravelController. Every mode that plays a map's lane travels it; one rule decides how far on the
+  // camera stands, from the map's own travel profile (its step, its arrival, its land and sky: src/maps/*.json travel)
+  // and the mode's movement profile (MAP_TRAVEL): the Adventure (and Adventure+) goes by the legs, standing still
+  // through the bosses; Arcade, Practice, the Director's Challenge and the season's Feature go by the road, a step a
+  // make with no bosses to stop for, slowing as the map's far end comes up and never quite stopping; Boss Rush stands
+  // in each boss's arena; an attraction's booth stays where it is. No mode or map is special-cased: a new mode names
+  // its profile here. The world, the music and the ambient life go on as it moves.
+  const MAP_TRAVEL = { story: "legs", arcade: "road", practice: "road", director: "road", feature: "road", rush: "arena" };
+  const travelProfile = () => (game.state === "title" ? "still" : MODES[game.mode] && MODES[game.mode].mini ? "still" : MAP_TRAVEL[game.mode] || "still");
+  function roadAt(h) {   // the road profile: linear, then easing toward the far end (the slopes meet, so no lurch)
+    const end = TRAVEL.table[STAGE_END], lin = Math.max(0, h) * TRAVEL.def.step * 0.8, knee = end * 0.8;
+    return lin < knee ? lin : knee + (end - knee) * (1 - Math.exp(-(lin - knee) / (end - knee)));
+  }
+  function travelDistAt(h) {   // how far on the camera stands after h makes, in this mode
+    if (!TRAVEL.on || !TRAVEL.table) return 0;
+    const P = travelProfile();
+    return P === "legs" ? travelAt(h) : P === "road" ? roadAt(h) : P === "arena" ? TRAVEL.table[game.phase === "mini" ? STAGE_MINI : STAGE_BOSS] : 0;
+  }
+  const travelMoves = () => TRAVEL.on && (travelProfile() === "legs" || travelProfile() === "road");   // (a make carries the world on: 08k_feel.js)
   function travelGoal() {
     if (TRAVEL.on && game.phase === "crossing" && game.mode === "story" && sceneMap === (game.stage || 1)) return crossingAt();   // the road into the next map (07q_crossing.js)
-    if (!TRAVEL.on || game.state === "title" || game.mode !== "story" || sceneMap !== (game.stage || 1) - 1) return 0;
-    return travelAt(game.stageHits || 0);
+    if (!TRAVEL.on || sceneMap !== (game.stage || 1) - 1) return 0;
+    return travelDistAt(game.stageHits || 0);
   }
   function updateTravel(dt) {
     if (!TRAVEL.on) return;
@@ -197,7 +233,7 @@
   // a step has just begun: in the harvest and the crows' country, the crows come up out of the trees
   function travelStepped(goal) {
     const Z = travelZone(goal + 10); if (!Z || !Z.flock) return;
-    if (Math.random() < Z.flock) spawnFlock(look().ambient.crows ? "crow" : "bat");   // (the crows, or the bats, come up as Morty passes)
+    const fk = flockKind(); if (fk && Math.random() < Z.flock) spawnFlock(fk);   // (the crows, or the bats, come up as Morty passes; v58: only where they live)
   }
   function travelApply() {
     const D = TRAVEL.D;
@@ -260,8 +296,10 @@
     if (K.canvas[1] * sc < 2.5) return;
     const hw = K.canvas[0] * sc; if (p.x + hw < -U * 0.2 || p.x - hw > W + U * 0.2) return;
     const a = travelFade(k.z) * wakeAlpha(k); if (a <= 0.01) return;
-    const t = world.t, G = propGroove(K.family, k.ph, t), sway = K.sway ? (GROOVE_TREE[K.family] || GROOVE_TREE[k.kind] ? Groove.sway(k.ph) * K.sway : Math.sin(twos(t) * (K.family === "corn" ? 2 : 1.1) + k.ph * 6) * K.sway) : G.sway, bb = G.bb;   // (v54: to the music, 02f_music_clock.js)
+    const t = world.t, G = propGroove(K.family, k.ph, t), sway = FLOW_SWAY[k.kind] ? flowSway(k, t) * (K.sway || FLOW_SWAY[k.kind]) : K.sway ? (GROOVE_TREE[K.family] || GROOVE_TREE[k.kind] ? Groove.sway(k.ph) * K.sway : Math.sin(twos(t) * (K.family === "corn" ? 2 : 1.1) + k.ph * 6) * K.sway) : G.sway, bb = G.bb;   // (v54: to the music, 02f_music_clock.js)
     ctx.save(); ctx.globalAlpha *= a; ctx.translate(p.x, p.y);
+    if (k.sink) { ctx.beginPath(); ctx.rect(-hw * 2, -K.canvas[1] * sc * 2, hw * 4, K.canvas[1] * sc * 2); ctx.clip(); ctx.translate(0, K.canvas[1] * sc * k.sink); }   // (v58: half buried: sunk into the floor, cut off at it)
+    if (k.tilt) ctx.rotate(k.tilt);   // (v58: knocked over)
     if (sway) ctx.transform(1, 0, sway, 1, 0, 0);
     reactXform(k);   // hit by a throw: it bends, squeaks or shakes like the rest of the map's props (07n_environment.js)
     ctx.scale(sc * k.flip * (1 - bb * 0.04), sc * (1 + bb * 0.06));
@@ -280,6 +318,7 @@
     }
     if (sil < 0.99) travelLights(K, t, k.ph);
     ctx.restore();
+    if (k.sink > 0.2) { ctx.save(); ctx.globalAlpha *= a; ctx.fillStyle = aquaBiome() ? "#9A8C6C" : "#8A7A5A"; ctx.beginPath(); ctx.ellipse(p.x, p.y, hw * 0.62, Math.max(1.5, hw * 0.1), 0, Math.PI, 0); ctx.fill(); ctx.restore(); }   // (the sand heaped where it went in)
     if (K.lights && sil < 0.99) for (const [lx, ly, lr] of K.lights) gpuLight(p.x + (lx - K.foot[0]) * sc * k.flip, p.y + (ly - K.foot[1]) * sc, lr * sc * 2.2, "255,196,110", 0.26 * a * wakeAlpha(k) * (1 - sil));   // lit windows, on the GPU
   }
   // the far haze: drawn once the scenery behind TRAVEL_HAZE_Z is down, so distance softens it (thicker as the fog rises)
@@ -317,3 +356,31 @@
   // v54: a new run stands at the start of the track at once (it used to keep the last run's place until the next frame)
   function travelSnap() { if (!TRAVEL.on) return; TRAVEL.D = TRAVEL.goal = TRAVEL.lastGoal = 0; TRAVEL.v = 0; travelApply(); }
   const rgbaOf = s => { const m = String(s).match(/rgba?\(([^)]+)\)/); if (m) { const v = m[1].split(",").map(Number); return [v[0], v[1], v[2], v.length > 3 ? v[3] : 1]; } const h = String(s).replace("#", ""); return h.length === 6 ? [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16), 1] : [0, 0, 0, 0]; };
+  // ── v58: the sky keeps time with the road. The further a map's track has carried Morty, the lower the moon has
+  // gone: it sets on its own side of the sky (never across the ring's band, which nothing in the sky may compete with),
+  // drifting outward and down until, by the boss, it is sinking behind the skyline. The night turns with it: the zenith
+  // deepens and the horizon takes the map's late colour (travel.sky: arc, how far toward setting it gets; late; k).
+  // Its halo, its light, the vignette's clearing and its road down the water all go with it. Looks only, worked out
+  // from TRAVEL.D, so a reload or a replay puts the moon where the run left it. The picture-house screen and a
+  // moonless cave stay put.
+  function skyUpdate() {
+    const S = TRAVEL.on && TRAVEL.def && TRAVEL.def.sky, end = S && TRAVEL.table ? TRAVEL.table[STAGE_END] : 0;
+    const p = end > 0 ? clamp(TRAVEL.D / end, 0, 1) : 0, moves = S && moon.r && moon.kind !== "screen";
+    SKY.p = p;
+    const e = moves ? S.arc * (p * p * (3 - 2 * p)) : 0, side = moon.x < W / 2 ? -1 : 1;
+    SKY.dx = e * side * Math.max(0, Math.min(U * 0.55, (side < 0 ? moon.x : W - moon.x) - moon.r * 1.3));
+    SKY.dy = e * Math.max(0, HY - moon.r * 0.35 - moon.y);
+    if (Math.round(SKY.dx / 3) + "," + Math.round(SKY.dy / 3) !== SKY.vig) buildVignette();
+  }
+  function drawSkyGrade() {   // (on the sky's plane, under the stars' twinkle, the clouds and the moon)
+    const S = TRAVEL.on && TRAVEL.def && TRAVEL.def.sky, k = S ? SKY.p * S.k : 0;
+    if (k > 0.004 && skyLayer) {
+      const P = skyLayer, g = ctx.createLinearGradient(0, P.y0, 0, HY + U * 0.14);
+      g.addColorStop(0, `rgba(${rgbOf(S.late[0])},${k})`); g.addColorStop(0.55, `rgba(${rgbOf(S.late[0])},${k * 0.45})`); g.addColorStop(1, `rgba(${rgbOf(S.late[1])},${k * 1.1})`);
+      ctx.fillStyle = g; ctx.fillRect(P.x0, P.y0, P.w, P.h);
+    }
+    if (!moon.halo) return;
+    const mx = moon.x + SKY.dx, my = moon.y + SKY.dy, gr = U * 0.39, rgb = rgbOf(look().moonColor), h = ctx.createRadialGradient(mx, my, moon.r * 0.8, mx, my, gr);
+    h.addColorStop(0, `rgba(${rgb},.22)`); h.addColorStop(0.4, `rgba(${rgb},.07)`); h.addColorStop(1, `rgba(${rgb},0)`);
+    ctx.fillStyle = h; ctx.beginPath(); ctx.arc(mx, my, gr, 0, TAU); ctx.fill();
+  }

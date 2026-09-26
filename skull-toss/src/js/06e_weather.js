@@ -34,13 +34,13 @@
     for (let i = 0; i < WX.bits.length; i++) {
       const b = WX.bits[i], k = WX.kind;
       if (k === "leaves") { b.x += (b.vx + wind * U * 0.25) * dt + Math.sin(WX.t * 2 + b.ph) * U * 0.03 * dt; b.y += b.vy * dt; b.rot += b.vr * dt; if (b.y > H + 20 || b.x > W + 30 || b.x < -30) WX.bits[i] = weatherBit(false); }
-      else if (k === "spores") { b.y += b.vy * dt; b.x += Math.sin(WX.t * 0.7 + b.ph) * U * 0.01 * dt; if (b.y < HY * 0.35) WX.bits[i] = weatherBit(false); }
-      else if (k === "fireflies") { b.wx += (b.dx + Math.sin(WX.t * b.sp + b.ph) * 0.2) * dt; b.wz += b.dz * dt; b.wy = clamp(b.wy + Math.cos(WX.t * b.sp * 1.3 + b.ph) * 0.15 * dt, 0.2, 2.6); if (Math.abs(b.wx) > 9 || b.wz < 1.5 || b.wz > 26) WX.bits[i] = weatherBit(true); }
+      else if (k === "spores") { const F = curl(b.x / U * 3, b.y / U * 3, WX.t * 0.3, 1.2, 2); b.y += (b.vy + F.y * U * 0.012) * dt; b.x += F.x * U * 0.016 * dt; if (b.y < HY * 0.35) WX.bits[i] = weatherBit(false); }   // (v58: they drift on the flow, 06i_flow.js)
+      else if (k === "fireflies") { const F = wander(b.ph * 7 + i, WX.t, 0.5); b.wx += (b.dx + F.x * 0.35) * dt; b.wz += (b.dz + F.y * 0.2) * dt; b.wy = clamp(b.wy + (F.x - F.y) * 0.12 * dt, 0.2, 2.6);   /* (v58: each wanders its own way on the flow) */ if (Math.abs(b.wx) > 9 || b.wz < 1.5 || b.wz > 26) WX.bits[i] = weatherBit(true); }
       else if (k === "confetti") { b.x += b.vx * dt + Math.sin(WX.t * 3 + b.rot) * U * 0.02 * dt; b.y += b.vy * dt; b.rot += b.vr * dt; if (b.y > H + 10) WX.bits[i] = weatherBit(false); }
       else if (k === "rain") { b.y += b.v * dt; b.x += b.v * 0.18 * dt; if (b.y > H) WX.bits[i] = weatherBit(false); }
       else if (k === "dust") { b.u = (b.u + b.du * dt + 1) % 1; b.v = (b.v + b.dv * dt + 1) % 1; }
-      else if (k === "bubbles") { b.y += b.vy * dt; b.x += Math.sin(WX.t * 2 + b.ph) * U * 0.015 * dt; if (b.y < HY * 0.6) WX.bits[i] = weatherBit(false); }
-      else if (k === "embers") { b.y += b.vy * dt; b.x += b.vx * dt + Math.sin(WX.t * 1.3 + b.ph) * U * 0.01 * dt; if (b.y < -10) WX.bits[i] = weatherBit(false); }
+      else if (k === "bubbles") { const F = curl(b.x / U * 4, b.y / U * 4, WX.t * 0.8, 1, 1); b.y += b.vy * dt; b.x += F.x * U * 0.02 * dt; if (b.y < HY * 0.6) WX.bits[i] = weatherBit(false); }   // (v58: wobbling on the flow)
+      else if (k === "embers") { const F = curl(b.x / U * 2.5, b.y / U * 2.5, WX.t * 0.5, 1, 2); b.y += (b.vy + F.y * U * 0.01) * dt; b.x += b.vx * dt + F.x * U * 0.014 * dt; if (b.y < -10) WX.bits[i] = weatherBit(false); }   // (v58: curling up on the flow)
     }
   }
   function drawWeather() {

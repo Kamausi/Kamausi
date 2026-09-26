@@ -6,57 +6,90 @@
   // boardwalk. Three classes, by what they are: gameplay (the ring and its post, the skull, a boss) reflect clearly;
   // scenery near the water softly; far scenery faintly. None of it touches a hit test: collisions stay with the
   // objects, in the world. A skull that comes down in the water sets off ripples, and the reflections shiver a while.
+  //   v58: the ring has one reflection and one only: RING_REFL, its own layer (the ring, the skull in flight over it and
+  // a boss), drawn every frame on water whatever the phone's quality, softer than the ring itself, rippling with the
+  // surface and a little more where its post stands in the water, and anchored to the ring wherever it moves. Nothing
+  // else draws the ring into the water (08c_scene.js gives the ring no shadow over water). The boardwalk stops short of
+  // the ring (WALK_END) so it stands in open water and its reflection is never hidden under planks.
   const WATER = { cv: null, g: null, ripples: [], shiver: 0, reflecting: false };
-  const REFLECT = { gameplay: 0.95, near: 0.6, far: 0.22, squash: 0.86 };
+  const RING_REFL = { cv: null, g: null, alpha: 0.5, drawn: 0 };
+  const REFLECT = { gameplay: 0.95, near: 0.6, far: 0.22, squash: 0.86, ring: 0.26 };   // (ring: the ring's own reflection is squashed hard, a cartoon's, so it lies in the water right under it)
   const waterOn = () => !!(look().ambient && look().ambient.water);
   // is this point of the water plane open water (not the boardwalk)?
-  function overWater(x, z) { if (!waterOn()) return false; const zEnd = RING_Z + 1.2; if (z > zEnd || z < 0) return true; const half = 0.75 + (0.6 - 0.75) * (z / zEnd); return Math.abs(x) > half + 0.02; }
+  function overWater(x, z) { if (!waterOn()) return false; const zEnd = WALK_END; if (z > zEnd || z < 0) return true; const half = 0.75 + (0.6 - 0.75) * (z / zEnd); return Math.abs(x) > half + 0.02; }
   // draw one reflector: its own drawing, mirrored about the water line at depth z, into the reflection layer
-  function reflectOne(z, x, alpha, fn) {
-    const g = WATER.g, gy = project(x, 0, z).y;
+  function reflectOne(z, x, alpha, fn, g = WATER.g, sq = REFLECT.squash) {
+    const gy = project(x, 0, z).y;
     g.save(); g.setTransform(DPR, 0, 0, DPR, 0, 0); g.globalAlpha = alpha;
-    g.translate(0, gy * (1 + REFLECT.squash)); g.scale(1, -REFLECT.squash);
+    g.translate(0, gy * (1 + sq)); g.scale(1, -sq);
     try { fn(); } catch (e) { Debug.warn("RENDER", e, "reflection"); }
     g.restore();
   }
-  function drawWaterReflections() {
-    if (!waterOn() || QUALITY.level < 0.75) return;   // (a phone that's struggling drops the reflections before anything else)
+  const layerFor = L => {   // an off-screen canvas the size of the screen, cleared
     const need = cvs.width, needH = cvs.height;
-    if (!WATER.cv) { WATER.cv = document.createElement("canvas"); WATER.g = WATER.cv.getContext("2d"); }
-    if (WATER.cv.width !== need || WATER.cv.height !== needH) { WATER.cv.width = need; WATER.cv.height = needH; }
-    const g = WATER.g; g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, need, needH);
-    const main = ctx; WATER.reflecting = true; ctx = g;
-    try {
-      // scenery, far to near (props are kept in back-to-front order)
-      for (const k of GY.props) {
-        if (k.kind === "digger" || (k.travel && !travelShows(k)) || !overWater(k.x, k.z + 0.3)) continue;
-        reflectOne(k.z, k.x, k.z > 16 ? REFLECT.far : REFLECT.near, () => (k.travel ? drawTravelProp(k) : drawProp(k)));
-      }
-      if (game.state !== "title") {
-        if (boss && boss.draw) reflectOne(ring.z + 2, ring.x, REFLECT.gameplay * 0.8, () => { boss.draw(false); boss.draw(true); });
-        reflectOne(ring.z, ring.x, REFLECT.gameplay, () => drawRing());
-        if (game.state === "flying" && skull.alpha > 0) reflectOne(skull.pos.z, skull.pos.x, REFLECT.gameplay, () => drawFlyingSkull());
-      }
-    } finally { ctx = main; WATER.reflecting = false; }
-    g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = "source-atop"; g.fillStyle = "rgba(6,14,16,.32)"; g.fillRect(0, 0, need, needH); g.restore();   // (darker and duller than the thing itself, as water gives it back)
-    // lay it on the water in thin strips, each nudged sideways by the swell (more toward the viewer, more after a splash)
+    if (!L.cv) { L.cv = document.createElement("canvas"); L.g = L.cv.getContext("2d"); }
+    if (L.cv.width !== need || L.cv.height !== needH) { L.cv.width = need; L.cv.height = needH; }
+    L.g.setTransform(1, 0, 0, 1, 0, 0); L.g.clearRect(0, 0, need, needH); return L.g;
+  };
+  // lay a reflection layer on the water in thin strips, each nudged sideways by the swell (more toward the viewer,
+  // more after a splash), darker and duller than the thing itself, as water gives it back; never on the boardwalk
+  function layReflection(L, alpha, wob = 1) {
+    const need = cvs.width, needH = cvs.height, g = L.g;
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = "source-atop"; g.fillStyle = "rgba(6,14,16,.32)"; g.fillRect(0, 0, need, needH); g.restore();
     const t = game.time, band = Math.max(2, Math.round(3 * DPR)), top = Math.max(0, Math.round((HY + camBase.y) * DPR));
     const lane = laneScreenPoly();
     ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.beginPath(); ctx.rect(0, top, need, needH - top); if (lane) { ctx.moveTo(lane[0].x * DPR, lane[0].y * DPR); for (const q of lane) ctx.lineTo(q.x * DPR, q.y * DPR); ctx.closePath(); }
     ctx.clip("evenodd");
-    ctx.globalAlpha = 0.34;
+    ctx.globalAlpha = alpha;
     for (let y = top; y < needH; y += band) {
-      const depth = (y - top) / Math.max(1, needH - top), amp = (1.2 + depth * 5 + WATER.shiver * 9) * DPR;
+      const depth = (y - top) / Math.max(1, needH - top), amp = (1.2 + depth * 5 + WATER.shiver * 9) * DPR * wob;
       const dx = Math.sin(y * 0.09 / DPR + t * 2.1) * amp + Math.sin(y * 0.031 / DPR - t * 1.3) * amp * 0.5;
-      ctx.drawImage(WATER.cv, 0, y, need, band, dx, y, need, band);
+      ctx.drawImage(L.cv, 0, y, need, band, dx, y, need, band);
+    }
+    ctx.restore();
+  }
+  function drawWaterReflections() {
+    RING_REFL.drawn = 0; if (!waterOn()) return;
+    const main = ctx;
+    if (QUALITY.level >= 0.75) {   // the scenery's (a phone that's struggling drops these before anything else)
+      const g = layerFor(WATER); WATER.reflecting = true; ctx = g;
+      try {
+        for (const k of GY.props) {   // far to near (props are kept in back-to-front order)
+          if (k.kind === "digger" || (k.travel && !travelShows(k)) || !overWater(k.x, k.z + 0.3)) continue;
+          reflectOne(k.z, k.x, k.z > 16 ? REFLECT.far : REFLECT.near, () => (k.travel ? drawTravelProp(k) : drawProp(k)));
+        }
+      } finally { ctx = main; WATER.reflecting = false; }
+      layReflection(WATER, 0.34);
+    }
+    drawRingReflection();
+  }
+  // the ring's reflection (the only one it has): always drawn on water, the skull and a boss in it with the ring
+  function drawRingReflection() {
+    RING_REFL.drawn = 0;
+    if (!waterOn() || game.state === "title" || game.ringHidden) return;
+    const main = ctx, g = layerFor(RING_REFL); WATER.reflecting = true; ctx = g;
+    try {
+      if (boss && boss.draw) reflectOne(ring.z + 2, ring.x, REFLECT.gameplay * 0.8, () => { boss.draw(false); boss.draw(true); }, g, REFLECT.ring);
+      reflectOne(ring.z, ring.x, REFLECT.gameplay, () => drawRing(), g, REFLECT.ring);
+      if (game.state === "flying" && skull.alpha > 0) reflectOne(skull.pos.z, skull.pos.x, REFLECT.gameplay, () => drawFlyingSkull(), g, REFLECT.ring);
+    } finally { ctx = main; WATER.reflecting = false; }
+    layReflection(RING_REFL, RING_REFL.alpha, 0.8);
+    RING_REFL.drawn = 1;
+    // where the post stands in the water, the surface rings round it, slowly, as it would round a pile
+    const p = project(ring.x, 0, ring.z), t = game.time;
+    ctx.save(); ctx.lineCap = "round";
+    for (let i = 0; i < 2; i++) {
+      const u = (t * 0.45 + i * 0.5) % 1, rad = (0.06 + u * 0.28) * p.s, a = (1 - u) * 0.28;
+      ctx.strokeStyle = `rgba(210,235,230,${a})`; ctx.lineWidth = 1;
+      for (let j = 0; j < 4; j++) { const a0 = j * 1.6 + i; ctx.beginPath(); ctx.ellipse(p.x, p.y, rad, rad * 0.26, 0, a0, a0 + 0.9); ctx.stroke(); }
     }
     ctx.restore();
   }
   // the boardwalk's outline on screen (it reflects nothing, and nothing reflects in it)
   function laneScreenPoly() {
     if (look().lane !== "boardwalk") return null;
-    const zEnd = RING_Z + 1.2, P = (x, z) => project(x, 0, z);
+    const zEnd = WALK_END, P = (x, z) => project(x, 0, z);
     return [P(-0.75, 0.05), P(0.75, 0.05), P(0.6, zEnd), P(-0.6, zEnd)];
   }
   // ── ripples: rings spreading on the water from where something came down in it, drawn on the water plane
@@ -98,6 +131,7 @@
       const dx = Math.sin(t * (0.21 + i * 0.13) + i * 2) * U * 0.035 * still + (i ? -1 : 1) * Math.sin(t * 0.05) * U * 0.02 * still, a = 0.55 + 0.35 * Math.sin(t * (0.6 + i * 0.35) + i * 1.7);
       ctx.save(); ctx.globalAlpha = a; drawGroundPlane(ctx, { ...S, x0: S.x0 + dx, y0: S.y0 + Math.sin(t * 0.4 + i) * 1.2 * still }); ctx.restore();
     });
+    if (moonPath) { ctx.save(); ctx.globalAlpha = 0.85 + 0.15 * Math.sin(t * 1.3); drawGroundPlane(ctx, { ...moonPath, x0: moonPath.x0 + SKY.dx }); ctx.restore(); }   // (v58: the moon's road down the water follows it across the sky)
   }
   // ── the collision view (a debug switch: ?collisions, or SkullToss.debug.collisions(true)). Read-only: it draws what the
   // hit tests test. Green: solid; blue: a trigger (the water, the props that react); red: danger; yellow: scoring

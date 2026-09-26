@@ -232,3 +232,196 @@ over the acts and the boss only (no drive or hats over the boss, which has its o
 | sting | a perfect or a bullseye | four notes up the scale on the next four eighths |
 
 Layers come and go on the bar line. `T.bandDry()` runs the scheduler without sound for the tests.
+
+## The sky over the road (`06g_travel.js: skyUpdate`, v58)
+
+How far along the map's track the camera stands (`TRAVEL.D` over the track's end) is the night's progress `p`. From it:
+
+- **The moon.** It moves outward and down on its own side of the sky: `dx` toward its edge (at most 0.55 U), `dy` down
+  to just above the horizon. The path is eased (smoothstep) and scaled by the map's `travel.sky.arc`. It never crosses
+  the ring's band. The moon's plate, its halo (now drawn live, `drawSkyGrade`), its GPU light, the vignette's clearing
+  and its road down the water (`moonPath`, its own plate on the water maps) all take the same offset.
+- **The night.** A wash over the sky plate, from `late[0]` at the zenith to `late[1]` at the horizon, at `p × k`.
+
+`travel.sky` is `{ arc 0–1, late [zenith, horizon], k 0–0.6 }`, checked by the build. The screen (the Drowned Theater)
+and a moonless map don't move.
+
+## The ring's reflection (`08l_water.js: RING_REFL`, v58)
+
+The ring has exactly one reflection, and only over water: `drawRingReflection`. It draws the ring, a boss and the skull
+in flight, mirrored at the ring's own water line with a cartoon squash (`REFLECT.ring`, 0.26), darkened, and laid in
+wavering strips like the scenery's reflections. It is drawn every frame whatever the phone's quality; the scenery's
+reflections still drop out first. The ring's post gets slow rings in the water round it. `drawTrackAndShadow` gives the
+ring no shadow over water. The boardwalk ends at `WALK_END` (3.3 m, `01_data.js`) so the ring stands in open water.
+
+## The MapTravelController (`06g_travel.js`, v58)
+
+`travelDistAt(h)` returns how far on the camera stands after `h` makes, from two things:
+
+- the **map's profile**: its `travel` block (step, arrival, land, sky);
+- the **mode's movement profile**, `MAP_TRAVEL`:
+
+| Profile | Modes | Movement |
+|---|---|---|
+| `legs` | Adventure, Adventure+ | The travel table: steps through acts I–III and the approach, still through the bosses. |
+| `road` | Arcade, Practice, the Director's Challenge, the Feature | 0.8 × step a make, linear, then easing toward the track's end (the slopes meet: no lurch). |
+| `arena` | Boss Rush | The arena of the boss being fought. |
+| `still` | the attractions, the title | Stays at 0. |
+
+`travelGoal` is the only caller, and the camera anticipation (`08k_feel.js`) reads the same function. A new mode names
+its profile in the table; nothing is special-cased by map or mode.
+
+## The flow (`06i_flow.js`, v58)
+
+Curl noise: `curl(x, y, t, scale, octaves)` is the curl of a value-noise potential, so the field has no sources or sinks
+(its discrete divergence is zero at the curl's own step, and the spec checks that). Built on it:
+
+- `current(x, y, z, t, drift)` is the underwater current. It has two layers, a macro swirl plus the biome's drift and
+  micro turbulence, in m/s.
+- `wander(seed, t)` is a creature's own meander.
+
+**Uses:**
+
+- the aquatic motes, bubbles, the weed's sway (`FLOW_SWAY`) and the swimmers' wander;
+- fireflies, spores, embers and the weather's bubbles;
+- the mist banks;
+- the portal's motes.
+
+**The rule:** nothing in the skull's flight, the aim, the ring, the targets or the obstacles reads it. The spec throws
+the same throw twice with the water churning between and checks the two flights match.
+
+## The aquatic environment (`08m_aquatic.js`, `06j_aqua_props.js`, v58)
+
+A map with water has an `aquatic` biome in its JSON. It has two kinds.
+
+**`submerged`** (the Drowned Theater): the camera is under water. `look.ambient.water` must be false: no surface, no
+reflections, no dive.
+
+| Layer | What |
+|---|---|
+| far | `far`: whales, mantas and schools crossing where the sky would be (`drawAquaFar`). |
+| floor | Caustics: a tileable folded-light tile made once, laid in perspective bands, two layers drifting against each other (`drawCaustics`). |
+| world | The creatures, merged into the scenery by depth (`aquaWorldList`, drawn in `drawGroundWorld`). |
+| column | Attenuation (thickest at the horizon), light shafts, marine snow, bubbles, and the caustics again, fainter, over everything standing (`drawAquaColumn`). |
+| front | Now and then a big dark fish passes close, low in the frame and to one side, never while aiming or in flight (`drawAquaFront`). |
+
+**`surface`** (the Black Marsh): the camera is above murky water. The life under the water is drawn on the water plane
+as dark shapes with a sheen along their backs. What sits on the water is drawn in the world. Ripples come from
+swimmers, frogs, bubbles and insects.
+
+**Fauna and behaviour:**
+
+| Creature | Biome | Behaviour |
+|---|---|---|
+| school | submerged | Members follow their place in the group, a beat behind; they burst apart when threatened and regroup. |
+| fish | submerged | Wander on the flow and scatter. |
+| crab | submerged | Crawls sideways in fits and starts; digs in when threatened. |
+| eel | submerged | Comes out of its hole and sways, then goes back; goes back at once if threatened. |
+| jelly | submerged | Drifts on the current with a slow pulse. |
+| turtle | submerged | Glides across every so often. |
+| octopus | submerged | Sits and shifts colour; jets away. |
+| shrimp | submerged | Little flicks along the floor. |
+| minnows, bigfish, swamp-eel, tadpoles | surface | Shapes under the surface; big fish make a boil now and then. |
+| frog | surface | Sits on its own pad; jumps in when startled and climbs back later. |
+| snapper | surface | Its head comes up and goes down, with a ring each way. |
+| gator | surface | Eyes and snout far off, gliding, with a V wake. |
+| strider | surface | Skates the surface in darts, dimpling it. |
+| dragonfly | surface | Darts on the flow and touches down. |
+
+A threat is the skull within 2.6 m, or the world travelling past (near the lane). Swimmers steer out of the ring's
+cone (`|x| < 2.1 + 0.1 z` at throw heights) and are clamped out of it (`aqKeepOut`). None of it is ever hit.
+
+**Depth:** each creature's colour is blended toward the water's `deep` colour with distance, and its ink fades. Near
+ones read darker-lined and larger; far ones are muted.
+
+**The sea bed's scenery (`06j_aqua_props.js`):** coral (fan, brain, branch), barnacled rock, seaweed, shells, anemones,
+a broken stage flat, a ruined column, a wall with a playbill and a sand drift. These are ordinary travel scenery,
+placed through the zones' mixes.
+
+**Seat rows:** a travel zone can carry `rows` with these fields:
+
+- `asset`, `every` (metres between rows), `deep` (seats per row) and `from`;
+- `stagger`;
+- `gone`, `over` (knocked over: `tilt`) and `buried` (sunk into the floor and clipped at it: `sink`).
+
+The build checks the `aquatic` block: its kind, the fauna that belong to that kind, 0–12 of each, and the water's
+colours, ranges and current.
+
+## MAP → ECOSYSTEM → CAST (`blueprint.json: ecosystem`, `08n_wildlife.js`, v58)
+
+Characters are not global. `blueprint.json: ecosystem` holds three things:
+
+- `cast`: every character and creature, with the maps it may appear on;
+- `variants`: the character's look per map:
+
+| Character | Variants |
+|---|---|
+| skeleton | plain · drowned · bleached · echo |
+| gravedigger | sexton · prospector |
+| zombie | intro · plain |
+
+- `identityTest`: the ten questions.
+
+Each map's `ecosystem` holds:
+
+- `teaches`: the order's word for its place;
+- `cast`;
+- `wildlife` counts for the land and air creatures;
+- `vegetation`, `props` and `hazards`;
+- `heat` (the desert).
+
+The build (`ecosystem_problems`) derives who a map actually shows from what the code reads, and refuses a map that
+shows anyone who isn't in its cast, or whose cast has anyone the rules don't allow there. What it reads:
+
+- the walkers, the ghost flag, the gravedigger, the witch and the cat;
+- the sky life (crows, or bats, or both with `batsToo`);
+- the fireflies;
+- the water's fauna;
+- the wildlife.
+
+In the code:
+
+- `castVariant(who)` picks the look: the skeleton's cel is washed and dressed per variant (`skeletonVariant`), the echo
+  flickers and trails a double, and the gravedigger wears a prospector's hat in the desert.
+- `flockKind()` decides who flies over. Travel zones' flocks use it too, so the Woods and the desert get none.
+
+**The Map Identity Test**, per map:
+
+| # | Question | Check |
+|---|---|---|
+| 1 | Without the background, is it still identifiable? | ≥ 4 scenery kinds no other map has. |
+| 2 | Does the cast belong? | Every member allowed; at least one not on either neighbour. |
+| 3 | Does something live here? | ≥ 2 kinds of wildlife. |
+| 4 | Does it grow its own? | ≥ 2 vegetation kinds, all on its track. |
+| 5 | What's lying about? | ≥ 3 prop kinds, all on its track. |
+| 6 | Its own ground? | Lane unlike both neighbours'. |
+| 7 | Its own air? | Weather unlike both neighbours'. |
+| 8 | Does it teach its lesson? | `teaches` = the order's word; hazards named. |
+| 9 | Its own palette? | Sky + ground mid-tones ≥ 20 (RGB) from every other map. |
+| 10 | Is its end its own? | A lair landmark no other map has. |
+
+**The wildlife (`08n_wildlife.js`)** is the land and air counterpart of the aquatic module. It shares:
+
+- the travel shift (creatures keep their place in the world as the camera moves);
+- threats (the skull near, or Morty going by);
+- the flow (wander) and the depth tone;
+- the merge into the scenery's depth order.
+
+Creatures and behaviour:
+
+| Creature | Behaviour |
+|---|---|
+| owl | Perched; turns its head after the skull; blinks; flies off when threatened. |
+| deer | Grazes, alerts, bounds away. |
+| fox | Trots across, sits, trots on. |
+| spirit | A glowing wisp wandering on the flow, with a GPU glow. |
+| vulture | Circles high. |
+| scorpion | Crawls; digs in when threatened. |
+| tumbleweed | Rolls with the wind, bouncing; never closer than 6.5 m. |
+| clockbug | Runs while wound, then rewinds its key. |
+| fungi | Pulse; flare when threatened; GPU glow. |
+| voidling | Fades in far off, watches, fades out. |
+| fragment | A piece of an earlier world, turning and drifting. |
+
+`drawHeatHaze` wavers the band over the horizon with strip copies of the frame. It is drawn before the ring, so the ring
+never wavers. Spirits and fragments are clamped out of the ring's cone.

@@ -211,14 +211,12 @@
     "tint": null,
     "ambient": {
       "walkers": [
-        "zombie",
-        "skeleton",
-        "werewolf"
+        "zombie"
       ],
-      "ghost": true,
+      "ghost": false,
       "bats": 0.6,
       "witch": true,
-      "digger": true,
+      "digger": false,
       "cat": true,
       "lightning": false,
       "crows": true
@@ -440,12 +438,6 @@
         "mul": 1.3
       },
       {
-        "asset": "digger",
-        "hit": 0,
-        "ahead": 12.5,
-        "x": -2.9
-      },
-      {
         "asset": "signpost",
         "hit": 9,
         "ahead": 14,
@@ -503,6 +495,14 @@
       "wave": 95,
       "curve": 1.0,
       "bend": 160
+    },
+    "sky": {
+      "arc": 0.8,
+      "late": [
+        "#0B0A1C",
+        "#5A3A4A"
+      ],
+      "k": 0.35
     }
   },
   "fragment": "hollow",
@@ -511,5 +511,36 @@
     "rate": 1.0,
     "key": 0
   },
-  "blurb": "The gentlest ring: it slides side to side on its pole, then flies a small triangle"
+  "blurb": "The gentlest ring: it slides side to side on its pole, then flies a small triangle",
+  "ecosystem": {
+    "_doc": "v58 MAP → ECOSYSTEM → CAST (blueprint.json: ecosystem): who and what lives here, and nowhere else it doesn't belong.",
+    "teaches": "Fundamentals",
+    "cast": [
+      "zombie",
+      "witch",
+      "cat",
+      "crow"
+    ],
+    "wildlife": {
+      "crow": 0
+    },
+    "vegetation": [
+      "corn",
+      "tree-autumn",
+      "bush",
+      "tree-bare"
+    ],
+    "props": [
+      "pumpkins",
+      "haybale",
+      "scarecrow",
+      "fence",
+      "cart",
+      "crowpost"
+    ],
+    "hazards": [
+      "crows on the wing",
+      "the scarecrow's arms"
+    ]
+  }
 }

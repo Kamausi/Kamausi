@@ -20,7 +20,7 @@
     chaos:    { name: "Chaos Skull",  throws: 5, color: "#FF6A3D", tip: "Every make rolls the score: ×1 to ×4", plus: true },
     // v57: six that change how the skull moves (07v_newpowers.js); water: only where there's water to dive into
     vine:     { name: "Vine Swing",   uses: 2, throws: 8, color: "#5E9E3A", tip: "Catch the vine and it slings you through the ring", map: 3 },
-    dive:     { name: "Diving Skull", uses: 2, throws: 8, color: "#3A8FB8", tip: "Short into the water? It dives, swims and leaps for the ring", map: 4, water: true },
+    dive:     { name: "Diving Skull", uses: 2, throws: 8, color: "#3A8FB8", tip: "Short into the water? It dives, swims and leaps for the ring", map: 5, water: true },
     clones:   { name: "Clone Skull",  throws: 4, color: "#B8A0E8", tip: "Every throw splits in three: whichever goes through counts", map: 5 },
     rewind:   { name: "Rewind Bone",  uses: 1, throws: 10, color: "#D8B25A", tip: "Miss, and the film runs back: the throw never happened", map: 6 },
     homing:   { name: "Homing Bone",  throws: 4, color: "#E85A5A", tip: "A near miss locks on and curves into the ring", map: 7 },

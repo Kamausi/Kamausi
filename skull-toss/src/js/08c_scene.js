@@ -8,9 +8,7 @@
     const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, ring.rc * p.s * 2.2);
     g.addColorStop(0, `rgba(${R.rgb},${0.1 + ring.flash * 0.18})`); g.addColorStop(1, `rgba(${R.rgb},0)`);
     ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(p.x, p.y, ring.rc * p.s * 2.2, ring.rc * p.s * 0.45, 0, 0, TAU); ctx.fill();
-    if (look().ambient.water) {   // over water the ring has a reflection where its shadow would be, rippling (the fog never hides it)
-      const r = ring.rc * p.s, wob = Math.sin(game.time * 3.1) * 0.06;
-      ctx.save(); ctx.globalAlpha = 0.38; ctx.translate(p.x, p.y + r * 0.18); ctx.scale(1 + wob, -0.26); drawRingShape(ctx, 0, 0, r, RING_TUBE * 2 * p.s, cos.ring, game.time, 0); ctx.restore();
+    if (look().ambient.water) {   // over water the ring casts no shadow: its reflection is the one thing under it (RING_REFL, 08l_water.js)
     } else { ctx.fillStyle = `rgba(0,0,0,${BLUEPRINT.shadow.ring.opacity})`; ctx.beginPath(); ctx.ellipse(p.x, p.y, ring.rc * p.s * 0.95, 0.07 * p.s, 0, 0, TAU); ctx.fill(); }
   }
   // cartoon wings: the ring has shaken loose and flies the triangle on its own (after the mini-boss). v45: which wings is a
@@ -340,12 +338,15 @@
     drawSkyWorld();
     L(farLayer, 70, "far");
     if (sceneFX.wheel || sceneFX.clock) { planeXform(ctx, 70, "far"); drawFarFX(world.t); baseXform(ctx); }
+    drawAquaFar();   // (v58: under water, where the sky would be, big shapes passing: 08m_aquatic.js)
     drawSkyLife();
-    drawGroundPlane(ctx, groundLayer); drawWaterSheen();   // (v55: the water's moving highlights, 08l_water.js)
+    drawGroundPlane(ctx, groundLayer); drawWaterSheen(); drawAquaFloor();   // (v55: the water's moving highlights, 08l_water.js; v58: the caustics on the sand, the life under the marsh, 08m_aquatic.js)
     if (midLayer) L(midLayer, 30, "world");
     drawWaterReflections(); drawRipples(); baseXform(ctx);   // (v51: what stands over the water, mirrored in it, and its ripples: 08l_water.js)
     drawGroundWorld();
     drawTravelTone();   // the travel zone's colour (06g_travel.js)
+    drawAquaColumn();   // (v58: the water between here and there: its colour, its light, what drifts in it; 08m_aquatic.js)
+    drawHeatHaze();     // (v58: the desert's air wavers over the horizon, under the ring: 08n_wildlife.js)
     const tint = game.state !== "title" && stageDef().tint;   // each map's colour grade, washed over the graveyard (not the ring or the skull)
     if (tint) { ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalCompositeOperation = "soft-light"; ctx.globalAlpha = 0.55; ctx.fillStyle = tint; ctx.fillRect(-20, -20, W + 40, H + 40); ctx.restore(); }
     if (game.mode === "feature" && game.state !== "title") {   // the season's Feature plays after dark: a night grade over the scenery, a lantern glow in the middle (07l_season.js)
@@ -371,6 +372,7 @@
     if (onStage) { drawDecoys(); drawRing(); drawPickup(); drawHomingLock(); }   // (v51: Adventure+'s decoy rings, behind the real one; v57: the Homing Bone's lock)
     if (boss) boss.draw(true);
     if (onStage) drawNearWorld();   // (v53: whatever walks between the ring and the camera passes in front of it and its pole)
+    drawAquaFront();   // (v58: now and then a big fish passes close, low and to one side)
     drawAttraction(true);
     if (onStage) drawVine();   // (v57: the Vine Swing's vine, over the lane, 07v_newpowers.js)
     drawSeeds(true); drawTargets(true); drawObstacles(true); drawHazards(true);
