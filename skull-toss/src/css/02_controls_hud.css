@@ -243,3 +243,6 @@ html.hc .rc-text{text-shadow:0 0 2px var(--ink),0 0 4px var(--ink)}
 @media (hover:none),(pointer:coarse){.btn:hover .toss,.btn:focus-visible .toss,.btn:active .toss{opacity:0!important;transform:translateY(14px) scale(.4)!important}}
 .btn,.chip-btn,.ghost-btn,button{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 body.rifting #reelCard,body.rifting #stagecard,body.rifting #hint{visibility:hidden}   /* v55: the new place's cards wait until the camera is out of the rift */
+
+/* v56: Sudden Death plays in the dark: no score counter, just SURVIVE on the bar (07u_attractions.js) */
+body.attr-dark .hud-score{visibility:hidden}

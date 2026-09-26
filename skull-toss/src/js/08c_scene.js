@@ -356,7 +356,7 @@
     drawBossLight();   // a boss fight: the scenery dims and a spot finds the ring (07n_environment.js)
     if (!game.ringHidden) drawAnchorSupport();   // the branch, arch, signpost, batten or rail the ring hangs from
     if (boss) boss.draw(false);
-    drawSeeds(false); drawTargets(false); drawCans(); drawObstacles(false); drawHazards(false);
+    drawSeeds(false); drawTargets(false); drawAttraction(false); drawCans(); drawObstacles(false); drawHazards(false);   // (v56: the attraction's booth and props, 07u_attractions.js)
     const onStage = game.state !== "title";
     if (onStage && !game.ringHidden) drawTrackAndShadow();
     drawPlayWorld();
@@ -371,6 +371,7 @@
     if (onStage) { drawDecoys(); drawRing(); drawPickup(); }   // (v51: Adventure+'s decoy rings, behind the real one)
     if (boss) boss.draw(true);
     if (onStage) drawNearWorld();   // (v53: whatever walks between the ring and the camera passes in front of it and its pole)
+    drawAttraction(true);
     drawSeeds(true); drawTargets(true); drawObstacles(true); drawHazards(true);
     drawImpactStars(ctx, false);   // contact stars: over the ring they hit, behind the skull that hit it
     if (pv) { drawDots(pv.front, false); drawReticle(pv); }

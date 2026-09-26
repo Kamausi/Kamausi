@@ -50,7 +50,7 @@
   function toTitle() {
     closeSheet(false); paused = false; Sound.setPaused(false); cancelAim(); Sound.flightStop(true); Replay.stop(false); leavePractice();
     game.state = "title"; game.score = 0; game.hits = 0; game.lives = START_LIVES; game.slots = START_LIVES; game.streak = 0;
-    stageReset(); clearPowers(); clearPickups(); setScene(0); snapRing(); Sound.setAct("menu");
+    stageReset(); clearPowers(); clearPickups(); attrEnd(); clearCans(); setScene(0); snapRing(); Sound.setAct("menu");
     particles = []; bursts = []; waves = []; clearFlies(); resetSkull(); showCombo(0); setHint("");
     showScreen("title"); updateHud();
   }

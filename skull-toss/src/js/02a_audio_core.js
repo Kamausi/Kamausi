@@ -234,6 +234,10 @@
       else if (kind === "clang") [330, 495, 742].forEach((f, i) => tone(f, "triangle", 0.7 - i * 0.15, 0.08, 0, null, o));
       else if (kind === "ribbit") { tone(190, "square", 0.07, 0.05, 0, 150, { ...o, lp: 900 }); tone(210, "square", 0.08, 0.05, 0.1, 160, { ...o, lp: 900 }); }
       else if (kind === "encore") { tone(300, "sine", 0.4, 0.06, 0, 1200, { ...o, vib: [9, 14], att: 0.03 }); [523, 659, 784, 1047].forEach((f, i) => tone(f, "triangle", 0.3, 0.05, 0.3 + i * 0.07, null, { lp: 3000 })); }
+      // v56: the attractions' foley: a carnival bell, a crowd, the curtains
+      else if (kind === "bell") { if (sfxOn()) { bell(0, pan, 0.08, 988, sfxBus); bell(0.18, pan, 0.06, 988, sfxBus); } }
+      else if (kind === "cheer") { noise(1.3, 0.07, "bandpass", 1100, 1500, 0, 0.5, { att: 0.12 }); noise(1.1, 0.05, "bandpass", 2400, 2000, 0.1, 0.7, { att: 0.2 }); for (const d of [0.1, 0.35]) tone(1900, "sine", 0.3, 0.02, d, 2600, { vib: [9, 40] }); }
+      else if (kind === "curtain") noise(0.38, 0.08, "lowpass", 1300, 280, 0, 0.8, { ...o, brown: true, att: 0.05 });
       else if (kind === "quack") { tone(520, "sawtooth", 0.12, 0.05, 0, 380, { ...o, lp: 1500, vib: [25, 40] }); }
       else if (kind === "shovel") { if (!ambOn()) return; noise(0.09, 0.07, "bandpass", 1300, 500, 0, 2, { ...o, bus: ambBus, low: true }); tone(210, "triangle", 0.05, 0.02, 0, 150, { ...o, bus: ambBus, low: true }); }
     },

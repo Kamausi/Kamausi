@@ -147,7 +147,7 @@
     renderWind(); obstaclesReset();
   }
   const newBalloon = y => ({ kind: "balloon", x: rrIn(-2.2, 2.2), y, z: rrIn(2.4, 4.8), vy: rrIn(0.28, 0.42), col: ["#A94332", "#C49A42", "#356B68", "#F2E7C9"][(runRand() * 4) | 0], r: 0.24 });
-  const windNow = () => (HZ.kind === "wind" && (hazardsAllowed() || game.mode === "gale") ? HZ.wind : plusWind());   // (v51: Adventure+'s crosswind)   // (v50: Gale Force's own gale)   // m/s² across the throw (positive pushes right)
+  const windNow = () => (HZ.kind === "wind" && (hazardsAllowed() || attrWind()) ? HZ.wind : plusWind());   // (v51: Adventure+'s crosswind)   // (v50: Gale Force's own gale)   // m/s² across the throw (positive pushes right)
   // the pendulum: a pivot high over the lane, swinging across it; its bob is what hits
   const PEND = { x: 0, y: 5.4, z: 3.1, L: 3.1, A: 0.86, r: 0.32 };
   function pendPeriod() { return 2.7 / tierNow().speed; }
@@ -247,7 +247,7 @@
   // the wind's HUD sign: which way and how hard (shown only where the wind blows)
   function renderWind() {
     const el = $("wind"); if (!el) return;
-    const pw = plusWind(), on = game.state !== "title" && ((HZ.kind === "wind" && (hazardsAllowed() || game.mode === "gale")) || pw !== 0); el.hidden = !on; if (!on) return;
+    const pw = plusWind(), on = game.state !== "title" && ((HZ.kind === "wind" && (hazardsAllowed() || attrWind())) || pw !== 0); el.hidden = !on; if (!on) return;
     const w = HZ.kind === "wind" ? HZ.wind : pw, n = Math.min(3, Math.ceil(Math.abs(w) / 0.6));
     el.querySelector(".arr").textContent = w === 0 ? "·" : (w > 0 ? "→" : "←").repeat(Math.max(1, n));
     el.querySelector("b").textContent = Math.abs(w).toFixed(1);

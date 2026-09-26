@@ -4,11 +4,7 @@
   //                plays on a copy of your profile, so no stat, bone, challenge or medal moves. The ring can stand
   //                still, go slow or run at full speed, flat or in 3D, with the map's hazards on or off.
   //   Boss Rush    every boss you've beaten, back to back: three skulls, one more after each end boss.
-  //   Curtain Call twenty seconds, as many makes as you can; misses cost nothing (a mini-game)
-  //   Longshot     a still ring that backs off after every make: how far can you reach? (a mini-game)
-  //   Target Gallery ten throws through a still ring at the targets hanging behind it (a mini-game)
-  //   v50: Perfect Pitch (ten throws, only clean makes count), Sudden Death (one skull, a ring that speeds up),
-  //   Gale Force (a turning gale, three skulls) and Swing Time (thirty seconds, a ring that swings wider)
+  //   the eight mini-games: v56, each an attraction of the carnival with no ring in it (07u_attractions.js)
   // Boss Rush opens once you've put an end boss down; the mini-games (v46: with Can Alley among them) are open from the start. v45: after every end boss but the last the
   // Adventure offers a bonus round, Can Alley (07o_bonus.js): the "encore" phase, where misses are free.
   const MODES = {
@@ -16,15 +12,16 @@
     arcade:   { lives: true, cont: true, maps: true },
     practice: { maps: true, free: true, open: () => true },
     rush:     { lives: true, open: () => profile.bossKills > 0 },
-    curtain:  { free: true, mini: true, clock: 20, map: 7 },   // (v46: the mini-games are open from the start, on their own card)
-    longshot: { lives: true, mini: true, map: 3 },
-    gallery:  { lives: true, mini: true, throws: 10, map: 5 },
-    cans:     { free: true, mini: true, map: 0 },              // v46: Can Alley on its own (07o_bonus.js): ten cans, twenty-five seconds
-    // v50: four more mini-games
-    pitch:    { free: true, mini: true, throws: 10, map: 1 },   // Perfect Pitch: ten throws at a still ring, and only clean ones count
-    sudden:   { lives: true, mini: true, one: true, map: 4 },   // Sudden Death: one skull, a ring that speeds up with every make
-    gale:     { lives: true, mini: true, map: 2 },              // Gale Force: a still ring in a gale that turns with every throw
-    swing:    { free: true, mini: true, clock: 30, map: 6 },    // Swing Time: thirty seconds, the ring swinging wider and faster with each make
+    // the mini-games (v46: open from the start, on their own card; v56: each an attraction, 07u_attractions.js).
+    // throws: that many skulls and misses are free; lives: three skulls, a miss costs one; one: a single skull
+    curtain:  { lives: true, mini: true, map: 7 },               // Curtain Call: a round each time the curtains part
+    longshot: { lives: true, mini: true, map: 3 },               // Longshot: the board backs off after every hit
+    gallery:  { free: true, mini: true, throws: 10, map: 5 },    // Target Gallery: ten skulls at the shooting gallery
+    cans:     { free: true, mini: true, throws: 10, map: 0 },    // Can Alley: ten skulls at the pyramid
+    pitch:    { free: true, mini: true, throws: 10, map: 1 },    // Perfect Pitch: ten skulls at the pockets
+    sudden:   { lives: true, mini: true, one: true, map: 4 },    // Sudden Death: one skull
+    gale:     { lives: true, mini: true, map: 2 },               // Gale Force: a still bullseye in a turning wind
+    swing:    { lives: true, mini: true, map: 6 },               // Swing Time: a target on a pendulum
     director: { lives: true, open: () => true },  // the Director's Challenge (07k_director.js): the week's map, whatever you've reached
     feature:  { lives: true, open: () => !!seasonNow() }   // the season's Feature (07l_season.js): only while a season's on
   };
@@ -32,10 +29,8 @@
   const MODE_IDS = Object.keys(MODES), MINI_IDS = MODE_IDS.filter(m => MODES[m].mini);
   const modeOf = () => MODES[game.mode] || MODES.story;
   const freeMiss = () => !!modeOf().free || game.phase === "encore" || game.phase === "crossing";   // a miss that costs no skull
-  const LONGSHOT = { z0: 4.6, step: 0.4, zMax: 14 };
-  const GALE = { max: 2.6 };   // Gale Force's wind, m/s² across the throw at its strongest
   const practice = { ring: "full", half: "A", hazards: true };   // the Practice options (the Play sheet sets them)
-  const modeSt = { real: null, rush: [], rushI: 0, clock: 0, far: 0, targetsHit: 0 };
+  const modeSt = { real: null, rush: [], rushI: 0 };
   const inPractice = () => !!modeSt.real;
   const realProfile = () => modeSt.real || profile;   // what gets saved, whatever the run is playing on
   const modeRec = m => realProfile().modes[m] || { best: 0, runs: 0 };
@@ -54,7 +49,7 @@
   function modeStart(mode) {
     leavePractice();
     if (mode === "practice" && !Replay.play) { modeSt.real = profile; profile = JSON.parse(JSON.stringify(profile)); }   // a copy to play on
-    Object.assign(modeSt, { rush: [], rushI: 0, clock: MODES[mode].clock || 0, far: 0, targetsHit: 0 });
+    Object.assign(modeSt, { rush: [], rushI: 0 });
   }
   function modeBegin() {   // after startGame has set the run up: each mode's own opening
     const m = game.mode;
@@ -66,57 +61,33 @@
       else for (let n = 1; n <= MAP_COUNT; n++) { const B = mapData(n).bosses; if (profile.bossLog[B.mini]) modeSt.rush.push({ id: B.mini, stage: n, end: false }); if (profile.bossLog[B.end]) modeSt.rush.push({ id: B.end, stage: n, end: true }); }
       if (!modeSt.rush.length) modeSt.rush.push({ id: "crow", stage: 1, end: false });
       rushBoss();
-    } else if (m === "longshot") { ring.frozen = { x: 0, y: RING_Y, z: LONGSHOT.z0 }; }
-    else if (m === "gallery") { ring.frozen = { x: 0, y: RING_Y, z: RING_Z }; galleryTargets(); }
-    else if (m === "pitch") ring.frozen = { x: 0, y: RING_Y, z: RING_Z };
-    else if (m === "gale") { ring.frozen = { x: 0, y: RING_Y, z: RING_Z }; galeGust(); }
+    }
     if (MODES[m].one) { game.lives = 1; game.slots = 1; game.peakLives = 1; }
-    if (m === "cans") startEncore(() => gameOver(true));   // (the bonus round, played for its own sake: no map to go on to)
-    else if (MODES[m].mini) stageCard(t(`mode.${m}.name`), t(`mode.${m}.rule`), "", 2.2, "gold");
+    if (MODES[m].mini) { attrBegin(m); stageCard(t(`mode.${m}.verb`), t(`mode.${m}.name`), t(`mode.${m}.rule`), 2.4, "gold"); }
     if (m === "director") directorBegin();
     if (m === "feature") featureBegin();
   }
   // ── the ring, mode by mode (ringTargets asks first)
   function modeRing() {
-    if (game.phase === "encore") return { amp: 0, omega: 0, rc: RC_START + CANS.rc, bob: 0 };   // Can Alley: a still, generous ring
+    if (attrOn()) return { amp: 0, omega: 0, rc: RC_START, bob: 0 };   // an attraction: the (hidden) ring stands still on its plane
     if (game.phase === "crossing") return { amp: 0, omega: 0, rc: game.run.crossRc || RC_START, bob: 0 };   // the Challenge Stage: rings on the road (07q_crossing.js)
-    if (game.mode === "curtain") { const L = level(24); return { amp: 1.35, omega: 1.5, rc: L.rc + 0.02, bob: 0.14 }; }
-    if (game.mode === "swing") { const k = Math.min(1, game.hits / 18), L = level(10); return { amp: 0.5 + 1.1 * k, omega: 0.9 + 1.6 * k, rc: L.rc + 0.03, bob: 0.08 + 0.1 * k }; }
-    if (game.mode === "sudden") return level(Math.min(60, 6 + game.hits * 3));
     if (game.mode === "practice" && practice.ring === "slow") { const L = level(aLevel(game.stageHits || 0)); return { ...L, omega: L.omega * 0.5 }; }
     return null;
   }
   // ── after each throw has settled: true if the mode moved the run on (stageCheck's place)
   function modeCheck() {
-    const m = game.mode, make = game.result && game.result.make;
+    const m = game.mode;
     if (game.phase === "crossing") return crossingCheck();
-    if (game.phase === "encore") { if (game.run.encoreEnd != null && (!cansLeft() || game.time >= game.run.encoreEnd)) { encoreDone(); return true; } return true; }   // (the cans are the round: no director between throws)
+    if (game.phase === "encore") { attrAfter(); if (game.run.encoreEnd != null && (!cansLeft() || game.time >= game.run.encoreEnd)) encoreDone(); return true; }   // (the cans are the round: no director between throws)
     if (m === "rush") { if (boss && boss.dead) { rushNext(); return true; } return false; }
-    if (m === "curtain" || m === "swing") { if (modeSt.clock <= 0) { gameOver(true); return true; } return m === "swing"; }
-    if (m === "pitch") { if (game.throws >= MODES.pitch.throws) { gameOver(true); return true; } return true; }
-    if (m === "gale") { galeGust(); return true; }
-    if (m === "sudden") return true;
-    if (m === "longshot" && make) {
-      modeSt.far = Math.max(modeSt.far, game.lastCross ? game.lastCross.ringZ : 0);
-      const z = Math.min(LONGSHOT.zMax, ring.z + LONGSHOT.step), x = clamp(rrIn(-1, 1) * Math.min(1.4, (z - LONGSHOT.z0) * 0.3), -1.4, 1.4);
-      ring.glide = { from: { x: ring.x, y: ring.y, z: ring.z }, t: 0, dur: 0.6 }; ring.frozen = { x, y: RING_Y, z };
-      return false;
-    }
-    if (m === "gallery") {
-      if (game.throws >= MODES.gallery.throws) { gameOver(true); return true; }
-      if (!targets.some(T => !T.pop)) galleryTargets();
-      return true;   // (the gallery's targets are its own: no director refills them)
-    }
+    if (attrOn()) return attrAfter();   // the attractions run themselves (07u_attractions.js)
     return m === "practice";   // Practice: no bosses, no director between throws beyond the hazards
   }
-  // the clock (Curtain Call and the encore): runs in play; the throw in the air when it runs out still counts
+  // the encore's clock: runs in play; the throw in the air when it runs out still counts
   function updateModes(dt) {
-    if ((game.mode === "curtain" || game.mode === "swing") && inRun() && game.state !== "cine") {
-      modeSt.clock = Math.max(0, modeSt.clock - dt);
-      if (modeSt.clock <= 0 && game.state === "ready") gameOver(true);
-    }
+    attrUpdate(dt);
     if (game.phase === "encore" && game.state === "ready" && game.time >= game.run.encoreEnd) encoreDone();
-    const sec = game.mode === "curtain" || game.mode === "swing" ? Math.ceil(modeSt.clock) : game.phase === "encore" ? Math.ceil(game.run.encoreEnd - game.time) : null;   // (the clocks tick on the HUD)
+    const sec = game.phase === "encore" ? Math.ceil(game.run.encoreEnd - game.time) : null;   // (the clock ticks on the HUD)
     if (sec !== null && sec !== modeSt.shownSec) { modeSt.shownSec = sec; renderProgress(); }
   }
 
@@ -141,30 +112,11 @@
     cine("boss-out", 2.4, () => { boss = null; seeds.length = 0; rushBoss(); }, 0.4);
   }
 
-  // ── Gale Force: the wind turns with every throw (its own gale, not the map's hazard), stronger as the makes add up
-  function galeGust() {
-    const k = Math.min(1, 0.45 + game.hits * 0.05);
-    HZ.kind = "wind"; HZ.wind = Math.round(rrIn(-1, 1) * GALE.max * k * 10) / 10; if (Math.abs(HZ.wind) < 0.5) HZ.wind = HZ.wind < 0 ? -0.5 : 0.5;
-    renderWind(); if (Math.abs(HZ.wind) > 0.6) Sound.toon("gust");
-  }
-  // ── the Target Gallery: five targets hang behind a still ring, each on a line you can throw through the hole
-  function galleryTargets() {
-    targets.length = 0;
-    const inner = ring.rc - RING_TUBE - SKULL_R, own = mapData(game.stage).target, kind = own === "frog" ? mapData(1).target : own;   // (a frog sits on the ground)
-    for (let i = 0; i < 5; i++) {
-      const a = (i / 5) * TAU + rrIn(-0.3, 0.3), r = inner * rrIn(0.15, 0.7), cx = Math.cos(a) * r, cy = RING_Y + Math.sin(a) * r;
-      const z = RING_Z + rrIn(1.4, 3.2), T = flightT(), tc = RING_Z * T / RING_Z, vy = (cy - START_Y + 0.5 * G * tc * tc) / tc;   // the throw through (cx, cy) at the ring…
-      const t2 = z / (RING_Z / T), x = (cx / RING_Z) * z, y = START_Y + vy * t2 - 0.5 * G * t2 * t2;                                   // …and where it is at the target's depth
-      targets.push({ kind, x, y, z, t: 0, left: 99, pop: 0, ph: rrIn(0, TAU), via: { x: cx, y: cy } });   // via: where to throw through the ring
-      sawIt("target", kind);
-    }
-  }
-
   // ── the Adventure's bonus round, taken (07o_bonus.js has the cans and the offer)
   function startEncore(then) {
     game.phase = "encore"; game.run.encoreEnd = game.time + CANS.secs + 1.8; game.run.encoreThen = then; game.run.encoreMakes = 0; game.run.bonusT0 = game.throws;
     profile.bonusRounds++; clearPickups(); clearDirectors();
-    setRingMode("line", false); ring.morph = 0; ring.frozen = { x: 0, y: RING_Y, z: RING_Z }; snapRing(); canLayout(); Sound.setAct("A");
+    setRingMode("line", false); ring.morph = 0; attrBegin("cans", { encore: true }); snapRing(); Sound.setAct("A");
     stageCard(t("cans.k"), t("cans.name"), t("cans.rule", { n: cans.length, secs: CANS.secs }), 1.8, "gold");
     mortySays("encore", { priority: true }); updateHud();
   }
@@ -180,30 +132,29 @@
     if (won) game.run.prizes = (game.run.prizes || []).concat(key);
     stageCard(clear ? t("cans.clear") : t("cans.time"), t("cans.count", { n, total }), t("cans.paid", { bones }) + (won ? " · " + t("cans.won", { name: P.name }) : ""), 2.2, "gold");
     Sound.toon(clear ? "fanfare" : "xylo"); Telemetry.emit("bonus_done", { stage, cans: n, clear, prize: won ? key : "" });
-    cine("mini-out", 2.2, () => { clearCans(); ring.frozen = null; if (then) then(); }, 0);
+    cine("mini-out", 2.2, () => { clearCans(); attrEnd(); if (then) then(); }, 0);
     persist(); updateHud();
   }
 
-  // ── the HUD's progress bar, mode by mode: a clock for Curtain Call and the encore, a reach for Longshot, the throws
-  // left in the Gallery, how far into the list in Boss Rush (its fights use the boss's own bar)
+  // ── the HUD's progress bar, mode by mode: a clock for the encore, the attraction's own line for a mini-game, how far
+  // into the list in Boss Rush (its fights use the boss's own bar)
   function modeProgress() {
     const m = game.mode; if (game.state === "title" || (m === "story" && game.phase !== "encore" && game.phase !== "crossing") || m === "arcade" || m === "director" || m === "feature") return false;   // (the Director's and the Feature's are renderProgress's own: 07b_stage.js)
     const fighting = !!boss && (game.phase === "mini" || game.phase === "boss");
     if (m === "rush" && fighting) { progSt.textContent = modeSt.rushI + 1; return false; }   // (the boss's health bar, as in Story)
     progEl.classList.remove("fight", "half", "beat"); delete progEl.dataset.boss;
-    const clock = game.phase === "encore" ? Math.max(0, (game.run.encoreEnd || game.time) - game.time) : m === "curtain" || m === "swing" ? modeSt.clock : -1;
+    const clock = game.phase === "encore" ? Math.max(0, (game.run.encoreEnd || game.time) - game.time) : -1;
     progEl.classList.toggle("arcade", clock >= 0);
-    if (clock >= 0) { progArc.textContent = `0:${String(Math.ceil(clock)).padStart(2, "0")}`; progFill.style.width = (100 * clock / (game.phase === "encore" ? CANS.secs + 1.8 : MODES[m].clock || MODES.curtain.clock)).toFixed(1) + "%"; }
+    if (clock >= 0) { progArc.textContent = `0:${String(Math.ceil(clock)).padStart(2, "0")}`; progFill.style.width = (100 * clock / (CANS.secs + 1.8)).toFixed(1) + "%"; }
     else progSt.textContent = game.stage || 1;
     if (game.phase === "encore") progLbl.textContent = t("prog.encore", { n: cans.filter(c => c.down).length, total: cans.length });
     else if (game.phase === "crossing") { const n = game.run.crossN || 0; progLbl.textContent = t("prog.cross", { map: mapData(game.stage + 1).name, n, total: CROSS.throws }); progFill.style.width = (100 * n / CROSS.throws).toFixed(1) + "%"; }
-    else if (m === "curtain") progLbl.textContent = t("prog.curtain", { n: game.hits });
-    else if (m === "swing") progLbl.textContent = t("prog.swing", { n: game.hits });
-    else if (m === "pitch") { const left = Math.max(0, MODES.pitch.throws - game.throws); progLbl.textContent = t("prog.pitch", { n: game.run.perfects || 0, left }); progFill.style.width = (100 * left / MODES.pitch.throws).toFixed(1) + "%"; }
-    else if (m === "sudden") { progLbl.textContent = t("prog.sudden", { n: game.hits, best: modeRec("sudden").best }); progFill.style.width = (100 * Math.min(1, game.hits / Math.max(10, modeRec("sudden").best || 10))).toFixed(1) + "%"; }
-    else if (m === "gale") { progLbl.textContent = t("prog.gale", { n: game.hits, w: Math.abs(HZ.wind).toFixed(1), dir: HZ.wind >= 0 ? "→" : "←" }); progFill.style.width = (100 * Math.abs(HZ.wind) / GALE.max).toFixed(1) + "%"; }
-    else if (m === "longshot") { const best = modeRec("longshot").best / 10; progLbl.textContent = t("prog.longshot", { m: ring.z.toFixed(1), best: Math.max(best, modeSt.far).toFixed(1) }); progFill.style.width = (100 * clamp((ring.z - LONGSHOT.z0) / (LONGSHOT.zMax - LONGSHOT.z0), 0, 1)).toFixed(1) + "%"; }
-    else if (m === "gallery") { const left = Math.max(0, MODES.gallery.throws - game.throws); progLbl.textContent = t("prog.gallery", { n: game.run.targets || 0, left }); progFill.style.width = (100 * left / MODES.gallery.throws).toFixed(1) + "%"; }
+    else if (MODES[m].mini && attrOn()) {   // v56: each attraction's own line
+      const lim = MODES[m].throws, left = lim ? Math.max(0, lim - game.throws) : 0, best = modeRec(m).best;
+      const n = attrValue(), o = { n, left, best, m: ATTR.zp, far: Math.max(best / 10, ATTR.far || 0), round: ATTR.round || 0, lv: ATTR.lvl >= 0 && GALE_LV[ATTR.lvl] ? t(`attr.gale.${GALE_LV[ATTR.lvl].id}`) : "", w: Math.abs(HZ.wind).toFixed(1), dir: HZ.wind >= 0 ? "→" : "←", dead: ATTR.dead || 0 };
+      progLbl.textContent = t(`attr.${m}.prog`, o);
+      progFill.style.width = (100 * (lim ? left / lim : m === "longshot" ? clamp(ATTR.step / (LONG.dists.length - 1), 0, 1) : m === "gale" ? Math.abs(HZ.wind) / GALE_LV[GALE_LV.length - 1].w : clamp(n / Math.max(10, best || 10), 0, 1))).toFixed(1) + "%";
+    }
     else if (m === "practice") { progLbl.textContent = t("prog.practice", { makes: game.hits, throws: game.throws }); progFill.style.width = (game.throws ? (100 * game.hits) / game.throws : 0).toFixed(1) + "%"; }
     else if (m === "rush") { progLbl.textContent = t("prog.rush", { n: Math.min(modeSt.rush.length, modeSt.rushI + 1), total: modeSt.rush.length }); progFill.style.width = (100 * modeSt.rushI / Math.max(1, modeSt.rush.length)).toFixed(1) + "%"; }
     return true;
@@ -214,11 +165,11 @@
     const m = game.mode;
     if (m === "director") { directorAfterRun(); game.run.modeValue = game.score; return; }   // (its record is the week's: 07k_director.js)
     const R = profile.modes[m] || (profile.modes[m] = { best: 0, runs: 0 });
-    const value = m === "rush" ? game.run.bosses : m === "curtain" ? game.hits : m === "longshot" ? Math.round(modeSt.far * 10) : m === "gallery" ? (game.run.targets || 0) : m === "cans" ? (game.run.cans || 0) : m === "pitch" ? (game.run.perfects || 0) : m === "sudden" || m === "gale" || m === "swing" ? game.hits : m === "feature" ? game.score : 0;
+    const value = m === "rush" ? game.run.bosses : MODES[m].mini ? (attrOn() ? attrValue() : 0) : m === "feature" ? game.score : 0;
     game.newBest = value > R.best; R.best = Math.max(R.best, value); R.runs++;
     if (m === "rush" || MODES[m].mini) challenge("modeRuns", 1);
     if (m === "rush") R.score = Math.max(R.score || 0, game.score);
     game.run.modeValue = value;
     Telemetry.emit("mode_end", { mode: m, value, best: R.best });
   }
-  const modeValueText = (m, v) => m === "feature" ? t("mode.feature.v", { n: fmtN(v) }) : m === "longshot" ? t("mode.longshot.m", { m: (v / 10).toFixed(1) }) : m === "rush" ? t("mode.rush.bosses", { n: v }) : m === "gallery" ? t("mode.gallery.targets", { n: v }) : m === "cans" ? t("mode.cans.n", { n: v }) : m === "pitch" ? t("mode.pitch.n", { n: v }) : t("mode.curtain.makes", { n: v });
+  const modeValueText = (m, v) => m === "feature" ? t("mode.feature.v", { n: fmtN(v) }) : m === "rush" ? t("mode.rush.bosses", { n: v }) : MODES[m] && MODES[m].mini ? t(`attr.${m}.v`, { n: fmtN(v), m: Math.round(v / 10) }) : fmtN(v);

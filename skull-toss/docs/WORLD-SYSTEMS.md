@@ -1,11 +1,12 @@
-# World systems (v54)
+# World systems (v54, v56)
 
-This covers four systems:
+This covers these systems:
 
 - the musical clock the world moves to;
 - how the travel scenery is laid out;
 - how a boss's lair reveals itself;
-- the portals between places.
+- the portals between places;
+- the carnival's attractions (the mini-games).
 
 Each section says where the code lives and what the tests check.
 
@@ -148,3 +149,25 @@ the portal goes straight to the next map.
 
 **Not done.** The design notes also describe power-ups that need new physics: homing, gravity flip, vine swinging,
 underwater traversal, time rewind and clones. They aren't in the game.
+
+## The attractions (`07u_attractions.js`, v56)
+
+The eight mini-games are attractions, not ring challenges. While one is on:
+
+- the ring is hidden, and nothing crosses it (`attrOn()` switches the ring test off in the flight);
+- the ring is parked on the attraction's plane, so the aim guide's reticle, the camera's safe box and the camera's
+  follow all read that depth;
+- the flight is judged where it crosses that plane (`attrCheck`), or, for Can Alley's cans and Sudden Death's
+  blades, by a swept test against each thing;
+- a hit resolves as `tgt` or `bull` and a miss as `board`, `curtain`, `pocket`, `fake`, `blade`, or the usual `wide`,
+  `over`, `low` or `short` (07_game.js: `RESULT`). The attraction's word replaces the ring's, and it never lights the
+  ring, pays a skull for a streak, or counts as a signature shot.
+
+**Longshot's throw.** The aim point is on the board's plane and the flight time grows with the square root of the
+distance, so a throw carries 150 m without leaving the screen. The skull is kept visible to 24 m past the board.
+
+**Randomness.** The attractions roll the run's dice (`runRand`), so a replay plays the same gallery, rounds, winds and
+cans.
+
+**In tests.** `T.attr()` reads the state, `T.attrThrow(x, y)` throws to meet (x, y) on the plane, and
+`T.attrProps`, `T.attrCurtain`, `T.attrWindSet`, `T.attrSwing(ahead)` and `T.pitchHoles()` set things up.

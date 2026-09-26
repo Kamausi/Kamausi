@@ -1,8 +1,30 @@
-# SKULL TOSS v55
+# SKULL TOSS v56
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)); nothing else ever plays in their place.
+
+## New in v56: the mini-games are the carnival's attractions
+
+Every mini-game is now an attraction you could find in the Skull Toss carnival, with its own set, its own goal and
+its own verb. None of them has a ring: the ring is hidden, and the skull is judged where it meets the attraction's own
+things. The aim guide's reticle sits on the attraction's plane.
+
+| Attraction | Verb | What it is | Skulls |
+|---|---|---|---|
+| **Target Gallery** | React | A blue and cream shooting gallery. Tin stars and spinning plates pay 1, ducks on conveyors 2, bullseyes that pop up and drop behind cover 3, and a golden target racing along the top rail 5 (it rings the bell). A plate edge-on slips past. | Ten, misses free |
+| **Can Alley** | Smash | A red striped booth and a pyramid of ten numbered cans with weight. A hit knocks what it hits and everything resting on it; the skull ploughs on through, slowed by each can; a can that flies knocks others over. The whole pyramid in one throw is a **Clean Sweep** (+5), and it's restacked. | Ten, misses free |
+| **Longshot** | Reach | A range with a board on legs at 10 m, then 15, 20, 25, 30, 40, 50 and on. The throw carries to the board, which is smaller each time. There's a breath of wind that grows with the distance, and the camera eases back. | Three |
+| **Curtain Call** | Time | A little stage. DING: the curtains part on the round's act (one target; one on the move; two, one of which goes; three in turn; the big finish in a spotlight), and slam shut. One throw a round, while they're open. Into a closed curtain, or a round that comes and goes with no throw, costs a skull. | Three |
+| **Perfect Pitch** | Place | A painted board of pockets: 10, 25, 50 and 100, smaller for more. Off the rim rattles out. Dead centre in the 100 is a **Perfect Pitch**: double, the bell, the lights chasing, the crowd. | Ten, misses free |
+| **Gale Force** | Compensate | A still bullseye in front of a wind machine. The wind turns every throw and gets up every three hits: breeze, gust, gale, storm, hurricane. Flags snap and paper and dust blow across. | Three |
+| **Sudden Death** | Survive | The dark, one spotlight, one target and no score on the screen, just SURVIVE. Every hit makes it worse: it moves, shrinks, quickens, blades cross in front, it jinks, the picture shakes, fakes appear, then it's tiny. | One |
+| **Swing Time** | Synchronize | A target on a pendulum under an iron frame: slow, then quicker, then wider, then out of time. Meet it where it's going to be; through the middle on the move is **DEAD CENTER** (3). | Three |
+
+- Each attraction's record is its own number: points (Gallery, Can Alley, Perfect Pitch), metres (Longshot), rounds
+  (Curtain Call) or hits (Gale Force, Sudden Death, Swing Time).
+- The Adventure's Can Alley bonus round uses the same booth and cans, with its clock, pay and prizes as before.
+- Two achievements follow the new rules: Curtain Caller is 10 rounds, and Full Gallery is 20 points.
 
 ## New in v55: a portal you believe, painted water, and tidier screens
 

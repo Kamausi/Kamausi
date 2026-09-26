@@ -11,7 +11,7 @@
   const STRUCT = BLUEPRINT.structure;
   const ACT_LEN = STRUCT.act, STAGE_MINI = STRUCT.mini, STAGE_LOOSE = STRUCT.loose, STAGE_BOSS = STRUCT.boss, STAGE_END = STRUCT.end;
   const MINI_HITS = STAGE_LOOSE - STAGE_MINI, BOSS_HITS = STAGE_END - STAGE_BOSS, BOSS_PHASES = STRUCT.phases;
-  const BASE_PTS = { perfect: 250, swish: 100, rim: 75, eye: 150 };
+  const BASE_PTS = { perfect: 250, swish: 100, rim: 75, eye: 150, tgt: 100, bull: 250 };   // (v56: an attraction's hit, and one in the middle)
   const comboMult = streak => Math.min(1 + 0.5 * Math.max(0, streak - 1), 6);
   // corners of the triangle: 0 near-left-low · 1 far-right-low · 2 up-centre. Patterns are learnable, never random.
   // The maps are data (src/maps/*.json → MAP_DATA): each names its ring's speed, triangle, patterns, modifiers and path.

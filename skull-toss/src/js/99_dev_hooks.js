@@ -34,7 +34,7 @@
     cards(on = true) { if (sandbox) sandbox.cardsOn = on; reelSt.leaderShown = false; reelSt.shown = []; reelSt.cues = []; },
     skipReel: () => skipReelCard(), encore(on = true) { if (sandbox) sandbox.encoreOn = on; }, startMode(mode, map = 0) { startGame({ mode, map }); }, setPractice(o) { Object.assign(practice, o); },
     realProfile: () => JSON.parse(JSON.stringify(realProfile())), inPractice: () => inPractice(),
-    modeState: () => ({ mode: game.mode, phase: game.phase, clock: modeSt.clock, far: modeSt.far, rush: modeSt.rush.map(b => b.id), rushI: modeSt.rushI, encoreEnd: game.run.encoreEnd, frozen: ring.frozen && { ...ring.frozen } }),
+    modeState: () => ({ mode: game.mode, phase: game.phase, rush: modeSt.rush.map(b => b.id), rushI: modeSt.rushI, encoreEnd: game.run.encoreEnd, frozen: ring.frozen && { ...ring.frozen } }),
     targetsFull: () => targets.map(T => ({ ...T, ...targetPos(T) })), armOuter: () => armOuter(), celEdge: type => { const c = walkerCel(type, 0, false, 2).c, d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data, w = c.width, h = c.height; let m = 0; for (let x = 0; x < w; x++) for (const y of [0, h - 1]) m = Math.max(m, d[(y * w + x) * 4 + 3]); for (let y = 0; y < h; y++) for (const x of [0, w - 1]) m = Math.max(m, d[(y * w + x) * 4 + 3]); return m; },
     popupsNow: () => ["stagecard", "powerCard"].map(id => { const e = $(id); const r = e.getBoundingClientRect(); return { id, hidden: e.hidden, c: parseFloat(e.style.top || getComputedStyle(e).top), h: e.offsetHeight, top: r.top, bottom: r.bottom }; }),
     stageCardNow: (k, t1, s) => stageCard(k, t1, s, 3), powerCardNow: id => powerCard(id),
@@ -149,7 +149,13 @@
     snapOn(on = true) { if (sandbox) { sandbox.snapOn = on; sandbox.snap = null; } }, snapshot: () => readRunSnapshot(),
     tier: () => ({ ...tierNow() }),
     // the Power-Up Director alone: n makes in a row from the start of the first half, noting the hits where a prop turned up
-    bonus: play => takeBonus(play), bonusOffered: () => !!game.bonus && !$("bonusBox").hidden, cans: () => cans.map(c => ({ row: c.row, i: c.i, x: c.x, y: c.y, z: c.z, down: c.down, via: { ...c.via } })),
+    bonus: play => takeBonus(play), bonusOffered: () => !!game.bonus && !$("bonusBox").hidden, cans: () => cans.map(c => ({ row: c.row, i: c.i, num: c.num, x: c.x, y: c.y, z: c.z, down: c.down })),
+    // v56: the attractions (07u_attractions.js): their state, a throw that meets (x, y) on the attraction's plane, and props to set
+    attr: () => ({ on: ATTR.on, kind: ATTR.kind, zp: ATTR.zp, score: ATTR.score, value: ATTR.on ? attrValue() : 0, far: ATTR.far, step: ATTR.step, round: ATTR.round, lvl: ATTR.lvl, sweeps: ATTR.sweeps, dead: ATTR.dead, perfects: ATTR.perfects,
+      cur: ATTR.cur && { phase: ATTR.cur.phase, t: ATTR.cur.t, win: ATTR.cur.win, fin: ATTR.cur.fin, act: ATTR.cur.act, done: ATTR.cur.done }, props: ATTR.props.map(p => ({ ...p })), ringHidden: !!game.ringHidden, wind: HZ.wind, dark: document.body.classList.contains("attr-dark"), pull: ATTR.pull, shake: ATTR.shake }),
+    attrThrow(x, y) { const a = attrAimFor(x, y); return this.throwAt(a.AX, a.AY); },
+    attrProps(list) { ATTR.props = list.map(p => ({ ...p })); }, attrSwing: (ahead = 0) => swingPos(ahead), attrFlight: () => ATTR.zp * flightT() / RING_Z, attrCurtain(phase, t = 0) { if (ATTR.cur) { ATTR.cur.phase = phase; ATTR.cur.t = t; } }, attrWindSet(w) { HZ.wind = w; },
+    pitchHoles: () => PITCH.holes.map(h => ({ ...h })),
     knockCan(i) { knockCan(cans[i], null); }, canPrizes: () => CAN_PRIZES.map(p => p[0] + ":" + p[1]), findItem: (kind, id) => !!findItem(kind, id),
     ranks: () => RANKS.map(r => [...r]),
     powerDeal(n) { const was = game.phase; game.phase = "B"; powerDirectorReset(); const out = []; for (let i = 0; i < n; i++) out.push(rollPower()); game.phase = was; return out; },

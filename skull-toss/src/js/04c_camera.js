@@ -101,6 +101,7 @@
       const S = BLUEPRINT.camera.ringSafe, p = project(ring.x, ring.y, ring.z), out = p.x < W * S.margin || p.x > W * (1 - S.margin) || p.y < H * S.top || p.y > H * S.bottom;
       cam.safe = clamp((cam.safe == null ? 1 : cam.safe) + (out ? -dt * 3 : dt * 1.5), 0.35, 1); tx *= cam.safe; ty *= cam.safe; tz *= cam.safe;
     }
+    if (ATTR.on) { tz -= ATTR.pull; if (ATTR.shake) { tx += Math.sin(cam.t * 37) * 0.02 * ATTR.shake; ty += Math.sin(cam.t * 29 + 1) * 0.012 * ATTR.shake; } }   // (v56: Longshot eases back; Sudden Death shakes)
     tx *= A; ty *= A; tz *= A;
     const n = Math.max(1, Math.ceil(dt / 0.008)), h = dt / n;
     for (let i = 0; i < n; i++) {

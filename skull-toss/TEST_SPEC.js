@@ -1586,29 +1586,40 @@
     T.step(3); assert(T.state().state === "over" && T.profile().modes.rush.best === 2, `the list done, the run is won (${T.state().state}, ${JSON.stringify(T.profile().modes.rush)})`);
     T.setStats(ZERO); T.toTitle();
   });
-  test("Curtain Call: twenty seconds, misses are free, and the clock ends it", () => {
-    T.setStats(OPENED); T.startMode("curtain"); assert(T.modeState().mode === "curtain" && T.modeState().clock === 20, JSON.stringify(T.modeState()));
-    T.calm(); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); T.freezeRing(0, C.RING_Y); throwAndSettle(2.5, C.RING_Y);
-    assert(T.state().lives === 3 && T.state().hits === 1, "a make counts; a miss is free");
-    T.step(15); assert(T.state().state === "over" && T.profile().modes.curtain.best === 1, `the clock ends it (${T.state().state}, ${JSON.stringify(T.profile().modes.curtain)})`);
+  test("v56 Curtain Call: a little stage; DING, the curtains part on the round's act, one throw while they're open; no ring anywhere", () => {
+    T.setStats(OPENED); T.startMode("curtain"); let A = T.attr();
+    assert(A.on && A.kind === "curtain" && A.ringHidden && A.cur && A.cur.phase === "shut", `an attraction, not a ring (${JSON.stringify({ on: A.on, hidden: A.ringHidden, cur: A.cur })})`);
+    T.step(1.4); A = T.attr(); assert(A.cur.phase === "open" && A.props.length === 1 && A.props[0].live, `the curtains part on one target (${JSON.stringify(A.cur)})`);
+    let p = A.props[0]; T.attrThrow(p.x, p.y); T.step(2.5);
+    assert(T.state().lastResult.make && T.state().hits === 1 && T.state().lives === 3, `a hit while they're open (${T.state().lastResult.kind})`);
+    A = T.attr(); assert(A.round === 2 && A.cur.act === 1, `the next act (${A.round}, ${A.cur.act})`);
+    T.attrCurtain("closed"); T.attrThrow(0, 2.3); T.step(2.5); assert(T.state().lastResult.kind === "curtain" && T.state().lives === 2, `into the closed curtain: a skull (${T.state().lastResult.kind}, ${T.state().lives})`);
+    T.step(1.2); A = T.attr(); const l = T.state().lives; T.step(A.cur.win + 0.6); assert(T.state().lives === l - 1, `a round that comes and goes with no throw costs one too (${l} → ${T.state().lives})`);
+    T.step(1.5); A = T.attr(); if (A.cur.phase === "open") { p = A.props.find(q => q.live) || A.props[0]; T.attrThrow(2.2, 3.5); T.step(2.5); }
+    T.step(4); assert(T.state().state === "over" && T.profile().modes.curtain.best === 1, `out of skulls, and the record is the rounds hit (${T.state().state}, ${JSON.stringify(T.profile().modes.curtain)})`);
     T.setStats(ZERO); T.toTitle();
   });
-  test("Longshot: the ring backs off after every make; a miss costs a skull; the record is the farthest make", () => {
-    T.setStats(OPENED); T.startMode("longshot"); let F = T.modeState().frozen; assert(F && F.z === 4.6, JSON.stringify(F));
-    T.calm(); assert(T.throwThrough(F.x, F.y, F.z), "throw refused"); T.step(2.5);
-    F = T.modeState().frozen; assert(T.state().lastResult.make && Math.abs(F.z - 5.0) < 1e-6, `0.4 m farther after a make (${F.z})`);
-    T.step(1); assert(T.throwThrough(F.x, F.y, F.z), "throw refused"); T.step(2.5);
-    T.freezeRing(F.x, F.y, 5.4); throwAndSettle(2.5, C.RING_Y); assert(T.state().lives === 2, "a miss costs a skull");
-    T.endRun(); T.step(1); assert(T.profile().modes.longshot.best === 50, `the farthest make, in tenths of a metre (${JSON.stringify(T.profile().modes.longshot)})`);
+  test("v56 Longshot: a board on the range at 10 m, then 15, 20…; the throw carries to it; a miss costs a skull; the record is the farthest hit", () => {
+    T.setStats(OPENED); T.startMode("longshot"); let A = T.attr();
+    assert(A.kind === "longshot" && A.zp === 10 && A.ringHidden, `the first board at 10 m (${A.zp})`);
+    T.attrWindSet(0); T.attrThrow(0, 1.35); T.step(3);
+    A = T.attr(); assert(T.state().lastResult.make && A.zp === 15 && A.far === 10, `a hit, and the board goes back to 15 m (${T.state().lastResult.kind}, ${A.zp})`);
+    T.attrWindSet(0); T.attrThrow(0, 1.35); T.step(3.5); A = T.attr(); assert(A.zp === 20 && A.far === 15, `then 20 m (${A.zp})`);
+    T.attrWindSet(0); T.attrThrow(2.6, 1.35); T.step(3.5); assert(T.state().lives === 2 && T.attr().zp === 20, `a miss costs a skull and the board stays (${T.state().lives})`);
+    T.endRun(); T.step(1); assert(T.profile().modes.longshot.best === 150, `the farthest hit, in tenths of a metre (${JSON.stringify(T.profile().modes.longshot)})`);
     T.setStats(ZERO); T.toTitle();
   });
-  test("Target Gallery: ten throws through a still ring at the targets hanging behind it", () => {
-    T.setStats(OPENED); T.startMode("gallery"); const Ts = T.targetsFull();
-    assert(Ts.length === 5 && Ts.every(q => q.z > C.RING_Z && q.via), `five targets behind the ring (${Ts.length})`);
-    T.calm(); T.throwThrough(Ts[0].via.x, Ts[0].via.y, C.RING_Z); T.step(2.5);
-    assert(T.state().lastResult.make && T.runStats().targets >= 1 && T.targetsFull()[0].pop > 0, `through the hole and on into the first target (${T.state().lastResult.kind}, ${T.runStats().targets})`);
-    for (let i = 1; i < 10 && T.state().state === "ready"; i++) { T.calm(); T.throwThrough(0, C.RING_Y, C.RING_Z); T.step(2.5); }
-    assert(T.state().state === "over" && T.profile().modes.gallery.best >= 1, `ten throws and it's over (${T.state().state}, ${JSON.stringify(T.profile().modes.gallery)})`);
+  test("v56 Target Gallery: a shooting gallery of ducks, plates, stars and pop-ups; each pays its own; ten skulls, misses free", () => {
+    T.setStats(OPENED); T.startMode("gallery"); let A = T.attr();
+    const types = new Set(A.props.map(p => p.type));
+    assert(A.ringHidden && types.has("duck") && types.has("plate") && types.has("star"), `ducks, plates and a star (${[...types]})`);
+    const st = A.props.find(p => p.type === "star"); T.attrThrow(st.x, st.y); T.step(2.5);
+    assert(T.state().lastResult.make && T.attr().value === 1, `the star pays 1 (${T.attr().value})`);
+    const d = T.attr().props.find(p => p.type === "duck" && p.row === 0); T.attrProps(T.attr().props.map(p => p.type === "duck" ? { ...p, v: 0 } : p));
+    T.attrThrow(d.x, d.y); T.step(2.5); assert(T.attr().value === 3, `a duck pays 2 (${T.attr().value})`);
+    T.attrThrow(-2.3, 3.6); T.step(2.5); assert(T.state().lastResult.kind === "board" && T.state().lives === 3, "into the backboard: a miss, but free");
+    for (let i = 3; i < 10 && T.state().state === "ready"; i++) { T.attrThrow(2.3, 0.9); T.step(2.5); }
+    assert(T.state().state === "over" && T.profile().modes.gallery.best === 3, `ten skulls and it's over; the record is the points (${T.state().state}, ${JSON.stringify(T.profile().modes.gallery)})`);
     T.setStats(ZERO); T.toTitle();
   });
   // ── v45: Can Alley, the optional bonus round after an end boss ──
@@ -1623,21 +1634,21 @@
     T.step(4); assert(T.state().stage === 2, "and the run goes on");
     T.encore(false); T.setStats(ZERO); T.toTitle();
   });
-  test("v45: Can Alley: ten cans on a stand behind a still ring; the stack falls together; misses are free; the lot pays and wins the map's prize", () => {
+  test("v45: Can Alley: ten numbered cans in a booth, no ring; the stack falls together; misses are free; the lot pays and wins the map's prize", () => {
     toCanAlley(); T.bonus(true); T.step(1.9);
-    const m = T.modeState(), cs = T.cans();
-    assert(m.phase === "encore" && m.frozen && cs.length === 10 && cs.every(c => c.z > C.RING_Z), `a still ring and ten cans behind it (${m.phase}, ${cs.length})`);
+    const m = T.modeState(), cs = T.cans(), A = T.attr();
+    assert(m.phase === "encore" && A.on && A.kind === "cans" && A.ringHidden && cs.length === 10 && cs.every(c => c.num >= 1), `the booth and ten numbered cans (${m.phase}, ${cs.length}, ${A.kind})`);
     assert([4, 3, 2, 1].every((n, row) => cs.filter(c => c.row === row).length === n), "stacked four, three, two, one");
     const lives = T.state().lives, b0 = T.bones();
-    T.calm(); throwAndSettle(2.5, C.RING_Y); assert(T.state().lives === lives, "a miss is free");
-    const b1 = cs.find(c => c.row === 0 && c.i === 1); T.throwThrough(b1.via.x, b1.via.y, C.RING_Z); T.step(3);
+    T.attrThrow(2.2, 3.4); T.step(2.5); assert(T.state().lives === lives, "a miss is free");
+    const b1 = cs.find(c => c.row === 0 && c.i === 1); T.attrThrow(b1.x, b1.y); T.step(3);
     const down = T.cans().filter(c => c.down).length;
-    assert(down >= 6, `a make into the second can of the bottom row brings down everything resting on it (${down} down)`);
+    assert(down >= 5, `the second can of the bottom row brings down what rests on it (${down} down)`);
     T.cans().forEach((c, i) => { if (!c.down) T.knockCan(i); }); T.endThrow(); T.step(2.6);
     const P = T.profile();
     assert(T.bones() === b0 + 10 * 5 + 125 && P.canAlley[1] === 1 && P.canClears === 1, `ten cans and the clear pay (${T.bones() - b0} bones)`);
     assert(P.unlocked.includes("aim:tickets"), "and the first clear after map 1 wins its prize");
-    T.step(3); assert(T.state().stage === 2 && T.state().phase === "A" && !T.cans().length, `then Reel Two (${T.state().stage}, ${T.state().phase})`);
+    T.step(3); assert(T.state().stage === 2 && T.state().phase === "A" && !T.cans().length && !T.attr().on, `then Reel Two, the booth gone (${T.state().stage}, ${T.state().phase})`);
     assert(T.canPrizes().length === 7 && T.canPrizes().every(k => { const [kind, id] = k.split(":"); return T.findItem(kind, id); }), "seven prizes, one a map before the last, all in the Vault");
     T.encore(false); T.setStats(ZERO); T.toTitle();
   });
@@ -1656,15 +1667,24 @@
     document.querySelector('#mapList [data-map="1"]').click(); assert(T.inPractice() && T.state().stage === 2, "and starts there");
     T.toTitle(); T.setStats(ZERO);
   });
-  test("v46: Can Alley as a mini-game: the ten cans, twenty-five seconds, its own record, and no Adventure prize", () => {
+  test("v56: Can Alley as a mini-game: ten skulls at the pyramid, a can a point; cleared, it's restacked; no Adventure prize", () => {
     T.setStats(ZERO); T.toTitle(); T.startMode("cans"); T.step(0.2);
-    const m = T.modeState(); assert(m.mode === "cans" && m.phase === "encore" && T.cans().length === 10, `the cans are up (${m.mode}, ${m.phase}, ${T.cans().length})`);
-    T.cans().forEach((c, i) => { if (!c.down) T.knockCan(i); }); T.endThrow(); T.step(3);
-    const P = T.profile(); assert(T.state().state === "over" && P.modes.cans && P.modes.cans.best === 10, `over, and a best of ten (${T.state().state}, ${JSON.stringify(P.modes.cans)})`);
+    let A = T.attr(); assert(A.kind === "cans" && T.cans().length === 10 && T.modeState().phase !== "encore", `the pyramid is up (${A.kind}, ${T.cans().length})`);
+    const b1 = T.cans().find(c => c.row === 0 && c.i === 1); T.attrThrow(b1.x, b1.y); T.step(3);
+    const n = T.cans().filter(c => c.down).length; assert(n >= 5 && T.attr().value === n, `a can a point (${n}, ${T.attr().value})`);
+    T.cans().forEach((c, i) => { if (!c.down) T.knockCan(i); }); T.attrThrow(2.2, 3.4); T.step(3);
+    assert(T.cans().every(c => !c.down) && T.attr().value === 10, `the lot down: a fresh pyramid (${T.attr().value})`);
+    for (let i = 2; i < 10 && T.state().state === "ready"; i++) { T.attrThrow(2.2, 3.4); T.step(3); }
+    const P = T.profile(); assert(T.state().state === "over" && P.modes.cans && P.modes.cans.best === 10, `ten skulls, over, and a best of ten (${T.state().state}, ${JSON.stringify(P.modes.cans)})`);
     assert(!P.unlocked.includes("aim:tickets") && !(P.canAlley || {})[1], "the carnival prizes stay the Adventure's");
     T.setStats(ZERO); T.toTitle();
   });
-  // ── v27: the Codex and the Production Archive ──
+  test("v56 Can Alley: a glancing hit can start a chain, and the whole pyramid in one throw is a Clean Sweep (+5)", () => {
+    let swept = false;
+    for (let x = -0.45; x <= 0.46 && !swept; x += 0.075) { T.setStats(ZERO); T.toTitle(); T.startMode("cans"); T.step(0.3); const y0 = T.cans()[0].y; T.attrThrow(x, y0); T.step(3.5); swept = T.attr().sweeps === 1; if (swept) assert(T.attr().value === 15 && T.cans().every(c => !c.down), `ten and five for the sweep, and restacked (${T.attr().value})`); }
+    assert(swept, "somewhere along the bottom row, a Clean Sweep");
+    T.setStats(ZERO); T.toTitle();
+  });
   test("The Codex notes things as they turn up: a boss when you meet it, a power-up when you grab it, each map's hazard and target", () => {
     T.setStats(ZERO); let K = T.codex(); assert(K.total === 113 && K.count === 2, `113 entries (v50: 32 areas; v54: six more power-ups), only Crow Hollow and its first act known at first (${K.count}/${K.total})`);
     fresh(); toHit(C.STAGE_MINI); assert(T.codex().seen.includes("boss:crow"), "meeting the Crow King notes him");
@@ -2646,6 +2666,53 @@
     T.setStats({ ...ZERO, bossLog: { crow: 60 } }); T.openSheet("mastery"); document.querySelector('#masteryTabs [data-cat="boss"]').click();
     const pg = document.querySelector('#masteryList [data-m="boss:crow"]'); assert(pg.classList.contains("m-page") && pg.querySelectorAll(".m-line .m-tier").length === 8 && pg.querySelectorAll(".m-tier.got").length === 4, "a page, eight stops on its line, four reached at 60");
     T.closeSheet(); T.setStats(ZERO); T.toTitle();
+  });
+  // ── v56: the mini-games rebuilt as the carnival's attractions (07u_attractions.js) ──
+  test("v56 Every mini-game is an attraction: its own booth, no ring to cross, the ring hidden; the Adventure keeps its ring", () => {
+    T.setStats(OPENED);
+    for (const m of ["curtain", "longshot", "gallery", "cans", "pitch", "sudden", "gale", "swing"]) { T.toTitle(); T.startMode(m); const A = T.attr(); assert(A.on && A.kind === m && A.ringHidden, `${m}: an attraction (${A.kind}, ${A.ringHidden})`); }
+    T.toTitle(); T.startMode("gallery"); const st = T.attr().props.find(p => p.type === "star"); T.attrThrow(st.x, st.y); T.step(2.5);
+    assert(T.state().lastResult.make && Number.isFinite(T.state().score) && T.state().score > 0, `a hit scores on the run's score too (${T.state().score})`);
+    T.toTitle(); assert(!T.attr().on, "the title: none"); T.start(); assert(!T.attr().on && !T.attr().ringHidden, "the Adventure: the ring as ever");
+    T.setStats(ZERO); T.toTitle();
+  });
+  test("v56 Perfect Pitch: pockets of 10, 25, 50 and 100; dead centre in the 100 is a Perfect Pitch (double); a rattle off the rim is a miss", () => {
+    T.setStats(OPENED); T.startMode("pitch"); const H = T.pitchHoles();
+    assert(H.map(h => h.pts).sort((a, b) => a - b).join() === "10,10,10,25,25,50,50,100" && H.find(h => h.pts === 100).r < H.find(h => h.pts === 10).r, "the pockets, smaller for more");
+    const h100 = H.find(h => h.pts === 100); T.attrThrow(h100.x, h100.y); T.step(2.5); assert(T.attr().value === 200 && T.attr().perfects === 1, `a Perfect Pitch pays double (${T.attr().value})`);
+    const h10 = H.find(h => h.pts === 10); T.attrThrow(h10.x + 0.12, h10.y); T.step(2.5); assert(T.attr().value === 210, `in the 10 (${T.attr().value})`);
+    T.attrThrow(h10.x + h10.r + 0.02, h10.y); T.step(2.5); assert(T.state().lastResult.kind === "pocket" && T.attr().value === 210 && T.state().lives === 3, `off the rim: rattled out, free (${T.state().lastResult.kind})`);
+    T.setStats(ZERO); T.toTitle();
+  });
+  test("v56 Gale Force: a still bullseye and a wind that turns every throw and gets up every three hits (breeze, gust, gale…)", () => {
+    T.setStats(OPENED); T.startMode("gale"); let A = T.attr();
+    assert(A.lvl === 0 && Math.abs(A.wind) >= 0.5 && Math.abs(A.wind) <= 0.9, `a breeze to start (${A.wind})`);
+    for (let i = 0; i < 3; i++) { T.attrWindSet(0); T.attrThrow(0, 2.3); T.step(2.5); }
+    A = T.attr(); assert(T.state().hits === 3 && A.lvl === 1 && Math.abs(A.wind) >= 1.1, `three hits: a gust (${A.lvl}, ${A.wind})`);
+    T.attrWindSet(0); T.attrThrow(1.5, 2.3); T.step(2.5); assert(T.state().lives === 2, "a miss costs a skull");
+    T.setStats(ZERO); T.toTitle();
+  });
+  test("v56 Sudden Death: the dark, one target, one skull; every hit adds something; one miss and it's over", () => {
+    T.setStats(OPENED); T.startMode("sudden"); let A = T.attr();
+    assert(A.dark && T.state().lives === 1 && A.props.filter(p => !p.kind).length === 1, `in the dark, one skull, one target (${A.dark}, ${T.state().lives})`);
+    const hitIt = () => { T.attrProps(T.attr().props.map(p => ({ ...p, w: 0, amp: 0, x0: p.x }))); const p = T.attr().props.find(q => !q.kind && !q.fake); T.attrThrow(p.x, p.y); T.step(2.5); };
+    for (let i = 0; i < 4; i++) { const r0 = T.attr().props.find(p => !p.kind).r; hitIt(); if (i === 1) assert(T.attr().props.find(p => !p.kind).r < r0, "two hits: it's smaller"); }
+    A = T.attr(); assert(T.state().hits === 4 && A.props.some(p => p.kind === "blade"), `four hits: blades (${T.state().hits})`);
+    for (let i = 4; i < 7; i++) hitIt();
+    A = T.attr(); assert(A.props.some(p => p.fake) && A.shake > 0, `seven hits: fakes, and the picture shakes (${A.shake})`);
+    T.attrProps(T.attr().props.filter(p => !p.kind)); const f = T.attr().props.find(p => p.fake); T.attrThrow(f.x, f.y); T.step(3);
+    assert(T.state().state === "over" && T.profile().modes.sudden.best === 7, `a fake is a miss, and that's it (${T.state().state}, ${JSON.stringify(T.profile().modes.sudden)})`);
+    T.toTitle(); assert(!T.attr().dark, "the lights back on");
+    T.setStats(ZERO); T.toTitle();
+  });
+  test("v56 Swing Time: a target on a pendulum; hit it where it is when the skull arrives; the middle of it is DEAD CENTER", () => {
+    T.setStats(OPENED); T.startMode("swing"); T.step(0.3);
+    const a = T.attrSwing(); assert(Math.abs(a.a) <= 0.45, `a gentle swing to start (${a.a})`);
+    const P = T.attrSwing(T.attrFlight()); T.attrThrow(P.x, P.y); T.step(2.5);
+    assert(T.state().lastResult.make && T.state().hits === 1, `thrown where it will be when the skull gets there: a hit (${T.state().lastResult.kind})`);
+    const Q = T.attrSwing(T.attrFlight()); T.attrThrow(Q.x, Q.y); T.step(2.5); assert(T.state().lastResult.kind === "bull" && T.attr().dead >= 1, `through the middle of it on the move: DEAD CENTER (${T.state().lastResult.kind})`);
+    T.attrThrow(0, 4.5); T.step(2.5); assert(T.state().lives === 2, "a miss costs a skull");
+    T.setStats(ZERO); T.toTitle();
   });
   // ── v54 ──
   test("v54 a ghost's glow fades out inside its drawing (no square edge up close); the act card and a power-up card never overlap", () => {

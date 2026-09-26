@@ -12,7 +12,7 @@
     voice.quiet = game.time; voice.idleSaid = false;
     const v = aimVelocity(AX, AY);
     Object.assign(skull, { launchRing: { x: ring.x, y: ring.y, z: ring.z }, ax0: windNow(), close: false, shots: [] });   // (what the signature shots read: 07h_shots.js)
-    Object.assign(skull, { sub: null, p0: { x: 0, y: START_Y, z: 0 }, v0: v, t: 0, crossed: false, resting: false, bounces: 0, ax: windNow(), tHit: false,
+    Object.assign(skull, { sub: null, sink: 0, canHit: false, canHits: 0, p0: { x: 0, y: START_Y, z: 0 }, v0: v, t: 0, crossed: false, resting: false, bounces: 0, ax: windNow(), tHit: false,
       spin: (1.3 + Math.abs(v.x) * 0.5) * (v.x < 0 ? -1 : 1), hang: 0, take: 0, alpha: 1, flightTime: 0, trail: [], spawn: 1, emit: 0, missed: false });
     skull.pos = { ...skull.p0 };
     game.state = "flying"; game.result = null; game.endTimer = 0; game.throws++; ghostLaunch();
@@ -62,7 +62,7 @@
     let remaining = s.hang > 0 || s.sub ? 0 : dt, elapsed = 0, guard = 0;   // (v53: under the water it's the water's own step, not the arc)
     while (remaining > 1e-9 && guard++ < 10) {
       let tE = Infinity, kind = null;
-      if (!s.crossed && s.v0.z > 0) { const e0 = elapsed, t0 = s.t, tc = crossTime(s, remaining, tau => phase0 + ring.omega * (e0 + tau - t0)); if (tc < Infinity) { tE = tc; kind = "ring"; } }
+      if (!s.crossed && s.v0.z > 0 && !attrOn()) { const e0 = elapsed, t0 = s.t, tc = crossTime(s, remaining, tau => phase0 + ring.omega * (e0 + tau - t0)); if (tc < Infinity) { tE = tc; kind = "ring"; } }
       if (!s.resting) { const tg = groundTime(s); if (tg > s.t + 1e-7 && tg <= s.t + remaining && tg < tE) { tE = tg; kind = "ground"; } }
       if (!kind) { s.t += remaining; break; }
       const adv = tE - s.t; remaining -= adv; elapsed += adv; rebase(s, tE);
@@ -75,8 +75,10 @@
     if (!game.result && !s.crossed) obstacleCheck(s, prevPos);   // the map's obstacles: bumpers bounce, fans and lodestones push, the rest block (07m_obstacles.js)
     envAfterFlight(s, prevPos);   // props it brushes answer (07n_environment.js)
     if (targets.length) targetCheck(s, prevPos);
+    if (ATTR.on) attrCheck(s, prevPos);   // v56: the attraction's own things (07u_attractions.js)
     if (cans.length) canCheck(s, prevPos);   // Can Alley (07o_bonus.js)
-    if (s.pos.z < -CAM_BACK + 0.9 || s.pos.z > 48) s.alpha = 0;
+    if (s.pos.z < -CAM_BACK + 0.9 || s.pos.z > attrFar()) s.alpha = 0;
+    if (s.sink) s.alpha = Math.max(0, s.alpha - dt * 3);   // (down a Perfect Pitch pocket)
     const fade = game.result ? clamp(game.endTimer / 0.3, 0, 1) : 1;
     const v = s.sub ? s.sub.v : velAt(s, s.t);
     const still = (s.resting && !s.sub) || s.hang > 0;
@@ -84,7 +86,7 @@
     if (game.result) {
       game.endTimer -= dt;
       if (game.endTimer <= 0) endThrow();
-    } else if (s.flightTime > 4) resolve("wide", null);
+    } else if (s.flightTime > (ATTR.on ? 8 : 4)) resolve("wide", null);
   }
 
   const hasPost = () => ring.mode === "line" && anchorDef().support === "ground";   // (a post or the desert's hand stands under the ring; a hanging ring has nothing below it)
@@ -166,7 +168,15 @@
     crusher: { make: false, hit: true },
     barrier: { make: false, hit: true },
     decoy:   { make: false, hit: true },   // (a decoy target hung in front of the ring: 07e_directors.js)
-    eye:     { make: true, pts: 1, fill: GOLD, text: INK, mood: "excited" }   // (v47: the Pumpkin King's eyes are targets, and a poke is one of the 80 hits)
+    eye:     { make: true, pts: 1, fill: GOLD, text: INK, mood: "excited" },   // (v47: the Pumpkin King's eyes are targets, and a poke is one of the 80 hits)
+    // v56: the attractions (07u_attractions.js): a hit, a hit in the middle, and the things a throw can go into instead
+    tgt:     { make: true, pts: 1, fill: TEAL, text: CREAM, mood: "excited", attr: true },
+    bull:    { make: true, pts: 2, fill: MUSTARD, text: INK, mood: "perfect", attr: true },
+    board:   { make: false, hit: true },
+    curtain: { make: false, hit: true },
+    pocket:  { make: false, hit: true },
+    fake:    { make: false, hit: true },
+    blade:   { make: false, hit: true }
   };
   // the words are strings: result.<kind>.word for a make, result.<kind>.call and .sub for a miss; coach.<kind> the tip after one
   const MISS_STAT = { wide: "wides", over: "overs", low: "lows", post: "posts", short: "shorts", clank: "clanks", seed: "seeds" };
@@ -174,7 +184,7 @@
     if (portalOpen()) { portalResolve(kind, RESULT[kind]); return; }   // (v54: a throw at a portal: through it, or try again for nothing, 07t_portal.js)
     const R = RESULT[kind], run = game.run;
     Telemetry.emit("throw", { result: kind, make: !!R.make, stage: game.stage, stageHits: game.stageHits, lives: game.lives, boss: boss ? boss.kind : null, n: game.throws });
-    game.result = { kind, make: R.make, at: game.time, bonked: false, pts: 0 }; ghostResolve(!!R.make); plusResolve(R, kind); windCurve(R);
+    game.result = { kind, make: R.make, at: game.time, bonked: false, pts: 0 }; ghostResolve(!!R.make); plusResolve(R, kind); if (!ATTR.on) windCurve(R);
     game.endTimer = R.make ? 0.95 : R.hit ? 1.0 : 1.45;
     const x = at ? at.x : W / 2, y = at ? at.y - ring.rc * at.s - U * 0.05 : H * 0.3;
     if (R.make) {
@@ -190,7 +200,7 @@
       game.score += pts; game.result.pts = pts; profile.scoreTotal += pts;
       game.perfStreak = kind === "perfect" ? game.perfStreak + 1 : 0;
       run.bestCombo = Math.max(run.bestCombo, game.streak);
-      if (kind === "perfect") run.perfects++; else if (kind === "rim") run.rims++; else if (kind === "eye") { run.eyes = (run.eyes || 0) + 1; profile.eyePokes++; } else run.swishes++;
+      if (kind === "perfect") run.perfects++; else if (kind === "rim") run.rims++; else if (kind === "eye") { run.eyes = (run.eyes || 0) + 1; profile.eyePokes++; } else if (R.attr) run.targets = (run.targets || 0) + 1; else run.swishes++;
       profile.makes++; profile.points += R.pts; profile.mapMakes[game.stage] = (profile.mapMakes[game.stage] || 0) + 1;
       if (kind === "perfect") profile.perfects++;
       if (kind === "rim") profile.rims++;
@@ -201,29 +211,31 @@
       // the skull reacts: huge grin, a spinning perfect, or a puzzled rim-in (the impact itself was the visual system's)
       setMood(rig, R.mood, game.time);
       VisualSystem.emit("score", { kind, streak: game.streak }); buzz(kind === "perfect" ? [10, 30, 16] : 12);   // the swish was the contact; the director lands the sting
-      const word = game.streak >= 2 ? comboWord(game.streak) : "";
-      impact(ghosted ? t("result.ghost.word") : t(`result.${kind}.word`), x, y, { fill: ghosted ? PURPLE : R.fill, text: ghosted ? CREAM : R.text, scale: kind === "perfect" ? 1.1 : 0.9, sub: word ? `×${game.streak} · ${word}` : ghosted ? t("result.ghost.sub") : "" });
-      flyPoints(`+${fmtN(pts)}`, x, y + U * 0.05, kind === "perfect");
+      const word = game.streak >= 2 ? comboWord(game.streak) : "", say = R.attr ? ATTR.say : null;   // (v56: an attraction says its own word)
+      if (say) impact(say.word, x, y, { fill: say.fill || R.fill, text: say.text || R.text, scale: kind === "bull" ? 1.05 : 0.9, sub: say.sub || (word ? `×${game.streak} · ${word}` : "") });
+      else impact(ghosted ? t("result.ghost.word") : t(`result.${kind}.word`), x, y, { fill: ghosted ? PURPLE : R.fill, text: ghosted ? CREAM : R.text, scale: kind === "perfect" ? 1.1 : 0.9, sub: word ? `×${game.streak} · ${word}` : ghosted ? t("result.ghost.sub") : "" });
+      if (!say) flyPoints(`+${fmtN(pts)}`, x, y + U * 0.05, kind === "perfect"); else if (say.fly) flyPoints(say.fly, x, y + U * 0.05, kind === "bull");
       if (blast) bonkBlast(at || { x, y, s: U / 9 });
       if (powerOn("magnet")) magnetBones(at || { x, y });
       if (pickup && d != null && pickupHit(game.lastCross)) collectPickup(at);
       if (boss && !boss.dead) boss.hit(kind, at);
       catchLooseRing(x, y);     // the first make through the ring the mini-boss dropped (07b_stage.js)
-      if (kind !== "eye") judgeShots(kind, x, y);   // a signature shot? (07h_shots.js; a poke in the eye isn't a throw through a ring)
+      if (kind !== "eye" && !R.attr) judgeShots(kind, x, y);   // a signature shot? (07h_shots.js; a poke in the eye isn't a throw through a ring)
       directorMake();           // the Shrinking Ring (07k_director.js)
       encoreMake();             // the encore pays bones for every make (07i_modes.js)
       crossingMake();           // and so does the Challenge Stage (07q_crossing.js)
       showCombo(game.streak);
-      if (game.streak === 6) { Sound.toon("ignite"); caption(t("fire.on"), x, y - U * 0.1); profile.fireRings++; }   // the ring catches fire (08c_scene.js)
+      if (R.attr) {}   // (an attraction has no ring to set alight, and its own rules for skulls)
+      else if (game.streak === 6) { Sound.toon("ignite"); caption(t("fire.on"), x, y - U * 0.1); profile.fireRings++; }   // the ring catches fire (08c_scene.js)
       else if (game.streak > 6) profile.fireMakes++;   // (a make into a burning ring)
-      if (game.streak % 5 === 0 && game.lives < MAX_LIVES) { // every 5 in a row earns a skull, stacking up to five
+      if (!R.attr && game.streak % 5 === 0 && game.lives < MAX_LIVES) { // every 5 in a row earns a skull, stacking up to five
         game.lives++; game.slots = Math.max(game.slots, game.lives); game.peakLives = Math.max(game.peakLives, game.lives);
         profile.peakLives = Math.max(profile.peakLives, game.peakLives); challenge("lives", game.lives);
         const icon = lifeIcons[game.lives - 1];
         updateHud(); icon.classList.remove("gain"); void icon.offsetWidth; icon.classList.add("gain");
         impact(game.lives > START_LIVES ? t("result.bonusSkull") : t("result.plusSkull"), x, y - U * 0.16, { fill: GOLD, text: INK, scale: 0.6, delay: 0.35, bits: false }); Sound.life();
       }
-      if (game.throws <= 6 && game.hits <= 2) setHint(t("hint.speedsUp"));
+      if (!R.attr && game.throws <= 6 && game.hits <= 2) setHint(t("hint.speedsUp"));
     } else {
       const onTarget = !!skull.tHit;   // v50: a throw that hit a bullseye isn't a miss: no skull lost, the streak stands
       const saved = !onTarget && powerOn("second");   // Second Chance: this miss is on the house
@@ -255,7 +267,7 @@
         VisualSystem.emit("miss");
       }
       buzz(30);
-      if (game.throws <= 8 && game.lives > 0) setHint(t(`coach.${kind}`), true);
+      if (game.throws <= 8 && game.lives > 0) setHint(ATTR.on ? t(`attr.${ATTR.kind}.coach`) : t(`coach.${kind}`), true);
     }
     mortyAfterThrow(kind, R.make);   // Morty's two cents (08g_voice.js)
     secretsAfterThrow(kind, R.make);   // (09l_mischief.js)
@@ -282,7 +294,7 @@
     mischiefAfterThrow();   // now and then the old print acts up (09l_mischief.js)
   }
   function resetSkull() {
-    Object.assign(skull, { sub: null, p0: { x: 0, y: START_Y, z: 0 }, v0: { x: 0, y: 0, z: 0 }, t: 0, crossed: false, resting: true, missed: false, ghosted: 0,
+    Object.assign(skull, { sub: null, sink: 0, canHit: false, canHits: 0, p0: { x: 0, y: START_Y, z: 0 }, v0: { x: 0, y: 0, z: 0 }, t: 0, crossed: false, resting: true, missed: false, ghosted: 0,
       bounces: 0, angle: 0, spin: 0, spawn: 0, alpha: 1, flightTime: 0, pullOff: { x: 0, y: 0 }, trail: [], emit: 0 });
     skull.pos = { ...skull.p0 };
     kick(rig, 1, 0, Math.PI / 2); rig.tilt = 0; rig.dots = 0; setMood(rig, "idle", game.time);
@@ -303,7 +315,7 @@
     seedRun(opts.seed != null ? opts.seed : sandbox ? 1933 : (Date.now() ^ (Math.random() * 0x7fffffff)) >>> 0);   // the run's dice (07e_directors.js)
     setScene(map);   // Story starts on map 1; Arcade on the map picked
     ring.frozen = null; ring.flash = 0; ring.wobble = 0; ring.morph = 0;
-    stageReset(); clearPowers(); clearPickups(); powerDirectorReset(); plusReset(); portalReset(); travelSnap();
+    stageReset(); clearPowers(); clearPickups(); powerDirectorReset(); plusReset(); portalReset(); attrReset(); clearCans(); travelSnap();
     if (mode !== "story") { game.stage = map + 1; VisualSystem.setStage(game.stage); }
     snapRing();
     VisualSystem.emit("start");
