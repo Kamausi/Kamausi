@@ -1,4 +1,4 @@
-# World systems (v54, v56)
+# World systems (v54, v56, v57)
 
 This covers these systems:
 
@@ -6,7 +6,9 @@ This covers these systems:
 - how the travel scenery is laid out;
 - how a boss's lair reveals itself;
 - the portals between places;
-- the carnival's attractions (the mini-games).
+- the carnival's attractions (the mini-games);
+- the land (hills, dips and a bending road);
+- the band (layers over the music).
 
 Each section says where the code lives and what the tests check.
 
@@ -56,8 +58,20 @@ of its own (`Groove`):
 - under a quarter, a hat between beats as well;
 - on the knockout, the music drops away on the next beat, holds, and comes back (`musicHold`).
 
-**Not done.** Stems (separate drum, bass and melody layers) would let the score change inside a track. The loops are
-single mixes, and they still loop with the browser's `loop`, at the file's own length.
+**The loops' keys** (v57). `tools/beatmap.mjs` also finds each loop's key: a pitch-class profile from FFT frames every
+quarter second, matched to the Krumhansl–Schmuckler major and minor profiles. It's stored with the beat map.
+
+| Loop | Key |
+|---|---|
+| menu | A minor |
+| a | C major |
+| b | C major |
+| boss | G minor |
+| pause | E minor |
+| shop | C major |
+
+**Not done.** True stems (separate recordings of the drums, bass and melody) would let the recorded score itself change.
+The loops are single mixes, so the band plays over them instead (below).
 
 ## The travel scenery (`06g_travel.js`)
 
@@ -85,9 +99,7 @@ width.
 **Under load.** The ground dressing and the clusters' small pieces (`lite`) are the first things to go when adaptive
 quality steps down.
 
-**Not done.**
-- Terrain height: the ground is still a flat plane, so there are no hills, dips or slopes.
-- A curving road: the camera still travels in a straight line.
+Terrain height and the bending road: see The land, below.
 
 ## The lair's reveal (`06g_travel.js: LANDMARK`)
 
@@ -147,8 +159,16 @@ the portal goes straight to the next map.
 | Skull Rush + Time Bone | Warp Speed |
 | Chaos Skull + Cursed Skull | Doom Roll |
 
-**Not done.** The design notes also describe power-ups that need new physics: homing, gravity flip, vine swinging,
-underwater traversal, time rewind and clones. They aren't in the game.
+**v57: six with physics of their own** (`07v_newpowers.js`), each running in the flight's own steps on the run's time:
+
+| Power-up | From | How it works |
+|---|---|---|
+| Vine Swing | map 3 | The vine's end sways over the lane at 2.8 m. Within 0.42 m of it the skull grabs: a pendulum round the branch (5.6 m up), steered toward the ring's x, released when its free flight would cross the ring's plane at the ring's height. |
+| Diving Skull | the water maps | A first touch on open water before the ring dives (`s.sub.dive`): it settles 0.55 m down, steers under the ring, and within 1.6 m of the ring's plane breaches on a 0.45 s arc to where the ring will be. |
+| Clone Skull | map 5 | Two analytic clones fanned ±0.75 m/s. At the ring's plane, if the skull would miss and a clone is through, the clone takes its place (`cloneSwap`). |
+| Rewind Bone | map 6 | A miss while it's on isn't counted (no life, no streak lost). When the miss has played, the skull runs back along its recorded path over 0.9 s, the ring's phase returns to the launch, and the throw is taken off the count. |
+| Homing Bone | map 7 | Proportional steering: in the last 0.75 s before the ring's plane, if the predicted crossing is within 1.5 m of where the ring will be, the skull accelerates toward it (up to 14 m/s²). |
+| Gravity Flip | map 8 | The throw's gravity is −G (`skull.g`). The aim mapping, the guide and the ground test all use the throw's own gravity, so the aim still marks the ring-plane crossing. A miss goes up and away. |
 
 ## The attractions (`07u_attractions.js`, v56)
 
@@ -171,3 +191,44 @@ cans.
 
 **In tests.** `T.attr()` reads the state, `T.attrThrow(x, y)` throws to meet (x, y) on the plane, and
 `T.attrProps`, `T.attrCurtain`, `T.attrWindSet`, `T.attrSwing(ahead)` and `T.pitchHoles()` set things up.
+
+## The land (`06h_land.js`, v57)
+
+Each map's `travel.land` sets:
+
+| Key | Meaning | Range |
+|---|---|---|
+| `hills` | how high the land rises either side of the road | 0–8 m |
+| `roll` | how much the road itself rises and falls | 0–4 m |
+| `wave` | the length of the road's swells | 40–300 m |
+| `curve` | how far the road bends (1 is about 9 m either way) | 0–2 |
+| `bend` | the length of the bends | 60–400 m |
+
+- **Looks only.** Within 9 m of the camera the land is flat and the road straight. The height eases in to 48 m out and
+  the bend to 22 m, so the play space never changes.
+- **Relative to the camera.** A hill ahead flattens into the ground under the next throws as the world advances.
+- **The bend moves things sideways, not the camera.** The camera always faces the same way, so the road snakes across
+  the view and a lair on the horizon swings into line.
+- **Drawing.** 23 slices from 170 m in to 9 m. Each is a curtain from its skyline down to the highest point any nearer
+  slice reaches, painted with the ground plate's own gradient (so flat land matches the painted ground exactly). The
+  map's hill colour comes up where the land rises, with a rim and a faint ink line only along real crests.
+- **In among the scenery.** The props, the wanderers and the ground dressing are drawn between the slices at their own
+  depths, so a crest hides the foot of whatever stands beyond it.
+- **The road.** A strip over the slices in the lane's own material, fading in beyond the ring.
+- **Under load.** The hill colour and the crest lines go when adaptive quality steps down.
+
+## The band (`02f_music_clock.js`, v57)
+
+Parts scheduled on the musical clock a tenth of a second ahead, on the music bus, in the playing loop's key. They play
+over the acts and the boss only (no drive or hats over the boss, which has its own drum), and never with the music off.
+
+| Layer | When | What |
+|---|---|---|
+| drive | three in a row | a soft kick on one and three |
+| hats | on fire (six in a row) | eighth-note hats |
+| heart | the last skull | lub-dub on every beat |
+| walk | the world moving | woodblock on the off-beats (switches by the beat) |
+| bass | the last eight hits before a boss (Adventure) | root and fifth, a note to the half bar |
+| sting | a perfect or a bullseye | four notes up the scale on the next four eighths |
+
+Layers come and go on the bar line. `T.bandDry()` runs the scheduler without sound for the tests.

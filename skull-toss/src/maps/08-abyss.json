@@ -513,7 +513,14 @@
         "ahead": 34,
         "x": 5
       }
-    ]
+    ],
+    "land": {
+      "hills": 4.5,
+      "roll": 2.2,
+      "wave": 100,
+      "curve": 1.0,
+      "bend": 140
+    }
   },
   "fragment": "abyss",
   "target": "filmcan",

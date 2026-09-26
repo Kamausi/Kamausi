@@ -9,7 +9,7 @@
   function aimPoint(nx, ny) { return { AX: -nx * AIM_X_MAX, AY: AIM_Y_MIN + ny * (AIM_Y_MAX - AIM_Y_MIN) }; }
   // every throw reaches the ring's resting plane at the aim point after flightT() seconds (Skull Rush makes that quicker)
   const flightT = () => FLIGHT_T * (powerOn("rush") ? 0.62 : 1);
-  function aimVelocity(AX, AY) { const a = attrAim(AX, AY); if (a) return a; const T = flightT(); return { x: AX / T, y: (AY - START_Y + 0.5 * G * T * T) / T, z: RING_Z / T }; }
+  function aimVelocity(AX, AY) { const a = attrAim(AX, AY); if (a) return a; const T = flightT(), g = gNow(); return { x: AX / T, y: (AY - START_Y + 0.5 * g * T * T) / T, z: RING_Z / T }; }   // (v57: gNow: a Gravity Flip falls up)
 
   // ───────────────────────── DOM ─────────────────────────
   const cvs = document.getElementById("stage");

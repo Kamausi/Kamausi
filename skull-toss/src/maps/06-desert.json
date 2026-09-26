@@ -481,7 +481,14 @@
         "ahead": 34,
         "x": 5
       }
-    ]
+    ],
+    "land": {
+      "hills": 5.5,
+      "roll": 2.6,
+      "wave": 120,
+      "curve": 0.7,
+      "bend": 180
+    }
   },
   "fragment": "desert",
   "target": "bonefruit",

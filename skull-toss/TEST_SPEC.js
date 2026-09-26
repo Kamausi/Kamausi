@@ -1686,7 +1686,7 @@
     T.setStats(ZERO); T.toTitle();
   });
   test("The Codex notes things as they turn up: a boss when you meet it, a power-up when you grab it, each map's hazard and target", () => {
-    T.setStats(ZERO); let K = T.codex(); assert(K.total === 113 && K.count === 2, `113 entries (v50: 32 areas; v54: six more power-ups), only Crow Hollow and its first act known at first (${K.count}/${K.total})`);
+    T.setStats(ZERO); let K = T.codex(); assert(K.total === 119 && K.count === 2, `119 entries (v50: 32 areas; v54 and v57: six more power-ups each), only Crow Hollow and its first act known at first (${K.count}/${K.total})`);
     fresh(); toHit(C.STAGE_MINI); assert(T.codex().seen.includes("boss:crow"), "meeting the Crow King notes him");
     T.givePower("rush"); assert(T.codex().seen.includes("power:rush"), "grabbing a power-up notes it");
     fresh(); T.setStage(2); T.setHits(10); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y);
@@ -1707,7 +1707,7 @@
     assert(ends.length === 8 && ends.every(r => r.classList.contains("unseen")) && ends.find(r => r.dataset.entry === "boss:reaper").textContent.startsWith("???"), "8 end bosses, none met");
     tabs.find(b => b.dataset.cat === "area").click(); const areas = [...document.querySelectorAll("#codexList .entry")];
     assert(areas.length === 32 && areas.filter(r => !r.classList.contains("unseen")).length === 5, `32 areas, map 1's four and map 2's first seen (${areas.filter(r => !r.classList.contains("unseen")).length})`);
-    assert(/of 113 found/.test($("codexCount").textContent), $("codexCount").textContent);
+    assert(/of 119 found/.test($("codexCount").textContent), $("codexCount").textContent);
     T.closeSheet(); T.setStats(ZERO); T.toTitle();
   });
   test("The Production Archive unseals the studio's paperwork as the story goes on", () => {
@@ -2666,6 +2666,50 @@
     T.setStats({ ...ZERO, bossLog: { crow: 60 } }); T.openSheet("mastery"); document.querySelector('#masteryTabs [data-cat="boss"]').click();
     const pg = document.querySelector('#masteryList [data-m="boss:crow"]'); assert(pg.classList.contains("m-page") && pg.querySelectorAll(".m-line .m-tier").length === 8 && pg.querySelectorAll(".m-tier.got").length === 4, "a page, eight stops on its line, four reached at 60");
     T.closeSheet(); T.setStats(ZERO); T.toTitle();
+  });
+  // ── v57: the land, the band, and six power-ups with physics of their own ──
+  test("v57 The land: flat and straight within nine metres (the play never changes); beyond, the road bends and the land rises either side; the water maps stay flat", () => {
+    T.setStats(ZERO); fresh(); T.step(0.5);
+    for (const z of [0, 3, 6, 7.9]) for (const x of [-4, 0, 4]) { const L = T.land(x, z); assert(L.dx === 0 && L.y === 0, `flat and straight at ${z} m (${JSON.stringify(L)})`); }
+    let bent = 0, lift = 0; for (let z = 30; z <= 160; z += 10) { bent = Math.max(bent, Math.abs(T.land(0, z).dx)); lift = Math.max(lift, T.land(20, z).y - T.land(0, z).y); }
+    assert(bent > 0.8, `the road bends further on (${bent.toFixed(2)} m)`);
+    assert(lift > 0.8, `the land rises away from the road (${lift.toFixed(2)} m)`);
+    let lane = 0, side = 0; for (let d = 0; d < 400; d += 7) { lane += Math.abs(T.landRaw(d, 0).h - T.landRaw(d, 0.5).h); side += T.landRaw(d, 22).h - T.landRaw(d, 0).h; }
+    assert(side / 58 > 1 && lane / 58 < 0.2, `hills either side, the lane itself level across (${(side / 58).toFixed(2)}, ${(lane / 58).toFixed(3)})`);
+    assert(T.land().slices === 23, `drawn in 23 slices (${T.land().slices})`);
+    T.setStage(4); T.step(0.5); const W = T.land(15, 60); assert(W.flat && W.y === 0, `the Drowned Theater: the water stays flat (${JSON.stringify(W)})`);
+    T.calm(); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); assert(T.state().lastResult.make, "and a throw is a throw, as ever");
+    T.toTitle();
+  });
+  test("v57 The band: layers in the loop's key come in on a bar line (drive, hats, heart, bass) and a perfect gets a four-note sting", () => {
+    const K = T.band().keys; assert(K.A && K.B && K.boss && K.A.tonic >= 0 && ["major", "minor"].includes(K.boss.mode), `every loop knows its key (${JSON.stringify(K)})`);
+    T.setStats(ZERO); fresh(); T.step(1); T.bandDry(true); assert(!Object.keys(T.band().want).length, "a fresh run: nothing extra");
+    T.setStreak(3); assert(T.band().want.drive && !T.band().want.hats, "three in a row: the drive");
+    T.step(3); const lg = T.band().log; assert(lg.length && lg.every(e => e.play.includes("drive") ? e.pos === 0 || e.pos === 8 : true) && lg.some(e => e.play.includes("drive")), `on one and three, from a bar line (${JSON.stringify(lg.slice(0, 3))})`);
+    T.setStreak(6); assert(T.band().want.hats, "on fire: the hats too");
+    T.setStreak(0); T.setLives(1); assert(T.band().want.heart && !T.band().want.drive, "the last skull: the heartbeat");
+    T.setLives(3); T.setHits(C.STAGE_MINI - 5); assert(T.band().want.bass, "the last hits before a boss: the bass leans in");
+    fresh(); T.step(1); T.bandDry(true); T.calm(); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); T.step(3);
+    assert(T.state().lastResult.kind === "perfect" && T.band().log.filter(e => e.play.includes("sting")).length === 4, `a perfect: four notes on the eighths (${T.state().lastResult.kind}, ${T.band().log.filter(e => e.play.includes("sting")).length})`);
+    T.bandDry(false); T.toTitle();
+  });
+  test("v57 power-ups: one new a map (the vine in the woods, the dive only where there's water, the flip in the Abyss) and each does what it says", () => {
+    const at = st => { T.setStats({ ...ZERO, bestStage: 9 }); fresh(); if (st > 1) T.setStage(st); T.step(0.3); return T.powersHere(); };
+    assert(!at(1).some(id => ["vine", "dive", "clones", "rewind", "homing", "flip"].includes(id)), "none on map 1");
+    assert(at(3).includes("vine") && !at(3).includes("dive"), "the Whistling Woods: the vine (no water, no dive)");
+    assert(at(4).includes("dive") && at(6).includes("rewind") && !at(6).includes("dive") && at(7).includes("homing") && at(8).includes("flip") && at(5).includes("clones"), "the rest a map at a time, the dive on the water maps only");
+    const setup = st => { at(st); T.setHits(5); T.step(0.5); T.calm(); T.freezeRing(0, C.RING_Y); };
+    setup(8); T.givePower("flip"); T.throwThrough(0, C.RING_Y, C.RING_Z); T.step(0.3); assert(T.skullInfo().g < 0, "Gravity Flip: it falls up"); T.step(2.5); assert(T.state().lastResult.make, `and the aim still meets the ring (${T.state().lastResult.kind})`);
+    setup(7); T.throwThrough(0.62, C.RING_Y + 0.3, C.RING_Z); T.step(2.5); assert(!T.state().lastResult.make, "without it, a throw that far off misses");
+    setup(7); T.givePower("homing"); T.throwThrough(0.62, C.RING_Y + 0.3, C.RING_Z); T.step(0.6); const homed = T.skullInfo().homed; T.step(2); assert(homed && T.state().lastResult.make, `Homing Bone: it locks on and curves in (${T.state().lastResult.kind})`);
+    setup(5); T.givePower("clones"); T.throwThrough(-0.62, C.RING_Y, C.RING_Z); T.step(0.2); assert(T.skullInfo().clones === 2, "Clone Skull: three in the air"); T.step(2.5); assert(T.state().lastResult.make, `the clone through the ring counts (${T.state().lastResult.kind})`);
+    setup(6); T.givePower("rewind"); const l0 = T.state().lives, n0 = T.state().throws; T.throwThrough(2.6, C.RING_Y, C.RING_Z); let rw = false; for (let i = 0; i < 80 && !rw; i++) { T.step(0.05); rw = T.skullInfo().rew; } assert(rw, "Rewind Bone: a miss, and the film runs back");
+    T.step(1.5); assert(T.state().lives === l0 && T.state().throws === n0 && T.state().state === "ready" && !T.powers().rewind, `and the throw never happened (${T.state().lives}, ${T.state().throws})`);
+    setup(3); T.givePower("vine"); T.step(0.2); const E = T.vineEnd(), a = T.aimFor(E.x, E.y, E.z); T.throwAt(a.AX, a.AY); T.step(0.6);
+    assert(T.skullInfo().vined, "Vine Swing: caught"); T.step(3); assert(T.state().lastResult.make && T.powers().vine && T.powers().vine.uses === 1, `slung through the ring, one catch left (${T.state().lastResult.kind})`);
+    setup(4); T.givePower("dive"); const d = T.aimFor(1.3, 0.14, 3.8); T.throwAt(d.AX, d.AY); let dv = false; for (let i = 0; i < 40 && !dv; i++) { T.step(0.05); const k = T.skullInfo(); dv = !!(k.sub && k.sub.dive); } assert(dv, "Diving Skull: short into the water, it dives");
+    T.step(3); assert(T.state().lastResult.make && T.state().lives === 3, `it swims on and leaps through the ring (${T.state().lastResult.kind})`);
+    T.toTitle(); T.setStats(ZERO);
   });
   // ── v56: the mini-games rebuilt as the carnival's attractions (07u_attractions.js) ──
   test("v56 Every mini-game is an attraction: its own booth, no ring to cross, the ring hidden; the Adventure keeps its ring", () => {

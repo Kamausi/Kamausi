@@ -261,6 +261,15 @@ def travel_problems(Tv, SB, C):
     if not (isinstance(arr, list) and 1 <= len(arr) <= 8 and all(0 < a <= 1 for a in arr) and arr == sorted(arr, reverse=True)): bad.append("travel.arrive: up to eight step sizes (0–1), getting shorter as a boss comes up")
     if not 1.5 <= Tv.get("gap", 0) <= 8: bad.append("travel.gap must be 1.5–8 metres")
     if not 60 <= Tv.get("far", 0) <= 300: bad.append("travel.far must be 60–300 metres")
+    # v57: the land (06h_land.js): how high the hills go either side, how much the road rises and falls and over what
+    # length, how far the road bends and over what length
+    Ld = Tv.get("land")
+    if Ld is not None:
+        for k, lo, hi, what in (("hills", 0, 8, "metres"), ("roll", 0, 4, "metres"), ("wave", 40, 300, "metres"), ("curve", 0, 2, "(1 is a bend of about 9 m either way)"), ("bend", 60, 400, "metres")):
+            v = Ld.get(k)
+            if not (isinstance(v, (int, float)) and lo <= v <= hi): bad.append(f"travel.land.{k} must be {lo}–{hi} {what}")
+        extra = set(Ld) - {"hills", "roll", "wave", "curve", "bend"}
+        if extra: bad.append(f"travel.land has keys the game doesn't read: {', '.join(sorted(extra))}")
     if bad: return bad
     D, starts, ids = travel_table(Tv, SB), [], set()
     hit_ok = lambda h: isinstance(h, int) and 0 <= h <= SB["end"]
@@ -406,6 +415,10 @@ if BF.exists():
         if len(b) < 16 or any(b[i + 1] <= b[i] for i in range(len(b) - 1)) or not (40 <= m.get("bpm", 0) <= 240) or m.get("down") not in (0, 1, 2, 3):
             sys.exit(f"build refused: audio/beats.json's {fn} isn't a usable beat map")
         BEATS[key] = {"bpm": m["bpm"], "down": m["down"], "beats": b}
+        k = m.get("key")   # v57: the loop's key (tools/beatmap.mjs), so the layers played over it are in tune
+        if k is not None:
+            if not (isinstance(k, dict) and k.get("tonic") in range(12) and k.get("mode") in ("major", "minor")): sys.exit(f"build refused: audio/beats.json's {fn} has a key that isn't a tonic 0–11 and major or minor")
+            BEATS[key]["key"] = {"tonic": k["tonic"], "mode": k["mode"]}
 js = "  const MUSIC_BEATS = " + json.dumps(BEATS, separators=(",", ":")) + ";\n" + js
 # ── the recorded sound effects are small, so every build carries them (src/sfx/<name>.mp3 → SFX_EMBED[name]) ──
 SFX = {}

@@ -17,14 +17,21 @@
     heavy:    { name: "Heavy Skull",  uses: 3, throws: 8, color: "#8C929C", tip: "Smash straight through what's in the way", map: 4 },
     time:     { name: "Time Bone",    throws: 5, color: "#6FB7D8", tip: "The ring and the hazards slow to half speed", map: 5 },
     combo:    { name: "Combo Bone",   throws: 6, color: "#E86A9A", tip: "Every make in a row adds ×0.25", map: 6 },
-    chaos:    { name: "Chaos Skull",  throws: 5, color: "#FF6A3D", tip: "Every make rolls the score: ×1 to ×4", plus: true }
+    chaos:    { name: "Chaos Skull",  throws: 5, color: "#FF6A3D", tip: "Every make rolls the score: ×1 to ×4", plus: true },
+    // v57: six that change how the skull moves (07v_newpowers.js); water: only where there's water to dive into
+    vine:     { name: "Vine Swing",   uses: 2, throws: 8, color: "#5E9E3A", tip: "Catch the vine and it slings you through the ring", map: 3 },
+    dive:     { name: "Diving Skull", uses: 2, throws: 8, color: "#3A8FB8", tip: "Short into the water? It dives, swims and leaps for the ring", map: 4, water: true },
+    clones:   { name: "Clone Skull",  throws: 4, color: "#B8A0E8", tip: "Every throw splits in three: whichever goes through counts", map: 5 },
+    rewind:   { name: "Rewind Bone",  uses: 1, throws: 10, color: "#D8B25A", tip: "Miss, and the film runs back: the throw never happened", map: 6 },
+    homing:   { name: "Homing Bone",  throws: 4, color: "#E85A5A", tip: "A near miss locks on and curves into the ring", map: 7 },
+    flip:     { name: "Gravity Flip", throws: 4, color: "#7A6AE8", tip: "The skull falls up: it dips, then climbs", map: 8 }
   };
   const POWER_IDS = Object.keys(POWERS);
   // which props can drop here: the seven from the start, each map's new one from that map on (every one in Arcade's
   // maps from there on too), and the rule-breaker only in Adventure+
   function powersHere() {
     const st = game.stage || 1;
-    return POWER_IDS.filter(id => { const P = POWERS[id]; return P.plus ? !!game.plus : P.map ? st >= P.map || !!game.plus : true; });
+    return POWER_IDS.filter(id => { const P = POWERS[id]; if (P.water && !look().ambient.water) return false; return P.plus ? !!game.plus : P.map ? st >= P.map || !!game.plus : true; });
   }
   // v54: some props are better together. A make while both of a pair are on is a synergy: its name comes up and it
   // pays half as much again
@@ -303,7 +310,7 @@
       if (!gpuFireAt(c, "cursed", 0, -r * 0.55, r * 1.6, r * 1.1, 1, 1)) for (let i = 0; i < 7; i++) { const a = -Math.PI / 2 + (i - 3) * 0.38, fl = 1 + 0.25 * Math.sin(tt * 14 + i * 2); c.fillStyle = i % 2 ? "#9BC53D" : "#6FA02A"; c.beginPath(); c.moveTo(Math.cos(a - 0.2) * r * 0.7, Math.sin(a - 0.2) * r * 0.7); c.quadraticCurveTo(Math.cos(a) * r * 1.7 * fl, Math.sin(a) * r * 1.7 * fl, Math.cos(a + 0.2) * r * 0.7, Math.sin(a + 0.2) * r * 0.7); c.fill(); }
       for (const sd of [-1, 1]) { c.fillStyle = "#3A2240"; c.beginPath(); c.moveTo(sd * r * 0.35, -r * 0.55); c.quadraticCurveTo(sd * r * 1.05, -r * 0.8, sd * r * 0.95, -r * 1.35); c.quadraticCurveTo(sd * r * 0.75, -r * 0.8, sd * r * 0.15, -r * 0.7); c.closePath(); ink(); }
       drawSkull(c, 0, r * 0.1, r * 0.78, { t, look: { ...DEFAULT_COS, skull: "hex" }, face: faceFor("excited", t), jaw: 0.25 });
-    }
+    } else drawNewPowerIcon(c, id, r, tt, lw);   // (v57: 07v_newpowers.js)
     c.restore();
   }
   // in the world: the prop hangs in the ring's centre, bobbing, and grows a halo when it's about to vanish

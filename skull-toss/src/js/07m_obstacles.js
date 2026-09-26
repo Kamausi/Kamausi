@@ -119,7 +119,7 @@
   const obstacleForcesLive = () => OB.list.some(I => I.kind === "fan" || I.kind === "magnet");
   // the flight a throw would take through the fans and lodestones, stepped the way the game steps it (for the aim guide)
   function forcedPath(v, tEnd) {
-    const out = [], dt = SIM_STEP, wx = windNow(); let p = { x: 0, y: START_Y, z: 0 }, u = { ...v }, T = OB.t;
+    const out = [], dt = SIM_STEP, wx = windNow(), G = gNow(); let p = { x: 0, y: START_Y, z: 0 }, u = { ...v }, T = OB.t;   // (v57: under the throw's own gravity)
     for (let t = 0; t < tEnd; t += dt) {
       const f = obstacleForce(p, T); u = { x: u.x + f.x * dt, y: u.y + f.y * dt, z: Math.max(0.5, u.z + f.z * dt) };
       p = { x: p.x + u.x * dt + 0.5 * wx * dt * dt, y: p.y + u.y * dt - 0.5 * G * dt * dt, z: p.z + u.z * dt }; u = { x: u.x + wx * dt, y: u.y - G * dt, z: u.z };

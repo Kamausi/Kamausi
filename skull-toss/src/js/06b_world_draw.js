@@ -175,7 +175,7 @@
     return ((Math.floor((ph / TAU) * CELS) % CELS) + CELS) % CELS;
   };
   function drawWalker(k) {
-    const p = project(k.x, 0, k.z - 0), hp = k.h * p.s;
+    const Ld = landAt(k.x, k.z), p = project(k.x + Ld.dx, Ld.y, k.z), hp = k.h * p.s;   // (v57: on the land where it's walking, 06h_land.js)
     if (k.scare) { p.y -= Math.sin(Math.min(1, k.scare) * Math.PI) * hp * 0.35; }
     if (p.x < -hp || p.x > W + hp) return;
     const a = k.alpha * clamp(1.1 - (k.z - 12) / 40, 0.6, 1);
@@ -237,14 +237,18 @@
     // after it (drawNearWorld), so one walking between the ring and the camera passes in front of the pole, not behind it
     const ws = world.walkers.filter(k => !walkerNear(k)).sort((a, b) => b.z - a.z);
     let wi = 0, hazed = !TRAVEL.on;
-    drawTravelDecals();   // (v54: flat detail on the ground, under everything that stands on it: 06g_travel.js)
+    // v57: the land (06h_land.js) is painted in slices, far to near, in among the scenery, each slice followed by the
+    // flat ground detail that lies on it (v54, 06g_travel.js); without land, that detail goes down first as before
+    landBegin(); if (!LAND.on) drawTravelDecals();
     for (const k of GY.props) {
       if (k.travel) { if (!travelShows(k)) continue; if (!hazed && k.z < TRAVEL_HAZE_Z) { drawTravelHaze(); hazed = true; } }   // (the far scenery softens behind the haze: 06g_travel.js)
-      while (wi < ws.length && ws[wi].z > k.z) drawWalker(ws[wi++]);
+      landUpTo(k.z);
+      while (wi < ws.length && ws[wi].z > k.z) { landUpTo(ws[wi].z); drawWalker(ws[wi++]); }
       if (k.travel) drawTravelProp(k); else drawProp(k);
     }
     if (!hazed) drawTravelHaze();
-    while (wi < ws.length) drawWalker(ws[wi++]);
+    while (wi < ws.length) { landUpTo(ws[wi].z); drawWalker(ws[wi++]); }
+    landUpTo(-1);
     const f = world.fogSprite;
     if (f) for (const b of world.fog) { const A = groundAt(b.y), x = W / 2 + (b.x - W / 2) * A.k + A.ox + camBase.x; ctx.globalAlpha = b.a; ctx.drawImage(f.c, x, A.y + camBase.y - (f.h * A.k) / 2, f.w * A.k, f.h * A.k); }
     ctx.globalAlpha = 1;

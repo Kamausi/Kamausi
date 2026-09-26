@@ -541,7 +541,14 @@
         "ahead": 34,
         "x": 5
       }
-    ]
+    ],
+    "land": {
+      "hills": 2.4,
+      "roll": 1.0,
+      "wave": 110,
+      "curve": 0.8,
+      "bend": 150
+    }
   },
   "fragment": "gilded",
   "target": "brazier",

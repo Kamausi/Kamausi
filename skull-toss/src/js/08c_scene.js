@@ -114,8 +114,8 @@
   }
 
   function buildPreview(AX, AY, guide) {
-    const v = aimVelocity(AX, AY), front = [], back = [], zr = ring.z, tc = zr / v.z, wx = 0.5 * windNow();   // (the guide bends with the wind)
-    const tg = (v.y + Math.sqrt(v.y * v.y + 2 * G * (START_Y - SKULL_R))) / G;
+    const v = aimVelocity(AX, AY), front = [], back = [], zr = ring.z, tc = zr / v.z, wx = 0.5 * windNow(), G = gNow();   // (the guide bends with the wind; v57: and falls up under a Gravity Flip)
+    const tg = groundTime({ p0: { y: START_Y }, v0: v, g: G });
     const reaches = tg >= tc;
     if (guide === "off") return { front, back, cross: null, land: null };
     const tEnd = guide === "short" ? Math.min(tg, tc * 0.36) : Math.min(tg, tc + 0.7);
@@ -289,7 +289,7 @@
     if (s.sub) { ctx.save(); ctx.globalAlpha = 0.35 * s.alpha; ctx.fillStyle = "#1F4A52"; ctx.beginPath(); ctx.arc(x, y, r * 1.25, 0, TAU); ctx.fill(); ctx.restore(); }   // (v53: under the water: seen through it)
     if (s.alpha * fade > 0.05) { drawPowerGlow(x, y, r); drawAura(ctx, x, y, r, V.t, false); drawRushWings(ctx, x, y, r, V.t, V.angle); drawPowerAura(ctx, x, y, r, V.t); }
     if (V.smear > 0 && s.alpha * fade > 0.05) drawSmear(ctx, x, y, r, V.mdir == null ? V.dir : V.mdir, V.smear, s.alpha * fade * ghostly, V.t);
-    drawSkull(ctx, x, y, r, { ang: V.angle + V.tilt, alpha: s.alpha * fade * ghostly, a: V.a, dir: V.dir, t: V.t, look: cos, face: V.face, jaw: V.jaw });
+    drawSkull(ctx, x, y, r, { ang: V.angle + V.tilt + (skullG(s) < 0 ? Math.PI : 0), alpha: s.alpha * fade * ghostly, a: V.a, dir: V.dir, t: V.t, look: cos, face: V.face, jaw: V.jaw });
     if (s.alpha * fade > 0.05) { drawAura(ctx, x, y, r, V.t, true); drawHat(ctx, x, y, r, V.angle + V.tilt, V.t, hat, s.alpha * fade * ghostly, hatOf(cos), V.a, V.dir); voice.anchor = { x, y, r }; }
     if (rig.mood === "deadpan" && rig.dots > 0) drawThought(x, y, r, rig.dots * s.alpha * fade);
     if (rig.mood === "dizzy" && s.alpha * fade > 0.1) dizzyStars(x, y - r * 1.2, r);
@@ -367,11 +367,12 @@
     const pv = aim.active && aim.valid && game.state === "ready" ? buildPreview(aim.AX, aim.AY, settings.guide) : null;
     drawGhostShot();   // (v51: the last miss, faint, 08k_feel.js)
     if (pv) drawDots(pv.back, true);
-    if (flying && behind) drawFlyingSkull();
-    if (onStage) { drawDecoys(); drawRing(); drawPickup(); }   // (v51: Adventure+'s decoy rings, behind the real one)
+    if (flying && behind) { drawClones(); drawFlyingSkull(); }
+    if (onStage) { drawDecoys(); drawRing(); drawPickup(); drawHomingLock(); }   // (v51: Adventure+'s decoy rings, behind the real one; v57: the Homing Bone's lock)
     if (boss) boss.draw(true);
     if (onStage) drawNearWorld();   // (v53: whatever walks between the ring and the camera passes in front of it and its pole)
     drawAttraction(true);
+    if (onStage) drawVine();   // (v57: the Vine Swing's vine, over the lane, 07v_newpowers.js)
     drawSeeds(true); drawTargets(true); drawObstacles(true); drawHazards(true);
     drawImpactStars(ctx, false);   // contact stars: over the ring they hit, behind the skull that hit it
     if (pv) { drawDots(pv.front, false); drawReticle(pv); }
@@ -393,12 +394,12 @@
       if (!aim.active && game.throws < 2 && skull.spawn >= 1 && game.state === "ready") drawChevrons(rest.x, rest.y, r);
     } else {
       if (onStage) { const rest = project(0, START_Y, 0), SL = VENT.sling || sling; drawLauncher(rest.x, rest.y, SKULL_R * rest.s * 1.12, SL, SL.fy, SL.sq); }   // empty now, still twanging
-      if (flying && !behind) drawFlyingSkull();
+      if (flying && !behind) { drawClones(); drawFlyingSkull(); }
     }
 
     drawContinueGhost();
     // the nearest planes: props on the ground at the frame's edges, then branches right by the lens
-    drawNear();
+    drawNear(); drawRewindFx();   // (v57: the film running back, 07v_newpowers.js)
     drawWeather();
     for (const P of fgLayer) L(P, 2.4, "fg");
     baseXform(ctx);

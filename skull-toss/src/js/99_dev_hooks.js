@@ -153,6 +153,9 @@
     // v56: the attractions (07u_attractions.js): their state, a throw that meets (x, y) on the attraction's plane, and props to set
     attr: () => ({ on: ATTR.on, kind: ATTR.kind, zp: ATTR.zp, score: ATTR.score, value: ATTR.on ? attrValue() : 0, far: ATTR.far, step: ATTR.step, round: ATTR.round, lvl: ATTR.lvl, sweeps: ATTR.sweeps, dead: ATTR.dead, perfects: ATTR.perfects,
       cur: ATTR.cur && { phase: ATTR.cur.phase, t: ATTR.cur.t, win: ATTR.cur.win, fin: ATTR.cur.fin, act: ATTR.cur.act, done: ATTR.cur.done }, props: ATTR.props.map(p => ({ ...p })), ringHidden: !!game.ringHidden, wind: HZ.wind, dark: document.body.classList.contains("attr-dark"), pull: ATTR.pull, shake: ATTR.shake }),
+    vineEnd: () => vineEnd(), skullInfo: () => ({ vine: !!skull.vine, vined: !!skull.vined, sub: skull.sub ? { dive: !!skull.sub.dive } : null, g: skull.g, clones: skull.clones ? skull.clones.length : 0, cloned: !!skull.cloned, homed: !!skull.homed, rew: !!skull.rew, pos: { ...skull.pos } }),
+    band: () => ({ on: { ...Band.on }, want: bandWant(), log: Band.log.slice(), sting: Band.sting.slice(), keys: Object.fromEntries(Object.entries(MUSIC_BEATS).map(([k, v]) => [k, v.key || null])) }), bandDry(on = true) { Band.dry = on; Band.log.length = 0; Band.n16 = null; Band.on = {}; },
+    land: (x = 0, z = 40) => ({ ...landAt(x, z), on: LAND.on, flat: LAND.flat, hills: LAND.hills, curve: LAND.curve, slices: LAND.slices ? LAND.slices.length : 0 }), landRaw: (d, u) => ({ h: landH(d, u), cx: landCx(d) }),
     attrThrow(x, y) { const a = attrAimFor(x, y); return this.throwAt(a.AX, a.AY); },
     attrProps(list) { ATTR.props = list.map(p => ({ ...p })); }, attrSwing: (ahead = 0) => swingPos(ahead), attrFlight: () => ATTR.zp * flightT() / RING_Z, attrCurtain(phase, t = 0) { if (ATTR.cur) { ATTR.cur.phase = phase; ATTR.cur.t = t; } }, attrWindSet(w) { HZ.wind = w; },
     pitchHoles: () => PITCH.holes.map(h => ({ ...h })),

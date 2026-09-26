@@ -134,6 +134,7 @@
   function travelSetup(P) {
     const Tv = mapData(sceneMap + 1).travel || null;
     TRAVEL.on = !!Tv; TRAVEL.def = Tv; TRAVEL.table = Tv ? travelTable(Tv) : null; TRAVEL.D = TRAVEL.goal = TRAVEL.lastGoal = 0; TRAVEL.sprites = {}; TRAVEL.near = []; TRAVEL.zones = [];
+    landSetup(Tv);   // (v57: the land's hills and the road's bends, 06h_land.js)
     if (!Tv) return false;
     layOutTravel(Tv, P); return true;
   }
@@ -170,13 +171,13 @@
       for (let i = 0; i < n; i++) TRAVEL.decals.push({ d: d + rnd() * 0.5, x: (rnd() * 2 - 1) * 5.2, kind: DECALS[(rnd() * DECALS.length) | 0], s: 0.5 + rnd() * 0.7, r: rnd() * TAU, ph: rnd() });
     }
   }
-  function drawTravelDecals() {
+  function drawTravelDecals(zMin = 0, zMax = 1e9) {   // (v57: a depth band at a time, laid on the land between its slices)
     if (!TRAVEL.on || !TRAVEL.decals || look().ambient.water || QUALITY.level < 0.75) return;   // (the first thing to go when a phone's busy)
     const D = TRAVEL.D;
     for (const g of TRAVEL.decals) {
-      const z = g.d - D; if (z < 0.6 || z > 36) continue;
-      const p = project(g.x, 0, z); if (p.x < -40 || p.x > W + 40) continue;
-      const q = project(g.x, 0, z + 0.25), sq = clamp((p.y - q.y) / 0.25 / p.s, 0.08, 1), u = p.s * 0.2 * g.s;   // (the ground's foreshortening, and a unit a fifth of a metre)
+      const z = g.d - D; if (z < 0.6 || z > 36 || z < zMin || z >= zMax) continue;
+      const Ld = landAt(g.x, z), p = project(g.x + Ld.dx, Ld.y, z); if (p.x < -40 || p.x > W + 40) continue;
+      const q = project(g.x + Ld.dx, Ld.y, z + 0.25), sq = clamp((p.y - q.y) / 0.25 / p.s, 0.08, 1), u = p.s * 0.2 * g.s;   // (the ground's foreshortening, and a unit a fifth of a metre)
       if (u < 1.2) continue;
       const a = clamp((36 - z) / 10, 0, 1) * 0.9;
       ctx.save(); ctx.globalAlpha *= a; ctx.translate(p.x, p.y); ctx.lineCap = "round"; ctx.lineJoin = "round";
@@ -255,7 +256,7 @@
   // one piece of scenery on the track, in the world, at the camera's distance from it
   function drawTravelProp(k) {
     if (k.kind === "digger") { if (k.z > TRAVEL_NEAR + 2) drawDigger(); return; }
-    const lm = !!k.wakes, K = travelKind(k.kind), p = project(k.x, 0, k.z), sc = (p.s * k.mul * (lm ? landmarkScale(k.z) : 1)) / 100;
+    const lm = !!k.wakes, K = travelKind(k.kind), Ld = landAt(k.x, k.z), p = project(k.x + Ld.dx, Ld.y, k.z), sc = (p.s * k.mul * (lm ? landmarkScale(k.z) : 1)) / 100;
     if (K.canvas[1] * sc < 2.5) return;
     const hw = K.canvas[0] * sc; if (p.x + hw < -U * 0.2 || p.x - hw > W + U * 0.2) return;
     const a = travelFade(k.z) * wakeAlpha(k); if (a <= 0.01) return;

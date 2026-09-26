@@ -1,9 +1,15 @@
   // ───────────────────────── flight physics (exact, event-driven) ─────────────────────────
   // (ax: the wind, pushing across the throw on the maps that have it)
-  function posAt(s, t) { const g = s.resting ? 0 : G, ax = s.resting ? 0 : s.ax || 0; return { x: s.p0.x + s.v0.x * t + 0.5 * ax * t * t, y: s.p0.y + s.v0.y * t - 0.5 * g * t * t, z: s.p0.z + s.v0.z * t }; }
-  function velAt(s, t) { return { x: s.v0.x + (s.resting ? 0 : s.ax || 0) * t, y: s.v0.y - (s.resting ? 0 : G) * t, z: s.v0.z }; }
+  function posAt(s, t) { const g = s.resting ? 0 : s.g != null ? s.g : G, ax = s.resting ? 0 : s.ax || 0; return { x: s.p0.x + s.v0.x * t + 0.5 * ax * t * t, y: s.p0.y + s.v0.y * t - 0.5 * g * t * t, z: s.p0.z + s.v0.z * t }; }
+  function velAt(s, t) { return { x: s.v0.x + (s.resting ? 0 : s.ax || 0) * t, y: s.v0.y - (s.resting ? 0 : s.g != null ? s.g : G) * t, z: s.v0.z }; }
   function rebase(s, t) { s.p0 = posAt(s, t); s.v0 = velAt(s, t); s.t = 0; }
-  function groundTime(s) { const c = s.p0.y - SKULL_R, b = s.v0.y, disc = b * b + 2 * G * c; return disc < 0 ? Infinity : (b + Math.sqrt(disc)) / G; }
+  function groundTime(s) {   // (v57: under either gravity: the first time from p0 it's down at the ground)
+    const g = s.g != null ? s.g : G, c = s.p0.y - SKULL_R, b = s.v0.y;
+    if (Math.abs(g) < 1e-9) return b < 0 ? c / -b : Infinity;
+    const disc = b * b + 2 * g * c; if (disc < 0) return Infinity;
+    const q = Math.sqrt(disc), ts = [(b + q) / g, (b - q) / g].filter(v => v > 1e-7);
+    return ts.length ? Math.min(...ts) : Infinity;
+  }
   const panOf = x => clamp(x / 2.4, -1, 1);
   function screenDir(s) { const a = project(s.pos.x, s.pos.y, s.pos.z), v = velAt(s, s.t), b = project(s.pos.x + v.x * 0.02, s.pos.y + v.y * 0.02, s.pos.z + v.z * 0.02); return Math.atan2(b.y - a.y, b.x - a.x); }
 
@@ -12,9 +18,10 @@
     voice.quiet = game.time; voice.idleSaid = false;
     const v = aimVelocity(AX, AY);
     Object.assign(skull, { launchRing: { x: ring.x, y: ring.y, z: ring.z }, ax0: windNow(), close: false, shots: [] });   // (what the signature shots read: 07h_shots.js)
-    Object.assign(skull, { sub: null, sink: 0, canHit: false, canHits: 0, p0: { x: 0, y: START_Y, z: 0 }, v0: v, t: 0, crossed: false, resting: false, bounces: 0, ax: windNow(), tHit: false,
+    Object.assign(skull, { sub: null, sink: 0, canHit: false, canHits: 0, g: gNow(), vine: null, vined: false, swung: false, homed: false, clones: null, cloneJudged: false, cloned: false, rew: null,
+      p0: { x: 0, y: START_Y, z: 0 }, v0: v, t: 0, crossed: false, resting: false, bounces: 0, ax: windNow(), tHit: false,
       spin: (1.3 + Math.abs(v.x) * 0.5) * (v.x < 0 ? -1 : 1), hang: 0, take: 0, alpha: 1, flightTime: 0, trail: [], spawn: 1, emit: 0, missed: false });
-    skull.pos = { ...skull.p0 };
+    skull.pos = { ...skull.p0 }; cloneLaunch(skull, v); rewindMark(skull);   // (v57: the Clone Skull's clones, the Rewind Bone's mark: 07v_newpowers.js)
     game.state = "flying"; game.result = null; game.endTimer = 0; game.throws++; ghostLaunch();
     profile.throws++; challenge("throws", 1);
     aim.active = false; cvs.classList.remove("aiming");
@@ -47,6 +54,7 @@
   const POSE = { confused: 0.52, deadpan: 0 };   // moods that hold a pose instead of tumbling
   function updateFlight(dt, phase0) {
     const s = skull;
+    if (s.rew) { rewindStep(s, dt); return; }   // (v57: the Rewind Bone running the film back)
     s.flightTime += dt;
     const pose = POSE[rig.mood];
     if (pose != null) { s.spin *= Math.max(0, 1 - dt * 9); const target = pose + Math.round((s.angle - pose) / TAU) * TAU; s.angle += (target - s.angle) * Math.min(1, dt * 9); }
@@ -56,10 +64,11 @@
     s.take += ((s.hang > 0 ? 1 : 0) - s.take) * Math.min(1, dt * (s.hang > 0 ? 9 : 14));   // the cartoon "take": it turns to camera
     if (s.hang > 0) {
       s.hang -= dt;
-      if (s.hang <= 0) { const v = velAt(s, s.t); s.p0 = posAt(s, s.t); s.v0 = { x: v.x * 0.1, y: -2.5, z: v.z * 0.1 }; s.t = 0; s.spin = 0; Sound.toon("whistleDown"); }
+      if (s.hang <= 0) { const v = velAt(s, s.t); s.p0 = posAt(s, s.t); s.v0 = { x: v.x * 0.1, y: skullG(s) < 0 ? 2.5 : -2.5, z: v.z * 0.1 }; s.t = 0; s.spin = 0; Sound.toon("whistleDown"); }
     }
     obstaclePush(s, dt);   // fans and lodestones push the flight (07m_obstacles.js)
-    let remaining = s.hang > 0 || s.sub ? 0 : dt, elapsed = 0, guard = 0;   // (v53: under the water it's the water's own step, not the arc)
+    powerPush(s, dt);      // (v57: the Homing Bone steering it in, 07v_newpowers.js)
+    let remaining = s.hang > 0 || s.sub || s.vine ? 0 : dt, elapsed = 0, guard = 0;   // (v53: under the water it's the water's own step, not the arc)
     while (remaining > 1e-9 && guard++ < 10) {
       let tE = Infinity, kind = null;
       if (!s.crossed && s.v0.z > 0 && !attrOn()) { const e0 = elapsed, t0 = s.t, tc = crossTime(s, remaining, tau => phase0 + ring.omega * (e0 + tau - t0)); if (tc < Infinity) { tE = tc; kind = "ring"; } }
@@ -69,7 +78,9 @@
       if (kind === "ring") hitRing(s, ringAt(phase0 + ring.omega * elapsed)); else hitGround(s);
       if (s.hang > 0) break;
     }
-    const prevPos = s.pos; if (s.sub) waterStep(s, dt); else s.pos = posAt(s, s.t); ghostRecord(s);   // (v51: for the next throw's ghost trail, 08k_feel.js)
+    const prevPos = s.pos; if (s.sub) waterStep(s, dt); else if (s.vine) vineStep(s, dt); else s.pos = posAt(s, s.t); ghostRecord(s);
+    vineCheck(s); if (s.clones) clonesStep(s, dt); rewindRecord(s);   // (v57: 07v_newpowers.js)
+    if (skullG(s) < 0 && s.pos.y > 9 && !s.resting) { if (!game.result) resolve("over", null); s.alpha = Math.max(0, s.alpha - dt * 4); }   // (a Gravity Flip that misses goes up and away)   // (v51: for the next throw's ghost trail, 08k_feel.js)
     if (!game.result && !s.crossed && seeds.length) seedCheck(s, prevPos);
     if (!game.result && !s.crossed) hazardCheck(s, prevPos);
     if (!game.result && !s.crossed) obstacleCheck(s, prevPos);   // the map's obstacles: bumpers bounce, fans and lodestones push, the rest block (07m_obstacles.js)
@@ -91,6 +102,7 @@
 
   const hasPost = () => ring.mode === "line" && anchorDef().support === "ground";   // (a post or the desert's hand stands under the ring; a hanging ring has nothing below it)
   function hitRing(s, rp) {
+    cloneSwap(s, rp);   // (v57: a Clone Skull's clone that's through takes the skull's place, 07v_newpowers.js)
     s.crossed = true;
     const dx = s.p0.x - rp.x, dy = s.p0.y - rp.y, d = Math.hypot(dx, dy), zr = rp.z;
     const rc = ring.rc, inner = rc - RING_TUBE - SKULL_R, outer = rc + RING_TUBE + SKULL_R;
@@ -126,6 +138,7 @@
     }
   }
   function hitGround(s) {
+    if (diveCatch(s)) return;   // (v57: the Diving Skull goes in rather than missing, 07v_newpowers.js)
     const p = s.p0, at = project(p.x, 0, p.z), first = s.bounces === 0;
     const short = !s.crossed && !game.result;
     if (short) { s.crossed = true; resolve("short", project(p.x, p.y + 0.4, p.z)); }
@@ -142,7 +155,7 @@
       game.endTimer = clamp(game.endTimer, 0.45, 0.6);
     }
     s.v0 = { x: s.v0.x * 0.55, y: -s.v0.y * 0.36, z: s.v0.z * 0.55 }; s.spin *= 0.5;
-    if (s.v0.y < 0.9 || s.bounces >= 3) { s.resting = true; s.ax = 0; s.v0 = { x: 0, y: 0, z: 0 }; s.p0.y = SKULL_R; s.spin = 0; }
+    if (skullG(s) > 0 && (s.v0.y < 0.9 || s.bounces >= 3)) { s.resting = true; s.ax = 0; s.v0 = { x: 0, y: 0, z: 0 }; s.p0.y = SKULL_R; s.spin = 0; }
   }
   const bonkWord = () => (IMPACTS[cos.impact] || IMPACTS.classic).word;
 
@@ -210,7 +223,8 @@
       challenge("combo", game.streak); challenge("best", game.hits); challenge("score", game.score);
       // the skull reacts: huge grin, a spinning perfect, or a puzzled rim-in (the impact itself was the visual system's)
       setMood(rig, R.mood, game.time);
-      VisualSystem.emit("score", { kind, streak: game.streak }); buzz(kind === "perfect" ? [10, 30, 16] : 12);   // the swish was the contact; the director lands the sting
+      VisualSystem.emit("score", { kind, streak: game.streak }); buzz(kind === "perfect" ? [10, 30, 16] : 12);
+      if (kind === "perfect" || kind === "bull") bandSting();   // (v57: four notes up the scale, on the beat, 02f_music_clock.js)   // the swish was the contact; the director lands the sting
       const word = game.streak >= 2 ? comboWord(game.streak) : "", say = R.attr ? ATTR.say : null;   // (v56: an attraction says its own word)
       if (say) impact(say.word, x, y, { fill: say.fill || R.fill, text: say.text || R.text, scale: kind === "bull" ? 1.05 : 0.9, sub: say.sub || (word ? `×${game.streak} · ${word}` : "") });
       else impact(ghosted ? t("result.ghost.word") : t(`result.${kind}.word`), x, y, { fill: ghosted ? PURPLE : R.fill, text: ghosted ? CREAM : R.text, scale: kind === "perfect" ? 1.1 : 0.9, sub: word ? `×${game.streak} · ${word}` : ghosted ? t("result.ghost.sub") : "" });
@@ -240,11 +254,13 @@
       const onTarget = !!skull.tHit;   // v50: a throw that hit a bullseye isn't a miss: no skull lost, the streak stands
       const saved = !onTarget && powerOn("second");   // Second Chance: this miss is on the house
       const bounced = !onTarget && !saved && R.hit && powerOn("ricochet");   // (v54: Ricochet: a bonk off something is on the house too)
+      const rewound = !onTarget && !saved && !bounced && rewindTakes();   // (v57: the Rewind Bone: the film runs back and the throw never happened)
+      if (rewound) { usePower("rewind"); game.result.rewind = true; }
       if (bounced) { usePower("ricochet"); impact(t("result.ricochet"), W / 2, H * 0.3, { fill: "#D98CE0", text: INK, scale: 0.7, delay: 0.2, bits: false }); Sound.toon("boing"); }
       if (onTarget) game.result.target = true;
       else if (saved) { usePower("second"); profile.saves++; impact(t("result.saved"), W / 2, H * 0.3, { fill: TEAL, text: CREAM, scale: 0.7, delay: 0.25, bits: false }); Sound.life(); }
-      else if (!bounced && !freeMiss() && !R.safe) { const extra = plusExtraLoss(R); game.lives = Math.max(0, game.lives - 1 - extra); if (extra) { PLUS.cracked = false; impact(t("plus.shattered"), W / 2, H * 0.3, { fill: RED, text: CREAM, scale: 0.7, delay: 0.2, bits: false }); } }   // (an eye poke costs nothing; v51: a cracked skull in Adventure+ costs two)   // (Practice, Curtain Call and the encore: misses are free)
-      if (!onTarget) {
+      else if (!bounced && !rewound && !freeMiss() && !R.safe) { const extra = plusExtraLoss(R); game.lives = Math.max(0, game.lives - 1 - extra); if (extra) { PLUS.cracked = false; impact(t("plus.shattered"), W / 2, H * 0.3, { fill: RED, text: CREAM, scale: 0.7, delay: 0.2, bits: false }); } }   // (an eye poke costs nothing; v51: a cracked skull in Adventure+ costs two)   // (Practice, Curtain Call and the encore: misses are free)
+      if (!onTarget && !rewound) {
         game.streak = 0; game.perfStreak = 0; run.misses++; profile.misses++;
         if (MISS_STAT[kind]) profile[MISS_STAT[kind]]++;
         if (boss && !R.safe) boss.flawless = false;
@@ -277,6 +293,7 @@
 
   function endThrow() {
     if (portalEndThrow()) return;   // (v54: a miss at a portal just comes back)
+    if (rewindBegin()) return;      // (v57: the Rewind Bone takes it back, 07v_newpowers.js)
     Sound.flightStop();
     if (game.lives <= 0) { if (!offerContinue()) gameOver(); return; }   // out of skulls: one more, perhaps (07g_continue.js)
     settleThrow();
@@ -294,7 +311,7 @@
     mischiefAfterThrow();   // now and then the old print acts up (09l_mischief.js)
   }
   function resetSkull() {
-    Object.assign(skull, { sub: null, sink: 0, canHit: false, canHits: 0, p0: { x: 0, y: START_Y, z: 0 }, v0: { x: 0, y: 0, z: 0 }, t: 0, crossed: false, resting: true, missed: false, ghosted: 0,
+    Object.assign(skull, { sub: null, sink: 0, canHit: false, canHits: 0, g: G, vine: null, clones: null, rew: null, homed: false, p0: { x: 0, y: START_Y, z: 0 }, v0: { x: 0, y: 0, z: 0 }, t: 0, crossed: false, resting: true, missed: false, ghosted: 0,
       bounces: 0, angle: 0, spin: 0, spawn: 0, alpha: 1, flightTime: 0, pullOff: { x: 0, y: 0 }, trail: [], emit: 0 });
     skull.pos = { ...skull.p0 };
     kick(rig, 1, 0, Math.PI / 2); rig.tilt = 0; rig.dots = 0; setMood(rig, "idle", game.time);

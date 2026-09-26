@@ -1,29 +1,7 @@
-  // ───────────────────────── v56: the carnival's attractions (the mini-games, rebuilt) ─────────────────────────
-  // Every mini-game is an attraction that could stand in the Skull Toss carnival: its own set, its own objective, its
-  // own verb, and none of them is "the ring somewhere else". While one is on the ring is gone (hidden, and nothing
-  // crosses it): the skull is judged where it meets the attraction's own things, at the attraction's own depth (the
-  // aim guide's reticle sits on that plane).
-  //   Target Gallery  React        a wooden shooting gallery, blue and cream: tin stars and spinning plates (1), ducks
-  //                                on conveyors (2), bullseyes that pop up and drop behind cover (3), and now and then a
-  //                                golden target racing along the top rail (5) that rings the bell. Ten skulls.
-  //   Can Alley       Smash        a red striped booth and a pyramid of numbered cans with weight (07o_bonus.js): a hit
-  //                                knocks what it hits and what rests on it, a hard one ploughs on through, and cans
-  //                                that fly knock others over. The lot in one throw is a CLEAN SWEEP, and it's restacked.
-  //   Longshot        Reach        a range: a board on legs at 10 m, then 15, 20, 25, 30, 40, 50…; the throw carries
-  //                                as far as the board, it's smaller every time, there's a breath of wind, and the
-  //                                camera eases back. Three skulls.
-  //   Curtain Call    Time         a little stage: DING, the curtains part on the round's act (one target; one on the
-  //                                move; two, one of which goes; three in turn; the big finish in a spotlight), and
-  //                                slam shut. One throw a round, while they're open. Three skulls.
-  //   Perfect Pitch   Place        a painted board of pockets, 10, 25, 50 and 100 by size; dead centre in the 100 is a
-  //                                PERFECT PITCH (the bell, the lights, the crowd). Ten skulls.
-  //   Gale Force      Compensate   a still bullseye and a wind machine: breeze, gust, gale, storm, a fresh direction
-  //                                every throw; flags snap, paper and dust blow across. Three skulls.
-  //   Sudden Death    Survive      the dark, one spotlight, one target, one skull; every hit makes it worse (it moves,
-  //                                shrinks, speeds up, blades cross in front, it jinks, the picture shakes, fakes).
-  //   Swing Time      Synchronize  a target on a pendulum: slow, then quicker, wider, then out of time. Through the
-  //                                middle of it on the move is DEAD CENTER. Three skulls.
-  // An attraction's record is its own number (points, cans, metres or hits), not the run's score.
+  // ───────────────────────── v56: the carnival's attractions (the mini-games) ─────────────────────────
+  // Each mini-game is an attraction with its own set, goal and verb, and no ring: the ring is hidden and parked on the
+  // attraction's plane (the aim guide's reticle reads it), and the skull is judged where it meets the attraction's own
+  // things. The eight, their rules and scoring: docs/WORLD-SYSTEMS.md (The attractions).
   const ATTR = { on: false, kind: null, t: 0, zp: RING_Z, props: [], bits: [], score: 0, n: 0, say: null, pull: 0, shake: 0, lvl: 0, encore: false, flash: 0 };
   const attrOn = () => ATTR.on;
   const aRand = (a, b) => a + runRand() * (b - a);   // (the run's dice, so a replay sees the same attraction)

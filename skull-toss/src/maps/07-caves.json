@@ -518,7 +518,14 @@
         "ahead": 34,
         "x": 5
       }
-    ]
+    ],
+    "land": {
+      "hills": 3.0,
+      "roll": 1.6,
+      "wave": 80,
+      "curve": 1.2,
+      "bend": 120
+    }
   },
   "fragment": "clockwork",
   "target": "bell",

@@ -496,7 +496,14 @@
       "tree-autumn",
       "tree-autumn",
       "tree-bare"
-    ]
+    ],
+    "land": {
+      "hills": 3.2,
+      "roll": 1.4,
+      "wave": 95,
+      "curve": 1.0,
+      "bend": 160
+    }
   },
   "fragment": "hollow",
   "target": "jack",

@@ -454,7 +454,14 @@
         "ahead": 34,
         "x": 5
       }
-    ]
+    ],
+    "land": {
+      "hills": 0,
+      "roll": 0,
+      "wave": 90,
+      "curve": 0.8,
+      "bend": 150
+    }
   },
   "fragment": "drowned",
   "target": "duck",

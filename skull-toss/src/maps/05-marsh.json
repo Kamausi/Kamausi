@@ -471,7 +471,14 @@
         "ahead": 34,
         "x": 5
       }
-    ]
+    ],
+    "land": {
+      "hills": 0,
+      "roll": 0,
+      "wave": 90,
+      "curve": 1.0,
+      "bend": 140
+    }
   },
   "fragment": "marsh",
   "target": "frog",

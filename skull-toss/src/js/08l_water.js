@@ -151,6 +151,7 @@
     setMood(rig, "fear", game.time);
   }
   function waterStep(s, dt) {
+    if (s.sub.dive) { diveStep(s, dt); return; }   // (v57: the Diving Skull swims on, 07v_newpowers.js)
     const W2 = s.sub; W2.t += dt;
     const gk = 1 - (1 - UNDER.g) * smooth(clamp(W2.t / UNDER.fade, 0, 1)), dk = smooth(clamp(W2.t / UNDER.ramp, 0, 1));
     const speed = Math.hypot(W2.v.x, W2.v.y, W2.v.z), lift = UNDER.lift * G * (1 - clamp(speed / 3, 0, 1));   // (floats up a little as it slows)

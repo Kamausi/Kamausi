@@ -498,7 +498,14 @@
         "ahead": 34,
         "x": 5
       }
-    ]
+    ],
+    "land": {
+      "hills": 4.2,
+      "roll": 2.0,
+      "wave": 85,
+      "curve": 1.2,
+      "bend": 130
+    }
   },
   "fragment": "whistle",
   "target": "wisp",

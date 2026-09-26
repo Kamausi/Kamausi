@@ -211,6 +211,9 @@
     D.load = 0;
   }
   function drawDigger() {
+    const sh = landShift(DIG.x, DIG.z); if (sh) { ctx.save(); ctx.translate(sh.x, sh.y); drawDiggerHere(); ctx.restore(); } else drawDiggerHere();   // (v57: on the land, 06h_land.js)
+  }
+  function drawDiggerHere() {
     const D = GY.digger || { t: 0, dirt: [], dust: [], mound: 0.4, yawn: 0, u: 0, kind: "normal", sa: 0.45, load: 0 }, x0 = DIG.x, z0 = DIG.z, p = project(x0, 0, z0), s = p.s;
     if (p.x < -s * 2 || p.x > W + s * 2) return;
     const resting = D.kind === "rest";

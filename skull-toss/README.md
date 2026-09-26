@@ -1,8 +1,38 @@
-# SKULL TOSS v56
+# SKULL TOSS v57
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)); nothing else ever plays in their place.
+
+## New in v57: hills, a winding road, a band that plays along, and six new power-ups
+
+- **Hills and dips.** The land along the route has a shape. The road rises and falls in long swells, so a crest can hide
+  what's beyond it and a dip can swallow it. Either side, the land lifts into hills. Each map has its own: gentle in
+  the Hollow and the Gilded Graveyard, hilly in the Woods, dunes in the Bone Desert, rolling cave floor in the
+  Clockwork Caves, and a dramatic Abyss. The two water maps stay flat.
+- **A road that bends.** The route winds left and right, and a path in the map's own lane material (dirt, flagstones,
+  boardwalk, sand, rails or the Abyss's glow) runs off into the distance along it. A boss's lair on the horizon swings
+  into line as the road straightens toward it.
+- Both are looks only. Within nine metres of the camera, where the launcher, the ring and every hazard are, the ground
+  is flat and the road straight, so no throw plays differently.
+- **The band.** Short parts played on the beat, in each loop's own key (found from the recordings), come in and drop out
+  on the bar line:
+  - a soft kick once you've made three in a row;
+  - hats once the ring is on fire;
+  - a heartbeat on your last skull;
+  - a woodblock tick-tock while the world is carrying you forward;
+  - a bass line in the last eight hits before a boss;
+  - four notes up the scale after a perfect.
+- **Six power-ups with physics of their own**, one new a map:
+
+| Power-up | From | What it does |
+|---|---|---|
+| **Vine Swing** | the Whistling Woods | A vine hangs over the lane, swaying. Catch its end and you swing round the branch and are slung through the ring. Two catches. |
+| **Diving Skull** | the water maps | A throw that drops short into the water dives instead of missing, swims on underwater, then leaps for the ring. Two dives. |
+| **Clone Skull** | the Black Marsh | Every throw splits in three. Whichever skull goes through the ring counts. |
+| **Rewind Bone** | the Bone Desert | Miss, and the film runs backwards. The throw never happened: no skull lost, and the streak is kept. |
+| **Homing Bone** | the Clockwork Caves | A throw that's close locks on and curves into the ring. |
+| **Gravity Flip** | the Black Abyss | The skull falls up: it dips, then climbs. The aim still marks where it crosses the ring. |
 
 ## New in v56: the mini-games are the carnival's attractions
 
