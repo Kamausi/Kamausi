@@ -28,6 +28,12 @@
     // on unless set false). A part that isn't there is treated as absent, the way a game with no server treats it:
     // saves stay on the device, the board is local, the Soul Shop waits. Sign-in can fail too (Anonymous not switched
     // on yet): the app still starts, so Google Analytics works whatever else doesn't.
+    // v55: a fresh App Check token, or why there isn't one ("" when it worked, or App Check isn't in use)
+    async appCheckRefresh() {
+      if (!this.appCheck || !window.firebase || !window.firebase.appCheck) return "";
+      try { await window.firebase.appCheck().getToken(true); this.appCheckError = ""; return ""; }
+      catch (e) { this.appCheckError = String((e && (e.code || e.message)) || e); return this.appCheckError; }
+    },
     async useFirebase(cfg) {
       const svc = { firestore: true, functions: true, ...(cfg.services || {}) }, { services: _services, functionsRegion, appCheck, ...options } = cfg;   // (options: what Firebase itself takes)
       const need = [["app", "firebase-app-compat.js"], ["auth", "firebase-auth-compat.js"], ...(svc.firestore ? [["firestore", "firebase-firestore-compat.js"]] : []), ...(svc.functions ? [["functions", "firebase-functions-compat.js"]] : [])];
@@ -39,9 +45,17 @@
       // player (no challenge, no checkbox), and nothing breaks if it can't load: the project only enforces it once it's
       // switched on in the Firebase console.
       this.appCheck = false;
-      if (appCheck && appCheck.recaptchaEnterprise && location.protocol === "https:" && !window.Capacitor && !window.skullTossDesktop) {
-        try { if (!fb.appCheck) await loadScript(FIREBASE_SDK + "firebase-app-check-compat.js"); fb.appCheck().activate(new fb.appCheck.ReCaptchaEnterpriseProvider(appCheck.recaptchaEnterprise), true); this.appCheck = true; }
-        catch (e) { this.error = "app check: " + String((e && e.message) || e); }
+      // (v55: the provider must be the one App Check's web app is registered with in the console: recaptchaEnterprise, or
+      // recaptchaV3 for a key made in the classic reCAPTCHA admin. The first token is fetched straight away, so a key that
+      // doesn't cover this address shows up as appCheckError instead of every sign-in failing mysteriously.)
+      const acKey = appCheck && (appCheck.recaptchaEnterprise || appCheck.recaptchaV3);
+      if (acKey && location.protocol === "https:" && !window.Capacitor && !window.skullTossDesktop) {
+        try {
+          if (!fb.appCheck) await loadScript(FIREBASE_SDK + "firebase-app-check-compat.js");
+          const P = appCheck.recaptchaEnterprise ? new fb.appCheck.ReCaptchaEnterpriseProvider(acKey) : new fb.appCheck.ReCaptchaV3Provider(acKey);
+          fb.appCheck().activate(P, true); this.appCheck = true;
+          fb.appCheck().getToken(false).then(() => { this.appCheckError = ""; }, e => { this.appCheckError = String((e && (e.code || e.message)) || e); });
+        } catch (e) { this.error = "app check: " + String((e && e.message) || e); }
       }
       let user = null;
       // (v53: wait for Firebase to restore the saved session before deciding there isn't one. currentUser is null until

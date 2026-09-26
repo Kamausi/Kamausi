@@ -45,6 +45,30 @@ To try everything locally: `firebase emulators:start`, then open the hosted page
 emulator, a purchase receipt of the form `TEST:<anything>` is accepted, so the Soul-pack flow can be tried end to
 end.
 
+## Sign-in fails with `auth/firebase-app-check-token-is-invalid`
+
+App Check is being enforced on **Authentication**, and the reCAPTCHA token the game sends isn't accepted. Nothing the
+player types can get past it: every sign-in (Google, Apple, Facebook, email) fails the same way. Check these, in order:
+
+1. **The key covers the site.** In Google Cloud console → Security → reCAPTCHA → key `6LfAG8wt…`, add every domain the
+   game is played on:
+   - `skull-toss-c7099.web.app`;
+   - `skull-toss-c7099.firebaseapp.com`;
+   - any custom domain, or the GitHub Pages domain.
+2. **App Check uses the same kind of key.** In Firebase console → App Check → Apps → the web app, the provider must be
+   **reCAPTCHA Enterprise** with that same site key, because `src/firebase.config.json` says `recaptchaEnterprise`. If
+   the key was made in the classic reCAPTCHA admin (v3), register it there as **reCAPTCHA v3** and change the config to
+   `"appCheck": { "recaptchaV3": "<key>" }`.
+3. **While you sort it out:** Firebase console → App Check → APIs → Authentication → *Unenforce*. Sign-in works again
+   straight away, and you can re-enforce once the metrics show verified requests.
+4. **The providers themselves.**
+   - Authentication → Sign-in method has Google, Apple, Facebook and Email/Password switched on. Apple and Facebook also
+     need their developer app IDs and secrets.
+   - Authentication → Settings → Authorized domains lists every domain the game runs on.
+
+The game fetches a fresh App Check token and retries once. If it still fails, it says so in Settings → Account &
+General with the reason. `Backend.appCheckError` holds the last token error.
+
 ## What lives where
 
 | Path | Who writes it | What it is |

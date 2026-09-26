@@ -8,9 +8,11 @@
     if (!sheetOpener || !sheetOpener.isConnected) sheetOpener = document.activeElement;
     $("sheet-" + name).hidden = false; $("sheetScrim").hidden = false;
     renderSheet(name, back); Sound.ui("open");
+    if (!back) sheetToTop($("sheet-" + name));   // (v55: a screen opens at its top, not wherever it was left: the Cart used to stay at the bottom)
     if (name === "store") Sound.musicScene("shop", true);   // the Curio Cart has its own tune
     $("sheet-" + name).querySelector("[data-back]").focus({ preventScroll: true });
   }
+  function sheetToTop(el) { el.scrollTop = 0; for (const e of el.querySelectorAll("*")) if (e.scrollTop || e.scrollLeft) { e.scrollTop = 0; e.scrollLeft = 0; } }
   function closeSheet(sound = true, swap = false) {
     if (!sheet) return;
     if (!swap) sheetTrail.length = 0;
@@ -166,7 +168,7 @@
     const n = $("prof-name"); if (document.activeElement !== n) n.value = profile.name;
     const bio = $("prof-bio"); if (document.activeElement !== bio) bio.value = profile.bio || ""; renderPicPick();
     $("profNameShow").textContent = profile.name || t("profile.nameless"); $("profBioShow").textContent = profile.bio || t("profile.noBio");   // (v50: name and bio beside the picture; the pencil edits them)
-    $("profBioShow").classList.toggle("empty", !profile.bio); $("profFragN").textContent = `${profile.fragments.length}/${MAP_COUNT}`; drawFragRing($("profFragCv"), profile.fragments);
+    $("profBioShow").classList.toggle("empty", !profile.bio); $("profFragN").textContent = `${profile.fragments.length}/${MAP_COUNT}`; $("profPlus").hidden = !(profile.plusClears > 0); drawFragRing($("profFragCv"), profile.fragments);
     const r = rankFor(profile.makes);
     $("rankName").textContent = r.name;
     $("profTitle").textContent = titleName();

@@ -280,6 +280,10 @@
     $("chalMoreBtn").querySelector(".dot").hidden = !(claimable("seasonal") || claimable("event"));
     $("chalWhat").textContent = P.label.toLowerCase();
     $("streakLine").hidden = profile.streakDays < 1; $("streakLine").textContent = t("streak.line", { n: profile.streakDays, next: 20 * Math.min(7, profile.streakDays + 1) });   // (v37)
+    if (d.locked) {   // v55: no season on, or no event: nothing to show but when to come back
+      $("chalList").innerHTML = `<div class="chal chal-soon"><div class="chal-title">${per === "event" ? t("chal.soonEvent") : t("chal.soonSeason")}</div><p class="k">${t("chal.soonSub")}</p></div>`;
+      $("chalSet").innerHTML = ""; $("chalTimer").textContent = ""; return;
+    }
     $("chalList").innerHTML = d.items.map((it, i) => {
       const def = chalDef(it.id), done = chalDone(it), have = Math.min(it.have, it.n), pct = Math.round((have / it.n) * 100);
       const show = v => it.id === "arcadeSecs" ? `${Math.floor(v / 60)}:${String(v % 60).padStart(2, "0")}` : fmt(v);
@@ -297,8 +301,8 @@
     tickChallenges();
   }
   function tickChallenges() {
-    $("chalTimer").textContent = fmtCountdown(msToReset(chalTab));
-    if (PERIOD_IDS.some(per => profile[per] && profile[per].day !== PERIODS[per].key())) { PERIOD_IDS.forEach(ensurePeriod); renderChallenges(); updatePips(); }
+    $("chalTimer").textContent = ensurePeriod(chalTab).locked ? "" : fmtCountdown(msToReset(chalTab));
+    if (PERIOD_IDS.some(per => profile[per] && !(PERIODS[per].live && !PERIODS[per].live()) && profile[per].day !== PERIODS[per].key())) { PERIOD_IDS.forEach(ensurePeriod); renderChallenges(); updatePips(); }
   }
   const chalMenu = open => { $("chalMenu").hidden = !open; $("chalMoreBtn").setAttribute("aria-expanded", String(open)); };
   $("chalTabs").addEventListener("click", e => {

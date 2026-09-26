@@ -341,7 +341,7 @@
     L(farLayer, 70, "far");
     if (sceneFX.wheel || sceneFX.clock) { planeXform(ctx, 70, "far"); drawFarFX(world.t); baseXform(ctx); }
     drawSkyLife();
-    drawGroundPlane(ctx, groundLayer);
+    drawGroundPlane(ctx, groundLayer); drawWaterSheen();   // (v55: the water's moving highlights, 08l_water.js)
     if (midLayer) L(midLayer, 30, "world");
     drawWaterReflections(); drawRipples(); baseXform(ctx);   // (v51: what stands over the water, mirrored in it, and its ripples: 08l_water.js)
     drawGroundWorld();

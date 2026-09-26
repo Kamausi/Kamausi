@@ -3,7 +3,7 @@
   // wanderers, fog] → the play field → near props → foreground frame. The flat planes are painted a little
   // bigger than the screen (the bleed) so a moving camera never shows an edge. Far planes are softer and hazier,
   // the foreground sharp-edged but dark and slightly soft, like a miniature set with depth of field.
-  let skyLayer = null, farLayer = null, midLayer = null, groundLayer = null, fgLayer = null, moon = { x: 0, y: 0, r: 0 };
+  let skyLayer = null, farLayer = null, midLayer = null, groundLayer = null, fgLayer = null, moon = { x: 0, y: 0, r: 0 }, waterSheens = [];
   const bleed = () => Math.round(Math.max(56, U * 0.3));
   function plate(x0, y0, w, h) {   // a canvas you paint in screen coordinates, covering (x0, y0, w, h)
     const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(w * DPR)); c.height = Math.max(1, Math.round(h * DPR));
@@ -113,7 +113,8 @@
     let g = b.createLinearGradient(0, HY, 0, H + B);
     g.addColorStop(0, L.ground[0]); g.addColorStop(0.3, L.ground[1]); g.addColorStop(0.7, L.ground[2]); g.addColorStop(1, L.ground[3]);
     b.fillStyle = g; b.fillRect(x0, HY, x1 - x0, H + B - HY);
-    if (L.ambient.water) paintWater(b, x0, x1, B);
+    waterSheens = [];
+    if (L.ambient.water) { paintWater(b, x0, x1, B); for (const seed of [311, 719]) { const S = plate(P.x0, P.y0, P.w, P.h); paintWaterSheen(S.g, seed); waterSheens.push(S); } }   // (v55: the two drifting sheens, 08l_water.js)
     else {   // low rolling hills stacked toward the horizon, each with a lit rim (cartoon backgrounds are all layers)
       for (const [zc, col, amp, seed] of [[46, L.hills[0], 0.9, 1], [34, L.hills[1], 0.7, 2], [26, L.hills[2], 0.55, 3]]) {
         b.fillStyle = col; b.strokeStyle = L.hillRim; b.lineWidth = 1.5; b.beginPath();

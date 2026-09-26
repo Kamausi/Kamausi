@@ -1,8 +1,45 @@
-# SKULL TOSS v54
+# SKULL TOSS v55
 
 Lob the skull through a ring in a haunted graveyard. Play **Story** to climb through the stages and beat the bosses, or **Arcade** to pick any map and see how long you can last. Three misses and you're buried.
 
 Open `index.html` in any browser, on a phone or a desktop. The fonts and all the artwork are embedded in the file, so the game looks the same offline. Most sound effects are generated in code; three are recordings, embedded too. The music is six recorded loops (see [The music](#the-music)); nothing else ever plays in their place.
+
+## New in v55: a portal you believe, painted water, and tidier screens
+
+- **Screens.**
+  - The Codex fits the screen; a long page scrolls inside itself.
+  - Achievement cards are smaller.
+  - Mastery is a row of page-cards. Each page has **eight tiers** (Bronze to Diamond) on a milestone line that scrolls
+    sideways and opens where you're up to. The first four tiers keep their old thresholds, so claims already made stay
+    made. The pay is rebalanced: less early, far more late.
+  - The Settings categories have bigger names and readable descriptions.
+  - Every screen opens at its top (the Curio Cart used to stay scrolled down).
+  - The closet runs in the order you'd dress Morty: skull, paint, eyes, teeth, mask, specs, hair, beard, hat, wings, then
+    effects, ring, launcher and specials.
+  - A diamond by the ring-fragment count on the profile once you've beaten Adventure+.
+- **Seasonal and Event challenges** belong to real seasons and live events. Outside them the tab just says more are
+  coming soon.
+- **Sign-in.**
+  - The `auth/firebase-app-check-token-is-invalid` error is App Check, enforced on Authentication in the Firebase
+    project, turning the site's token away. The fix is in the console; [firebase/README.md](firebase/README.md) has the
+    steps.
+  - The game now retries once with a fresh token and explains the failure in plain words.
+  - It supports a reCAPTCHA v3 key as well as Enterprise.
+  - Creating an email account with no session yet now creates it, instead of trying to sign in to it.
+- **The results screen** gives Morty room: hats, wings and auras are no longer cut off square.
+- **The portal is a rupture, not a black circle.**
+  - It lenses and magnifies the scenery round its writhing rim, falls away inward in layers, pulls motes in, and lights
+    the ground.
+  - Through it, the camera is pulled into the last frame of the old place, then accelerates down a curving rift: walls
+    in layers at different depths and speeds, haze, near and far streaks.
+  - The real next place appears tiny far ahead and grows until it fills the frame, and the camera comes out behind
+    Morty.
+- **Water is painted**, not drawn in lines:
+  - a watercolour base with depth;
+  - broad uneven swells, and tapered highlights on the crests;
+  - the moon broken across it;
+  - two sheens that drift against each other;
+  - splash rings as broken painted arcs.
 
 ## New in v54: a world with depth, music you can see, and a way on through a portal
 

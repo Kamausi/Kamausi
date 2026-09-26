@@ -71,20 +71,34 @@
     for (const R of WATER.ripples) R.t += dt;
     WATER.ripples = WATER.ripples.filter(R => R.t < 1.6 + R.s * 0.4);
   }
+  // v55: a splash's rings are painted too: broken arcs of tapered light that spread and fade, not outlined ellipses
   function drawRipples() {
     if (!WATER.ripples.length) return;
-    ctx.save(); ctx.lineWidth = 1.5;
+    ctx.save(); ctx.lineCap = "round";
     for (const R of WATER.ripples) {
       const p = project(R.x, 0, R.z), life = 1.6 + R.s * 0.4;
       for (let i = 0; i < 3; i++) {
         const u = R.t - i * 0.18; if (u <= 0) continue;
-        const rad = (0.15 + u * 0.9 * R.s) * p.s, a = Math.max(0, 1 - u / life) * 0.6;
-        ctx.strokeStyle = `rgba(210,235,230,${a})`; ctx.beginPath(); ctx.ellipse(p.x, p.y, rad, rad * 0.26, 0, 0, TAU); ctx.stroke();
+        const rad = (0.15 + u * 0.9 * R.s) * p.s, a = Math.max(0, 1 - u / life) * 0.5;
+        for (let j = 0; j < 7; j++) {   // seven broken arcs round the ring, each its own length and weight
+          const a0 = j * 0.9 + i * 0.4 + R.x * 3, span = 0.35 + 0.25 * Math.sin(j * 2.7 + i), wgt = Math.max(0.6, (1.6 - u * 0.6) * (0.6 + 0.4 * Math.sin(j * 1.9)));
+          ctx.strokeStyle = `rgba(210,235,230,${a * (0.5 + 0.5 * Math.sin(j * 3.1 + i))})`; ctx.lineWidth = wgt;
+          ctx.beginPath(); ctx.ellipse(p.x, p.y, rad, rad * 0.26, 0, a0, a0 + span); ctx.stroke();
+        }
       }
     }
     ctx.restore();
   }
-
+  // v55: the water's two sheens, drifting against each other at different speeds and breathing, so the surface moves
+  // without sliding as one piece
+  function drawWaterSheen() {
+    if (!waterSheens.length || game.state === "title" && !look().ambient.water) return;
+    const t = world.t, still = reduceMotion ? 0.3 : 1;
+    waterSheens.forEach((S, i) => {
+      const dx = Math.sin(t * (0.21 + i * 0.13) + i * 2) * U * 0.035 * still + (i ? -1 : 1) * Math.sin(t * 0.05) * U * 0.02 * still, a = 0.55 + 0.35 * Math.sin(t * (0.6 + i * 0.35) + i * 1.7);
+      ctx.save(); ctx.globalAlpha = a; drawGroundPlane(ctx, { ...S, x0: S.x0 + dx, y0: S.y0 + Math.sin(t * 0.4 + i) * 1.2 * still }); ctx.restore();
+    });
+  }
   // ── the collision view (a debug switch: ?collisions, or SkullToss.debug.collisions(true)). Read-only: it draws what the
   // hit tests test. Green: solid; blue: a trigger (the water, the props that react); red: danger; yellow: scoring
   // (the ring's clean window, the targets); purple: the camera's safe frame.

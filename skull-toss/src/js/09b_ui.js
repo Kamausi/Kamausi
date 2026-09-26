@@ -309,8 +309,10 @@
   // the round is over, so the skull has left the building: X eyes, jaw hanging open, and a wisp where the rest of him was
   function drawSleeper(T) {
     const [c, r] = fitCanvas($("sleeper")); if (!r.width) return;
-    const s = r.width, k = easeOutBack(clamp((T - ui.shownAt) / 0.3, 0, 1));
-    const cx = s * 0.47, cy = s * 0.44 + Math.sin(T * 1.5) * s * 0.02, sr = s * 0.31 * k, wob = Math.sin(T * 2.2) * sr * 0.14;
+    // (v55: the canvas is 1.8× the space he sits in, with him in the middle of it, so a tall hat, wings or an aura have
+    // room round him instead of being cut off square at its edges)
+    const s = r.width / 1.8, o = s * 0.4, k = easeOutBack(clamp((T - ui.shownAt) / 0.3, 0, 1));
+    const cx = o + s * 0.47, cy = o + s * 0.44 + Math.sin(T * 1.5) * s * 0.02, sr = s * 0.31 * k, wob = Math.sin(T * 2.2) * sr * 0.14;
     c.lineJoin = "round"; c.lineCap = "round";
     c.fillStyle = CREAM; c.strokeStyle = INK; c.lineWidth = Math.max(1.6, s * 0.026);
     c.beginPath();                                   // the wisp, trailing off under the jaw

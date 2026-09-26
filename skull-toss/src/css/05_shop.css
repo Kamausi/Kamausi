@@ -718,3 +718,47 @@ details.row.sent{display:block}details.row.sent summary{cursor:pointer;font:700 
 .booth.m-sudden{background:#141218;--aw1:#3A3440;--aw2:#1E1A24}
 .booth.m-sudden .verb{background:#C0392B;color:var(--cream)}
 .booth.m-swing{background:#5A3E24;--aw1:#E3B64B;--aw2:#8A6A3E}
+/* v55: smaller achievement cards */
+.ach-grid{grid-auto-columns:min(33vw,132px)}
+@media (min-width:700px){.ach-grid{grid-auto-columns:150px}}
+.ach-grid .ach{min-height:0;padding:8px 6px 7px;gap:3px}
+.ach-grid .ach .medal{width:36px;height:36px}.ach-grid .ach .medal svg{width:18px;height:18px}
+.ach-grid .ach-t b{font-size:13px}
+.ach-grid .ach-t span{font-size:10px;line-height:1.25}
+.ach-grid .ach-prog{gap:2px;padding-top:3px}.ach-grid .ach-prog em{font-size:10px}
+.ach-grid .ach-r{font-size:12.5px;padding:2px 8px}
+.ach-grid .ach-tier{margin-top:2px;font-size:8.5px;padding:1px 6px 0}
+/* v55: settings categories: bigger names, readable descriptions */
+.set-cat b{font-size:clamp(24px,7vw,30px)}
+.set-cat span{font:700 clamp(14px,4vw,16.5px)/1.3 var(--ui);opacity:.85}
+/* v55: the Codex fits the screen: the page row fills what's left, a long page scrolls inside itself */
+#sheet-codex .sheet-body{display:flex;flex-direction:column;overflow:hidden}
+#sheet-codex .codex-list{flex:1 1 auto;min-height:0;align-items:stretch}
+#sheet-codex .codex-list>.entry,#sheet-codex .codex-list>.doc{min-height:0;max-height:100%;overflow-y:auto;padding:18px 18px 24px 24px}
+#sheet-codex .tip{flex:none;margin:6px 0 0;padding:8px 12px;font-size:11.5px}
+@media (max-height:720px){#sheet-codex .tip{display:none}}
+/* v55: mastery as pages in a sideways row, each with its eight tiers on a milestone line that scrolls */
+#masteryList{display:flex;gap:12px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;margin:10px -16px 0;padding:4px 16px 12px;scrollbar-width:none}
+#masteryList::-webkit-scrollbar{display:none}
+.m-page{flex:0 0 min(80vw,340px);scroll-snap-align:center;display:flex;flex-direction:column;padding:18px 16px 16px 22px;border-radius:4px 12px 12px 4px;background:linear-gradient(90deg,#D9C79E,#F2E7C9 14px);color:var(--ink);border:2px solid var(--ink);box-shadow:0 4px 0 var(--ink),inset 3px 0 0 rgba(0,0,0,.12)}
+.m-page .m-head b{font-size:20px;color:var(--ink)}
+.m-page .m-have{font:18px/1 var(--num);color:var(--red-d)}
+.m-page p{color:#4A3A2A;font-size:12.5px;min-height:2.7em}
+.m-line{overflow-x:auto;overflow-y:hidden;margin:10px -16px 0 -22px;padding:6px 16px 4px 22px;scrollbar-width:thin}
+.m-track{position:relative;display:flex;gap:10px;width:max-content;padding-top:4px}
+.m-track::before{content:"";position:absolute;left:20px;right:20px;top:24px;height:4px;border-radius:2px;background:rgba(23,19,15,.25)}
+.m-fill{position:absolute;left:20px;top:24px;height:4px;border-radius:2px;background:var(--red-d);max-width:calc(100% - 40px)}
+.m-page .m-tier{position:relative;width:74px;flex:none;background:none;border:0;box-shadow:none;color:var(--ink);padding:0 0 4px;gap:3px;animation:none}
+.m-dot{display:grid;place-items:center;width:40px;height:40px;margin:0 auto;border-radius:50%;border:3px solid var(--ink);background:#C9BC9A;font:17px/1 var(--num);color:var(--ink);box-shadow:0 2px 0 var(--ink)}
+.m-page .m-tier .m-t{font:800 10px/1.2 var(--ui);color:#4A3A2A}
+.m-page .m-tier .m-p{font:14px/1 var(--num);color:var(--ink)}
+.m-page .m-tier.got .m-dot{box-shadow:0 0 0 3px var(--cream),0 0 0 5px var(--ink);animation:gain .9s var(--snap) infinite alternate}
+.m-page .m-tier.claimed .m-dot{animation:none;box-shadow:0 2px 0 var(--ink);opacity:.85}
+.m-tier.bronze.got .m-dot,.m-tier.bronze.claimed .m-dot{background:#B07A45}.m-tier.silver.got .m-dot,.m-tier.silver.claimed .m-dot{background:#B5BAC4}
+.m-tier.gold.got .m-dot,.m-tier.gold.claimed .m-dot{background:var(--gold)}.m-tier.platinum.got .m-dot,.m-tier.platinum.claimed .m-dot{background:#DCE3EA}
+.m-tier.emerald.got .m-dot,.m-tier.emerald.claimed .m-dot{background:#3FAE6A}.m-tier.ruby.got .m-dot,.m-tier.ruby.claimed .m-dot{background:#C8364A;color:var(--cream)}
+.m-tier.obsidian.got .m-dot,.m-tier.obsidian.claimed .m-dot{background:#2A2632;color:var(--cream)}
+.m-tier.diamond.got .m-dot,.m-tier.diamond.claimed .m-dot{background:linear-gradient(135deg,#BFF3FF,#6FD3F0 45%,#E8FBFF)}
+.m-page .m-tier.got:not(.claimed) .m-p{color:var(--red-d)}
+.m-page .m-tier.m-tier.m-tier{background:none;color:var(--ink);opacity:1}
+.m-page{width:min(80vw,340px);max-width:min(80vw,340px);box-sizing:border-box}

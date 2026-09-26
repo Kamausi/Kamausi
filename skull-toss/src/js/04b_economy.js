@@ -122,15 +122,20 @@
                next: n => new Date(n.getFullYear(), n.getMonth() + 1, 1), again: "back next month" },
     // v50: a season is a quarter of the year; an event runs a fortnight (Monday to the Sunday after next). Both reuse
     // the monthly and weekly goals, made bigger (mult), and pay to match
-    seasonal: { label: "Seasonal", pool: CHALLENGES_MONTHLY, seed: "skull-toss:season:", mult: 2, key: (d = new Date()) => `s${d.getFullYear()}-${Math.floor(d.getMonth() / 3) + 1}`,
-               next: n => new Date(n.getFullYear(), Math.floor(n.getMonth() / 3) * 3 + 3, 1), again: "back next season" },
+    // v55: Seasonal belongs to the real seasons (07l_season.js) and Events to a live event (the config's event.banner, in
+    // its window): outside them there's nothing to do but come back later
+    seasonal: { label: "Seasonal", pool: CHALLENGES_MONTHLY, seed: "skull-toss:season:", mult: 2, key: () => { const S = seasonNow(); return S ? "s" + S.id : "s-none"; },
+               next: n => { const S = seasonNow(); return S ? new Date(Date.parse(S.until)) : new Date(n.getFullYear(), n.getMonth() + 1, 1); }, again: "back next season", live: () => !!seasonNow() },
     event:   { label: "Event",   pool: CHALLENGES_WEEKLY,  seed: "skull-toss:event:", mult: 1.5, key: (d = new Date()) => "e" + dayKey(fortStart(d)),
-               next: n => { const m = fortStart(n); m.setDate(m.getDate() + 14); return m; }, again: "a new event soon" }
+               next: n => { const until = Date.parse(Flags.values["event.until"] || ""); if (until) return new Date(until); const m = fortStart(n); m.setDate(m.getDate() + 14); return m; }, again: "a new event soon",
+               live: () => !!Flags.values["event.banner"] && Flags.eventLive(seasonTime()) }
   };
   function fortStart(d) { const w = weekStart(d), ref = new Date(2024, 0, 1), n = Math.round((w - ref) / 604800000); if (n % 2) w.setDate(w.getDate() - 7); return w; }   // (every other Monday since 1 Jan 2024)
   const PERIOD_IDS = Object.keys(PERIODS);
   function ensurePeriod(per) {
-    const P = PERIODS[per], key = P.key(), cur = profile[per];
+    const P = PERIODS[per];
+    if (P.live && !P.live()) return { day: "off", items: [], locked: true };   // (v55: out of season, or no event on)
+    const key = P.key(), cur = profile[per];
     if (cur && cur.day === key && cur.items.length >= 1) return cur;
     // the rotation (v37): kinds the live config has switched off stay out, and an event can raise the pay (03d_flags.js)
     const off = Flags.get("challenges.off"), bonus = Math.max(0.5, Math.min(5, Number(Flags.get("challenges.bonus")) || 1));

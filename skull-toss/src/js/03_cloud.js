@@ -80,8 +80,8 @@
       if (id === "apple.com") { const p = new fb.auth.OAuthProvider("apple.com"); p.addScope("email"); p.addScope("name"); return p; }
       return null;
     },
-    async signIn(id = "google.com", email = "", pass = "", create = false) {
-      const auth = this.auth(); if (!auth || this.busy) return;
+    async signIn(id = "google.com", email = "", pass = "", create = false, retried = false) {
+      const auth = this.auth(); if (!auth || (this.busy && !retried)) return;
       this.busy = true; this.error = ""; renderAccount();
       try {
         const u = auth.currentUser, fb = window.firebase;
@@ -89,6 +89,7 @@
           const cred = fb.auth.EmailAuthProvider.credential(email, pass);
           if (u && u.isAnonymous && create) await u.linkWithCredential(cred);   // a new account: this save becomes it
           else if (u && u.isAnonymous) { try { await u.linkWithCredential(cred); } catch (e) { if (e && (e.code === "auth/email-already-in-use" || e.code === "auth/credential-already-in-use")) { await Cloud.push(); await auth.signInWithEmailAndPassword(email, pass); await this.adopt(); return; } throw e; } }
+          else if (!u && create) await auth.createUserWithEmailAndPassword(email, pass);   // (v55: no session at all yet: make the account, don't try to sign in to one that isn't there)
           else await auth.signInWithEmailAndPassword(email, pass);
         } else {
           const provider = this.provider(id);
@@ -111,6 +112,13 @@
         const box = $("emailBox"); if (box) box.hidden = true;
       } catch (e) {
         const code = (e && e.code) || "";
+        // v55: App Check turned the request away. Once, fetch a fresh App Check token and try again; if that can't be had
+        // either, say so plainly (it's the project's set-up, not the player: docs in firebase/README.md)
+        if (code === "auth/firebase-app-check-token-is-invalid" || code === "auth/firebase-app-check-token-missing") {
+          const why = await Backend.appCheckRefresh();
+          if (!retried && !why) { this.busy = false; return this.signIn(id, email, pass, create, true); }
+          this.error = t("acct.appCheck") + (why ? ` (${why})` : ""); this.busy = false; renderAccount(); renderSave(); return;
+        }
         if (id !== "password" && (code === "auth/popup-blocked" || code === "auth/operation-not-supported-in-this-environment" || code === "auth/web-storage-unsupported")) {
           try { const auth2 = this.auth(), u2 = auth2.currentUser, pr = this.provider(id); if (u2) await u2.linkWithRedirect(pr); else await auth2.signInWithRedirect(pr); return; } catch (e2) { /* fall through to the message */ }
         }

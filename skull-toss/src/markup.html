@@ -134,19 +134,19 @@
       <div class="closet-body">
     <div class="outfits" id="outfits"><button class="ghost-btn" id="surpriseBtn" type="button" data-t="ui.surprise-me">Surprise me</button><span class="slots" id="outfitSlots"></span><button class="ghost-btn" id="outfitSave" type="button" data-t="ui.save-look">Save look</button></div>
     <div class="cat-tabs" id="catTabs" role="tablist">
-      <button type="button" role="tab" data-cat="hat" data-group="Head" aria-selected="false" data-t="ui.hats">Hats</button>
+      <button type="button" role="tab" data-cat="skull" data-group="Skull" aria-selected="true" data-t="ui.skulls">Skulls</button>
+      <button type="button" role="tab" data-cat="paint" aria-selected="false" data-t="ui.paint">Paint</button>
       <button type="button" role="tab" data-cat="eyes" data-group="Face" aria-selected="false" data-t="ui.eyes">Eyes</button>
       <button type="button" role="tab" data-cat="teeth" aria-selected="false" data-t="ui.teeth">Teeth</button>
-      <button type="button" role="tab" data-cat="glasses" aria-selected="false" data-t="ui.specs">Specs</button>
       <button type="button" role="tab" data-cat="mask" aria-selected="false" data-t="ui.masks">Masks</button>
+      <button type="button" role="tab" data-cat="glasses" aria-selected="false" data-t="ui.specs">Specs</button>
       <button type="button" role="tab" data-cat="hair" data-group="Hair" aria-selected="false" data-t="ui.hair">Hair</button>
       <button type="button" role="tab" data-cat="beard" data-group="Facial hair" aria-selected="false" data-t="ui.beard">Beard</button>
+      <button type="button" role="tab" data-cat="hat" data-group="Head" aria-selected="false" data-t="ui.hats">Hats</button>
       <button type="button" role="tab" data-cat="wings" data-group="Wings" aria-selected="false" data-t="ui.wings">Wings</button>
       <button type="button" role="tab" data-cat="aura" data-group="Effects" aria-selected="false" data-t="ui.auras">Auras</button>
       <button type="button" role="tab" data-cat="trail" aria-selected="false" data-t="ui.trails">Trails</button>
       <button type="button" role="tab" data-cat="impact" aria-selected="false" data-t="ui.pows">Pows</button>
-      <button type="button" role="tab" data-cat="skull" data-group="Skull" aria-selected="true" data-t="ui.skulls">Skulls</button>
-      <button type="button" role="tab" data-cat="paint" aria-selected="false" data-t="ui.paint">Paint</button>
       <button type="button" role="tab" data-cat="ring" data-group="Ring" aria-selected="false" data-t="ui.rings">Rings</button>
       <button type="button" role="tab" data-cat="ringwings" aria-selected="false" data-t="ui.r-wings">R-wings</button>
       <button type="button" role="tab" data-cat="pole" aria-selected="false" data-t="ui.poles">Poles</button>
@@ -389,7 +389,7 @@
     <div class="card career" id="careerCard"></div>
     <div class="card prof-body"><canvas id="profBody" aria-label="Morty's bones so far" data-t-aria="ui.mortys-bones-so-far" role="img"></canvas>
       <div class="pb-text"><div class="k" data-t="ui.mortys-bones">Morty's bones</div><div class="pb-n" id="profBodyN"></div><div class="sub" data-t="ui.each-end-boss-gives-one-back">Each end boss gives one back.</div>
-        <div class="pb-frag"><b id="profFragN">0/8</b><span data-t="ui.ring-fragments">Ring fragments</span></div>
+        <div class="pb-frag"><b id="profFragN">0/8</b><span class="pb-plus" id="profPlus" hidden role="img" aria-label="Adventure+ beaten" data-t-aria="ui.adventure-plus-beaten"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 L21 10 L12 22 L3 10 Z" fill="#9FE8FF" stroke="#17130F" stroke-width="2" stroke-linejoin="round"/><path d="M3 10 H21 M8 10 L12 22 L16 10 M8 10 L12 2 L16 10" fill="none" stroke="#17130F" stroke-width="1.2"/></svg></span><span data-t="ui.ring-fragments">Ring fragments</span></div>
         <canvas class="pb-ring" id="profFragCv" role="img" aria-label="The Black Ring's shards so far" data-t-aria="ui.ring-shards-so-far"></canvas></div></div>
     <div id="history"></div>
     <details class="all-stats" id="allStats"><summary data-t="ui.see-all-stats">See all stats</summary><div id="stats"></div></details>

@@ -1844,8 +1844,8 @@
   test("Shot mastery: Bronze, Silver and Gold at 1, 10 and 25; each tier pays once; gold on all twelve is the Shot Doctor", () => {
     T.setStats({ ...ZERO, bones: 0, shots: { longbomb: 10 } });
     assert(T.tierReached("shot", "longbomb", 1) && !T.tierReached("shot", "longbomb", 2) && T.masteryClaimable(), "Silver at 10, not Gold");
-    assert(T.claimMastery("shot", "longbomb", 0) === 100 && T.claimMastery("shot", "longbomb", 1) === 300 && T.bones() === 400, `Bronze 100 and Silver 300 (${T.bones()})`);
-    assert(T.claimMastery("shot", "longbomb", 1) === 0 && T.claimMastery("shot", "longbomb", 2) === 0 && T.bones() === 400, "once each; Gold not yet");
+    assert(T.claimMastery("shot", "longbomb", 0) === 60 && T.claimMastery("shot", "longbomb", 1) === 150 && T.bones() === 210, `Bronze 60 and Silver 150 (v55's pay) (${T.bones()})`);
+    assert(T.claimMastery("shot", "longbomb", 1) === 0 && T.claimMastery("shot", "longbomb", 2) === 0 && T.bones() === 210, "once each; Gold not yet");
     const all = {}; for (const s of T.shotList()) all[s.id] = 25; T.setStats({ ...ZERO, shots: all });
     assert(T.equip("title", "shotdoctor"), "gold on all twelve: the Shot Doctor"); T.equip("title", "rookie"); T.setStats(ZERO);
   });
@@ -2445,7 +2445,7 @@
     T.setStats(ZERO); T.toTitle(); T.openSheet("customize");
     for (const k of ["hair", "beard", "wings", "launcher"]) { T.shopCat(k); assert(document.querySelectorAll("#shopGrid .item").length >= 3, `the ${k} shelf`); }
     const groups = [...document.querySelectorAll("#catTabs [data-group]")].map(b => b.dataset.group);
-    assert(groups.join() === "Head,Face,Hair,Facial hair,Wings,Effects,Skull,Ring,Launcher,Special" && !document.querySelector('#catTabs [data-cat="wizard"]'), groups.join());
+    assert(groups.join() === "Skull,Face,Hair,Facial hair,Head,Wings,Effects,Ring,Launcher,Special" && !document.querySelector('#catTabs [data-cat="wizard"]'), groups.join());
     assert(!T.canUse("hair", "vines"), "locked at first");
     T.setStats({ ...ZERO, bossLog: { pumpkin: 1 } }); assert(T.canUse("hair", "vines"), "the Pumpkin King: his vines");
     T.closeSheet(); T.equip("wings", "shadow"); T.start(); T.step(0.5); T.freezeRing(0, C.RING_Y); throwAndSettle(0, C.RING_Y); assert(T.state().lastResult.make, "and he still throws the same");
@@ -2635,6 +2635,18 @@
     assert(!T.profile().allAccess && T.profile().bones === P0.bones && /isn't valid/.test($("redeemNote").textContent), "refused");
     T.closeSheet();
   });
+  // ── v55 ──
+  test("v55 screens: the closet in the order you'd dress him; a screen opens at its top; a diamond once Adventure+ is beaten; mastery pages of eight", () => {
+    const cats = [...document.querySelectorAll("#catTabs [data-cat]")].map(b => b.dataset.cat);
+    assert(cats.slice(0, 9).join() === "skull,paint,eyes,teeth,mask,glasses,hair,beard,hat", `skull, then face, hair, beard, hat (${cats.slice(0, 9)})`);
+    T.setStats(ZERO); T.toTitle(); T.openSheet("store"); const body = document.querySelector("#sheet-store .sheet-body") || $("sheet-store"); body.scrollTop = 400; T.closeSheet();
+    T.openSheet("store"); assert(body.scrollTop === 0, "the Cart opens at its top again"); T.closeSheet();
+    T.openSheet("profile"); assert($("profPlus").hidden, "no diamond yet"); T.closeSheet();
+    T.setStats({ ...ZERO, plusClears: 1 }); T.openSheet("profile"); assert(!$("profPlus").hidden, "Adventure+ beaten: the diamond"); T.closeSheet();
+    T.setStats({ ...ZERO, bossLog: { crow: 60 } }); T.openSheet("mastery"); document.querySelector('#masteryTabs [data-cat="boss"]').click();
+    const pg = document.querySelector('#masteryList [data-m="boss:crow"]'); assert(pg.classList.contains("m-page") && pg.querySelectorAll(".m-line .m-tier").length === 8 && pg.querySelectorAll(".m-tier.got").length === 4, "a page, eight stops on its line, four reached at 60");
+    T.closeSheet(); T.setStats(ZERO); T.toTitle();
+  });
   // ── v54 ──
   test("v54 a ghost's glow fades out inside its drawing (no square edge up close); the act card and a power-up card never overlap", () => {
     assert(T.celEdge("ghost") <= 2, `nothing at the cel's edge (alpha ${T.celEdge("ghost")})`);
@@ -2744,13 +2756,16 @@
     assert(document.querySelector("#sheet-store .sheet-head .bones"), "the bones beside the Souls"); T.closeSheet();
     T.openSheet("play"); document.querySelector("[data-open=minis]").click(); assert(document.querySelectorAll("#miniModes [data-mode]").length === 8, "eight mini-games"); T.closeSheet();
     T.openSheet("mastery"); assert(document.querySelectorAll("#masteryTabs [data-cat]").length === 5, "five parts");
-    assert(document.querySelectorAll("#masteryList .m-row")[0].querySelectorAll(".m-tier").length === 4 && document.querySelector(".m-tier.diamond"), "four tiers, Diamond last"); T.closeSheet();
+    assert(document.querySelectorAll("#masteryList .m-row")[0].querySelectorAll(".m-tier").length === 8 && document.querySelector(".m-tier.diamond:last-child"), "v55: eight tiers, Diamond last"); T.closeSheet();
   });
   test("v50 Challenges: a fourth tab drops down Seasonal and Events; the set bonus sits clear of the dotted line", () => {
     T.setStats(ZERO); T.toTitle(); T.openSheet("challenges");
     $("chalMoreBtn").click(); assert(!$("chalMenu").hidden, "the drop-down opens");
-    document.querySelector('#chalMenu [data-per="seasonal"]').click(); assert($("chalMenu").hidden && /Seasonal/.test($("chalMoreLbl").textContent) && document.querySelectorAll("#chalList .chal").length === 3, "three seasonal challenges");
-    $("chalMoreBtn").click(); document.querySelector('#chalMenu [data-per="event"]').click(); assert(/Events/.test($("chalMoreLbl").textContent) && document.querySelectorAll("#chalList .chal").length === 3, "and three for the event");
+    T.seasonAt("2026-09-01"); T.setFlags({}); document.querySelector('#chalMenu [data-per="seasonal"]').click(); assert($("chalMenu").hidden && /Seasonal/.test($("chalMoreLbl").textContent) && document.querySelectorAll("#chalList .chal-soon").length === 1 && /coming soon/i.test($("chalList").textContent), "v55: out of season, just coming soon");
+    T.seasonAt("2026-10-15"); T.closeSheet(); T.openSheet("challenges"); assert(document.querySelectorAll("#chalList .chal:not(.chal-soon)").length === 3, "in Season One: three seasonal challenges");
+    $("chalMoreBtn").click(); document.querySelector('#chalMenu [data-per="event"]').click(); assert(/Events/.test($("chalMoreLbl").textContent) && document.querySelectorAll("#chalList .chal-soon").length === 1, "no event on: coming soon");
+    T.setFlags({ "event.banner": "Test Week" }); T.closeSheet(); T.openSheet("challenges"); assert(document.querySelectorAll("#chalList .chal:not(.chal-soon)").length === 3, "an event on: three for it");
+    T.setFlags({}); T.seasonAt(null);
     const line = $("chalTabs").getBoundingClientRect().bottom, set = $("chalSet").getBoundingClientRect().top; assert(set >= line, `the set bonus clears the line (${set} ≥ ${line})`);
     T.closeSheet();
   });

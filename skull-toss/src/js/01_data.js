@@ -266,7 +266,7 @@
   const STAT_KEYS = ["games", "throws", "makes", "perfects", "rims", "bestStreak", "bestPerfStreak", "peakLives", "points", "best", "bonesTotal", "bonks", "misses", "clutch",
     "bestScore", "scoreTotal", "bestStage", "miniKills", "miniFlawless", "bossKills", "bossFlawless",
     "wides", "overs", "lows", "posts", "shorts", "clanks", "seeds", "zeroRuns", "quickDeaths",
-    "powerups", "cursed", "saves", "bonesSpent", "shopBuys", "coffins", "playTime", "grabs", "arcadeRuns", "chalClaims", "achSeen", "storyClears", "targetHits", "hazardHits", "continues", "xp", "bonusRounds", "cansDown", "canClears", "fireRings", "fireMakes", "longestRun", "bestDayStreak", "chalSets", "ringCatches", "eyePokes", "crossings", "cleanCrossings", "crossThrows"];   // xp: career experience (04h_career.js)
+    "powerups", "cursed", "saves", "bonesSpent", "shopBuys", "coffins", "playTime", "grabs", "arcadeRuns", "chalClaims", "achSeen", "storyClears", "plusClears", "targetHits", "hazardHits", "continues", "xp", "bonusRounds", "cansDown", "canClears", "fireRings", "fireMakes", "longestRun", "bestDayStreak", "chalSets", "ringCatches", "eyePokes", "crossings", "cleanCrossings", "crossThrows"];   // xp: career experience (04h_career.js)
   // Morty's body, section by section: what each of the first seven end bosses gives back (07p_body.js)
   const BODY_SECTIONS = ["leftArm", "rightArm", "ribs", "spine", "pelvis", "leftLeg", "rightLeg"];
   // arcade: the best on each map, keyed by map number ({ score, secs, hits, runs }); achievements: the ones unlocked

@@ -245,6 +245,7 @@
   function storyComplete() {
     boss = null; seeds.length = 0;
     const firstClear = !profile.storyClears; profile.storyClears++; game.run.story = true;
+    if (game.plus) profile.plusClears = (profile.plusClears || 0) + 1;   // (v55: Adventure+ beaten: a diamond by the ring's fragments on the profile)
     if (firstClear && !game.plus && !sandbox) setTimeout(() => toast(`<b>${t("plus.kicker")}</b> · ${t("plus.unlocked")}`), 2500);   // (v51: the way back in, 07s_plus.js)
     Sound.toon("fanfare"); Telemetry.emit("story_complete", { score: game.score, secs: Math.round(game.time - (game.run.t0 || 0)) });
     const done = card => { gameOver(card); };

@@ -65,16 +65,52 @@
       laneRows(0.5, 30, 0.9, z => { const p = projectBase(0, 0, z), s = 0.18 * p.s; b.beginPath(); b.moveTo(p.x, p.y - s * 0.4); b.lineTo(p.x + s, p.y); b.lineTo(p.x, p.y + s * 0.4); b.lineTo(p.x - s, p.y); b.closePath(); b.fill(); });
     }
   };
-  // water (the bayou): the ground is a still black pond with the moon's reflection laid down it in broken strokes
+  // v55: water is painted water with waves in it, not lines standing for water. A watercolour base, darker in the deep
+  // middle and lifting toward the horizon where it takes the sky; soft blotches of blue, green and teal in it; broad
+  // swells of uneven width that overlap and break off; short tapered highlights, mostly on the swells' crests, each its
+  // own length, angle and strength; the moon laid down it in broken strokes. No outlines. It moves in two sheens of
+  // highlights drifting at different speeds (paintWaterSheen, drawn by drawWaterSheen in 08l_water.js).
+  const WATER_TONES = ["40,70,86", "34,62,70", "52,86,92", "30,48,64", "60,96,90", "26,40,58"];
   function paintWater(b, x0, x1, B) {
-    const rnd = mulberry32(93);
-    b.strokeStyle = "rgba(200,240,220,.08)"; b.lineWidth = 1;
-    for (let i = 0; i < 90; i++) { const z = 2 + Math.pow(rnd(), 1.4) * 40, x = (rnd() * 2 - 1) * 14, p = projectBase(x, 0, z), w = p.s * (0.3 + rnd() * 0.6); b.beginPath(); b.moveTo(p.x - w, p.y); b.lineTo(p.x + w, p.y); b.stroke(); }
-    if (moon.r) {
-      b.fillStyle = `rgba(${rgbOf(look().moonColor)},.22)`;
-      for (let y = HY + 2, i = 0; y < H + B; y += 4 + i * 0.6, i++) { const w = moon.r * (0.6 + rnd() * 0.9) * (1 + i * 0.03); b.fillRect(moon.x - w / 2 + (rnd() - 0.5) * 6, y, w, 1.6); }
+    const rnd = mulberry32(93 + sceneMap * 7), top = HY + 1, bot = H + B;
+    const g = b.createLinearGradient(0, top, 0, bot); g.addColorStop(0, "rgba(120,150,160,.28)"); g.addColorStop(0.18, "rgba(40,70,86,.18)"); g.addColorStop(0.55, "rgba(10,20,30,.1)"); g.addColorStop(1, "rgba(30,56,70,.16)");
+    b.fillStyle = g; b.fillRect(x0, top, x1 - x0, bot - top);
+    for (let i = 0; i < 46; i++) {   // the watercolour: soft blotches, flattened by the distance
+      const z = 2 + Math.pow(rnd(), 1.3) * 42, x = (rnd() * 2 - 1) * (4 + z * 0.8), p = projectBase(x, 0, z), rx = p.s * (1.5 + rnd() * 3.5), ry = rx * (0.16 + 0.1 * rnd());
+      const c = b.createRadialGradient(p.x, p.y, 0, p.x, p.y, rx); c.addColorStop(0, `rgba(${WATER_TONES[(rnd() * WATER_TONES.length) | 0]},${0.12 + rnd() * 0.16})`); c.addColorStop(1, "rgba(0,0,0,0)");
+      b.save(); b.translate(p.x, p.y); b.scale(1, ry / rx); b.translate(-p.x, -p.y); b.fillStyle = c; b.beginPath(); b.arc(p.x, p.y, rx, 0, TAU); b.fill(); b.restore();
+    }
+    for (let i = 0; i < 70; i++) {   // the swells: broad uneven crescents, lighter or darker, overlapping
+      const z = 2.2 + Math.pow(rnd(), 1.5) * 40, x = (rnd() * 2 - 1) * (3 + z * 0.9), p = projectBase(x, 0, z), w = p.s * (0.8 + rnd() * 2.4), h = Math.max(1, p.s * (0.05 + rnd() * 0.08)), lift = rnd() < 0.55;
+      b.fillStyle = lift ? `rgba(150,190,190,${0.05 + rnd() * 0.07})` : `rgba(4,10,16,${0.12 + rnd() * 0.12})`;
+      const k0 = rnd() * 0.4, k1 = 0.6 + rnd() * 0.4;
+      b.beginPath(); b.moveTo(p.x - w, p.y); b.bezierCurveTo(p.x - w * (0.5 - k0), p.y - h * 1.6, p.x + w * (k1 - 0.5), p.y - h * (1.2 + rnd()), p.x + w, p.y + h * 0.2);
+      b.bezierCurveTo(p.x + w * 0.4, p.y + h * (0.3 + rnd() * 0.5), p.x - w * 0.3, p.y + h * 0.2, p.x - w, p.y); b.fill();
+    }
+    paintWaterStrokes(b, rnd, 120, 0.9);   // the highlights on the crests
+    if (moon.r) {   // the moon laid down the water in broken strokes, wider toward you
+      const mc = rgbOf(look().moonColor);
+      for (let y = HY + 3, i = 0; y < H + B; y += 3 + i * 0.7, i++) {
+        const spread = moon.r * (0.5 + i * 0.045), n = 1 + (rnd() * 2.5) | 0;
+        for (let j = 0; j < n; j++) { const cx = moon.x + (rnd() - 0.5) * spread * 1.6, len = spread * (0.2 + rnd() * 0.55), th = 1 + i * 0.05 + rnd();
+          taperStroke(b, cx, y + (rnd() - 0.5) * 2, len, th, (rnd() - 0.5) * 0.08, `rgba(${mc},${0.1 + rnd() * 0.18})`); }
+      }
     }
   }
+  // a short tapered brush stroke: fat in the middle, to a point at each end
+  function taperStroke(b, x, y, len, th, rot, col) {
+    b.save(); b.translate(x, y); b.rotate(rot); b.fillStyle = col; b.beginPath(); b.moveTo(-len / 2, 0);
+    b.quadraticCurveTo(-len * 0.1, -th, len / 2, th * 0.1); b.quadraticCurveTo(len * 0.1, th * 0.9, -len / 2, 0); b.fill(); b.restore();
+  }
+  function paintWaterStrokes(b, rnd, n, k = 1) {
+    for (let i = 0; i < n; i++) {
+      const z = 2 + Math.pow(rnd(), 1.6) * 38, x = (rnd() * 2 - 1) * (3 + z * 0.9), p = projectBase(x, 0, z), len = p.s * (0.25 + rnd() * 0.9), th = Math.max(0.6, p.s * (0.015 + rnd() * 0.03));
+      taperStroke(b, p.x, p.y - p.s * 0.04, len, th, (rnd() - 0.5) * 0.3, `rgba(${rnd() < 0.7 ? "200,230,225" : "240,236,210"},${(0.08 + rnd() * 0.24) * k})`);
+      if (rnd() < 0.35) taperStroke(b, p.x + len * (0.3 + rnd() * 0.3), p.y - p.s * 0.02, len * 0.5, th * 0.7, (rnd() - 0.5) * 0.3, `rgba(200,230,225,${(0.05 + rnd() * 0.14) * k})`);   // (a broken second stroke off the first)
+    }
+  }
+  // the sheens: highlights only, on their own transparent plates, drifted and breathed at different speeds
+  function paintWaterSheen(b, seed) { paintWaterStrokes(b, mulberry32(seed + sceneMap * 11), 90, 0.85); }
 
   // ── the foreground frame: (B, S) → the plates it paints (each in screen coordinates, drawn at the lens)
   const FG_SIL = "#07090D";
